@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "Compartir un mensaje de forma anónima",
+    "lblSiteUsage": "Encripta cualquier mensaje con una contraseña",
+    "lblUnlockDescr": "Desbloquea tu mensaje",
+    "lblUnlockUsage": "Ingrese la contraseña",
+
+    "lblContentPH": "(Su mensaje)",
+    "lblPasswordPH": "(Elija una contraseña segura)",
+    "lblUnlockPassPH": "(ingrese la contraseña)",
+
+    "lblDoneLine1": "¡Ya está todo listo!",
+    "lblDoneLine2": "Comparte este enlace y la contraseña que elegiste",
+    "lblClearPage": "Borrar la página",
+    "lblResetPage": "Cifrar otro mensaje",
+    "lblUnlockedLine1": "Aquí está el mensaje cifrado",
+
+    "lbl404Descr": "¡Whoops! 404!",
+    "lbl404Msg1": "Ese enlace no va a ninguna parte",
+    "lbl404Msg2": "O el enlace ha caducado, o nunca existió en primer lugar. De cualquier manera, no hay mucho que hacer desde este punto",
+    "lbl404GoHome": "Volver a la página principal.",
+
+    "lblPrivacy": "Privacy",
+    "lblHowWork": "Cómo funciona",
+
+    "btnDecrypt": "Descifrar",
+    "btnEncrypt": "Encrypt",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "Esto falta",
+    "msgMissingPass": "Por favor, establezca una contraseña realmente buena",
+    "msgMissingText": "Por favor ingrese un texto para cifrar",
+    "msgMissingUnlockPass": "Introduzca la contraseña para descifrar el mensaje"
+}

@@ -1,0 +1,25 @@
+{
+    "lang_name": "English",
+    "lang_culture": "en-US",
+    "iso-639-1": "en",
+    "iso-639-2": "enu",
+
+    "lblEnableJS": "Please Enable JavaScript to View This Site",
+    "msgFooter": "Powered by Streams",
+    "copyright": "&copy; {year}",
+    "version": "Version {version_id}",
+    
+    "msg401Line1": "Slow Down!",
+    "msg401Line2": "You&apos;re making too many requests too quickly.<br>Share the system with everyone.",
+    "msg404Line1": "No Resource!",
+    "msg404Line2": "Sorry. This resource has either already been viewed, or the link is wrong.",
+    "msg500Line1": "Oh No!",
+    "msg500Line2": "Just a moment, please. Something&apos;s not quite right.",
+
+    "errCantUpload": "Could Not Upload File",
+    "errNeedName": "Please Enter Your Login Name",
+    "errNeedPass": "Please Enter Your Password",
+    "errCantPass": "Please Confirm Your Login and Password",
+
+    "msgServerError": "A critical error has occurred. We're terribly sorry for this and are working on a fix."
+}

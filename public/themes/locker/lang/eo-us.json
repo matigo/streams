@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "Anonime Kunhavigi Mesaĝon",
+    "lblSiteUsage": "Kryru ajnan mesaĝon per pasvorto.",
+    "lblUnlockDescr": "Malŝlosi Vian Mesaĝon",
+    "lblUnlockUsage": "Enmetu la pasvorton",
+
+    "lblContentPH": "(Via Mesaĝo)",
+    "lblPasswordPH": "(Elektu Fortan Pasvorton)",
+    "lblUnlockPassPH": "(Enmetu la Pasvorton)",
+
+    "lblDoneLine1": "Vi kaj ĉio, ĉio Ŝanĝu!",
+    "lblDoneLine2": "Konigi ĉi tiun ligon kaj la pasvorton, kiun vi elektis.",
+    "lblClearPage": "Klara la Paĝo",
+    "lblResetPage": "Kryru Alia Mesaĝo",
+    "lblUnlockedLine1": "Jen la Kodita Mesaĝo",
+
+    "lbl404Descr": "Kiuj! 404!",
+    "lbl404Msg1": "Tiu ligilo ne iras ie ajn.",
+    "lbl404Msg2": "Aŭ la ligo eksvalidiĝis, aŭ ĝi neniam ekzistis en la unua loko. Efektive, ne multe devas fari de ĉi tiu punkto.",
+    "lbl404GoHome": "Reen al la ĉefa paĝo.",
+
+    "lblPrivacy": "Privateco",
+    "lblHowWork": "Kiel ĝi Funkcias",
+
+    "btnDecrypt": "Malkribi",
+    "btnEncrypt": "Kryru",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "Ĉi tio Malaperis",
+    "msgMissingPass": "Bonvolu Agordi Vere Bonan Pasvorton",
+    "msgMissingText": "Bonvolu Enmeti Iuj Tekston por Kryri",
+    "msgMissingUnlockPass": "Bonvolu Eniri la Pasvorton por Dekripti la Mesaĝon"
+}

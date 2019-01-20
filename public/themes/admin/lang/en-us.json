@@ -1,0 +1,33 @@
+{
+    "ttlSiteName": "10Cv5 Admin",
+    "lblSiteDescr": "Control Your Content",
+    "lblCopyright": "Copyright &copy; 10Centuries",
+    "lblPoweredBy": "Powered by good coffee and pictures of happy puppies",
+
+    "navDashboard": "Home",
+    "navContent": "Content",
+    "navFiles": "Uploaded Files",
+    "navPosts": "Post History",
+    "navWrite": "Write a New Post",
+
+    "lblDashboard": "Dashboard",
+
+    "lbl404Descr": "Whoops! Not quite sure what you&apos;re looking for ...",
+    "lbl404GoHome": "Return to the main page.",
+
+    "lblPrivacy": "Privacy",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "This Is Missing",
+    "msgMissingPass": "Please Set a Really Good Password",
+    "msgMissingText": "Please Enter Some Text to Encrypt",
+    "msgMissingUnlockPass": "Please Enter the Password to Decrypt the Message"
+}

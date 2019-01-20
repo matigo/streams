@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "匿名でメッセージを共有する",
+    "lblSiteUsage": "すべてのメッセージをパスワードで暗号化します。",
+    "lblUnlockDescr": "メッセージをロック解除する",
+    "lblUnlockUsage": "パスワードを入力してください",
+
+    "lblContentPH": "(あなたのメッセージ)",
+    "lblPasswordPH": "(強力なパスワードを選択する)",
+    "lblUnlockPassPH": "(パスワードを入力してください)",
+
+    "lblDoneLine1": "あなたはすべてセット！",
+    "lblDoneLine2": "このリンクとあなたが選んだパスワードを共有してください。",
+    "lblClearPage": "ページをクリアする",
+    "lblResetPage": "別のメッセージを暗号化する",
+    "lblUnlockedLine1": "ここに暗号化されたメッセージがあります",
+
+    "lbl404Descr": "Whoops! 404!",
+    "lbl404Msg1": "そのリンクはどこにも行きません。",
+    "lbl404Msg2": "リンクの有効期限が切れているか、リンクが最初に存在したことはありません。 いずれにせよ、この点からはあまりできないことがあります。",
+    "lbl404GoHome": "メインページに戻る",
+
+    "lblPrivacy": "プライバシー",
+    "lblHowWork": "使い方",
+
+    "btnDecrypt": "解読する",
+    "btnEncrypt": "暗号化する",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "これは欠けている",
+    "msgMissingPass": "本当に良いパスワードを設定してください",
+    "msgMissingText": "暗号化するテキストを入力してください",
+    "msgMissingUnlockPass": "メッセージを解読するためのパスワードを入力してください"
+}

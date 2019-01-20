@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="[LANG_CD]">
+    <head>
+        <title>[PAGE_TITLE]</title>
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="cleartype" content="on" />
+        <meta charset="utf-8" />
+
+        <meta name="authorization" content="[TOKEN]" />
+        <meta name="channel_guid" content="[CHANNEL_GUID]" />
+        <meta name="persona_guid" content="" />
+        <meta name="client_guid" content="[CLIENT_GUID]" />
+        <meta name="home_url" content="[HOMEURL]" />
+        <meta name="api_url" content="[API_URL]" />
+
+        <meta name="description" content="[SITEDESCR]" />
+        <meta name="keywords" content="[SITEKEYWD]" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="generator" content="[GENERATOR]" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-capable" content="no" />
+        <meta name="mobile-web-app-capable" content="no">
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="Robots" content="index, follow" />
+
+        <link rel="shortcut icon" href="[IMG_DIR]/favicon.png">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Quicksand">
+        <link rel="stylesheet" type="text/css" href="[CSS_DIR]/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="[CSS_DIR]/style.css?ver=[CSS_VER]">
+    </head>
+    <body>
+        <svg style="display: none;">
+            <symbol viewBox="0 0 512 512" id="ios-search">
+                <path d="M448.3,424.7L335,311.3c20.8-26,33.3-59.1,33.3-95.1c0-84.1-68.1-152.2-152-152.2c-84,0-152,68.2-152,152.2
+                s68.1,152.2,152,152.2c36.2,0,69.4-12.7,95.5-33.8L425,448L448.3,424.7z M120.1,312.6c-25.7-25.7-39.8-59.9-39.8-96.3
+                s14.2-70.6,39.8-96.3S180,80,216.3,80c36.3,0,70.5,14.2,96.2,39.9s39.8,59.9,39.8,96.3s-14.2,70.6-39.8,96.3
+                c-25.7,25.7-59.9,39.9-96.2,39.9C180,352.5,145.8,338.3,120.1,312.6z"/>
+            </symbol>
+            <symbol viewBox="0 0 512 512" id="btn-close">
+                <polygon class="st0" points="340.2,160 255.8,244.3 171.8,160.4 160,172.2 244,256 160,339.9 171.8,351.6 255.8,267.8 340.2,352 
+                352,340.3 267.6,256 352,171.8 "/>
+            </symbol>
+            <symbol viewBox="0 0 512 512" id="toggle">
+                <g>
+                    <rect x="96" y="241" width="320" height="32"/>
+                    <rect x="96" y="145" width="320" height="32"/>
+                    <rect x="96" y="337" width="320" height="32"/>
+                </g>
+            </symbol>
+        </svg>
+        <header class="container  page-header">
+            <div class="page-header__logo">
+                <div class="logo">
+                    <h1><a class="logo__link" href="[HOMEURL]">[SITE_NAME]</a></h1>
+                    <div class="logo__description">[SITEDESCR]</div>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul class="main-nav__items">
+                    <li class="main-nav__item">
+                        <a href="[HOMEURL]">Home</a>
+                        <ul class="main-nav__items-submenu">
+                            <li class="main-nav__item-submenu">
+                                <a href="index-fullsize.html">Home Fullsize</a>
+                            </li>
+                            <li class="main-nav__item-submenu">
+                                <a href="404.html">404 Page</a>
+                            </li>
+                            <li class="main-nav__item-submenu">
+                                <a href="single-post.html">Single Post</a>
+                            </li>
+                            <li class="main-nav__item-submenu  main-nav__item-submenu--active">
+                                <a href="single-post-fullsize.html">Single Post Fullsize</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="main-nav__item">
+                        <a href="category.html">Lifestyle</a>
+                        <ul class="main-nav__items-submenu">
+                            <li class="main-nav__item-submenu">
+                                <a href="category-fullsize.html">Category Fullsize</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="main-nav__item">
+                        <a href="category.html">Journey</a>
+                    </li>
+                    <li class="main-nav__item">
+                        <a href="category.html">Inspiration</a>
+                    </li>
+                    <li class="main-nav__item">
+                        <a href="about.html">About</a>
+                    </li>
+                    <li class="main-nav__item">
+                        <a href="contact.html">Contact</a>
+                    </li>
+                </ul>
+                <div class="main-nav__search">
+                    <svg>
+                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#ios-search"></use>
+                    </svg>
+                </div>
+            </nav>
+            <div class="nav-toggle">
+                <svg class="nav-toggle__icon">
+                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#toggle"></use>
+                </svg>
+            </div>
+        </header>
+        <main>
+            <div class="container">
+[CONTENT]
+                        <div class="single-post__related hidden">
+                            <div class="single-post__related-item">
+                                <a href="#">
+                                    <img src="[IMG_DIR]/img2.jpg" alt="My Favorite Books on Creativity and Productivity">
+                                    <h6>My Favorite Books on Creativity and Productivity</h6>
+                                </a>
+                                <span>January 20, 2017</span>
+                            </div>
+                            <div class="single-post__related-item">
+                                <a href="#">
+                                    <img src="[IMG_DIR]/img3.jpg" alt="How Long Does it Take Sunlight to Reach Earth?">
+                                    <h6>How Long Does it Take Sunlight to Reach Earth?</h6>
+                                </a>
+                                <span>January 18, 2017</span>
+                            </div>
+                            <div class="single-post__related-item">
+                                <a href="#">
+                                    <img src="[IMG_DIR]/img4.jpg" alt="How to Decorate Your First Apartment">
+                                    <h6>How to Decorate Your First Apartment</h6>
+                                </a>
+                                <span>January 10, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container page-footer__top">
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                    <h4>Recent Posts</h4>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Cup Of Coffee On The Window Sill</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 25, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Flower Bedroom Ideas</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 24, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                    <h4>&nbsp;</h4>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Cup Of Coffee On The Window Sill</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 25, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Flower Bedroom Ideas</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 24, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-4">
+                    <h4>&nbsp;</h4>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Cup Of Coffee On The Window Sill</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 25, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer__recent-post">
+                        <div class="page-footer__recent-post-info">
+                            <div class="page-footer__recent-post-content">
+                                <a href="single-post.html">Flower Bedroom Ideas</a>
+                            </div>
+                            <div class="page-footer__recent-post-date">
+                                <span>January 24, 2017</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container page-footer__bottom">
+                <div class="col-md-8 col-sm-8 page-footer__bottom-copyright">
+                    <p>2018 © &mdash; Site Powered by Strong Coffee &amp; Pictures of Happy Puppies</p>
+                </div>
+                <div class="col-md-4 col-sm-4 page-footer__bottom-social">&nbsp;</div>
+            </div>
+        </footer>
+        <div class="search-popup">
+            <svg class="search-popup__close">
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#btn-close"></use>
+            </svg>
+            <div class="container  search-popup__container">
+                <form action="index.html">
+                    <input type="text" size="32" placeholder="Search">
+                </form>
+            </div>
+        </div>
+        <div class="content-overlay"></div>
+        <script type="text/javascript" src="[JS_DIR]/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="[JS_DIR]/moment-with-locales.js"></script>
+        <script type="text/javascript" src="[JS_DIR]/notify.min.js"></script>
+        <script type="text/javascript" src="[JS_DIR]/network.js?ver=[CSS_VER]"></script>
+        <script type="text/javascript" src="[JS_DIR]/script.js?ver=[CSS_VER]"></script>
+    </body>
+[GenTime]
+</html>

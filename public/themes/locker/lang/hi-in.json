@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C सी लॉकर",
+    "lblSiteDescr": "अनामित रूप से एक संदेश साझा करें",
+    "lblSiteUsage": "पासवर्ड के साथ कोई संदेश एन्क्रिप्ट करें।",
+    "lblUnlockDescr": "अपना संदेश अनलॉक करें",
+    "lblUnlockUsage": "पासवर्ड दर्ज करें",
+
+    "lblContentPH": "(आपका संदेश)",
+    "lblPasswordPH": "(एक मजबूत पासवर्ड चुनें)",
+    "lblUnlockPassPH": "(पासवर्ड दर्ज करें)",
+
+    "lblDoneLine1": "आप सब सेट हैं!",
+    "lblDoneLine2": "इस लिंक और आपके द्वारा चुने गए पासवर्ड को साझा करें।",
+    "lblClearPage": "पेज साफ़ करें",
+    "lblResetPage": "एक और संदेश एन्क्रिप्ट करें",
+    "lblUnlockedLine1": "यहां एन्क्रिप्टेड संदेश है",
+
+    "lbl404Descr": "अरेप्स! 404!",
+    "lbl404Msg1": "वह लिंक कहीं नहीं जाता है।",
+    "lbl404Msg2": "या तो लिंक समाप्त हो गया है, या यह पहले स्थान पर कभी अस्तित्व में नहीं था। किसी भी तरह से, इस बिंदु से बहुत कुछ नहीं करना है।",
+    "lbl404GoHome": "मुख्य पृष्ठ पर वापस जाएं।",
+
+    "lblPrivacy": "गोपनीयता",
+    "lblHowWork": "यह कैसे काम करता है",
+
+    "btnDecrypt": "डिक्रिप्ट",
+    "btnEncrypt": "एन्क्रिप्ट करें",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "यह गुम है",
+    "msgMissingPass": "कृपया वास्तव में एक अच्छा पासवर्ड सेट करें",
+    "msgMissingText": "कृपया एन्क्रिप्ट करने के लिए कुछ पाठ दर्ज करें",
+    "msgMissingUnlockPass": "संदेश को डिक्रिप्ट करने के लिए पासवर्ड दर्ज करें"
+}

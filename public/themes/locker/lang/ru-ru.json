@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "Анонимно отправить сообщение",
+    "lblSiteUsage": "Шифровать любое сообщение с паролем.",
+    "lblUnlockDescr": "Разблокировать ваше сообщение",
+    "lblUnlockUsage": "Введите пароль",
+
+    "lblContentPH": "(Ваше сообщение)",
+    "lblPasswordPH": "(Выберите сильный пароль)",
+    "lblUnlockPassPH": "(Введите пароль)",
+
+    "lblDoneLine1": "Вы все настроены!",
+    "lblDoneLine2": "Поделитесь ссылкой и паролем, который вы выбрали",
+    "lblClearPage": "Очистить страницу",
+    "lblResetPage": "Шифровать другое сообщение",
+    "lblUnlockedLine1": "Вот зашифрованное сообщение",
+
+    "lbl404Descr": "Упс! 404!",
+    "lbl404Msg1": "Эта ссылка не идет никуда",
+    "lbl404Msg2": "Либо связь истекло, либо никогда не существовало в первую очередь. В любом случае, с этой точки зрения не так много.",
+    "lbl404GoHome": "Вернуться на главную страницу",
+
+    "lblPrivacy": "Конфиденциальность",
+    "lblHowWork": "Как это работает",
+
+    "btnDecrypt": "Расшифровать",
+    "btnEncrypt": "Шифровать",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "Это отсутствует",
+    "msgMissingPass": "Установите действительно хороший пароль",
+    "msgMissingText": "Введите текст для шифрования",
+    "msgMissingUnlockPass": "Пожалуйста, введите пароль для расшифровки сообщения"
+}

@@ -1,0 +1,56 @@
+[NAV_TOP]
+        <div class="app-body">
+[NAV_LEFT]
+            <div class="content-wrapper">
+                <div class="container-fluid">
+                    <div class="page-title mb-4 d-flex align-items-center">
+                        <div class="mr-auto">
+                            <h4 class="weight500 d-inline-block pr-3 mr-3 border-right">[lblPageTitle]</h4>
+                            <nav aria-label="breadcrumb" class="d-inline-block ">
+                                <ol class="breadcrumb p-0">
+                                    <li class="breadcrumb-item">[navDashboard]</li>
+                                    <li class="breadcrumb-item">[navContent]</li>
+                                    <li class="breadcrumb-item active" aria-current="page">[navWrite]</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="card card-shadow mb-4">
+                                <div class="card-header border-0">
+                                    <div class="custom-title-wrap bar-primary">
+                                        <div class="custom-title">[lblFormTitle]</div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" name="fdata" data-name="title" placeholder="[lblPostTitlePH]">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control hidden" name="fdata" data-name="url" placeholder="[lblPostUrlPH]">
+                                        <small class="form-text text-muted"><em>https://your.site.address/article/this-is-the-url</em></small>
+                                    </div>
+                                    <textarea id="content" name="fdata" data-name="content" placeholder="[lblPostContentPH]"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="sticky-footer">
+                    <div class="container">
+                        <div class="text-center">
+                            <small>[lblCopyright]</small>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script type="text/javascript" src="[JS_DIR]/simplemde.min.js"></script>
+        <script type="text/javascript">
+            new SimpleMDE({
+                element: document.getElementById("content"),
+                spellChecker: false
+            });
+        </script>

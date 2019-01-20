@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "Compartilhar anonimamente uma mensagem",
+    "lblSiteUsage": "Criptografe qualquer mensagem com uma senha..",
+    "lblUnlockDescr": "Desbloquear sua mensagem",
+    "lblUnlockUsage": "Digite a senha",
+
+    "lblContentPH": "(sua mensagem)",
+    "lblPasswordPH": "(Escolha uma senha forte)",
+    "lblUnlockPassPH": "(digite a senha)",
+
+    "lblDoneLine1": "Você está pronto!",
+    "lblDoneLine2": "Compartilhe este link e a senha que você escolheu.",
+    "lblClearPage": "Limpar a página",
+    "lblResetPage": "Criptografar outra mensagem",
+    "lblUnlockedLine1": "Aqui está a mensagem criptografada",
+
+    "lbl404Descr": "Opa! 404!",
+    "lbl404Msg1": "Esse link não vai a lugar algum",
+    "lbl404Msg2": "O link expirou ou nunca existiu. De qualquer forma, não há muito o que fazer a partir deste ponto.",
+    "lbl404GoHome": "Voltar para a página principal.",
+
+    "lblPrivacy": "Privacidade",
+    "lblHowWork": "Como funciona",
+
+    "btnDecrypt": "Decrypt",
+    "btnEncrypt": "Criptografar",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "This Is Missing",
+    "msgMissingPass": "Por favor, defina uma senha realmente boa",
+    "msgMissingText": "Por favor digite algum texto para criptografar",
+    "msgMissingUnlockPass": "Por favor digite a senha para descriptografar a mensagem"
+}

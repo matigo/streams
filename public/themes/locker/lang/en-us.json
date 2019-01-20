@@ -1,0 +1,42 @@
+{
+    "ttlSiteName": "10C Locker",
+    "lblSiteDescr": "Anonymously Share a Message",
+    "lblSiteUsage": "Encrypt any message with a password.",
+    "lblUnlockDescr": "Unlock Your Message",
+    "lblUnlockUsage": "Enter the password",
+
+    "lblContentPH": "(Your Message)",
+    "lblPasswordPH": "(Choose a Strong Password)",
+    "lblUnlockPassPH": "(Enter the Password)",
+
+    "lblDoneLine1": "You&apos;re All Set!",
+    "lblDoneLine2": "Share this link and the password you chose.",
+    "lblClearPage": "Clear the Page",
+    "lblResetPage": "Encrypt Another Message",
+    "lblUnlockedLine1": "Here Is the Encrypted Message",
+
+    "lbl404Descr": "Whoops! 404!",
+    "lbl404Msg1": "That link doesn&apos;t go anywhere.",
+    "lbl404Msg2": "Either the link has expired, or it never existed in the first place. Either way, there&apos;s not a lot to do from this point.",
+    "lbl404GoHome": "Back to the main page.",
+
+    "lblPrivacy": "Privacy",
+    "lblHowWork": "How It Works",
+
+    "btnDecrypt": "Decrypt",
+    "btnEncrypt": "Encrypt",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optHiIN": "हिंदी",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optPtPT": "Português",
+    "optRuRU": "русский",
+
+    "msgMissingValue": "This Is Missing",
+    "msgMissingPass": "Please Set a Really Good Password",
+    "msgMissingText": "Please Enter Some Text to Encrypt",
+    "msgMissingUnlockPass": "Please Enter the Password to Decrypt the Message"
+}

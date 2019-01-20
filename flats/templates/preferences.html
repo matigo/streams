@@ -1,0 +1,34 @@
+
+    	<div class="opview interact prefs hidden" data-view="prefs">
+        	<h3>[lblMyPreferences]</h3>
+
+        	<span class="prefs-obj lbl-33 text-right">[lblPrefLang]:</span>
+        	<select id="pref-lang" name="pdata" class="prefs-obj width-66" data-value="[PREF_LANG]">
+            	<option value="en-us">[optEnUS]</option>
+            	<option value="eo-us">[optEoUS]</option>
+            	<option value="ja-jp">[optJaJP]</option>
+            	<option value="es-es">[optEsES]</option>
+        	</select>
+
+        	<span class="prefs-obj lbl-33 text-right">[lblPrefName]:</span>
+        	<input id="pref-name" name="pdata" type="text" autocomplete="off" class="prefs-obj width-66" placeholder="[lblSiteNamePH]" value="[PREF_NAME]" />
+        	<span class="prefs-obj lbl-33 text-right">[lblPrefMail]:</span>
+        	<input id="pref-mail" name="pdata" type="text" autocomplete="off" class="prefs-obj width-66" placeholder="[lblSiteDescrPH]" value="[PREF_MAIL]" />
+            <span class="prefs-obj lbl-33 text-right">[lblPrefTime]:</span>
+        	<select id="pref-zone" name="pdata" class="prefs-obj width-66">
+[ZONE_LIST]
+        	</select>
+
+            <span class="prefs-obj lbl-33 text-right">[lblAcctType]:</span>
+            <span class="width-66">[ACCT_TYPE]</span>
+            <span class="prefs-obj lbl-33 text-right">[lblStoreLimit]:</span>
+            <span class="width-66 bytes" data-value="[STORE_LIMIT]">[STORE_LIMIT]</span>
+            <span class="prefs-obj lbl-33 text-right">[lblStoreUsed]:</span>
+            <span class="width-66 bytes" data-value="[STORE_USED]">[STORE_USED]</span>
+
+            <div class="width-66">&nbsp;</div>
+            <button class="btn width-33 btn-save-prefs green" data-label="[btnSave]">[btnSave]</button>
+            <div class="full-width text-center" style="margin-top: 5rem;">
+        	    <button class="btn btn-cancel padd">[btnCancel]</button>
+            </div>
+    	</div>

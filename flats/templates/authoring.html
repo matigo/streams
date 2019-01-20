@@ -1,0 +1,36 @@
+
+        <script src="[JS_DIR]/dropzone.js?ver=[CSS_VER]"></script>
+        <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+        <script type="text/javascript">
+            window.personas = [PERSONAS];
+        </script>
+    	<div class="opview interact create hidden" data-view="create">
+        	<select id="post-type" name="fdata" onchange="toggleCreateView();">
+            	<option value="post.note">[optNote]</option>
+            	<option value="post.article">[optBlog]</option>
+            	<option value="post.bookmark">[optBookmark]</option>
+            	<option value="post.quotation">[optQuotation]</option>
+        	</select>
+        	<input id="source-url" name="fdata" type="text" autocomplete="off" class="seventy-width create-obj" placeholder="[lblPostSourcePH]" />
+        	<button class="btn btn-read padd create-obj" data-label="[btnRead]">[btnRead]</button>
+        	<input id="source-title" name="fdata" type="text" autocomplete="off" class="create-obj" placeholder="[lblSourceTitlePH]" />
+        	<input id="title" name="fdata" type="text" autocomplete="off" class="create-obj" placeholder="[lblPostTitlePH]" />
+            <div id="editor" class="quill-editor" data-ph="[lblEditorPH]"></div>
+            <div class="width-33 char-count text-center">&nbsp;</div>
+            <button class="btn width-33 btn-meta" data-label="[btnAddMeta]" data-value="N" data-Y="[btnHideMeta]" data-N="[btnAddMeta]">[btnAddMeta]</button>
+            <button class="btn width-33 btn-publish" data-label="[btnPublish]">[btnPublish]</button>
+            <form id="dropzone" class="col-lg-12 col-md-12 col-sm-12 col-xs-12 uploads dropzone hidden"></form>
+            <input id="post-tags" name="fdata" type="text" autocomplete="off" class="meta-obj hidden" placeholder="[lblPostTagsPH]" />
+        	<input id="post-geo" name="fdata" type="text" autocomplete="off" class="seventy-width meta-obj hidden" placeholder="[lblPostGeoPH]" />
+        	<input id="post-guid" name="fdata" type="hidden" autocomplete="off" />
+        	<button class="btn btn-geo meta-obj btn-valid hidden" style="min-width: 4.5rem;"><i class="fas fa-map-pin"></i></button>
+            <div class="full-width text-center" style="margin-top: 5rem;">
+        	    <button class="btn btn-cancel padd">[btnCancel]</button>
+            </div>
+            <div class="half-width text-left" style="margin-top: 1rem;">
+                <button class="btn btn-prefs padd" style="background: #ccc; color: #fff;"><i class="fas fa-user-circle"></i></button>
+            </div>
+            <div class="half-width text-right[CAN_EDIT]" style="margin-top: 1rem;">
+        	    <button class="btn btn-settings padd" style="background: #ccc; color: #fff;"><i class="fas fa-cog"></i></button>
+            </div>
+    	</div>

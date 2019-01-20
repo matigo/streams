@@ -1,0 +1,21 @@
+{
+    "short_name": "Social",
+    "name": "Nice.Social",
+    "icons": [
+        {
+            "src": "/themes/social/img/social-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/themes/social/img/social-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#fff",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#fff"
+}
