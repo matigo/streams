@@ -203,6 +203,10 @@ class System {
 
         // If There's a Change, Record the Change and Start the DNS Update Process
         if ( $has_change ) {
+
+            print_r( "Change Found!" );
+            die();
+
             // Update the CloudFlare Data
             $data = $this->_updateCloudFlareDNS(CLOUDFLARE_API_KEY, 'jason@j2fi.net', $ipv4, $ipv6);
 
@@ -336,6 +340,20 @@ class System {
                 }
             }
         }
+
+        // Record the data to a JSON File
+  		$ima = time();
+        $yW = date('yW', $ima);
+		$log_file = LOG_DIR . "/cloudflare-$yW.log";
+
+		$fh = fopen($log_file, 'a');
+        $ima_str = date("F j, Y h:i:s A", $ima );
+		$stringData = "--------------------------------------------------------------------------------\n" .
+		              "Record At: $ima_str \n" .
+		              json_encode($result, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT) . "\n" .
+		              "--------------------------------------------------------------------------------\n";
+		fwrite($fh, $stringData);
+		fclose($fh);
 
         // Return an Array Outlining the Records Updated
         return $result;

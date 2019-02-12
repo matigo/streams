@@ -3,7 +3,7 @@
 /**
  * @author Jason F. Irwin
  * @copyright 2016
- * 
+ *
  * Class contains the rules and methods called for Cookie Handling and
  *		Restoration of Primary Settings in Advantage
  */
@@ -62,9 +62,9 @@ class cookies {
             } else {
                 if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
             }
-            
+
         }
-        
+
         foreach( $_COOKIE as $key=>$val ) {
             if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
         }
@@ -138,7 +138,7 @@ class cookies {
 
         // Don't Keep an Empty Array Object with the Request URI
         unset($rVal[substr($rVal['ReqURI'], 1)]);
-        
+
         // Save Some Cookies for Later Use
         $this->_saveCookies($rVal);
 
@@ -162,12 +162,12 @@ class cookies {
 
         foreach ( $vals as $val ) {
             $keyval = explode( "=", $val );
-            
+
             if ( is_array($keyval) ) {
 	            $rVal[ $keyval[0] ] = $keyval[1];
             }
         }
-        
+
         // Return an Array Containing the Missing Data
         return $rVal;
     }
@@ -197,7 +197,7 @@ class cookies {
                       '_is_debug'      => false,
                      );
     }
-    
+
     /**
      *  Function Returns the Type of Request and the Route Required
      */
@@ -216,6 +216,9 @@ class cookies {
      */
     private function _getDisplayLanguage( $AccountLang = '' ) {
         $langcd = NoNull($_GET['DispLang'], $_COOKIE['DispLang']);
+        if ( defined('ENABLE_MULTILANG') === false ) { define('ENABLE_MULTILANG', 0); }
+        if ( defined('DEFAULT_LANG') === false ) { define('DEFAULT_LANG', 'en'); }
+
         if ( $langcd == '' || NoNull($AccountLang) != '' ){ $langcd = NoNull($AccountLang, DEFAULT_LANG); }
         $rVal = DEFAULT_LANG;
 
@@ -280,7 +283,7 @@ class cookies {
 
         // Re-Assemble the URL Path
         $URLPath = explode('/', implode('/', $URLPath));
-        
+
         // Confirm the Routing
         if ( $route == '' ) { $route = (in_array($URLPath[0], $filters) ? $URLPath[0] : 'web'); }
 
@@ -304,7 +307,7 @@ class cookies {
         // Return the Array of Values
         return $rVal;
     }
-    
+
     /**
      *  Function Determines the Site.id Value and Returns It
      */
@@ -333,57 +336,36 @@ class cookies {
     /**
      * Function Saves the Cookies to the Browser's Cache (If Cookies Enabled)
      */
-    private function _saveCookies( $cookieVals ) {
-        $domain = '';
-        $parts = explode('.', strtolower($_SERVER['SERVER_NAME']));
-        $cnt = 1;
-        for ( $i = count($parts) - 1; $i >= 0; $i-- ) {
-            $domain = '.' . $parts[$i] . $domain;
-            if ( $cnt >= 2 ) { break; }
-            $cnt++;
-        }
+    private function _saveCookies( $cookieVals, $fullDomain = true ) {
+        if (!headers_sent()) {
+            $valids = array( 'token', 'DispLang', 'remember', 'invite' );
+            $longer = array( 'token' );
+            $domain = strtolower($_SERVER['SERVER_NAME']);
 
-        $RememberMe = YNBool(NoNull($cookieVals['remember'], 'N'));
-        foreach( $cookieVals as $key=>$val ) {
-            if( $this->_validCookie( $key ) ) {
-                setcookie( $key, "$val", $this->_getCookieLifeSpan($key, $RememberMe), "/", NoNull($domain, strtolower($_SERVER['SERVER_NAME'])) );
+            if ( $fullDomain !== false ) { $fullDomain = true; }
+            if ( $fullDomain ) {
+                $parts = explode('.', strtolower($_SERVER['SERVER_NAME']));
+                $domain = '';
+                $cnt = 1;
+                for ( $i = count($parts) - 1; $i >= 0; $i-- ) {
+                    $domain = '.' . $parts[$i] . $domain;
+                    if ( $cnt >= 2 ) { break; }
+                    $cnt++;
+                }
+            }
+
+            $RememberMe = YNBool(NoNull($cookieVals['remember'], 'N'));
+            foreach( $cookieVals as $key=>$val ) {
+                if( in_array($key, $valids) ) {
+                    $LifeSpan = time() + COOKIE_EXPY;
+                    if( $RememberMe ) { $LifeSpan = time() + 3600 * 24 * 60; }
+                    if ( in_array($item, $longer) ) { $LifeSpan = time() + 3600 * 24 * 365; }
+
+                    setcookie( $key, "$val", $LifeSpan, "/", NoNull($domain, strtolower($_SERVER['SERVER_NAME'])) );
+                }
             }
         }
     }
-
-    /**
-     * Function returns the Expiration Timestamp for a given Cookie item.
-     *  Note: "Immortal" items have a 2 week life span. Everything else
-     *        relies on the COOKIE_EXPY value in /conf/config.php
-     */
-    private function _getCookieLifeSpan( $item, $RememberMe ) {
-        $eternals = array( 'token', 'remember' );
-        $rVal = time() + COOKIE_EXPY;
-
-        // Sixty Days
-        if( $RememberMe ) { $rVal = time() + 3600 * 24 * 60; }
-
-        // One Year
-        if ( in_array($item, $eternals) ) { $rVal = time() + 3600 * 24 * 365; }
-
-        //Return the Expiration Time
-        return $rVal;
-    }
-
-    /**
-     * Function returns a boolean signifying whether the Cookie should
-     *      be saved to the browser
-     */
-    private function _validCookie( $item ) {
-        $include = array( 'token', 'DispLang', 'remember', 'invite' );
-
-        // Return a Happy Boolean if it's a Valid Cookie
-        if( in_array( $item, $include )) { return true; }
-
-        //Return the Exclusion Status of the Item
-        return false;
-    }
-
 }
 
 ?>

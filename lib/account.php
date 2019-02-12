@@ -2,7 +2,7 @@
 
 /**
  * @author Jason F. Irwin
- * 
+ *
  * Class contains the rules and methods called for Accounts
  */
 require_once( LIB_DIR . '/functions.php');
@@ -50,7 +50,7 @@ class Account {
         // Return The Array of Data or an Unhappy Boolean
         return $rVal;
     }
-    
+
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $rVal = false;
@@ -81,7 +81,7 @@ class Account {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -103,7 +103,7 @@ class Account {
             case 'me':
                 $rVal = $this->_setProfile();
                 break;
-            
+
             case 'resetpassword':
             case 'resetpass':
                 $rVal = $this->_resetPassword();
@@ -137,7 +137,7 @@ class Account {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -188,7 +188,7 @@ class Account {
         if ( !array_key_exists($CleanID, $this->cache) ) { $this->_readAccountInfo($AccountID); }
         return ( is_array($this->cache[$CleanID]) ) ? $this->cache[$CleanID] : false;
     }
-    
+
     /**
      *  Function Populates the Cache Variable with Account Data for a Given Set of IDs
      */
@@ -206,7 +206,7 @@ class Account {
             if ( count($AcctList) > 0 ) {
                 $ReplStr = array( '[ACCOUNT_IDS]' => implode(',', $AcctList) );
                 $sqlStr = readResource(SQL_DIR . '/account/getAccountPersonInfo.sql', $ReplStr);
-                $rslt = doSQLQuery($sqlStr, true);
+                $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
                         $AcctID = nullInt($Row['account_id']);
@@ -227,7 +227,7 @@ class Account {
             }
         }
     }
-    
+
     /**
      *  Function Acts as a Quick Language Setting Option
      */
@@ -331,7 +331,7 @@ class Account {
 
                 // Set the Account Status, Employee Records, and Scopes
                 $isOK = $this->_setAccountPermissions();
-                
+
                 // Set/Reset the Account for Usage
                 $ReplStr['[ACCOUNT_ID]'] = nullInt($NewAcctID);
                 $sqlStr = readResource(SQL_DIR . '/auth/resetAccount.sql', $ReplStr) . SQL_SPLITTER .
@@ -392,7 +392,7 @@ class Account {
     private function _setAccountMetaForID( $AccountID, $Type, $Value ) {
         if ( nullInt($AccountID) <= 0 ) { return false; }
         if ( NoNull($Type) == '' ) { return false; }
-        
+
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID),
                           '[META_VALUE]' => sqlScrub($Value),
                           '[META_TYPE]'  => sqlScrub($Type),
@@ -417,7 +417,7 @@ class Account {
                           '[ACCOUNT_ID]'    => nullInt($this->settings['_account_id']),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/getAccountSummary.sql', $ReplStr, true);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = false;
 
@@ -472,7 +472,7 @@ class Account {
                                                       'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['employee_updated_at'])),
                                                       'updated_unix' => strtotime($Row['employee_updated_at']),
                                                      ),
-                                
+
                                'scopes'     => explode(',', NoNull($Row['scopes'])),
 
                                'meta'       => array( 'community_moderator' => YNBool($Row['community_moderator']),
@@ -497,7 +497,7 @@ class Account {
         // If We're Here, We Have a Bad GUID
         return "Unrecognized GUID Supplied";
     }
-    
+
     /**
      *  Function Marks an Account as Expired without Validation or Verification
      */
@@ -513,7 +513,7 @@ class Account {
         // Return a Simple Boolean
         return true;
     }
-    
+
     /**
      *  Function Collects the Password History for a Given Account.ID if a Person's Permissions are High Enough
      */
@@ -522,7 +522,7 @@ class Account {
                           '[RECORD_ID]'  => nullInt($AccountID),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/getAccountPassHistory.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
             foreach ( $rslt as $Row ) {
@@ -567,7 +567,7 @@ class Account {
         $CleanLang = NoNull(NoNull($this->settings['pref_lang'], $this->settings['pref-lang']), $this->settings['language']);
         $CleanMail = NoNull(NoNull($this->settings['pref_mail'], $this->settings['pref-mail']), $this->settings['mail_addr']);
         $CleanTime = NoNull(NoNull($this->settings['pref_zone'], $this->settings['pref-zone']), $this->settings['timezone']);
-        $CleanGUID = NoNull($this->settings['persona_guid'], $this->settings['persona-guid']); 
+        $CleanGUID = NoNull($this->settings['persona_guid'], $this->settings['persona-guid']);
 
         // Perform Some Basic Validation
         if ( mb_strlen($CleanGUID) != 36 ) {
@@ -604,11 +604,11 @@ class Account {
     private function _getProfile() {
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
         $sqlStr = readResource(SQL_DIR . '/account/getProfile.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
                 $strings = getLangDefaults($Row['language_code']);
-                
+
                 $rVal = array( 'guid'           => NoNull($Row['guid']),
                                'type'           => NoNull($Row['type']),
                                'timezone'       => Nonull($Row['timezone']),
@@ -630,7 +630,7 @@ class Account {
         // Return the Profile Object or an Unhappy String
         return $rVal;
     }
-    
+
     /**
      *  Function Records an Updated Public Profile for a Given Persona.guid Value
      */
@@ -656,11 +656,11 @@ class Account {
         if ( $rslt > 0 ) {
             return $this->_getPublicProfile();
         }
-        
+
         // If We're Here, We Couldn't Update the Public Profile
         return "Could Not Update Public Profile";
     }
-    
+
     /**
      *  Function Builds the Public Profile for a Given Persona.guid Value
      */
@@ -712,13 +712,13 @@ class Account {
         // If We're Here, There Is No Persona
         return false;
     }
-    
+
     private function _getAccountPersonas( $AccountID = 0 ) {
         if ( nullInt($AccountID) <= 0 ) { return false; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
         $sqlStr = readResource(SQL_DIR . '/account/getPersonas.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $cdnUrl = getCdnUrl();
             $data = false;
@@ -748,7 +748,7 @@ class Account {
         // If We're Here, There Are No Personas
         return false;
     }
-    
+
     /**
      *  Function Will Ideally Be Called Only Once By Each Person, Setting the Welcome Message as "Done"
      */
@@ -801,13 +801,13 @@ class Account {
         $CleanLifeMin = nullInt($this->settings['life_span'], (COOKIE_EXPY / 60));
         $CleanPassOne = NoNull($this->settings['pass_one']);
         $CleanPassTwo = NoNull($this->settings['pass_two']);
-        
+
         // Verify We Have Minutes
         if ( $CleanLifeMin <= 0 ) { return "Invalid Token Lifespan Supplied"; }
         if ( $CleanPassOne == "" ) { return "Invalid Password Supplied"; }
         if ( mb_strlen($CleanPassOne) <= 5 ) { return "Password Is Too Short"; }
         if ( $CleanPassOne != $CleanPassTwo ) { return "Passwords Do Not Match"; }
-        
+
         // Do We Need a Unique Password?
         if ( defined('PASSWORD_UNIQUES') ) {
             if ( nullInt(PASSWORD_UNIQUES) > 0 ) {
@@ -829,7 +829,7 @@ class Account {
                   readResource(SQL_DIR . '/account/setAccountPassHistory.sql', $ReplStr, true) . SQL_SPLITTER .
                   readResource(SQL_DIR . '/account/markPassChg.sql', $ReplStr, true);
         $isOK = doSQLExecute($sqlStr);
-        
+
         // Record the Event
         setActivityRecord( $this->settings['_account_id'], 'account.update', 'action.complete', $this->settings['_account_id'],
                            "Updated Security Info for Account " . $this->settings['_account_id'] );
@@ -837,7 +837,7 @@ class Account {
         // Return the Account's Security Information
         return $this->_getSecurityInfo();
     }
-    
+
     /**
      *  Function Verifies Whether a Password Has Been Used for a Given Account in the Past
      */
@@ -853,7 +853,7 @@ class Account {
                           '[SHA_SALT]'   => sqlScrub(SHA_SALT),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/chkPasswordUnique.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
                 if ( nullInt($Row['records']) > 0 ) { return false; }
@@ -873,7 +873,7 @@ class Account {
                           '[TOKEN_LIFE]' => (COOKIE_EXPY / 60),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/getSecurityPrefs.sql', $ReplStr, true);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
             foreach ( $rslt as $Row ) {
@@ -887,7 +887,7 @@ class Account {
         // Return an Empty Array if There Is No Information
         return array();
     }
-    
+
     /** ********************************************************************* *
      *  Account Creation Processes (Called Mainly from SSO on New Record)
      ** ********************************************************************* */
@@ -916,10 +916,10 @@ class Account {
         if ( $rslt > 0 ) {
             // Set a Scope
             $this->_setScope($rslt, 'none');
-            
+
             // Return the Basic Account Object
             $rVal = $this->_getAccountInfo($rslt);
-            
+
             // Record the Activity
             setActivityRecord( $rslt, 'account.create', 'action.complete', $rslt, "Created Account [$rslt] via SSO" );
         }
@@ -938,7 +938,7 @@ class Account {
         $CleanValue = NoNull($this->settings['value']);
         $CleanType = NoNull($this->settings['type']);
         $rVal = "Could Not Record Account Preference";
-        
+
         if ( $CleanValue == '' ) { return "Invalid Value Passed"; }
         if ( $CleanType == '' ) { return "Invalid Type Passed"; }
 
@@ -953,7 +953,7 @@ class Account {
         // Return the Preference Object or an Unhappy String
         return $rVal;
     }
-    
+
     private function _getPreference( $type = '' ) {
         $CleanType = NoNull($type, $this->settings['type']);
         $rVal = '';
@@ -964,7 +964,7 @@ class Account {
                           '[TYPE_KEY]'   => strtolower(sqlScrub($CleanType)),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/getPreference.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
             foreach ( $rslt as $Row ) {

@@ -3,7 +3,7 @@
 /**
  * @author Jason F. Irwin
  * @copyright 2015
- * 
+ *
  * Class contains the rules and methods called for Site Settings & Creation
  */
 require_once( LIB_DIR . '/functions.php');
@@ -62,7 +62,7 @@ class Site {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -84,7 +84,7 @@ class Site {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -101,7 +101,7 @@ class Site {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -150,7 +150,7 @@ class Site {
             $SiteURL = sqlScrub( NoNull($this->settings['site_url'],$_SERVER['SERVER_NAME']) );
             $ReplStr = array( '[SITE_URL]' => strtolower($SiteURL) );
             $sqlStr = readResource(SQL_DIR . '/site/getCacheFolder.sql', $ReplStr);
-            $rslt = doSQLQuery($sqlStr, true);
+            $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
                     $this->settings['channel_id'] = nullInt($Row['channel_id']);
@@ -185,9 +185,9 @@ class Site {
 
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
-                $cver = NoNull($Row['site_version']) . '-' . 
+                $cver = NoNull($Row['site_version']) . '-' .
                         NoNull($Row['can_edit']) . NoNull($Row['show_geo']) . NoNull($Row['show_note']) .
-                        NoNull($Row['show_article']) . NoNull($Row['show_bookmark']) . NoNull($Row['show_quotation']) . '-' . 
+                        NoNull($Row['show_article']) . NoNull($Row['show_bookmark']) . NoNull($Row['show_quotation']) . '-' .
                         NoNull($this->settings['_language_code'], $this->settings['DispLang']);
                 $this->cache[strtolower($SiteURL)] = array( 'HomeURL'         => NoNull($Row['site_url']),
                                                             'api_url'         => getApiUrl(),
@@ -240,7 +240,7 @@ class Site {
 
         if ( $ReplStr['[CHANNEL_GUID]'] != '' && $ReplStr['[ACCOUNT_ID]'] > 0 ) {
             $sqlStr = readResource(SQL_DIR . '/site/getSiteByGUID.sql', $ReplStr);
-            $rslt = doSQLQuery($sqlStr, true);
+            $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 $SiteID = nullInt($rslt[0]['site_id']);
                 if ( $SiteID > 0 ) {
@@ -258,10 +258,10 @@ class Site {
         $SiteID = nullInt($this->settings['site_id'], $this->settings['PgSub1']);
         if ( $SiteID <= 0 ) { return false; }
         $rVal = false;
-        
+
         $ReplStr = array( '[SITE_ID]' => $SiteID );
         $sqlStr = readResource(SQL_DIR . '/site/getSiteByID.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = false;
 
@@ -297,11 +297,11 @@ class Site {
             if ( is_array($data) ) { $rVal = $data; }
             unset($data);
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
-    
+
     /**
      *  Function Returns an Array of Personas that can Publish to a Given Channel
      */
@@ -326,7 +326,7 @@ class Site {
 
             if ( count($data) > 0 ) { return $data; }
         }
-        
+
         // If We're Here, There are None
         return false;
     }
@@ -354,11 +354,10 @@ class Site {
                          );
         $sqlStr = readResource(SQL_DIR . '/site/setSiteData.sql', $ReplStr);
         $isOK = doSQLExecute($sqlStr);
-        
+
         if ( $isOK > 0 ) {
             $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr) . SQL_SPLITTER .
                       readResource(SQL_DIR . '/site/setSiteGeoVisibility.sql', $ReplStr);
-            writeNote($sqlStr, true);
             $isOK = doSQLExecute($sqlStr);
         }
 
@@ -378,7 +377,7 @@ class Site {
 
         $ReplStr = array( '[CHANNEL_ID]' => nullInt($ChannelID) );
         $sqlStr = readResource(SQL_DIR . '/site/getSiteFromChannel.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) { $rVal = nullInt($Row['site_id']); }
         }
@@ -398,7 +397,7 @@ class Site {
 
         $ReplStr = array( '[SITE_ID]' => $SiteID );
         $sqlStr = readResource(SQL_DIR . '/site/getSiteMeta.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr, true);
+        $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $SiteAuthor = '';
             $SiteCover = '';
@@ -473,7 +472,7 @@ class Site {
                 }
                 $this->settings['site_id'] = $SiteID;
                 $data['site'] = $this->_getSiteDataByID();
-                $data['site_id'] = $SiteID;                
+                $data['site_id'] = $SiteID;
                 $rVal = $data;
             }
         }
@@ -481,7 +480,7 @@ class Site {
         // Return an Array of the Site Data
         return $rVal;
     }
-    
+
     /**
      *  Function Records the RSS Information for a given site
      */
@@ -576,16 +575,16 @@ class Site {
         // Return the Site Array or an Unhappy Boolean Value
         return $rVal;
     }
-    
+
     /**
      *  Function Marks a Site (and all it's content?) as Deleted
      */
     private function _deleteSite() {
-        
+
     }
-    
+
     private function _addChannelAuthor() {
-        
+
     }
 
     /** ********************************************************************* *
