@@ -130,11 +130,13 @@ class Route extends Streams {
         // If Caching Is Enabled, Check If We Have a Valid Cached Version
         $cache_file = md5($data['site_version'] . '-' . NoNull(APP_VER . CSS_VER) . '-' .
                           nullInt($this->settings['_account_id']) . '-' . $this->settings['ReqURI'] . '-' . nullInt($this->settings['page']));
-        if ( nullInt(ENABLE_CACHING) == 1 ) {
-            $html = readCache($data['site_id'], $cache_file);
-            if ( $html !== false ) {
-                $ReplStr = array( '[GenTime]' => $this->_getRunTime() );
-                return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+        if ( defined('ENABLE_CACHING') ) {
+            if ( nullInt(ENABLE_CACHING) == 1 ) {
+                $html = readCache($data['site_id'], $cache_file);
+                if ( $html !== false ) {
+                    $ReplStr = array( '[GenTime]' => $this->_getRunTime() );
+                    return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+                }
             }
         }
 
@@ -157,10 +159,13 @@ class Route extends Streams {
         // If We're Here, We Have Data to Show
         $ReplStr['[PAGEHTML]'] = $this->_getPageContent($data);
         $ReplStr['[CONTENT]'] = readResource($ReqFile, $ReplStr);
+        $ReplStr['[NAVMENU]'] = $this->_getSiteNav($data);
         $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
 
         // Save the File to Cache if Required
-        if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($data['site_id'], $cache_file, $html); }
+        if ( defined('ENABLE_CACHING') ) {
+            if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($data['site_id'], $cache_file, $html); }
+        }
 
         // Get the Run-time
         $runtime = $this->_getRunTime();
@@ -222,6 +227,7 @@ class Route extends Streams {
             require_once( LIB_DIR . '/posts.php' );
             $post = new Posts( $this->settings, $this->strings );
             $html = $post->getPageHTML($data);
+
             $this->settings['status'] = $post->getResponseCode();
             $this->settings['errors'] = $post->getResponseMeta();
             unset($post);
@@ -367,6 +373,47 @@ class Route extends Streams {
                 $this->strings = $rVal;
             }
         }
+    }
+
+    /**
+     *  Function Collects the Navigation Bar for the Site
+     */
+    private function _getSiteNav( $data ) {
+        $ThemeLocation = THEME_DIR . '/' . $data['location'];
+        $html = '';
+
+        // Is there a custom.php file in the theme that will provide the requisite data?
+        $ResDIR = $ThemeLocation . "/resources";
+        if ( file_exists("$ThemeLocation/custom.php") ) {
+            require_once("$ThemeLocation/custom.php");
+            $ClassName = ucfirst($data['location']);
+            $res = new $ClassName( $this->settings, $this->strings );
+            if ( function_exists($res->getSiteNav) ) {
+                $html = $res->getSiteNav($data);
+                $this->settings['errors'] = $res->getResponseMeta();
+                $this->settings['status'] = $res->getResponseCode();
+            }
+            unset($res);
+
+        } else {
+            $ReplStr = array( '[SITE_ID]' => nullInt($data['site_id']) );
+            $sqlStr = readResource(SQL_DIR . '/web/getSiteNav.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                $SiteUrl = $data['protocol'] . '://' . $data['HomeURL'];
+                foreach ( $rslt as $Row ) {
+                    if ( YNBool($Row['is_visible']) ) {
+                        if ( $html != '' ) { $html .= "\r\n"; }
+                        $html .= tabSpace(5) . '<li class="main-nav__item" data-items="' . nullInt($Row['items']) . '">' .
+                                    '<a href="' . $SiteUrl . NoNull($Row['url']) . '" title="">' . NoNull($this->strings[$Row['label']], $Row['label']) . '</a>' .
+                                 '</li>';
+                    }
+                }
+            }
+        }
+
+        // Return the Completed HTML if it Exists
+        return $html;
     }
 
     private function _getContentArray( $data ) {

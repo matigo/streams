@@ -122,6 +122,7 @@ function updateContentHeight(el) {
         var els = document.getElementsByClassName('newpost-content');
         if ( els.length > 0 ) { el = els[0]; }
     }
+    if ( el === undefined || el === null ) { return; }
 
     el.style.height = '1px';
     el.style.height = (25 + el.scrollHeight) + 'px';

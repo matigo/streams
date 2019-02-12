@@ -1,0 +1,25 @@
+{
+    "nav_about": "About",
+    "nav_contact": "Contact",
+    "nav_home": "Home",
+    "nav_article": "Articles",
+    "nav_bookmark": "Bookmarks",
+    "nav_note": "Notes",
+    "nav_quotation": "Quotations",
+
+    "lblPostedBy": "Written By",
+    "lblTags": "Tags",
+    "lblNoTags": "<em>(None)</em>",
+    "lblAboutMe": "About Me",
+    "lblContact": "Get In Touch",
+
+    "lblContactName": "Name",
+    "lblContactMail": "Email",
+    "lblContactMessage": "Message",
+
+    "lblContactThankYou": "Thank you for getting in touch!",
+    "msgMissingValue": "This Is Missing",
+    "msgMissingPass": "Please Set a Really Good Password",
+    "msgMissingText": "Please Enter Some Text to Encrypt",
+    "msgMissingUnlockPass": "Please Enter the Password to Decrypt the Message"
+}

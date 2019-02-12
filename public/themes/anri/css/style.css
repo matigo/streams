@@ -726,7 +726,7 @@ blockquote::before {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  border-bottom: 1px dotted #dcdcdc;
+  display: none;
 }
 .single-post__footer-tags::after {
   content: "";
@@ -746,7 +746,7 @@ blockquote::before {
 }
 .single-post__footer-tags-list {
     float: left;
-    line-height: 1;
+    line-height: 1.333em;
     list-style: none;
     overflow: hidden;
     padding: 0;

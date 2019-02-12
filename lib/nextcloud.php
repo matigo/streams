@@ -126,7 +126,7 @@ class Nextcloud {
         $sqlStr = "SELECT fc.`fileid`, fc.`path`, fc.`name`, fc.`size`, fc.`mtime`, fc.`storage_mtime` FROM `oc_filecache` fc" .
                   " WHERE `is_processed` = 'N' and `path` LIKE 'files/Photos/%' and `mimetype` = 8" .
                   " ORDER BY fc.`fileid`;";
-        $rslt = doSQLQuery( $sqlStr, 'nextcloud' );
+        $rslt = doSQLQuery( $sqlStr, false, 'nextcloud' );
         if ( is_array($rslt) ) {
             require_once(LIB_DIR . '/images.php');
             $data = array();
@@ -177,7 +177,7 @@ class Nextcloud {
 
                 // Record the Data to the Database
                 if ( $cnt >= 75 ) {
-                    $isOK = doSQLExecute($sqlStr, 'nextcloud');
+                    $isOK = doSQLExecute($sqlStr, false, 'nextcloud');
                     $sqlStr = '';
                     $cnt = 0;
                 }
@@ -191,7 +191,7 @@ class Nextcloud {
             }
 
             // If There Are Still Things to Record, Do So
-            if ( $sqlStr != '' ) { $isOK = doSQLExecute($sqlStr, 'nextcloud'); }
+            if ( $sqlStr != '' ) { $isOK = doSQLExecute($sqlStr, false, 'nextcloud'); }
 
             // If We Have Data, Return It
             if ( count($data) > 0 ) { return $data; }

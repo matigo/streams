@@ -1,5 +1,8 @@
 # Specify filepatterns you want git to ignore.
 .DS_Store
+.htaccess
 *.token
 *.data
+*.log
 *.tmp
+config.php

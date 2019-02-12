@@ -1222,7 +1222,7 @@ class Posts {
                               '[TITLE]'         => NoNull($post['title']),
                               '[CONTENT]'       => NoNull($post['content']) . NoNull($ReplyHTML),
                               '[BANNER]'        => '',
-                              '[TAGLINE]'       => NoNull($tagLine),
+                              '[TAGLINE]'       => NoNull($tagLine, $this->strings['lblNoTags']),
                               '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
                               '[GEOTAG]'        => $geoLine,
                               '[THREAD]'        => $PostThread,
@@ -1249,6 +1249,13 @@ class Posts {
 
                 default:
                     /* Do Nothing */
+            }
+
+            // Add the Theme Language Text
+            if ( is_array($this->strings) ) {
+                foreach ( $this->strings as $key=>$val ) {
+                    if ( in_array($key, $ReplStr) === false ) { $ReplStr["[$key]"] = $val; }
+                }
             }
 
             // Determine the Template File

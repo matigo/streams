@@ -734,6 +734,51 @@ CREATE TRIGGER `after_update_post`
 ;;
 
 /** ************************************************************************* *
+ *  Messages
+ ** ************************************************************************* */
+DROP TABLE IF EXISTS `SiteContact`;
+CREATE TABLE IF NOT EXISTS `SiteContact` (
+    `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
+    `site_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `name`          varchar(80)             CHARACTER SET utf8  NOT NULL    ,
+    `mail`          varchar(160)            CHARACTER SET utf8  NOT NULL    ,
+    `message`       text                                        NOT NULL    ,
+
+    `is_read`       enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `is_mailed`     enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+
+    `guid`          char(36)                CHARACTER SET utf8  NOT NULL    ,
+    `hash`          char(40)                CHARACTER SET utf8  NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`site_id`) REFERENCES `Site` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_sitecont_main` ON `SiteContact` (`is_deleted`, `site_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_insert_sitecontact`;;
+CREATE TRIGGER `before_insert_sitecontact`
+BEFORE INSERT ON `SiteContact`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    SET new.`hash` = SHA1(new.`message`);
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_sitecontact`;;
+CREATE TRIGGER `before_update_sitecontact`
+BEFORE UPDATE ON `SiteContact`
+   FOR EACH ROW
+ BEGIN
+    SET new.`hash` = SHA1(new.`message`);
+    SET new.`updated_at` = Now();
+   END
+;;
+
+/** ************************************************************************* *
  *  Create Sequence (Statistics)
  ** ************************************************************************* */
 DROP TABLE IF EXISTS `UsageStats`;

@@ -963,7 +963,7 @@
     /**
      * Function Queries the Required Database and Returns the values as an array
      */
-    function doSQLQuery( $sqlStr, $dbname = DB_NAME ) {
+    function doSQLQuery( $sqlStr, $params = array(), $dbname = DB_NAME ) {
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $GLOBALS['Perf']['queries']++;
         $result = false;
@@ -1013,7 +1013,7 @@
     /**
      * Function Executes a SQL String against the Required Database and Returns a boolean response.
      */
-    function doSQLExecute( $sqlStr, $dbname = DB_NAME ) {
+    function doSQLExecute( $sqlStr, $params = array(), $dbname = DB_NAME ) {
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $sqlQueries = array();
         $rVal = -1;
