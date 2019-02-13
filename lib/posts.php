@@ -171,6 +171,7 @@ class Posts {
      ** ********************************************************************* */
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
+    public function getPopularPosts() { return $this->_getPopularPosts(); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -446,7 +447,9 @@ class Posts {
                 if ( NoNull($Row['canonical_url']) == NoNull($this->settings['ReqURI']) || NoNull($Row['post_guid']) == $pguid || count($rslt) == 1 ) { $pclass[] = 'h-entry'; }
                 if ( NoNull($Row['reply_to']) != '' ) { $pclass[] = 'p-in-reply-to'; }
 
-                $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], true, true);
+                $IsNote = true;
+                if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], $IsNote, true);
                 $post_text = $this->_parsePostMentions($post_text);
 
                 $data[] = array( 'guid'     => NoNull($Row['post_guid']),
@@ -1090,6 +1093,57 @@ class Posts {
     }
 
     /**
+     *  Function Returns an HTML List of Popular Posts
+     *  Note: this caches data for 60 minutes before refreshing
+     */
+    private function _getPopularPosts() {
+        $CacheFile = 'popular-' . date('Ymdh');
+        $html = '';
+
+        // Check for a Cache File and Return It If Valid
+        if ( defined('ENABLE_CACHING') === false ) { define('ENABLE_CACHING', 0); }
+        if ( nullInt(ENABLE_CACHING) == 1 ) { $html = readCache($this->settings['site_id'], $CacheFile); }
+        if ( $html !== false && $html != '' ) { return $html; }
+
+        // If We're Here, Let's Construct the Popular Posts List
+        $ReplStr = array( '[SITE_ID]' => nullInt($this->settings['site_id']),
+                          '[COUNT]'   => nullInt($this->settings['pops_count'], 9),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getPopularPosts.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $SiteUrl = NoNull($this->settings['HomeURL']);
+
+            foreach ( $rslt as $Row ) {
+                $PublishAt = date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at']));
+
+                if ( $html != '' ) { $html .= "\r\n"; }
+                $html .= tabSpace(4) . '<div class="col-lg-4 col-md-4 col-sm-4">' . "\r\n" .
+                         tabSpace(5) . '<div class="page-footer__recent-post">' . "\r\n" .
+                         tabSpace(6) . '<div class="page-footer__recent-post-info">' . "\r\n" .
+                         tabSpace(7) . '<div class="page-footer__recent-post-content">' . "\r\n" .
+                         tabSpace(8) . '<a href="' . $SiteUrl . NoNull($Row['canonical_url']) . '">' . NoNull($Row['title']) . '</a>' . "\r\n" .
+                         tabSpace(7) . '</div>' . "\r\n" .
+                         tabSpace(7) . '<div class="page-footer__recent-post-date">' . "\r\n" .
+                         tabSpace(8) . '<span class="dt-published" datetime="' . $PublishAt . '" data-dateunix="' . strtotime($Row['publish_at']) . '">' . NoNull($PublishAt, $Row['publish_at']) . '</span>' . "\r\n" .
+                         tabSpace(7) . '</div>' . "\r\n" .
+                         tabSpace(6) . '</div>' . "\r\n" .
+                         tabSpace(5) . '</div>' . "\r\n" .
+                         tabSpace(4) . '</div>';
+            }
+
+            // Save the File to Cache if Required
+            if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($this->settings['site_id'], $CacheFile, $html); }
+
+            // Return the List of Popular Posts
+            return $html;
+        }
+
+        // If We're Here, There's Nothing.
+        return '';
+    }
+
+    /**
      *  Function Determines the Pagination for the Page
      */
     private function _getPagePagination( $data ) {
@@ -1098,11 +1152,20 @@ class Posts {
         $Count = nullInt($this->settings['count'], 10);
         $Page = $this->_getPageNumber();
         $Page++;
+        $html = '';
 
         // If We're Writing a New Post, Return a Different Set of Data
         if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
             return '';
         }
+
+        // Determine the Name of the Cache File (if Required)
+        $CacheFile = substr(str_replace('/', '-', NoNull($CanonURL, '/home')), 1) . '-' . $Page . '-' . NoNull($data['site_version'], 'ver0');
+        $CacheFile = str_replace('--', '-', $CacheFile);
+
+        if ( defined('ENABLE_CACHING') === false ) { define('ENABLE_CACHING', 0); }
+        if ( nullInt(ENABLE_CACHING) == 1 ) { $html = readCache($this->settings['site_id'], $CacheFile); }
+        if ( $html !== false && $html != '' ) { return $html; }
 
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
@@ -1113,12 +1176,13 @@ class Posts {
         $sqlStr = readResource(SQL_DIR . '/posts/getPagePagination.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
-            $html = '';
             $max = 0;
             $cnt = 0;
 
             foreach ( $rslt as $Row ) {
-                $cnt = nullInt($Row['post_count']);
+                if ( YNBool($Row['exacts']) === false ) {
+                    $cnt = nullInt($Row['post_count']);
+                }
             }
             while ( $cnt > 0 ) {
                 $cnt -= $Count;
@@ -1159,7 +1223,7 @@ class Posts {
                         } else {
                             $html .= tabSpace(6) . 
                                      '<li class="blog-pagination__item">' .
-                                        '<a href="' . $SiteUrl . '?page=' . $cnt . '">' . number_format($cnt, 0) . '</a>' .
+                                        '<a href="' . $SiteUrl . (($cnt > 1) ? '?page=' . $cnt : '') . '">' . number_format($cnt, 0) . '</a>' .
                                      '</li>';
                         }
                     }
@@ -1190,13 +1254,19 @@ class Posts {
                              '</li>';
                 }
 
+                // Format the Complete HTML
+                $html = "\r\n" .
+                        tabSpace(4) . '<nav class="blog-pagination">' . "\r\n" .
+                        tabSpace(5) . '<ul class="blog-pagination__items">' . "\r\n" .
+                        $html . "\r\n" .
+                        tabSpace(5) . '</ul>' . "\r\n" .
+                        tabSpace(4) . '</nav>';
+
+                // Save the File to Cache if Required
+                if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($this->settings['site_id'], $CacheFile, $html); }
+
                 // Return the HTML
-                return "\r\n" .
-                       tabSpace(4) . '<nav class="blog-pagination">' . "\r\n" .
-                       tabSpace(5) . '<ul class="blog-pagination__items">' . "\r\n" .
-                       $html . "\r\n" .
-                       tabSpace(5) . '</ul>' . "\r\n" .
-                       tabSpace(4) . '</nav>';
+                return $html;
             }
         }
 
@@ -1475,7 +1545,9 @@ class Posts {
                     }
 
                     // Prep the Post-Text
-                    $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], true, true);
+                    $IsNote = true;
+                    if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                    $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], $IsNote, true);
                     $post_text = $this->_parsePostMentions($post_text);
 
                     $data[] = array( 'guid'     => NoNull($post['post_guid']),

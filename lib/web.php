@@ -163,7 +163,10 @@ class Route extends Streams {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
-                    $ReplStr = array( '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                    $SiteLogin = NoNull($this->strings['lblLogin']);
+                    if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
+                    $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
+                                      '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
                                       '[GenTime]'      => $this->_getRunTime(),
                                      );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
@@ -185,6 +188,11 @@ class Route extends Streams {
             foreach ( $this->strings as $Key=>$Value ) {
                 $ReplStr["[$Key]"] = NoNull($Value);
             }
+
+            // Set the Site Login String
+            $SiteLogin = NoNull($this->strings['lblLogin']);
+            if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
+            $ReplStr['[lblSiteLogin]'] = NoNull($SiteLogin, $this->strings['lblLogin']);
         }
 
         // If We're Here, We Have Data to Show
@@ -522,12 +530,22 @@ class Route extends Streams {
                        '[AUTHOR_TOOLS]' => $this->_getAuthoringTools($data),
                        '[SETTINGS]'     => $this->_getSettingsPanel($data),
                        '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                       '[POPULAR_LIST]' => $this->_getPopularPosts(),
                        '[PREFERENCES]'  => $this->_getPreferencesPanel($data),
                        '[PAGINATION]'   => $this->_getPagination($data),
                       );
 
         // Return the Strings
         return $rVal;
+    }
+
+    private function _getPopularPosts() {
+        require_once( LIB_DIR . '/posts.php' );
+        $post = new Posts( $this->settings, $this->strings );
+        $html = $post->getPopularPosts();
+        unset($post);
+
+        return $html;
     }
 
     private function _getAuthoringTools($data) {

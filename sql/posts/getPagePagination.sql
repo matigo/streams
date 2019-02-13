@@ -1,5 +1,5 @@
-SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`
-  FROM (SELECT pg.`post_id`, pg.`publish_at`
+SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`, MAX(tmp.`is_exact`) as `exacts`
+  FROM (SELECT pg.`post_id`, pg.`publish_at`, pg.`is_exact`
           FROM (SELECT CASE WHEN ch.`privacy_type` <> 'visibility.public' THEN 'N'
                             WHEN po.`privacy_type` = 'visibility.none' AND pa.`account_id` <> [ACCOUNT_ID] THEN 'N'
                             WHEN po.`privacy_type` <> 'visibility.public' THEN IFNULL(tmp.`can_read`, 'N')
@@ -9,7 +9,8 @@ SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`
                             WHEN po.`type` = 'post.bookmark' THEN vis.`show_bookmark`
                             WHEN po.`type` = 'post.quotation' THEN vis.`show_quotation`
                             ELSE 'N' END as `aux_visible`,
-                       po.`id` as `post_id`, po.`publish_at`
+                       po.`id` as `post_id`, po.`publish_at`,
+                       CASE WHEN po.`canonical_url` = '[CANON_URL]' THEN 'Y' ELSE 'N' END as `is_exact`
                   FROM `Post` po INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
                                  INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                                  INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
@@ -48,5 +49,6 @@ SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`
                    and 'Y' = CASE WHEN '[CANON_URL]' = '' THEN 'Y'
                                   WHEN po.`canonical_url` LIKE '/[PGROOT]/%' THEN 'Y'
                                   ELSE 'N' END
+                   and '[PGROOT]' IN ('', 'note', 'article', 'bookmark', 'quotation')
                  ORDER BY po.`publish_at` DESC) pg
          WHERE pg.`is_visible` = 'Y' and pg.`aux_visible` = 'Y') tmp

@@ -683,6 +683,16 @@ blockquote::before {
     padding: 0.25em;
     max-width: 100%;
 }
+.single-post__content img.alignleft {
+    float: left;
+    margin: 0.25em 1em 0 0 !important;
+    text-align: left;
+}
+.single-post__content img.alignright {
+    float: right;
+    margin: 0.25em 0 0 1em !important;
+    text-align: right;
+}
 .single-post__content a {
   font-weight: bold;
   color: #262626;
