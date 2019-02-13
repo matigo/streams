@@ -1088,6 +1088,122 @@ class Posts {
         // Return the Requested Page Number
         return $Page;
     }
+
+    /**
+     *  Function Determines the Pagination for the Page
+     */
+    private function _getPagePagination( $data ) {
+        $CanonURL = $this->_getCanonicalURL();
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        $Count = nullInt($this->settings['count'], 10);
+        $Page = $this->_getPageNumber();
+        $Page++;
+
+        // If We're Writing a New Post, Return a Different Set of Data
+        if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
+            return '';
+        }
+
+        // Construct the SQL Query
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_GUID]'  => sqlScrub($data['site_guid']),
+                          '[CANON_URL]'  => sqlScrub($CanonURL),
+                          '[PGROOT]'     => sqlScrub($PgRoot),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getPagePagination.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $html = '';
+            $max = 0;
+            $cnt = 0;
+
+            foreach ( $rslt as $Row ) {
+                $cnt = nullInt($Row['post_count']);
+            }
+            while ( $cnt > 0 ) {
+                $cnt -= $Count;
+                if ( $cnt > 0 ) { $max++; }
+            }
+            $max++;
+
+            // If the Maximum Page is Greater Than 1, Build a Pagination Matrix
+            if ( $max > 1 ) {
+                $SiteUrl = NoNull($this->settings['HomeURL']);
+                if ( $Page <= 0 ) { $Page = 1; }
+                $cnt = 1;
+
+                if ( $Page > 1 ) {
+                    if ( $html != '' ) { $html .= "\r\n"; }
+                    $html .= tabSpace(6) . 
+                             '<li class="blog-pagination__item">' .
+                                '<a href="' . $SiteUrl . '?page=' . ($Page - 1) . '"><i class="fa fa-backward"></i></a>' .
+                             '</li>';
+                }
+
+                $min_idx = ($Page - 4);
+                if ( $min_idx < 1 ) { $min_idx = 1; }
+                if ( $Page > 7 ) { $min_idx - 4; }
+                $max_idx = ($min_idx + 8);
+                $min_dot = false;
+                $max_dot = false;
+
+                while ( $cnt <= $max ) {
+                    if ( ($cnt >= $min_idx && $cnt <= $max_idx) || $cnt == 1 || $cnt == $max ) {
+                        if ( $html != '' ) { $html .= "\r\n"; }
+                        if ( $cnt == $Page ) {                        
+                            $html .= tabSpace(6) . 
+                                     '<li class="blog-pagination__item blog-pagination__item--active">' .
+                                        '<a>' . number_format($cnt, 0) . '</a>' .
+                                     '</li>';
+
+                        } else {
+                            $html .= tabSpace(6) . 
+                                     '<li class="blog-pagination__item">' .
+                                        '<a href="' . $SiteUrl . '?page=' . $cnt . '">' . number_format($cnt, 0) . '</a>' .
+                                     '</li>';
+                        }
+                    }
+                    if ( $Page > 6 && $cnt < $min_idx && $min_idx > 1 && $min_dot === false ) {
+                        if ( $html != '' ) { $html .= "\r\n"; }
+                        $html .= tabSpace(6) . 
+                                 '<li class="blog-pagination__item">' .
+                                    '<a><i class="fa fa-ellipsis-h"></i></a>' .
+                                 '</li>';
+                        $min_dot = true;
+                    }
+                    if ( $cnt > $max_idx && $max_idx < $max && $max_dot === false ) {
+                        if ( $html != '' ) { $html .= "\r\n"; }
+                        $html .= tabSpace(6) . 
+                                 '<li class="blog-pagination__item">' .
+                                    '<a><i class="fa fa-ellipsis-h"></i></a>' .
+                                 '</li>';
+                        $max_dot = true;
+                    }
+                    $cnt++;
+                }
+
+                if ( $Page < $max ) {
+                    if ( $html != '' ) { $html .= "\r\n"; }
+                    $html .= tabSpace(6) . 
+                             '<li class="blog-pagination__item">' .
+                                '<a href="' . $SiteUrl . '?page=' . ($Page + 1) . '"><i class="fa fa-forward"></i></a>' .
+                             '</li>';
+                }
+
+                // Return the HTML
+                return "\r\n" .
+                       tabSpace(4) . '<nav class="blog-pagination">' . "\r\n" .
+                       tabSpace(5) . '<ul class="blog-pagination__items">' . "\r\n" .
+                       $html . "\r\n" .
+                       tabSpace(5) . '</ul>' . "\r\n" .
+                       tabSpace(4) . '</nav>';
+            }
+        }
+
+        // If We're Here, There's No Pagination Required
+        return '';
+    }
+
     private function _getPageHTML( $data ) {
         $Count = nullInt($this->settings['count'], 10);
         $Page = $this->_getPageNumber() * $Count;
@@ -1141,6 +1257,9 @@ class Posts {
                     $html .= $el;
                 }
             }
+
+            // Add the Pagination (If Required)
+            if ( $html != '' ) { $html .= $this->_getPagePagination($data); }
 
             // If There are No Posts, Show a Friendly Message
             if ( NoNull($html) == '' ) { $html = "There Is No HTML Here"; }

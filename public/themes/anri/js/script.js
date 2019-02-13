@@ -87,22 +87,15 @@ function getMetaValue( name ) {
     var nav = $('.main-nav');
     var contentOverlay = $('.content-overlay');
 
-    navSearch.on('click', function(){
-      popupSearch.addClass('search-popup--active').find('input[type="text"]').focus();
-    });
-
-    popupSearchClose.on('click', function(){
-      popupSearch.removeClass('search-popup--active');
-    });
-
+    navSearch.on('click', function(){ popupSearch.addClass('search-popup--active').find('input[type="text"]').focus(); });
+    popupSearchClose.on('click', function(){ popupSearch.removeClass('search-popup--active'); });
     navToggle.on('click', function(){
-      nav.addClass('main-nav--mobile');
-      contentOverlay.addClass('content-overlay--active');
+        nav.addClass('main-nav--mobile');
+        contentOverlay.addClass('content-overlay--active');
     });
-
     contentOverlay.on('click', function(){
-      nav.removeClass('main-nav--mobile');
-      contentOverlay.removeClass('content-overlay--active');
+        nav.removeClass('main-nav--mobile');
+        contentOverlay.removeClass('content-overlay--active');
     });
 })(jQuery);
 
@@ -157,7 +150,7 @@ function updatePostBanners() {
     var home_url = getMetaValue('home_url') + '/';
     var els = document.getElementsByClassName('post-banner');
     for ( var i = 0; i < els.length; i++ ) {
-        if ( NoNull(els[i].src) != home_url ) {
+        if ( NoNull(els[i].src) != '' && NoNull(els[i].src) != window.location.href ) {
             els[i].classList.remove('hidden');
         } else {
             els[i].classList.add('hidden');

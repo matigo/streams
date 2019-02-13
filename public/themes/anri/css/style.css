@@ -47,6 +47,46 @@ blockquote::before {
   color: #dcdcdc;
 }
 /*------------------------------------------------------------------
+[2. Operations Bar ] 
+*/
+.navbar {
+    background-color: #000;
+    border-radius: 0;
+    border-bottom: 2px solid #000;
+    color: #fff;
+    overflow: visible;
+    opacity: 0.85;
+    padding: 0;
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+    z-index: 2000;
+}
+
+.navbar a {
+    float: left;
+    font-size: 1em;
+    color: #fff;
+    text-align: center;
+    padding: 0.25em 1em;
+    text-decoration: none;
+}
+.navbar .navitem { display: inline-block; font-size: 1.125em; margin-right: 1em; padding: 0.6em 1em 0; }
+.navbar .messages { display: inline-block; float: right; overflow: hidden; }
+.navbar .messages button { background: transparent; border: 0; font-size: 1.5em; overflow: visible; padding: 0.25em 1em; }
+.navbar .messages button .notification { background: #f00; border-radius: 1em; border: 1px solid #000; font-size: 0.5em; font-weight: bold; margin-left: -1em; padding: 0.25em 0.667em 0.333em 0.5em; z-index: 5; }
+.navbar .dropdown { float: right; overflow: hidden; }
+.navbar .dropdown .dropbtn { background: transparent; border: 0; color: #fff; font-size: 1em; outline: none; padding: 0.25em 1em; margin: 0; }
+.navbar .dropdown .dropbtn .hello { display: inline-block; font-size: 1.125em; margin-right: 1em; padding: 0.333em 0 0; }
+.navbar .dropdown .dropbtn .avatar { border-radius: 2.5em; max-height: 2.5em; max-width: 2.5em; }
+.dropdown-content { background-color: #f9f9f9; box-shadow: 0 0.25em 0.5em 0 rgba(0,0,0,0.2); min-width: 8em; position: absolute; right: 0; z-index: 1; }
+.dropdown-content a { color: #000; display: block; float: none; padding: 0.5em 1em; text-decoration: none; text-align: right; }
+.dropdown-content a:hover { background-color: #ddd; }
+.navbar .dropdown:hover, .navbar .dropdown-content { display: block; overflow: visible; }
+.nav-spacer { display: block; padding: 0; min-height: 3em; }
+
+/*------------------------------------------------------------------
 [2. Header ] 
 */
 .page-header {
@@ -637,8 +677,11 @@ blockquote::before {
   padding: 20px 0px;
   line-height: 28px;
 }
-.single-post__content p {
-  margin-bottom: 20px;
+.single-post__content p { margin-bottom: 20px; }
+.single-post__content img {
+    border: 1px solid #ccc;
+    padding: 0.25em;
+    max-width: 100%;
 }
 .single-post__content a {
   font-weight: bold;
@@ -1161,14 +1204,16 @@ single-post__footer-tags-list .newpost-tags {
   -o-transition: all 0.2s ease-in-out;
 }
 .single-post__contact input[type="text"],
-.single-post__contact input[type="email"] {
+.single-post__contact input[type="email"],
+.single-post__contact input[type="password"] {
   width: 50%;
   height: 45px;
   padding: 0 14px;
   border: 1px solid #dcdcdc;
 }
 .single-post__contact input[type="text"]:focus,
-.single-post__contact input[type="email"]:focus {
+.single-post__contact input[type="email"]:focus,
+.single-post__contact input[type="password"]:focus {
   outline: 0;
   border: 1px solid #262626;
   transition: all 0.2s ease-in-out;

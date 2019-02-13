@@ -3,6 +3,8 @@
 .htaccess
 *.token
 *.data
+*.inc
 *.log
 *.tmp
+jason_fox_box.jpg
 config.php

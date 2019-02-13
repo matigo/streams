@@ -26,11 +26,12 @@
         <meta name="Robots" content="index, follow" />
 
         <link rel="shortcut icon" href="[IMG_DIR]/favicon.png">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Quicksand">
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/style.css?ver=[CSS_VER]">
     </head>
-    <body>
+    <body>[SITE_OPSBAR]
         <svg style="display: none;">
             <symbol viewBox="0 0 512 512" id="ios-search">
                 <path d="M448.3,424.7L335,311.3c20.8-26,33.3-59.1,33.3-95.1c0-84.1-68.1-152.2-152-152.2c-84,0-152,68.2-152,152.2
@@ -50,7 +51,7 @@
                 </g>
             </symbol>
         </svg>
-        <header class="container  page-header">
+        <header class="container page-header">
             <div class="page-header__logo">
                 <div class="logo">
                     <h1><a class="logo__link" href="[HOMEURL]">[SITE_NAME]</a></h1>
@@ -154,7 +155,9 @@
                 <div class="col-md-8 col-sm-8 page-footer__bottom-copyright">
                     <p>2018 © &mdash; Site Powered by Strong Coffee &amp; Pictures of Happy Puppies</p>
                 </div>
-                <div class="col-md-4 col-sm-4 page-footer__bottom-social">&nbsp;</div>
+                <div class="col-md-4 col-sm-4 page-footer__bottom-social text-right">
+                    <p><a href="[HOMEURL]/login" title="">[lblLogin]</a></p>
+                </div>
             </div>
         </footer>
         <div class="search-popup">

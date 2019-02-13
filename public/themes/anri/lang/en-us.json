@@ -17,7 +17,26 @@
     "lblContactMail": "Email",
     "lblContactMessage": "Message",
 
+    "lblLogin": "Login",
+    "lblLoginRetry": "Try Again?",
+    "lblLoginName": "Account ID",
+    "lblLoginPass": "Password",
+    "btnLoginSubmit": "Login",
+    "btnLoginRetry": "Try Again",
+
+    "lbl403": "403 Access Denied",
+    "lbl404": "404 Page Not Found",
+
+    "lblHello": "Hello",
+    "navNewPost": "Write New Item",
+    "navProfile": "Profile",
+    "navLogout": "Logout",
+
     "lblContactThankYou": "Thank you for getting in touch!",
+    "msgLoginNote": "Enter your account credentials here to sign into this website. Don&apos;t have an account? You can <a href=\"https://10centuries.org\" title=\"10Centuries\">create one here</a>.",
+    "msgLoginNoDice": "Either the login name or the password you provided isn&apos;t quite right. Please try again.",
+    "msg403Result": "Sorry, but you need to be signed in to use this page.",
+    "msg404Result": "Sorry! The requested page could not be found or it is currently unavailable.",
     "msgMissingValue": "This Is Missing",
     "msgMissingPass": "Please Set a Really Good Password",
     "msgMissingText": "Please Enter Some Text to Encrypt",

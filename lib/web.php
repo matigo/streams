@@ -65,6 +65,35 @@ class Route extends Streams {
                 $data['do_redirect'] = true;
             }
 
+            // Are We Signed In and Accessing Something That Requires Being Signed In?
+            if ( $this->settings['_logged_in'] ) {
+                switch ( strtolower($this->settings['PgRoot']) ) {
+                    case 'signout':
+                    case 'logout':
+                        require_once(LIB_DIR . '/auth.php');
+                        $auth = new Auth($this->settings);
+                        $sOK = $auth->performLogout();
+                        unset($auth);
+
+                        $this->settings['remember'] = false;
+                        $data['do_redirect'] = true;
+                        break;
+
+                    default:
+                        /* Do Nothing Here */
+                }
+            }
+
+            // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
+            if ( $this->settings['_logged_in'] === false ) {
+                $checks = array('new');
+                $route = strtolower($this->settings['PgRoot']);
+
+                if ( in_array($route, $checks) ) {
+                    redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
+                }
+            }
+
             // Is There a Language Change Request?
             if ( strtolower(NoNull($this->settings['PgRoot'])) == 'lang' ) {
                 $val = NoNull($this->settings['PgSub1'], $this->settings['_language_code']);
@@ -134,7 +163,9 @@ class Route extends Streams {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
-                    $ReplStr = array( '[GenTime]' => $this->_getRunTime() );
+                    $ReplStr = array( '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                                      '[GenTime]'      => $this->_getRunTime(),
+                                     );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
                 }
             }
@@ -376,6 +407,37 @@ class Route extends Streams {
     }
 
     /**
+     *  Function Returns the 10C Ops Bar for a Site (if available) so long as the
+     *      current person has a valid Authentication Token
+     */
+    private function _getSiteOpsBar( $data ) {
+        $OpsBarFile = THEME_DIR . '/' . $data['location'] . '/resources/nav-opsbar.html';
+
+        if ( $this->settings['_logged_in'] ) {
+            if ( file_exists( $OpsBarFile ) ) {
+                $SiteUrl = NoNull($this->settings['HomeURL']);
+                $ReplStr = array( '[AVATAR_IMG]'    => $SiteUrl . '/avatars/' . NoNull($this->settings['_avatar_file'], 'default.png'),
+                                  '[DISPLAY_NAME]'  => NoNull($this->settings['_display_name']),
+                                  '[PERSONA_GUID]'  => NoNull($this->settings['_persona_guid']),
+                                  '[STORAGE_TOTAL]' => nullInt($this->settings['_storage_total']),
+                                  '[STORAGE_USED]'  => nullInt($this->settings['_storage_used']),
+                                  '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
+                                 );
+                if ( is_array($this->strings) ) {
+                    foreach ( $this->strings as $key=>$val ) {
+                        $ReplStr["[$key]"] = $val;
+                    }
+                }
+
+                return readResource( $OpsBarFile, $ReplStr );
+            }
+        }
+
+        // If We're Here, There's Nothing
+        return '';
+    }
+
+    /**
      *  Function Collects the Navigation Bar for the Site
      */
     private function _getSiteNav( $data ) {
@@ -442,6 +504,7 @@ class Route extends Streams {
 
                        '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
                        '[CLIENT_GUID]'  => NoNull($data['client_guid']),
+                       '[PERSONA_GUID]' => NoNull($this->settings[_persona_guid]),
                        '[TOKEN]'        => ((YNBool($this->settings['_logged_in'])) ? NoNull($this->settings['token']) : ''),
 
                        '[SITE_URL]'     => $this->settings['HomeURL'],
@@ -458,6 +521,7 @@ class Route extends Streams {
                        '[BANNER_IMG]'   => $banner_img,
                        '[AUTHOR_TOOLS]' => $this->_getAuthoringTools($data),
                        '[SETTINGS]'     => $this->_getSettingsPanel($data),
+                       '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
                        '[PREFERENCES]'  => $this->_getPreferencesPanel($data),
                        '[PAGINATION]'   => $this->_getPagination($data),
                       );

@@ -966,8 +966,10 @@
     function doSQLQuery( $sqlStr, $params = array(), $dbname = DB_NAME ) {
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $GLOBALS['Perf']['queries']++;
+        $qstart = getMicroTime();
         $result = false;
         $rVal = array();
+        $didx = 0;
         $r = 0;
 
         // Do Not Proceed If We Don't Have SQL Settings
@@ -985,7 +987,23 @@
 		}
 
 		// If We Have a Good Connection, Go!
-		if ( $mysql_db ) { $result = mysqli_query($mysql_db, $sqlStr); }
+		if ( $mysql_db ) {
+            // If We're In Debug, Capture the SQL Query
+            if ( defined('DEBUG_ENABLED') ) {
+                if ( DEBUG_ENABLED == 1 ) {
+                    if ( array_key_exists('debug', $GLOBALS) === false ) {
+                        $GLOBALS['debug'] = array();
+                        $GLOBALS['debug']['queries'] = array();
+                    }
+                    $didx = COUNT($GLOBALS['debug']['queries']);
+                    $GLOBALS['debug']['queries'][$didx] = array( 'query' => $sqlStr,
+                                                                 'time'  => 0
+                                                                );
+                }
+            }
+
+            $result = mysqli_query($mysql_db, $sqlStr);
+        }
 
         // Parse the Result If We Have One
         if ( $result ) {
@@ -1000,6 +1018,17 @@
 
             // Close the MySQL Connection
             mysqli_free_result($result);
+
+            // Record the Ops Time (if required)
+            if ( defined('DEBUG_ENABLED') ) {
+                if ( DEBUG_ENABLED == 1 ) {
+                    $quntil = getMicroTime();
+                    $ops = round(($quntil - $qstart), 6);
+                    if ( $ops < 0 ) { $ops *= -1; }
+
+                    $GLOBALS['debug']['queries'][$didx]['time'] = $ops;
+                }
+            }
 
         } else {
             writeNote("doSQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
@@ -1592,6 +1621,15 @@
         $sqlStr = readResource(SQL_DIR . '/system/setUsageStat.sql', $ReplStr, true);
         $isOK = doSQLExecute($sqlStr);
 
+        if ( defined('DEBUG_ENABLED') ) {
+            if ( DEBUG_ENABLED == 1 ) {
+                if ( is_array($GLOBALS['debug']) ) {
+                    $json = json_encode($GLOBALS['debug'], JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                    writeDebug($json, 'sqlops');
+                }
+            }
+        }
+
         // Return the [UsageStats].[id] Value
         return $isOK;
     }
@@ -1619,7 +1657,7 @@
                                    'data' => $data
                                   );
                     if ( $more !== false ) { $json['meta']['more'] = YNBool($more); }
-                    $data = json_encode($json);
+                    $data = json_encode($json, JSON_UNESCAPED_UNICODE);
                     break;
 
                 default:
@@ -1896,6 +1934,7 @@
      *			  be updated to follow the user's time zone.
      */
 	function writeNote( $Message, $doOverride = false ) {
+        if ( defined('DEBUG_ENABLED') === false ) { return; }
         if ( DEBUG_ENABLED != 0 || $doOverride === true ) {
             date_default_timezone_set(TIMEZONE);
       		$ima = time();
@@ -1909,6 +1948,22 @@
     		fclose($fh);
         }
 	}
+
+    function writeDebug( $text, $prefix = 'debug' ) {
+        if ( defined('DEBUG_ENABLED') === false ) { return; }
+        if ( DEBUG_ENABLED != 0 ) {
+            if ( defined('TIMEZONE') === false ) { define('TIMEZONE', 'UTC'); }
+
+            date_default_timezone_set(TIMEZONE);
+            $ima = time();
+            $log_file = LOG_DIR . "/$prefix-$ima.log";
+
+            $fh = fopen($log_file, 'a');
+            $stringData = NoNull($text);
+            fwrite($fh, $stringData);
+            fclose($fh);
+        }
+    }
 
     /**
      * Function formats the Error Message for {Procedure} - Error and Returns it

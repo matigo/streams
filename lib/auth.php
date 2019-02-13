@@ -40,9 +40,11 @@ class Auth {
     private function _getBaseArray( $Items ) {
         $this->settings = array( 'HomeURL' => str_replace(array('https://', 'http://'), '', $Items['HomeURL']) );
         $ChannelGuid = NoNull($Items['channel_guid'], $Items['channel-guid']);
-        $ClientGuid = NoNull($Items['client_guid'], $Items['client_id']);
-        $Name = NoNull($Items['account_name'], $Items['acctname']);
-        $Pass = NoNull($Items['account_pass'], $Items['acctpass']);
+        $ClientGuid = NoNull($Items['client_guid'], NoNull($Items['client-guid'], $Items['client_id']));
+        $Name = NoNull($Items['account_name'], NoNull($Items['account-name'], $Items['acctname']));
+        $Pass = NoNull($Items['account_pass'], NoNull($Items['account-pass'], $Items['acctpass']));
+        $isWebReq = NoNull($Items['web_req'], NoNull($Items['web-req'], $Items['webreq']));
+        $isHTTPS = ( strpos($Items['HomeURL'], 'https://') !== false ? true : false);
         $data = $this->_getTokenData($Items['token']);
 
         return array( 'is_valid'     => ((is_array($data)) ? $data['_logged_in'] : false),
@@ -53,11 +55,13 @@ class Auth {
                       'client_guid'  => NoNull($ClientGuid),
                       'channel_guid' => NoNull($ChannelGuid),
                       'theme'        => 'default',
+                      'webreq'       => NoNull($isWebReq, 'N'),
 
                       'HomeURL'      => str_replace(array('https://', 'http://'), '', $Items['HomeURL']),
                       'ReqType'      => $Items['ReqType'],
                       'PgRoot'       => $Items['PgRoot'],
                       'PgSub1'       => $Items['PgSub1'],
+                      'https'        => $isHTTPS,
                      );
     }
 
@@ -292,6 +296,7 @@ class Auth {
         $ChanGUID = sqlScrub($this->settings['channel_guid']);
         $AcctName = sqlScrub($this->settings['account_name']);
         $AcctPass = sqlScrub($this->settings['account_pass']);
+        $isWebReq = YNBool(NoNull($this->settings['webreq']));
         $LangCd = DEFAULT_LANG;
         $Token = false;
         $rVal = false;
@@ -324,14 +329,29 @@ class Auth {
             }
         }
 
-        // Return the Token String or an Unhappy Array
-        if ( is_string($Token) ) {
-            return array( 'token'   => $Token,
-                          'lang_cd' => strtolower($LangCd),
-                         );
+        // Is this a Web Request? If So, Treat It As Such
+        if ( $isWebReq ) {
+            $url = (($this->settings['https']) ? 'https' : 'http') . '://' . $this->settings['HomeURL'];
+
+            if ( is_string($Token) ) {
+                $url .= "/validatetoken?token=$Token";
+            } else {
+                $url .= "/nodice";
+            }
+            redirectTo($url);
+            return false;
+
         } else {
-            $this->_setMetaMessage("Unrecognised Credentials", 400);
-            return array();
+
+            /* API Response */
+            if ( is_string($Token) ) {
+                return array( 'token'   => $Token,
+                              'lang_cd' => strtolower($LangCd),
+                             );
+            } else {
+                $this->_setMetaMessage("Unrecognised Credentials", 400);
+                return array();
+            }
         }
     }
 
