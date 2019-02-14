@@ -48,6 +48,7 @@ SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`, MAX(tmp.`is_exact`) as `ex
                                   ELSE 'N' END
                    and 'Y' = CASE WHEN '[CANON_URL]' = '' THEN 'Y'
                                   WHEN po.`canonical_url` LIKE '/[PGROOT]/%' THEN 'Y'
+                                  WHEN '[OBJECT]' IN ('article', 'quotation', 'bookmark', 'note') AND po.`type` = LEFT('post.[OBJECT]', 64) THEN 'Y'
                                   ELSE 'N' END
                    and '[PGROOT]' IN ('', 'note', 'article', 'bookmark', 'quotation')
                  ORDER BY po.`publish_at` DESC) pg

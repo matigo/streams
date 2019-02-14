@@ -3,7 +3,8 @@ SELECT pg.`post_id`, pg.`publish_at`
                     WHEN po.`privacy_type` = 'visibility.none' AND pa.`account_id` <> [ACCOUNT_ID] THEN 'N'
                     WHEN po.`privacy_type` <> 'visibility.public' THEN IFNULL(tmp.`can_read`, 'N')
                     ELSE 'Y' END as `is_visible`,
-               CASE WHEN po.`type` = 'post.note' THEN vis.`show_note`
+               CASE WHEN po.`canonical_url` = '[CANON_URL]' THEN 'Y'
+                    WHEN po.`type` = 'post.note' THEN vis.`show_note`
                     WHEN po.`type` = 'post.article' THEN vis.`show_article`
                     WHEN po.`type` = 'post.bookmark' THEN vis.`show_bookmark`
                     WHEN po.`type` = 'post.quotation' THEN vis.`show_quotation`
@@ -13,13 +14,17 @@ SELECT pg.`post_id`, pg.`publish_at`
                          INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                          INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                          INNER JOIN (SELECT sm.`site_id`, 0 as `sort_id`,
-                                            CASE WHEN MAX(CASE WHEN sm.`key` = 'show_note' THEN sm.`value` ELSE '-' END) <> '-'
+                                            CASE WHEN '[OBJECT]' = 'note' THEN 'Y'
+                                                 WHEN MAX(CASE WHEN sm.`key` = 'show_note' THEN sm.`value` ELSE '-' END) <> '-'
                                                  THEN MAX(CASE WHEN sm.`key` = 'show_note' THEN sm.`value` ELSE '-' END) ELSE 'Y' END as `show_note`,
-                                            CASE WHEN MAX(CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE '-' END) <> '-'
+                                            CASE WHEN '[OBJECT]' = 'article' THEN 'Y'
+                                                 WHEN MAX(CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE '-' END) <> '-'
                                                  THEN MAX(CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE '-' END) ELSE 'Y' END as `show_article`,
-                                            CASE WHEN MAX(CASE WHEN sm.`key` = 'show_bookmark' THEN sm.`value` ELSE '-' END) <> '-'
+                                            CASE WHEN '[OBJECT]' = 'bookmark' THEN 'Y'
+                                                 WHEN MAX(CASE WHEN sm.`key` = 'show_bookmark' THEN sm.`value` ELSE '-' END) <> '-'
                                                  THEN MAX(CASE WHEN sm.`key` = 'show_bookmark' THEN sm.`value` ELSE '-' END) ELSE 'Y' END as `show_bookmark`,
-                                            CASE WHEN MAX(CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE '-' END) <> '-'
+                                            CASE WHEN '[OBJECT]' = 'quotation' THEN 'Y'
+                                                 WHEN MAX(CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE '-' END) <> '-'
                                                  THEN MAX(CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE '-' END) ELSE 'Y' END as `show_quotation`
                                        FROM `SiteMeta` sm INNER JOIN `Site` z ON sm.`site_id` = z.`id`
                                       WHERE sm.`is_deleted` = 'N' and z.`is_deleted` = 'N' and z.`guid` = '[SITE_GUID]'
@@ -42,6 +47,7 @@ SELECT pg.`post_id`, pg.`publish_at`
                           ELSE 'N' END
            and 'Y' = CASE WHEN '[CANON_URL]' = '' THEN 'Y'
                           WHEN po.`canonical_url` = '[CANON_URL]' THEN 'Y'
+                          WHEN '[OBJECT]' IN ('article', 'quotation', 'bookmark', 'note') AND po.`type` = LEFT('post.[OBJECT]', 64) THEN 'Y'
                           ELSE 'N' END
          ORDER BY po.`publish_at` DESC) pg
  WHERE pg.`is_visible` = 'Y' and pg.`aux_visible` = 'Y'

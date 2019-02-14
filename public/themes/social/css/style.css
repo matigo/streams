@@ -212,6 +212,7 @@ blockquote {
 .content p { margin: 0.5em 0 0; }
 .content p .account {
     color: #551a8b;
+    cursor: pointer;
     font-weight: bold;
 }
 .content p a { color: #551a8b; }
@@ -235,6 +236,7 @@ blockquote {
 }
 .content-author img {
     background-image: url('../../../avatars/default.png');
+    cursor: pointer;
     width: 100%;
 }
 .content-area {
@@ -254,6 +256,7 @@ blockquote {
     padding: 0.5em 0 0.25em 1em !important;
 }
 .content-area .full-wide {
+    cursor: pointer;
     display: block;
     width: 100%;
 }

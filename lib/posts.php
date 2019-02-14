@@ -1120,13 +1120,9 @@ class Posts {
                 if ( $html != '' ) { $html .= "\r\n"; }
                 $html .= tabSpace(4) . '<div class="col-lg-4 col-md-4 col-sm-4">' . "\r\n" .
                          tabSpace(5) . '<div class="page-footer__recent-post">' . "\r\n" .
-                         tabSpace(6) . '<div class="page-footer__recent-post-info">' . "\r\n" .
-                         tabSpace(7) . '<div class="page-footer__recent-post-content">' . "\r\n" .
-                         tabSpace(8) . '<a href="' . $SiteUrl . NoNull($Row['canonical_url']) . '">' . NoNull($Row['title']) . '</a>' . "\r\n" .
-                         tabSpace(7) . '</div>' . "\r\n" .
-                         tabSpace(7) . '<div class="page-footer__recent-post-date">' . "\r\n" .
-                         tabSpace(8) . '<span class="dt-published" datetime="' . $PublishAt . '" data-dateunix="' . strtotime($Row['publish_at']) . '">' . NoNull($PublishAt, $Row['publish_at']) . '</span>' . "\r\n" .
-                         tabSpace(7) . '</div>' . "\r\n" .
+                         tabSpace(6) . '<a href="' . $SiteUrl . NoNull($Row['canonical_url']) . '" data-views="' . nullInt($Row['hits']) . '">' . NoNull($Row['title'], $Row['type']) . '</a>' . "\r\n" .
+                         tabSpace(6) . '<div class="page-footer__recent-post-date">' . "\r\n" .
+                         tabSpace(7) . '<span class="dt-published" datetime="' . $PublishAt . '" data-dateunix="' . strtotime($Row['publish_at']) . '">' . NoNull($PublishAt, $Row['publish_at']) . '</span>' . "\r\n" .
                          tabSpace(6) . '</div>' . "\r\n" .
                          tabSpace(5) . '</div>' . "\r\n" .
                          tabSpace(4) . '</div>';
@@ -1166,12 +1162,14 @@ class Posts {
         if ( defined('ENABLE_CACHING') === false ) { define('ENABLE_CACHING', 0); }
         if ( nullInt(ENABLE_CACHING) == 1 ) { $html = readCache($this->settings['site_id'], $CacheFile); }
         if ( $html !== false && $html != '' ) { return $html; }
+        $tObj = strtolower(str_replace('/', '', $CanonURL));
 
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[SITE_GUID]'  => sqlScrub($data['site_guid']),
                           '[CANON_URL]'  => sqlScrub($CanonURL),
                           '[PGROOT]'     => sqlScrub($PgRoot),
+                          '[OBJECT]'     => sqlScrub($tObj),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getPagePagination.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
@@ -1193,6 +1191,7 @@ class Posts {
             // If the Maximum Page is Greater Than 1, Build a Pagination Matrix
             if ( $max > 1 ) {
                 $SiteUrl = NoNull($this->settings['HomeURL']);
+                if ( $PgRoot == $tObj ) { $SiteUrl .= "/$PgRoot"; }
                 if ( $Page <= 0 ) { $Page = 1; }
                 $cnt = 1;
 
@@ -1279,6 +1278,7 @@ class Posts {
         $Page = $this->_getPageNumber() * $Count;
         $CanonURL = $this->_getCanonicalURL();
         $TagKey = $this->_getTagKey();
+        $tObj = strtolower(str_replace('/', '', $CanonURL));
 
         // If We're Writing a New Post, Return a Different Set of Data
         if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
@@ -1290,6 +1290,7 @@ class Posts {
                           '[SITE_GUID]'  => sqlScrub($data['site_guid']),
                           '[CANON_URL]'  => sqlScrub($CanonURL),
                           '[TAG_KEY]'    => sqlScrub($TagKey),
+                          '[OBJECT]'     => sqlScrub($tObj),
                           '[COUNT]'      => nullInt($Count),
                           '[PAGE]'       => nullInt($Page),
                          );
@@ -1399,6 +1400,17 @@ class Posts {
                 }
             }
 
+            $SourceIcon = '';
+            if ( array_key_exists('meta', $post) && is_array($post['meta']) ) {
+                if ( array_key_exists('source', $post['meta']) && is_array($post['meta']['source']) ) {
+                    $ico = strtolower(NoNull($post['meta']['source']['network']));
+                    if ( $ico == 'App.Net' ) { $ico = 'adn'; }
+                    if ( in_array($ico, array('adn', 'twitter')) ) {
+                        $SourceIcon = '<i class="fa fa-' . strtolower(NoNull($post['meta']['source']['network'])) . '"></i>';
+                    }
+                }
+            }
+
             $ReplStr = array( '[POST_GUID]'     => NoNull($post['guid']),
                               '[POST_TYPE]'     => NoNull($post['type']),
                               '[POST_CLASS]'    => $postClass,
@@ -1415,6 +1427,8 @@ class Posts {
                               '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
                               '[GEOTAG]'        => $geoLine,
                               '[THREAD]'        => $PostThread,
+                              '[SOURCE_NETWORK]'=> NoNull($post['meta']['source']['network']),
+                              '[SOURCE_ICON]'   => $SourceIcon,
                               '[PUBLISH_AT]'    => NoNull($post['publish_at']),
                               '[PUBLISH_UNIX]'  => nullInt($post['publish_unix']),
                               '[UPDATED_AT]'    => NoNull($post['updated_at']),

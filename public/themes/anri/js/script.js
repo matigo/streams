@@ -137,12 +137,14 @@ function updatePostTimestamps() {
     for ( var i = 0; i < els.length; i++ ) {
         var _cnt = parseInt(els[i].getAttribute('data-thread-count'));
         var _ts = parseInt(els[i].getAttribute('data-dateunix'));
+        var _note = NoNull(els[i].getAttribute('data-note'), 'N');
+        var _fmt = 'dddd MMMM Do YYYY';
 
         if ( _cnt === undefined || _cnt === null || isNaN(_cnt) ) { _cnt = 0; }
+        if ( moment(_ts * 1000).isSame(today, 'day') ) { _fmt = 'h:mm a'; } else { if ( _note == 'Y' ) { _fmt = 'dddd MMMM Do YYYY h:mm a'; } }
 
         if ( isNaN(_ts) === false ) {
-            els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fas fa-comments"></i> ' : '') +
-                               ((moment(_ts * 1000).isSame(today, 'day') ) ? moment(_ts * 1000).format('h:mm a') : moment(_ts * 1000).format('dddd MMMM Do YYYY'));
+            els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fa fa-comments"></i> ' : '') + moment(_ts * 1000).format(_fmt);
         }
     }
 }
