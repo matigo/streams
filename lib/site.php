@@ -338,6 +338,7 @@ class Site {
         // Perform Some Basic Error Checking
         if ( NoNull($this->settings['channel_guid'], $this->settings['channel-guid']) == '' ) { $this->_setMetaMessage("Invalid Channel GUID Supplied", 400); }
         if ( NoNull($this->settings['site_name'], $this->settings['site-name']) == '' ) { $this->_setMetaMessage("Invalid Site Name Supplied", 400); }
+        $isWebReq = YNBool(NoNull($this->settings['web-req'], $this->settings['webreq']));
 
         // Get a Site.ID Value
         $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub(NoNull($this->settings['channel_guid'], $this->settings['channel-guid'])),
@@ -359,7 +360,12 @@ class Site {
             $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr) . SQL_SPLITTER .
                       readResource(SQL_DIR . '/site/setSiteGeoVisibility.sql', $ReplStr);
             $isOK = doSQLExecute($sqlStr);
+        } else {
+            if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
         }
+
+        // If This is a Web Request, Redirect the Visitor
+        if ( $isWebReq ) { redirectTo($this->settings['HomeURL']); }
 
         // Get the Updated Information
         $rVal = $this->_getSiteData();

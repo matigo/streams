@@ -118,7 +118,7 @@
      *  Value Passed
      */
     function YNBool( $Val ) {
-        $valids = array( 'yes', 'y', '1', 1 );
+        $valids = array( 'yes', 'y', 'on', '1', 1 );
         return in_array(strtolower($Val), $valids);
     }
 

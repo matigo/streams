@@ -338,8 +338,9 @@ class cookies {
      */
     private function _saveCookies( $cookieVals, $fullDomain = true ) {
         if (!headers_sent()) {
+            $cookieVals['remember'] = BoolYN(YNBool(NoNull($cookieVals['remember'], 'N')));
             $valids = array( 'token', 'DispLang', 'remember', 'invite' );
-            $longer = array( 'token' );
+            $longer = array( 'DispLang' );
             $domain = strtolower($_SERVER['SERVER_NAME']);
 
             if ( $fullDomain !== false ) { $fullDomain = true; }
@@ -358,7 +359,7 @@ class cookies {
             foreach( $cookieVals as $key=>$val ) {
                 if( in_array($key, $valids) ) {
                     $LifeSpan = time() + COOKIE_EXPY;
-                    if( $RememberMe ) { $LifeSpan = time() + 3600 * 24 * 60; }
+                    if( $RememberMe ) { $LifeSpan = time() + 3600 * 24 * 30; }
                     if ( in_array($item, $longer) ) { $LifeSpan = time() + 3600 * 24 * 365; }
 
                     setcookie( $key, "$val", $LifeSpan, "/", NoNull($domain, strtolower($_SERVER['SERVER_NAME'])) );

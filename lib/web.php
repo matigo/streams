@@ -36,6 +36,8 @@ class Route extends Streams {
         // Collect the Site Data - Redirect if Invalid
         $data = $this->site->getSiteData();
         if ( is_array($data) ) {
+            $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
+
             // Set some of the Globals
             $GLOBALS['site_id'] = $data['site_id'];
 
@@ -70,6 +72,8 @@ class Route extends Streams {
                 switch ( strtolower($this->settings['PgRoot']) ) {
                     case 'signout':
                     case 'logout':
+                        $RedirectURL = NoNull($_SERVER['HTTP_REFERER'], $data['protocol'] . '://' . $data['HomeURL']);
+
                         require_once(LIB_DIR . '/auth.php');
                         $auth = new Auth($this->settings);
                         $sOK = $auth->performLogout();
@@ -86,7 +90,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('new');
+                $checks = array('new', 'settings');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
@@ -115,7 +119,7 @@ class Route extends Streams {
 
             // Perform the Redirect if Necessary
             $suffix = ( YNBool($this->settings['remember']) ) ? '?remember=Y' : '';
-            if ( $data['do_redirect'] ) { redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . $suffix ); }
+            if ( $data['do_redirect'] ) { redirectTo( $RedirectURL . $suffix ); }
 
             // Load the Requested HTML Content
             $html = $this->_getPageHTML( $data );
@@ -166,6 +170,7 @@ class Route extends Streams {
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
                     $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
+                                      '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
                                       '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
                                       '[GenTime]'      => $this->_getRunTime(),
                                      );
@@ -512,7 +517,7 @@ class Route extends Streams {
 
                        '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
                        '[CLIENT_GUID]'  => NoNull($data['client_guid']),
-                       '[PERSONA_GUID]' => NoNull($this->settings[_persona_guid]),
+                       '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
                        '[TOKEN]'        => ((YNBool($this->settings['_logged_in'])) ? NoNull($this->settings['token']) : ''),
 
                        '[SITE_URL]'     => $this->settings['HomeURL'],
@@ -524,6 +529,11 @@ class Route extends Streams {
                        '[META_DOMAIN]'  => NoNull($data['HomeURL']),
                        '[META_TYPE]'    => NoNull($data['page_type'], 'website'),
                        '[META_DESCR]'   => NoNull($data['description']),
+                       '[SITE_NOTE]'    => $this->_checkboxValue($data, 'show_note'),
+                       '[SITE_ARTICLE]' => $this->_checkboxValue($data, 'show_article'),
+                       '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
+                       '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
+                       '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
                        '[ACCESS_LEVEL]' => NoNull($this->settings['_access_level'], 'read'),
                        '[BANNER_IMG]'   => $banner_img,
@@ -537,6 +547,16 @@ class Route extends Streams {
 
         // Return the Strings
         return $rVal;
+    }
+
+    /**
+     *  Function Checks the Array and Returns an HTML Value based on what it sees
+     */
+    private function _checkboxValue($data, $item) {
+        $enabled = YNBool(BoolYN($data[$item]));
+
+        if ( $enabled ) { return ' checked'; }
+        return '';
     }
 
     private function _getPopularPosts() {

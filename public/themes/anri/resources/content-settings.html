@@ -1,0 +1,71 @@
+                <div class="col-lg-12 col-md-12">
+                    <div class="single-post single-post--fullsize">
+                        <div class="single-post__title  single-post__title--contact">
+                            <h2>[lblSettings]</h2>
+                        </div>
+                        <div class="single-post__content  single-post__content--contact">
+                            <p>[lblSettingsDescr]</p>
+                        </div>
+                        <div class="single-post__contact">
+                            <form action="[HOMEURL]/api/site" method="POST">
+                                <p class="single-post__site-name">
+                                    <label for="site-name">[lblSettingsSiteName]</label>
+                                    <input id="site-name" type="text" class="fullwide" name="site-name" size="30" aria-required="true" value="[SITE_NAME]" required>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label for="site-descr">[lblSettingsSiteDescr]</label>
+                                    <input id="site-descr" type="text" class="fullwide" name="site-descr" size="30" aria-required="true" value="[SITEDESCR]" required>
+                                </p>
+                                <p class="single-post__site-keys">
+                                    <label for="site-keys">[lblSettingsSiteKeys]</label>
+                                    <input id="site-keys" type="text" class="fullwide" name="site-keys" size="30" aria-required="true" value="[SITEKEYWD]" required>
+                                </p>
+
+                                <h4>[lblSettingsS2]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowNote]</strong>
+                                    <label class="switch">
+                                        <input id="show-note" type="checkbox" name="show-note"[SITE_NOTE]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowArticle]</strong>
+                                    <label class="switch">
+                                        <input id="show-article" type="checkbox" name="show-article"[SITE_ARTICLE]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowBookmark]</strong>
+                                    <label class="switch">
+                                        <input id="show-bookmark" type="checkbox" name="show-bookmark"[SITE_BMARKS]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowQuotation]</strong>
+                                    <label class="switch">
+                                        <input id="show-quotation" type="checkbox" name="show-quotation"[SITE_QUOTES]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+
+                                <h4>[lblSettingsS3]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowGeo]</strong>
+                                    <label class="switch">
+                                        <input id="show-geo" type="checkbox" name="show-geo"[SITE_GEO]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__contact-submit">
+                                    <input id="contact-submit" type="submit" name="contact-submit" size="30" value="[btnSettingsSave]">
+                                    <input type="hidden" name="channel_guid" value="[CHANNEL_GUID]">
+                                    <input type="hidden" name="web-req" value="Y">
+                                </p>
+                                <p>&nbsp;</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>

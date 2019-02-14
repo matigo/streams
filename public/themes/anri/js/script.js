@@ -78,6 +78,10 @@ function getMetaValue( name ) {
  ** ************************************************************************* */
 (function($) {
     'use strict';
+    window.KEY_DOWNARROW = 40;
+    window.KEY_ESCAPE = 27;
+    window.KEY_ENTER = 13;
+    window.KEY_N = 78;
 
     var navSearch = $('.main-nav__search');
     var popupSearch = $('.search-popup');
@@ -97,6 +101,12 @@ function getMetaValue( name ) {
         nav.removeClass('main-nav--mobile');
         contentOverlay.removeClass('content-overlay--active');
     });
+
+    $("#content").keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
+    $('.publish').click(function() { publishPost(); });
+    $('#source-url').on('input', function() { checkSourceUrl(); });
+    $('.btn-geo').click(function() { getGeoLocation(this); });
+
 })(jQuery);
 
 document.onreadystatechange = function () {
@@ -104,12 +114,37 @@ document.onreadystatechange = function () {
         updatePostTimestamps();
         updateContentHeight();
         updatePostBanners();
+        prepNewPost();
     }
 }
 
 /** ************************************************************************* *
  *  Common Functions
  ** ************************************************************************* */
+function disableForm() {
+    var els = document.getElementsByTagName('INPUT');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].disabled = true;
+            if ( els[i].type == 'submit' ) {
+                els[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+            }
+        }
+    }
+}
+function prepNewPost() {
+    var els = document.getElementsByName('fdata');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _name = NoNull(els[i].getAttribute('data-name'));
+            switch ( _name ) {
+                case 'publish_at':
+                    els[i].value = moment().format('MMMM Do YYYY h:mm a');
+                    break;
+            }
+        }
+    }
+}
 function updateContentHeight(el) {
     if ( el === undefined || el === false || el === null ) {
         var els = document.getElementsByClassName('newpost-content');
@@ -119,6 +154,30 @@ function updateContentHeight(el) {
 
     el.style.height = '1px';
     el.style.height = (25 + el.scrollHeight) + 'px';
+    updatePublishPostButton();
+}
+function updatePublishPostButton() {
+    var els = document.getElementsByClassName('newpost-content');
+    var _isBlank = true;
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _txt = NoNull(els[i].value);
+            if ( _txt != '' ) { _isBlank = false; }
+        }
+    }
+    var els = document.getElementsByClassName('publish');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _isBlank ) {
+            if ( els[i].classList.contains('btn-primary') ) {
+                els[i].classList.remove('btn-primary');
+            }
+        } else {
+            if ( els[i].classList.contains('btn-primary') === false ) {
+                els[i].classList.add('btn-primary');
+            }
+        }
+        if ( els[i].disabled !== _isBlank ) { els[i].disabled = _isBlank; }
+    }
 }
 function updatePostTimestamps() {
     // Set the Moment Locale
@@ -164,4 +223,66 @@ function updatePostBanners() {
             els[i].parentNode.classList.add('hidden');
         }
     }
+}
+
+/** ************************************************************************* *
+ *  Post Publication Functions
+ ** ************************************************************************* */
+function publishPost() {
+    var params = { 'channel_guid': '',
+                   'persona_guid': '',
+                   'content': ''
+                  };
+
+    var metas = document.getElementsByTagName('meta');
+    var reqs = ['channel_guid', 'persona_guid'];
+    for (var i = 0; i < metas.length; i++) {
+        if ( reqs.indexOf(metas[i].getAttribute("name")) >= 0 ) {
+            params[ metas[i].getAttribute("name") ] = NoNull(metas[i].getAttribute("content"));
+        }
+    }
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].value) != '' ) {
+            var _name = NoNull(els[i].getAttribute('data-name'));
+            if ( _name != '' ) { params[ _name.replaceAll('-', '_') ] = els[i].value; }
+        }
+    }
+
+    // doJSONQuery('posts', 'POST', params, parsePublish);
+    var btns = document.getElementsByClassName('publish');
+    for ( var i = 0; i < btns.length; i++ ) {
+        btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+    }
+}
+
+/** ************************************************************************* *
+ *  GeoLocation Functions
+ ** ************************************************************************* */
+function getGeoLocation( btn ) {
+    if ( navigator.geolocation ) {
+        navigator.geolocation.watchPosition(showPosition);
+    } else {
+        $(btn).notify("Geolocation Data Unavailable", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+        btn.disabled = true;
+    }
+}
+function showPosition( position ) {
+    var pos = position.coords.latitude + ', ' + position.coords.longitude;
+    if ( position.coords.altitude !== undefined && position.coords.altitude !== false && position.coords.altitude !== null && position.coords.altitude != 0 ) {
+        pos += ', ' + position.coords.altitude;
+    }
+
+    var els = document.getElementById('post-geo');
+    if ( els !== undefined && els !== false && els !== null ) {
+        els.value = pos;
+    }
+}
+function openGeoLocation( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _pos = el.getAttribute('data-value');
+    if ( _pos === undefined || _pos === false || _pos === null ) { return; }
+    
+    var ntab = window.open('https://www.google.ca/maps/@' + _pos + ',17z', '_blank');
+    ntab.focus();
 }

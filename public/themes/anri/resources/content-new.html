@@ -3,36 +3,34 @@
                         <div class="single-post__image">
                             <img src="[HOMEURL]/themes/anri/img/img1.jpg" alt="Cup Of Coffee On The Window Sill">
                         </div>
+
+                        <div class="single-post__info text-left" style="padding-top: 1em;">
+                            <select id="ptype" class="newpost-small" name="fdata" data-name="post_type" aria-required="true">
+                                <option value="post.article" selected>[optPostArticle]</option>
+                                <option value="post.quotation">[optPostQuotation]</a></option>
+                                <option value="post.bookmark">[optPostBookmark]</a></option>
+                                <option value="post.page">[optPostPage]</a></option>
+                                <option value="post.note">[optPostNote]</a></option>
+                            </select>
+                            <input class="newpost-small" type="text" name="fdata" value="" data-name="publish_at" aria-required="false" placeholder="[lblPostDatePH]" autocomplete="off" />
+                        </div>
                         <div class="single-post__title">
-                            <input class="newpost-h2" type="text" name="fdata" value="Cup Of Coffee On The Window Sill" data-name="title" aria-required="false" />
+                            <input class="newpost-h2" type="text" name="fdata" value="" data-name="title" aria-required="false" placeholder="[lblPostTitlePH]" autocomplete="off" />
                         </div>
                         <div class="single-post__info">
-                            <input class="newpost-small" type="text" name="fdata" value="November 14, 2017 12:00pm" data-name="publish_at" aria-required="false" />
                         </div>
                         <div class="single-post__content">
-                            <textarea class="newpost-content" name="fdata" onkeyup="updateContentHeight(this);" data-name="content" aria-required="true">
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. [Suspendisse lobortis](https://example.com) commodo ullamcorper. Duis pretium convallis odio non varius. Nulla quis lorem metus. Fusce velit magna, ultricies quis elit sit amet, lacinia porttitor magna. Nulla scelerisque, ex quis imperdiet finibus, elit massa dictum arcu, et fermentum orci felis in ipsum. Suspendisse rutrum nec ipsum id feugiat. Nunc eu lacinia turpis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Etiam dapibus cursus justo.
-
-Quis eu odio imperdiet dictumst faucibus quam nostra lorem lorem facilisi sem eget aliquet dignissim ornare ultrices ut. Posuere aliquam maecenas imperdiet sit nonummy. Aenean auctor nulla est auctor conubia porttitor elementum taciti hymenaeos Aptent dui justo donec porta neque Lacinia Dui aliquet. Cras ullamcorper nulla tortor eros maecenas sodales magnis natoque sit placerat parturient mattis nunc dictumst. Non molestie justo pharetra natoque nec. Integer tristique lacinia ultrices.
-
-Mauris. Nunc quis justo felis Nibh Elementum eu proin lacinia magnis nonummy. Consectetuer. Enim maecenas. Dictum id sed. Habitasse magna taciti suscipit sociis tellus ad, diam orci et lorem purus in rutrum molestie parturient urna porta auctor inceptos venenatis eget congue. Metus vivamus Convallis, primis felis sodales nulla viverra dictum platea sed. Curabitur, varius justo platea. Libero litora, gravida nibh risus turpis ornare congue vestibulum mus.
-
-* Porttitor justo lobortis sapien.
-* Phasellus inceptos Porttitor.
-* Aliquam in fames et.
-* Elementum odio rutrum vehicula. Platea.
-* Dui amet lacinia congue.
-
-Feugiat ante proin mi volutpat Torquent habitasse aliquet orci sapien fringilla gravida. Ridiculus ultrices adipiscing ornare, et platea pretium sit elit dictum tortor vivamus mattis. Bibendum. Hendrerit porttitor lacus eget ante facilisis arcu sodales vel aenean. Imperdiet netus. Blandit potenti tristique penatibus risus morbi ante Magnis arcu proin placerat sociosqu suspendisse. Dolor. Tortor per sapien Dictumst Vitae Eleifend sociis ultrices quis a. Rutrum ligula ornare. Turpis.
-
-> Pulvinar neque. [Habitant integer](https://example.com) ultricies sapien penatibus scelerisque molestie. Nostra libero per ipsum velit faucibus neque nonummy. Justo. Pellentesque tempor facilisis inceptos Fringilla mus curabitur posuere nam. Litora. Rhoncus commodo nonummy.
-
-Diam pede metus porta. Fermentum ac suspendisse euismod dui nisl sapien vehicula etiam suscipit aptent risus nostra facilisi commodo sagittis ligula ultricies Facilisis ante egestas metus tristique cum turpis odio lacinia porttitor ullamcorper nonummy hac nostra blandit quisque. Tellus. Inceptos faucibus sed platea montes. Condimentum euismod Enim eros imperdiet id luctus dapibus.
-                            </textarea>
+                            <textarea id="content" class="newpost-content" name="fdata" onkeyup="updateContentHeight(this);" data-name="content" aria-required="true" placeholder="[lblPostContentPH]"></textarea>
                         </div>
                         <div class="single-post__info text-left">
                             <label for="ftags">Tags:</label>
-                            <input id="ftags" class="newpost-half" type="text" name="fdata" value="arts, creative" data-name="tags" aria-required="false" />
+                            <input id="ftags" class="newpost-full" type="text" name="fdata" value="" data-name="tags" aria-required="false" autocomplete="off" />
+                            <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
+                            <label for="post-geo">Location:</label>
+                            <input id="post-geo" class="newpost-full" type="text" name="fdata" value="" data-name="post_geo" aria-required="false" autocomplete="off" />
+                            <button class="btn btn-primary btn-geo"><i class="fa fa-crosshairs"></i></button>
+
+                            <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
                             <label for="fpriv">Visibility:</label>
                             <select id="fpriv" class="newpost-half" name="fdata" data-name="post_privacy" aria-required="true">
                                 <option value="visibility.public" selected>Visible to Everyone</option>
@@ -40,9 +38,12 @@ Diam pede metus porta. Fermentum ac suspendisse euismod dui nisl sapien vehicula
                                 <option value="visibility.password">Password Protected</a></option>
                                 <option value="visibility.none">Visible Only to You</a></option>
                             </select>
+                            <label for="postpass">Password:</label>
+                            <input id="postpass" class="newpost-half" type="text" name="fdata" value="" data-name="postpass" aria-required="false" autocomplete="off" />
                         </div>
                         <div class="single-post__info text-right" style="padding: 15px 0 10px;">
-                            <button class="btn btn-primary" style="padding: 6px 25px;">Publish</button>
+                            <button class="btn publish">[btnPostPublish]</button>
+                            <input type="hidden" name="fdata" data-name="post_guid" value="">
                         </div>
                         <div class="single-post__info text-left" style="padding: 0 0 25px;">
                             <p><em>Post last auto-saved 3 minutes ago</em></p>
