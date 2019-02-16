@@ -11,11 +11,11 @@ String.prototype.hashCode = function() {
   }
   return hash;
 };
-jQuery.fn.scrollTo = function(elem, speed) { 
+jQuery.fn.scrollTo = function(elem, speed) {
     $(this).animate({
-        scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top 
-    }, speed === undefined ? 1000 : speed); 
-    return this; 
+        scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top
+    }, speed === undefined ? 1000 : speed);
+    return this;
 };
 function NoNull( txt, alt ) {
     if ( alt === undefined || alt === null || alt === false ) { alt = ''; }
@@ -103,7 +103,7 @@ function getMetaValue( name ) {
     });
 
     $("#content").keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
-    $('.publish').click(function() { publishPost(); });
+    $('.btn-publish').click(function() { publishPost(); });
     $('#source-url').on('input', function() { checkSourceUrl(); });
     $('.btn-geo').click(function() { getGeoLocation(this); });
 
@@ -165,7 +165,7 @@ function updatePublishPostButton() {
             if ( _txt != '' ) { _isBlank = false; }
         }
     }
-    var els = document.getElementsByClassName('publish');
+    var els = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < els.length; i++ ) {
         if ( _isBlank ) {
             if ( els[i].classList.contains('btn-primary') ) {
@@ -228,7 +228,7 @@ function updatePostBanners() {
 /** ************************************************************************* *
  *  Post Publication Functions
  ** ************************************************************************* */
-function publishPost() {
+function validatePost() {
     var params = { 'channel_guid': '',
                    'persona_guid': '',
                    'content': ''
@@ -249,10 +249,56 @@ function publishPost() {
         }
     }
 
-    // doJSONQuery('posts', 'POST', params, parsePublish);
-    var btns = document.getElementsByClassName('publish');
+    // Set the Publication Date Accordingly
+    var publish_date = moment(params['publish_at'], 'MMMM Do YYYY h:mm a').format('YYYY-MM-DD HH:mm:ss');
+    if ( publish_date === undefined || publish_date === false || publish_date === null || publish_date == 'Invalid date' ) {
+        publish_date = new Date(params['publish_at']);
+    }
+
+    params['publish_at'] = moment(publish_date).format('YYYY-MM-DD HH:mm:ss');
+    if ( moment(params['publish_at']).isBefore('1900-01-01') || moment(params['publish_at']).isAfter('3999-12-31') ) {
+        var _msg = 'The publication date {date} does not make sense.'.replaceAll('{date}', params['publish_at']);
+        $(".publish-at").notify(_msg, { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+        return false;
+    }
+    if ( params['publish_at'] === undefined || params['publish_at'] === false || params['publish_at'] === null || params['publish_at'] == 'Invalid date' ) {
+        $('.publish-at').notify("The publication date does not make sense.", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+        return false;
+    }
+
+    return params;
+}
+
+function publishPost() {
+    $('.post-type').notify("testing something ...");
+    var params = validatePost();
+    if ( params !== false ) {
+        // doJSONQuery('posts', 'POST', params, parsePublish);
+        var btns = document.getElementsByClassName('btn-publish');
+        for ( var i = 0; i < btns.length; i++ ) {
+            btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+            btns[i].disabled = true;
+        }
+    }
+}
+function parsePublish( data ) {
+    if ( data !== undefined && data.meta !== undefined ) {
+        if ( data.meta.code == 200 ) {
+            // The publication was good, so redirect
+            var ds = data.data;
+
+
+        } else {
+            // We have an error of some kind, so show it
+        }
+    }
+
+    // Set the Publish Button Back to Something Usable
+    var btns = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < btns.length; i++ ) {
-        btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+        var _lbl = NoNull(btns[i].getAttribute('data-label'), '-Pub-');
+        btns[i].innerHTML = _lbl;
+        btns[i].disabled = false;
     }
 }
 
@@ -282,7 +328,7 @@ function openGeoLocation( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
     var _pos = el.getAttribute('data-value');
     if ( _pos === undefined || _pos === false || _pos === null ) { return; }
-    
+
     var ntab = window.open('https://www.google.ca/maps/@' + _pos + ',17z', '_blank');
     ntab.focus();
 }

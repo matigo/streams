@@ -29,6 +29,9 @@
     "lblPostTitlePH": "(Optional Title)",
     "lblPostDatePH": "(Optional Publish Date)",
     "lblPostContentPH": "(Write Your Post Here)",
+    "lblPostLocation": "Location",
+    "lblPostPassword": "Password",
+    "lblPostTags": "Tags",
     "optPostArticle": "Blog Post",
     "optPostBookmark": "Bookmark",
     "optPostNote": "Social Post",
@@ -49,6 +52,12 @@
     "lblSettingsS2": "Landing Page Preferences",
     "lblSettingsS3": "Metadata Settings",
     "btnSettingsSave": "Save Settings",
+
+    "lblVisibility": "Visibility",
+    "optVisPublic": "Visible to Everybody",
+    "optVisPrivate": "Visible to Followers",
+    "optVisPassword": "Password Protected",
+    "optVisNone": "Visible Only to You",
 
     "lbl403": "403 Access Denied",
     "lbl404": "404 Page Not Found",

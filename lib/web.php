@@ -90,7 +90,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('new', 'settings');
+                $checks = array('write', 'settings');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {

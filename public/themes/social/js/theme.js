@@ -698,7 +698,7 @@ function parseSourceData( data ) {
                 case 'source-title':
                     if ( ds.title !== false && els[i].value == '' ) { els[i].value = NoNull(ds.title); }
                     break;
-                
+
                 case 'content':
                     if ( ptype == 'post.quotation' && NoNull(ds.summary, ds.text) != '' ) {
                         els[i].value = '> ' + NoNull(ds.summary, ds.text) + "\n\n" + els[i].value;
@@ -928,7 +928,7 @@ function togglePublicProfileEdit() {
             }
         }
     }
-    
+
     var els = document.getElementsByClassName('persona-bio');
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].classList.contains('hidden') ) {
@@ -973,7 +973,7 @@ function showNewPostAs() {
             }
         }
     }
-    
+
     if ( _name != '' ) {
         var els = document.getElementsByClassName('newpost-title');
         for ( var i = 0; i < els.length; i++ ) {
@@ -1272,6 +1272,7 @@ function parseEditPost(data) {
                 for ( var o = 0; o < els.length; o++ ) {
                     if ( els[o].getAttribute('data-type') == 'mdown' ) {
                         els[o].value = ds[i].text;
+                        setCharCount(els[o]);
                         els[o].focus();
                         break;
                     }
@@ -1472,7 +1473,7 @@ function togglePinPost(btn) {
     var _guid = btn.parentNode.getAttribute('data-guid');
     if ( _guid === undefined || _guid === false || _guid === null || _guid.length <= 30 ) { return; }
     var valids = ['blue', 'green', 'orange', 'red', 'yellow', 'none'];
-    
+
     // Are Pins Showing?
     var _pins = false;
     var els = btn.parentNode.getElementsByClassName('btn-pin');
@@ -1506,7 +1507,7 @@ function performPin(btn) {
                 if ( els[i].classList.contains('btn-action') ) { els[i].classList.remove('hidden'); }
             }
             break;
-        
+
         default:
             actionPinPost(_guid, _value);
             break;
