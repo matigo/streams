@@ -773,6 +773,13 @@ function togglePrefButton(_key, _val) {
     }
 }
 function refreshPreferences() {
+    var _theme = readStorage('theme');
+    if ( _theme === undefined || _theme === false || _theme === null || NoNull(_theme) == '' ) { _theme = 'default'; }
+    document.body.classList.remove('default');
+    document.body.classList.remove('dark');
+    document.body.classList.add(_theme);
+    togglePrefButton('theme', _theme);
+
     var _fsize = parseInt(readStorage('fontSize'));
     if ( _fsize === undefined || _fsize === false || _fsize === null || isNaN(_fsize) ) { _fsize = 16; }
     togglePrefButton('fontSize', _fsize);

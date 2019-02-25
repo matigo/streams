@@ -270,7 +270,7 @@ function validatePost() {
 }
 
 function publishPost() {
-    $('.post-type').notify("testing something ...");
+    $(".btn-publish").notify("The publication date does not make sense.", { position: "bottom right", autoHide: false, autoHideDelay: 500000 });
     var params = validatePost();
     if ( params !== false ) {
         // doJSONQuery('posts', 'POST', params, parsePublish);

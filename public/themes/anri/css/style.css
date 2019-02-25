@@ -17,7 +17,7 @@
 
 -------------------------------------------------------------------*/
 /*------------------------------------------------------------------
-[1. Body ] 
+[1. Body ]
 */
 body {
   margin: 0;
@@ -57,9 +57,16 @@ sup a::hover {
   padding: 0 0.5em;
   text-decoration: underline !important;
 }
+.notifyjs-wrapper { position: fixed !important; }
+.notifyjs-bootstrap-yellow {
+    background: #ffffc0 !important;
+    border: 2px solid #000 !important;
+    border-radius: 10px !important;
+    color: #000;
+}
 
 /*------------------------------------------------------------------
-[2. Operations Bar ] 
+[2. Operations Bar ]
 */
 .navbar {
     background-color: #000;
@@ -99,7 +106,7 @@ sup a::hover {
 .nav-spacer { display: block; padding: 0; min-height: 3em; }
 
 /*------------------------------------------------------------------
-[2. Header ] 
+[2. Header ]
 */
 .page-header {
   margin-top: 0;
@@ -111,7 +118,7 @@ sup a::hover {
   text-align: center;
 }
 /*------------------------------------------------------------------
-[3. Logo ] 
+[3. Logo ]
 */
 .logo h1 { margin-top: 0; }
 .logo__link {
@@ -130,7 +137,7 @@ sup a::hover {
 }
 .logo__description { font-size: 0.9em; }
 /*------------------------------------------------------------------
-[4. Navigation ] 
+[4. Navigation ]
 */
 .main-nav {
   position: relative;
@@ -271,7 +278,7 @@ sup a::hover {
   }
 }
 /*------------------------------------------------------------------
-[5. Navigation Toggle ] 
+[5. Navigation Toggle ]
 */
 .nav-toggle {
   display: none;
@@ -301,7 +308,7 @@ sup a::hover {
   }
 }
 /*------------------------------------------------------------------
-[6. Search Popup ] 
+[6. Search Popup ]
 */
 .search-popup {
   position: fixed;
@@ -381,7 +388,7 @@ sup a::hover {
   }
 }
 /*------------------------------------------------------------------
-[7. Category Title ] 
+[7. Category Title ]
 */
 .category-title {
   padding-left: 30px;
@@ -401,7 +408,7 @@ sup a::hover {
   border: 1px dotted #dcdcdc;
 }
 /*------------------------------------------------------------------
-[8. Blog Post ] 
+[8. Blog Post ]
 */
 .blog-post {
   margin-bottom: 30px;
@@ -563,7 +570,7 @@ sup a::hover {
   }
 }
 /*------------------------------------------------------------------
-[9. Single Post ] 
+[9. Single Post ]
 */
 .single-post {
   margin-bottom: 30px;
@@ -860,7 +867,7 @@ sup a::hover {
   margin-right: 0;
 }
 single-post__footer-tags-list .newpost-tags {
-    
+
 }
 .single-post__footer-social {
   position: relative;
@@ -1426,7 +1433,7 @@ single-post__footer-tags-list .newpost-tags {
   }
 }
 /*------------------------------------------------------------------
-[10. Sidebar Widget ] 
+[10. Sidebar Widget ]
 */
 .sidebar-widget {
   padding: 0 30px;
@@ -1646,7 +1653,7 @@ single-post__footer-tags-list .newpost-tags {
   }
 }
 /*------------------------------------------------------------------
-[11. Pagination ] 
+[11. Pagination ]
 */
 .blog-pagination__items {
   text-align: center;
@@ -1675,7 +1682,7 @@ single-post__footer-tags-list .newpost-tags {
   opacity: 0.8;
 }
 /*------------------------------------------------------------------
-[12. Footer ] 
+[12. Footer ]
 */
 .page-footer {
   padding-top: 50px;
@@ -1789,7 +1796,7 @@ single-post__footer-tags-list .newpost-tags {
   }
 }
 /*------------------------------------------------------------------
-[13. Content Overlay ] 
+[13. Content Overlay ]
 */
 .content-overlay {
   position: fixed;

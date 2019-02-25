@@ -1,0 +1,48 @@
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                    <div class="single-post single-post--fullsize">
+                        <div class="single-post__info text-left" style="padding-top: 1em;">
+                            <select id="ptype" class="newpost-small post-type" name="fdata" data-name="post_type" aria-required="true">
+                                <option value="post.article" selected>[optPostArticle]</option>
+                                <option value="post.quotation">[optPostQuotation]</a></option>
+                                <option value="post.bookmark">[optPostBookmark]</a></option>
+                                <option value="post.page">[optPostPage]</a></option>
+                                <option value="post.note">[optPostNote]</a></option>
+                            </select>
+                            <input class="newpost-small publish-at" type="text" name="fdata" value="" data-name="publish_at" aria-required="false" placeholder="[lblPostDatePH]" autocomplete="off" />
+                        </div>
+                        <div class="single-post__title">
+                            <input class="newpost-h2" type="text" name="fdata" value="" data-name="title" aria-required="false" placeholder="[lblPostTitlePH]" autocomplete="off" />
+                        </div>
+                        <div class="single-post__info">
+                        </div>
+                        <div class="single-post__content">
+                            <textarea id="content" class="newpost-content" name="fdata" onkeyup="updateContentHeight(this);" data-name="content" aria-required="true" placeholder="[lblPostContentPH]"></textarea>
+                        </div>
+                        <div class="single-post__info text-left">
+                            <label for="ftags">[lblPostTags]:</label>
+                            <input id="ftags" class="newpost-full" type="text" name="fdata" value="" data-name="tags" aria-required="false" autocomplete="off" />
+                            <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
+                            <label for="post-geo">[lblPostLocation]:</label>
+                            <input id="post-geo" class="newpost-full" type="text" name="fdata" value="" data-name="post_geo" aria-required="false" autocomplete="off" />
+                            <button class="btn btn-primary btn-geo"><i class="fa fa-crosshairs"></i></button>
+
+                            <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
+                            <label for="fpriv">[lblVisibility]:</label>
+                            <select id="fpriv" class="newpost-half" name="fdata" data-name="post_privacy" aria-required="true">
+                                <option value="visibility.public" selected>[optVisPublic]</option>
+                                <option value="visibility.private">[optVisPrivate]</a></option>
+                                <option value="visibility.password">[optVisPassword]</a></option>
+                                <option value="visibility.none">[optVisNone]</a></option>
+                            </select>
+                            <label for="postpass">[lblPostPassword]:</label>
+                            <input id="postpass" class="newpost-half" type="text" name="fdata" value="" data-name="postpass" aria-required="false" autocomplete="off" />
+                        </div>
+                        <div class="single-post__info text-right" style="padding: 15px 0 10px;">
+                            <button class="btn btn-publish" data-label="[btnPostPublish]">[btnPostPublish]</button>
+                            <input type="hidden" name="fdata" data-name="post_guid" value="">
+                        </div>
+                        <div class="single-post__info text-left" style="padding: 0 0 25px;">
+                            <p><em class="autosavemsg">&nbsp;</em></p>
+                        </div>
+                    </div>
+                </div>
