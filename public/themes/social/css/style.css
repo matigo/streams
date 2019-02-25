@@ -847,6 +847,7 @@ body.dark {
     background: #252424;
     color: #fff;
 }
+body.dark blockquote { color: #ccc; }
 body.dark .header { background: #434c73; }
 body.dark .content p .account {
     color: #eee;
@@ -854,6 +855,7 @@ body.dark .content p .account {
 body.dark .metaline time { color: #eee; }
 body.dark .threadview .thread { background: #252424; }
 body.dark .content .post-entry.selected { background: #333; }
+body.dark .content-area .content-source-url { color: #333; }
 body.dark .modal-content { background: #252424; }
 body.dark .btn { background: transparent; }
 body.dark .btn-primary {
