@@ -842,22 +842,30 @@ a.u-bookmark-of {
     background: #551a8b;
     border-color: #551a8b;
 }
+.btn-publish { min-width: 5em; }
 
 body.dark {
     background: #252424;
     color: #fff;
 }
 body.dark blockquote { color: #ccc; }
-body.dark .header { background: #434c73; }
-body.dark .content p .account {
-    color: #eee;
+body.dark code, kbd, pre, samp {
+    background: #eee;
+    padding: 0.0625em 0.333em 0.0625em 0.25em;
 }
+body.dark .header { background: #434c73; }
+body.dark .content p .account { color: #eee; }
+body.dark .content p a { color: #cc7722; }
 body.dark .metaline time { color: #eee; }
+body.dark .metaline.geo span { color: #cc7722; }
 body.dark .threadview .thread { background: #252424; }
 body.dark .content .post-entry.selected { background: #333; }
 body.dark .content-area .content-source-url { color: #333; }
 body.dark .modal-content { background: #252424; }
-body.dark .btn { background: transparent; }
+body.dark .btn {
+    background: transparent;
+    border-color: #434c73;
+}
 body.dark .btn-primary {
     background: #434c73;
     border-color: #434c73;
