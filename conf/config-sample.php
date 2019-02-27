@@ -55,6 +55,7 @@ define('MAIL_ADDRESS', "");                                 // The Default Reply
 define('MAIL_RATELIMIT', 15);                               // The Maximum Number of Messages to Send per Minute
 
 define('CLOUDFLARE_API_KEY', '');                           // The CloudFlare Global API Key
+define('CLOUDFLARE_API_URL', '');                           // The CloudFlare API Address
 
 define('USE_S3', 0);                                        // Use Amazon S3 Storage
 define('AWS_ACCESS_KEY', '');                               // The Amazon S3 Access Key

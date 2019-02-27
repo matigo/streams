@@ -862,6 +862,7 @@ body.dark .threadview .thread { background: #252424; }
 body.dark .content .post-entry.selected { background: #333; }
 body.dark .content .post-entry.reply-to { background: #666; }
 body.dark .content-area .content-source-url { color: #cc7722; }
+body.dark .content-area p img { border-color: #434c73; }
 body.dark .modal-content { background: #252424; }
 body.dark .btn {
     background: transparent;
