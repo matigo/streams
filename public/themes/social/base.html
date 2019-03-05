@@ -4,7 +4,7 @@
         <title>[PAGE_TITLE]</title>
 
         <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-    	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta http-equiv="cleartype" content="on" />
         <meta charset="utf-8" />
 
@@ -66,35 +66,35 @@
                 <button class="btn btn-newpost hidden"><i class="fas fa-edit"></i></button>
             </div>
         </div>
-    	<div class="opview interact hidden" data-view="signin">
-        	<input id="account_name" name="cdata" type="email" placeholder="[lblAccountNamePH]" autocomplete="on" data-error="[msgMissingValue]" />
-        	<input id="account_pass" name="cdata" type="password" placeholder="[lblAccountPassPH]" autocomplete="current-password" data-error="[msgMissingValue]" />
+        <div class="opview interact hidden" data-view="signin">
+            <input id="account_name" name="cdata" type="email" placeholder="[lblAccountNamePH]" autocomplete="on" data-error="[msgMissingValue]" />
+            <input id="account_pass" name="cdata" type="password" placeholder="[lblAccountPassPH]" autocomplete="current-password" data-error="[msgMissingValue]" />
             <div class="full-width text-right">
                 <button class="btn btn-auth padd" data-label="[btnSignIn]">[btnSignIn]</button>
             </div>
             <div class="full-width text-center" style="margin-top: 5em;">
-        	    <button class="btn btn-cancel padd">[btnCancel]</button>
+                <button class="btn btn-cancel padd">[btnCancel]</button>
             </div>
-    	</div>
-    	<div class="opview content" data-view="consume">
+        </div>
+        <div class="opview content" data-view="consume">
 [CONTENT]
-    	</div>
-    	<div class="nav-puck">
-        	<div class="navigation hidden">
-            	<ul>
-                	<li class="puck-item" data-action="tl-global"><i class="fas fa-globe"></i></li>
-                	<li class="puck-item" data-action="tl-mentions"><i class="far fa-comments"></i></li>
-                	<li class="separator">&nbsp;</li>
-                	<li class="puck-item" data-action="settings"><i class="fas fa-cog"></i></li>
-            	</ul>
-        	</div>
-        	<div class="puck" data-state="closed">
-            	<ul>
-                	<li class="puck-item puck-open"><i class="fas fa-chevron-circle-up"></i></li>
-                	<li class="puck-item puck-close hidden"><i class="fas fa-chevron-circle-down"></i></li>
-            	</ul>
-        	</div>
-    	</div>
+        </div>
+        <div class="nav-puck">
+            <div class="navigation hidden">
+                <ul>
+                    <li class="puck-item" data-action="tl-global"><i class="fas fa-globe"></i></li>
+                    <li class="puck-item" data-action="tl-mentions"><i class="far fa-comments"></i></li>
+                    <li class="separator">&nbsp;</li>
+                    <li class="puck-item" data-action="settings"><i class="fas fa-cog"></i></li>
+                </ul>
+            </div>
+            <div class="puck" data-state="closed">
+                <ul>
+                    <li class="puck-item puck-open"><i class="fas fa-chevron-circle-up"></i></li>
+                    <li class="puck-item puck-close hidden"><i class="fas fa-chevron-circle-down"></i></li>
+                </ul>
+            </div>
+        </div>
         <div class="threadview content modal fade compose in hidden" data-view="consume"></div>
         <div id="viewProfile" class="modal fade compose" role="dialog">
             <div class="modal-dialog profile">
@@ -197,16 +197,16 @@
                         <h4 class="modal-title newpost-title" data-label="[lblWriteNewPostAs]">[lblWriteNewPost]</h4>
                     </div>
                     <div class="modal-body" dir="auto" style="min-height: 185px;">
-                    	<select id="post-type" class="form-element ddown" name="fdata" onchange="toggleCreateView();">
-                        	<option value="post.note" selected="">[optNote]</option>
-                        	<option value="post.article">[optBlog]</option>
-                        	<option value="post.bookmark">[optBookmark]</option>
-                        	<option value="post.quotation">[optQuotation]</option>
-                    	</select>
-                    	<input id="source-url" name="fdata" type="text" autocomplete="off" class="form-element right-4em create-obj" placeholder="[lblPostSourcePH]" />
-                    	<button class="btn btn-read btn-4em create-obj" data-label="[btnRead]">[btnRead]</button>
-                    	<input id="source-title" name="fdata" type="text" autocomplete="off" class="form-element create-obj" placeholder="[lblSourceTitlePH]" />
-                    	<input id="title" name="fdata" type="text" autocomplete="off" class="form-element create-obj" placeholder="[lblPostTitlePH]" />
+                        <select id="post-type" class="form-element ddown" name="fdata" onchange="toggleCreateView();">
+                            <option value="post.note" selected="">[optNote]</option>
+                            <option value="post.article">[optBlog]</option>
+                            <option value="post.bookmark">[optBookmark]</option>
+                            <option value="post.quotation">[optQuotation]</option>
+                        </select>
+                        <input id="source-url" name="fdata" type="text" autocomplete="off" class="form-element right-4em create-obj" placeholder="[lblPostSourcePH]" />
+                        <button class="btn btn-read btn-4em create-obj" data-label="[btnRead]">[btnRead]</button>
+                        <input id="source-title" name="fdata" type="text" autocomplete="off" class="form-element create-obj" placeholder="[lblSourceTitlePH]" />
+                        <input id="title" name="fdata" type="text" autocomplete="off" class="form-element create-obj" placeholder="[lblPostTitlePH]" />
                         <textarea id="content" name="fdata" class="required write-area bordered" data-type="mdown" rows="4" dir="auto" placeholder="[lblEditorPH]"></textarea>
                         <form id="dropzone" class="col-lg-12 col-md-12 col-sm-12 col-xs-12 uploads dropzone hidden"></form>
 
@@ -218,9 +218,9 @@
                             <button class="btn btn-meta btn-primary" data-label="[btnAddMeta]" data-value="N" data-Y="[btnHideMeta]" data-N="[btnAddMeta]">[btnAddMeta]</button>
                         </div>
                         <input id="post-tags" name="fdata" type="text" autocomplete="off" class="form-element meta-obj hidden" placeholder="[lblPostTagsPH]" />
-                    	<input id="post-geo" name="fdata" type="text" autocomplete="off" class="form-element right-4em meta-obj hidden" placeholder="[lblPostGeoPH]" />
-                    	<input id="post-guid" name="fdata" type="hidden" autocomplete="off" />
-                    	<button class="btn btn-geo btn-4em meta-obj btn-primary hidden"><i class="fas fa-map-pin"></i></button>
+                        <input id="post-geo" name="fdata" type="text" autocomplete="off" class="form-element right-4em meta-obj hidden" placeholder="[lblPostGeoPH]" />
+                        <input id="post-guid" name="fdata" type="hidden" autocomplete="off" />
+                        <button class="btn btn-geo btn-4em meta-obj btn-primary hidden"><i class="fas fa-map-pin"></i></button>
 
                         <span id="reply_text" class="inreplyto"></span>
                     </div>
@@ -252,10 +252,10 @@
                 </div>
             </div>
         </div>
-    	<div class="opview footer" data-view="consume">
+        <div class="opview footer" data-view="consume">
             <button class="btn btn-signin">[btnSignIn]</button>
             <button class="btn btn-filter">[btnFilter]</button>
-    	</div>
+        </div>
     </body>
     <script type="text/javascript" src="[JS_DIR]/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="[JS_DIR]/bootstrap.min.js"></script>

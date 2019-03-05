@@ -107,6 +107,13 @@ class cookies {
             }
         }
 
+        // Ensure the Token Value (if exists) Is Correctly Formatted
+        if ( array_key_exists('token', $rVal) && NoNull($rVal['token']) != '' ) {
+            if ( strpos($rVal['token'], 'Bearer ') == 0 ) {
+                $rVal['token'] = NoNull(str_replace('Bearer ', '', $rVal['token']));
+            }
+        }
+
         // Scrub the Page Pointers
         foreach ( $rVal as $Key=>$Val ) {
             switch ( strtolower($Key) ) {

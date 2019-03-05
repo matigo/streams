@@ -19,7 +19,7 @@
     "lblHeading": "Heading",
     "lblSubHead": "Sub-Heading",
     "lblOffline": "Offline",
-    
+
     "lblPrefLang": "Language",
     "lblPrefName": "Name",
     "lblPrefMail": "Email",
@@ -27,7 +27,7 @@
     "lblAcctType": "Type",
     "lblStoreLimit": "Storage Total",
     "lblStoreUsed": "Storage Used",
-    
+
     "lblSiteNamePH": "(Website Name)",
     "lblSiteDescrPH": "(Optional Website Description)",
     "lblSiteKeysPH": "(Optional Keywords)",
@@ -36,7 +36,7 @@
     "lblShowArticle": "Blog Posts",
     "lblShowBookmark": "Bookmarks",
     "lblShowQuotation": "Quotations",
-    
+
     "lblProfile": "Profile",
 
     "btnSendMention": "Send Webmention",
@@ -61,7 +61,7 @@
     "optNote": "Social Post",
     "optBookmark": "Bookmark",
     "optQuotation": "Quotation",
-    
+
     "optEnUS": "English",
     "optEoUS": "Esperanto",
     "optJaJP": "日本語",

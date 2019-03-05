@@ -1,7 +1,7 @@
 window.network_active = false;
 function doJSONQuery( endpoint, type, parameters, afterwards ) {
-    var access_token = getAuthToken();
-    var api_url = getApiURL();
+    var access_token = getMetaValue('authorization');
+    var api_url = getMetaValue('api_url');
     if ( api_url == '' ) {
         alert( "Error: API URL Not Defined!" );
         return false;
@@ -18,17 +18,18 @@ function doJSONQuery( endpoint, type, parameters, afterwards ) {
     };
     xhr.onerror = function() {
         window.network_active = false;
-        /* Do Nothing */
+        var rsp = JSON.parse( xhr.responseText );
+        afterwards( rsp );
     }
     xhr.ontimeout = function() {
         window.network_active = false;
-        /* Do Nothing */
+        afterwards( false );
     }
     var suffix = '';
     if ( type == 'GET' ) { suffix = jsonToQueryString(parameters); }
 
     /* Open the XHR Connection and Send the Request */
-    xhr.open(type, api_url + endpoint + suffix, true);
+    xhr.open(type, api_url + '/' + endpoint + suffix, true);
     xhr.timeout = (endpoint == 'auth/login') ? 5000 : 600000;
     if ( access_token != '' ) { xhr.setRequestHeader("Authorization", access_token); }
     xhr.setRequestHeader("Content-Type", "Application/json; charset=utf-8");
@@ -38,32 +39,13 @@ function jsonToQueryString(json) {
     var data = Object.keys(json).map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(json[key]); }).join('&');
     return (data !== undefined && data !== null && data != '' ) ? '?' + data : '';
 }
-function getAuthToken() {
-    _token = readStorage('token');
-    if ( _token === undefined || _token === null || _token === false || _token.length <= 20 ) { _token = ''; }
-    if ( _token.length > 20 ) { return _token; }
-
-    var cookieVal = decodeURIComponent(document.cookie);
-    if ( cookieVal !== undefined && cookieVal !== null && cookieVal !== false ) {
-        var key = 'token';
-        var ca = cookieVal.split(';');
-        for ( var i = 0; i < ca.length; i++ ) {
-            var c = ca[i];
-            while ( c.charAt(0) == ' ' ) { c = c.substring(1); }
-            if ( c.indexOf(key) == 0 ) {
-                _token = c.substring(key.length + 1, c.length);
-                saveStorage('token', _token);
-                return _token;
-            }
+function getMetaValue( _name ) {
+    if ( _name === undefined || _name === false || _name === null || NoNull(_name) == '' ) { return ''; }
+    var metas = document.getElementsByTagName('meta');
+    for (var i = 0; i < metas.length; i++) {
+        if ( metas[i].getAttribute("name") == _name ) {
+            return metas[i].getAttribute("content");
         }
     }
     return '';
-}
-function getApiURL() {
-    var metas = document.getElementsByTagName('meta');
-    for ( var i = 0; i < metas.length; i++ ) {
-        if ( metas[i].getAttribute("name") == 'api_url' ) {
-            return metas[i].getAttribute("content") + '/';
-        }
-    }
 }

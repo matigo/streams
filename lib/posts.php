@@ -1197,7 +1197,7 @@ class Posts {
 
                 if ( $Page > 1 ) {
                     if ( $html != '' ) { $html .= "\r\n"; }
-                    $html .= tabSpace(6) . 
+                    $html .= tabSpace(6) .
                              '<li class="blog-pagination__item">' .
                                 '<a href="' . $SiteUrl . '?page=' . ($Page - 1) . '"><i class="fa fa-backward"></i></a>' .
                              '</li>';
@@ -1213,14 +1213,14 @@ class Posts {
                 while ( $cnt <= $max ) {
                     if ( ($cnt >= $min_idx && $cnt <= $max_idx) || $cnt == 1 || $cnt == $max ) {
                         if ( $html != '' ) { $html .= "\r\n"; }
-                        if ( $cnt == $Page ) {                        
-                            $html .= tabSpace(6) . 
+                        if ( $cnt == $Page ) {
+                            $html .= tabSpace(6) .
                                      '<li class="blog-pagination__item blog-pagination__item--active">' .
                                         '<a>' . number_format($cnt, 0) . '</a>' .
                                      '</li>';
 
                         } else {
-                            $html .= tabSpace(6) . 
+                            $html .= tabSpace(6) .
                                      '<li class="blog-pagination__item">' .
                                         '<a href="' . $SiteUrl . (($cnt > 1) ? '?page=' . $cnt : '') . '">' . number_format($cnt, 0) . '</a>' .
                                      '</li>';
@@ -1228,7 +1228,7 @@ class Posts {
                     }
                     if ( $Page > 6 && $cnt < $min_idx && $min_idx > 1 && $min_dot === false ) {
                         if ( $html != '' ) { $html .= "\r\n"; }
-                        $html .= tabSpace(6) . 
+                        $html .= tabSpace(6) .
                                  '<li class="blog-pagination__item">' .
                                     '<a><i class="fa fa-ellipsis-h"></i></a>' .
                                  '</li>';
@@ -1236,7 +1236,7 @@ class Posts {
                     }
                     if ( $cnt > $max_idx && $max_idx < $max && $max_dot === false ) {
                         if ( $html != '' ) { $html .= "\r\n"; }
-                        $html .= tabSpace(6) . 
+                        $html .= tabSpace(6) .
                                  '<li class="blog-pagination__item">' .
                                     '<a><i class="fa fa-ellipsis-h"></i></a>' .
                                  '</li>';
@@ -1247,7 +1247,7 @@ class Posts {
 
                 if ( $Page < $max ) {
                     if ( $html != '' ) { $html .= "\r\n"; }
-                    $html .= tabSpace(6) . 
+                    $html .= tabSpace(6) .
                              '<li class="blog-pagination__item">' .
                                 '<a href="' . $SiteUrl . '?page=' . ($Page + 1) . '"><i class="fa fa-forward"></i></a>' .
                              '</li>';
@@ -1730,6 +1730,7 @@ class Posts {
         $text = NoNull($fixed);
 
 		// Construct the Footnotes
+        /*
 		$fnotes = '';
     	if (preg_match_all('/\[(\d+\. .*?)\]/s', $text, $matches)) {
         	$notes = array();
@@ -1758,6 +1759,53 @@ class Posts {
     		$fnotes .= '</ol>';
         }
         if ( $fnotes != '' ) { $text .= $fnotes; }
+        */
+
+        // Handle the Footnotes
+        $fnotes = '';
+        if ( strpos($text, '[') > 0 ) {
+            $notes = array();
+            $pass = 0;
+
+            while ( $pass < 100 ) {
+                $inBracket = false;
+                $btxt = '';
+                $bidx = '';
+                $bid = 0;
+                for ( $i = 0; $i < strlen($text); $i++ ) {
+                    if ( substr($text, $i, 1) == "[" ) {
+                        $bracketValid = false;
+                        if ( strpos(substr($text, $i, 6), '. ') > 0 ) { $bracketValid = true; }
+                        if ( $bracketValid || $inBracket ) {
+                            $inBracket = true;
+                            $bid++;
+                        }
+                    }
+                    if ( $inBracket ) { $btxt .= substr($text, $i, 1); }
+                    if ( $inBracket && substr($text, $i, 1) == "]" ) {
+                        $bid--;
+                        if ( $bid <= 0 ) {
+                            $n = count($notes) + 1;
+                            $ntxt = substr($btxt, strpos($btxt, '. ') + 2);
+                            $ntxt = substr($ntxt, 0, strlen($ntxt) - 1);
+                            if ( NoNull($ntxt) != '' ) {
+                                $text = str_replace($btxt, "<sup>$n</sup>", $text);
+                                $notes[] = NoNull($ntxt);
+                                $btxt = '';
+                                break;
+                            }
+                        }
+                    }
+                }
+                $pass++;
+            }
+
+            if ( count($notes) > 0 ) {
+                foreach ( $notes as $note ) {
+                    $fnotes .= "<li class=\"footnote\">" . Markdown::defaultTransform($note, $isNote) . "</li>";
+                }
+            }
+        }
 
         // Handle Code Blocks
     	if (preg_match_all('/\```(.+?)\```/s', $text, $matches)) {
@@ -1913,6 +1961,9 @@ class Posts {
             // Output Something Here
             $out_str .= " $word";
         }
+
+        // If We Have Footnotes, Add them
+        if ( $fnotes != '' ) { $out_str .= '<hr><ol>' . $fnotes . '</ol>'; }
 
         // Fix any Links that Don't Have Targets
         $rVal = str_ireplace('<a href="', '<a target="_blank" href="', $out_str);

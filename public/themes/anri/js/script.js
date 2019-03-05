@@ -54,6 +54,20 @@ function randName(len) {
     }
     return txt;
 }
+function showByClass( _cls ) {
+    if ( _cls === undefined || _cls === false || _cls === null ) { return; }
+    var els = document.getElementsByClassName(_cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].classList.remove('hidden');
+    }
+}
+function hideByClass( _cls ) {
+    if ( _cls === undefined || _cls === false || _cls === null ) { return; }
+    var els = document.getElementsByClassName(_cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].classList.add('hidden');
+    }
+}
 function writeToZone( name, cdn_url ) {
     var quill = document.querySelector(".ql-editor");
     if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
@@ -114,7 +128,10 @@ document.onreadystatechange = function () {
         updatePostTimestamps();
         updateContentHeight();
         updatePostBanners();
+        togglePostType();
         prepNewPost();
+
+        if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
 }
 
@@ -145,6 +162,43 @@ function prepNewPost() {
         }
     }
 }
+function togglePostType() {
+    var pObj = document.getElementsByClassName('post-type');
+    if ( pObj.length > 0 ) {
+        var _reqs = [];
+        var _btns = [];
+
+        for  ( var idx = 0; idx < pObj.length; idx++ ) {
+            var _val = NoNull(pObj[idx].value);
+            if ( _val === undefined || _val === false || _val === null ) { _type = ''; }
+            switch ( _val.toLowerCase() ) {
+                case 'post.article':
+                case 'post.page':
+                    _reqs = ['title'];
+                    break;
+
+                case 'post.quotation':
+                case 'post.bookmark':
+                    _reqs = ['source-url', 'source-title'];
+                    break;
+            }
+        }
+
+        var els = document.getElementsByClassName('create-obj');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].classList.add('hidden');
+            var _id = NoNull(els[i].getAttribute('data-name'));
+            if ( _id !== undefined && _id !== false && _id !== null ) {
+                if ( _reqs.indexOf(_id) >= 0 ) { els[i].classList.remove('hidden'); }
+            }
+            if ( els[i].tagName == 'BUTTON' ) {
+                for ( b in _btns ) {
+                    if ( els[i].classList.contains(_btns[b]) ) { els[i].classList.remove('hidden'); }
+                }
+            }
+        }
+    }
+}
 function updateContentHeight(el) {
     if ( el === undefined || el === false || el === null ) {
         var els = document.getElementsByClassName('newpost-content');
@@ -167,16 +221,18 @@ function updatePublishPostButton() {
     }
     var els = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < els.length; i++ ) {
-        if ( _isBlank ) {
-            if ( els[i].classList.contains('btn-primary') ) {
-                els[i].classList.remove('btn-primary');
+        if ( els[i].innerHTML != '<i class="fa fa-spin fa-spinner"></i>' ) {
+            if ( _isBlank ) {
+                if ( els[i].classList.contains('btn-primary') ) {
+                    els[i].classList.remove('btn-primary');
+                }
+            } else {
+                if ( els[i].classList.contains('btn-primary') === false ) {
+                    els[i].classList.add('btn-primary');
+                }
             }
-        } else {
-            if ( els[i].classList.contains('btn-primary') === false ) {
-                els[i].classList.add('btn-primary');
-            }
+            if ( els[i].disabled !== _isBlank ) { els[i].disabled = _isBlank; }
         }
-        if ( els[i].disabled !== _isBlank ) { els[i].disabled = _isBlank; }
     }
 }
 function updatePostTimestamps() {
@@ -270,10 +326,9 @@ function validatePost() {
 }
 
 function publishPost() {
-    $(".btn-publish").notify("The publication date does not make sense.", { position: "bottom right", autoHide: false, autoHideDelay: 500000 });
     var params = validatePost();
     if ( params !== false ) {
-        // doJSONQuery('posts', 'POST', params, parsePublish);
+        doJSONQuery('posts', 'POST', params, parsePublish);
         var btns = document.getElementsByClassName('btn-publish');
         for ( var i = 0; i < btns.length; i++ ) {
             btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
@@ -286,10 +341,13 @@ function parsePublish( data ) {
         if ( data.meta.code == 200 ) {
             // The publication was good, so redirect
             var ds = data.data;
-
-
+            if ( ds.length > 0 ) {
+                for ( var i = 0; i < ds.length; i++ ) {
+                    window.location.href = ds[i].canonical_url;
+                }
+            }
         } else {
-            // We have an error of some kind, so show it
+            $('.publish-at').notify(meta.text, { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
         }
     }
 
@@ -299,6 +357,83 @@ function parsePublish( data ) {
         var _lbl = NoNull(btns[i].getAttribute('data-label'), '-Pub-');
         btns[i].innerHTML = _lbl;
         btns[i].disabled = false;
+    }
+}
+
+/** ************************************************************************* *
+ *  Quotation Functions
+ ** ************************************************************************* */
+function getSourceData() {
+    var _url = '';
+
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name'));
+        if ( _name == 'source-url' ) { _url = NoNull(els[i].value); }
+    }
+    if ( _url !== undefined && _url !== false && _url !== null && _url != '' ) {
+        var params = { 'source_url': _url };
+        doJSONQuery('bookmark', 'GET', params, parseSourceData);
+    }
+
+    var btns = document.getElementsByClassName('btn-read-source');
+    for ( var i = 0; i < btns.length; i++ ) {
+        btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+        btns[i].disabled = true;
+    }
+}
+function parseSourceData( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ptype = 'post.note';
+        var ds = data.data;
+
+        var pObj = document.getElementsByClassName('post-type');
+        for ( var i = 0; i < pObj.length; i++ ) {
+            ptype = NoNull(pObj[i].value);
+        }
+
+        var els = document.getElementsByName('fdata');
+        for ( var i = 0; i < els.length; i++ ) {
+            var _name = NoNull(els[i].getAttribute('data-name'));
+            switch ( _name.toLowerCase() ) {
+                case 'source-title':
+                    if ( ds.title !== false && els[i].value == '' ) { els[i].value = NoNull(ds.title); }
+                    break;
+
+                case 'content':
+                    if ( ptype == 'post.quotation' && NoNull(ds.summary, ds.text) != '' ) {
+                        els[i].value = '> ' + NoNull(ds.summary, ds.text) + "\n\n" + els[i].value;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+    var btns = document.getElementsByClassName('btn-read-source');
+    for ( var i = 0; i < btns.length; i++ ) {
+        btns[i].innerHTML = btns[i].getAttribute('data-label');
+        btns[i].disabled = false;
+    }
+}
+function checkSourceUrl() {
+    var els = document.getElementsByName('fdata');
+    for ( var idx = 0; idx < els.length; idx++ ) {
+        var _name = NoNull(els[idx].getAttribute('data-name'));
+        if ( _name == 'source-url' ) {
+            var btns = document.getElementsByClassName('btn-read-source');
+            for ( var b = 0; b < btns.length; b++ ) {
+                if ( els[idx].value.length > 0 ) {
+                    btns[b].classList.add('btn-primary');
+                    btns[b].disabled = false;
+                } else {
+                    btns[b].classList.remove('btn-primary');
+                    btns[b].disabled = true;
+                }
+            }
+            break;
+        }
     }
 }
 

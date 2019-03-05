@@ -1,28 +1,16 @@
-/*------------------------------------------------------------------
-[Table of contents]
+@font-face {
+    font-family: 'Quicksand';
+    src: url('../fonts/quicksand-regular-webfont.woff2') format('woff2'),
+         url('../fonts/quicksand-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
 
-1. Body
-2. Header
-3. Logo
-4. Navigation
-5. Navigation Toggle
-6. Search Popup
-7. Category Title
-8. Blog Post
-9. Single Post
-10. Sidebar Widget
-11. Pagination
-12. Footer
-13. Content Overlay
-
--------------------------------------------------------------------*/
-/*------------------------------------------------------------------
-[1. Body ]
-*/
+/* [1. Body ] */
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Quicksand', sans-serif;
+  font-family: 'Quicksand', -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
   font-size: 16px;
   color: #3f3f3f;
   background-color: #f5f5f5;
@@ -56,6 +44,15 @@ sup a::hover {
   font-weight: bolder;
   padding: 0 0.5em;
   text-decoration: underline !important;
+}
+code,
+kbd,
+pre,
+samp {
+    font-family: monospace;
+    font-size: 0.95rem;
+    color: #333;
+    white-space: pre-wrap;
 }
 .notifyjs-wrapper { position: fixed !important; }
 .notifyjs-bootstrap-yellow {
@@ -866,9 +863,6 @@ sup a::hover {
 .single-post__footer-tags-list a:last-child {
   margin-right: 0;
 }
-single-post__footer-tags-list .newpost-tags {
-
-}
 .single-post__footer-social {
   position: relative;
   padding: 5px 10px;
@@ -1431,6 +1425,10 @@ single-post__footer-tags-list .newpost-tags {
     min-width: 100%;
     max-width: 100%;
   }
+}
+.btn-read-source {
+    border-width: 2px;
+    vertical-align: top;
 }
 /*------------------------------------------------------------------
 [10. Sidebar Widget ]
