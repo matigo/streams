@@ -306,12 +306,12 @@ function validatePost() {
     }
 
     // Set the Publication Date Accordingly
-    var publish_date = moment(params['publish_at'], 'MMMM Do YYYY h:mm a').format('YYYY-MM-DD HH:mm:ss');
+    var publish_date = moment(params['publish_at'], 'MMMM Do YYYY h:mm a');
     if ( publish_date === undefined || publish_date === false || publish_date === null || publish_date == 'Invalid date' ) {
         publish_date = new Date(params['publish_at']);
     }
 
-    params['publish_at'] = moment(publish_date).format('YYYY-MM-DD HH:mm:ss');
+    params['publish_at'] = moment.utc(publish_date).format();
     if ( moment(params['publish_at']).isBefore('1900-01-01') || moment(params['publish_at']).isAfter('3999-12-31') ) {
         var _msg = 'The publication date {date} does not make sense.'.replaceAll('{date}', params['publish_at']);
         $(".publish-at").notify(_msg, { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
