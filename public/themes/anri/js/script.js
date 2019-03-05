@@ -423,8 +423,9 @@ function checkSourceUrl() {
         var _name = NoNull(els[idx].getAttribute('data-name'));
         if ( _name == 'source-url' ) {
             var btns = document.getElementsByClassName('btn-read-source');
+            var _url = NoNull(els[idx].value);
             for ( var b = 0; b < btns.length; b++ ) {
-                if ( els[idx].value.length > 0 ) {
+                if ( isValidUrl(_url) && _url.length > 5 ) {
                     btns[b].classList.add('btn-primary');
                     btns[b].disabled = false;
                 } else {
@@ -435,6 +436,11 @@ function checkSourceUrl() {
             break;
         }
     }
+}
+function isValidUrl( _url ) {
+    var a  = document.createElement('a');
+    a.href = _url;
+    return (a.host && a.host != window.location.host);
 }
 
 /** ************************************************************************* *
