@@ -25,9 +25,6 @@ class Account {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
         $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
-
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
@@ -57,6 +54,7 @@ class Account {
 
         switch ( $Activity ) {
             case 'list':
+                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
                 $rVal = $this->_getAccountList();
                 break;
 
@@ -71,10 +69,12 @@ class Account {
                 break;
 
             case 'me':
+                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
                 $rVal = $this->_getProfile();
                 break;
 
             case 'summary':
+                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
                 $rVal = $this->_getAccountSummary();
                 break;
 
@@ -89,6 +89,9 @@ class Account {
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $rVal = false;
+
+        // Check the User Token is Valid
+        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
 
         switch ( $Activity ) {
             case 'bio':
@@ -128,6 +131,9 @@ class Account {
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $rVal = false;
+
+        // Check the User Token is Valid
+        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
 
         switch ( $Activity ) {
             case '':

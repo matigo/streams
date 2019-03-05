@@ -408,12 +408,10 @@ function restorePosts() {
 
             // Make Sure We're Not Going Crazy with Post Redraws
             if ( i < 75 ) { cursor.continue(); } else {
-                fixBrokenAvatars();
                 getTimeline();
             }
 
         } else {
-            fixBrokenAvatars();
             getTimeline();
         }
 
@@ -1731,7 +1729,6 @@ function parseTimeline(data) {
         }
         hideByClass('load-spinner');
         updatePostTimestamps();
-        fixBrokenAvatars();
         if ( _showmore ) { showByClass('readmore'); } else { hideByClass('readmore'); }
     }
 }
@@ -1889,15 +1886,6 @@ function getVisibilityIcon( privacy ) {
 
         default:
             return '';
-    }
-}
-function fixBrokenAvatars() {
-    var _path = window.location.protocol + '//' + window.location.hostname;
-    var els = document.getElementsByClassName('avatar-img');
-    for ( var i = 0; i < els.length; i++ ) {
-        if ( els[i].height < 24 ) {
-            els[i].src = _path + '/avatars/default.png';
-        }
     }
 }
 

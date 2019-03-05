@@ -2,7 +2,7 @@
 
 /**
  * @author Jason F. Irwin
- * 
+ *
  * Class contains the rules and methods called for API Handling
  */
 require_once( LIB_DIR . '/functions.php');
@@ -102,7 +102,7 @@ class Route extends Streams {
      */
     private function _validateRequestType() {
         $readOnly = array( 'account.expired', 'account.readonly' );
-        $valids = array( 'auth', 'dummy', 'system' );
+        $valids = array( 'account', 'auth', 'dummy', 'system' );
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
 
         // If We're Checking Authentication, The Request is Valid
@@ -129,7 +129,7 @@ class Route extends Streams {
      */
     private function _returnData( $data ) {
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
-        $valids = array( 'auth', 'locker', 'posts', 'post', 'system' );
+        $valids = array( 'account', 'auth', 'locker', 'posts', 'post', 'system' );
         $code = 0;
 
         // If We're Not Logged In, The Request is Invalid
