@@ -637,7 +637,9 @@ class Posts {
             }
 
             // Ensure the PostMeta for the Type is Set
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                              '[POST_ID]'    => nullInt($data['post_id'], $rslt),
+                             );
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/setPostTypeExists.sql', $ReplStr);
 
