@@ -1,13 +1,12 @@
-SELECT po.`type`, REPLACE(po.`type`, 'post.', 'nav_') as `label`, REPLACE(po.`type`, 'post.', '/') as `url`, 'N' as `is_default`, COUNT(po.`id`) as `items`, 50 as `sort_order`, 'Y' as `is_visible`
-  FROM `Post` po INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
-                 INNER JOIN `Site` si ON ch.`site_id` = si.`id`
- WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N'
-   and po.`type` IN ('post.article', 'post.bookmark', 'post.note', 'post.quotation') and si.`id` = [SITE_ID]
- GROUP BY po.`type`
+SELECT REPLACE(sm.`key`, 'has_', 'post.') as `type`, REPLACE(sm.`key`, 'has_', 'nav_') as `label`, REPLACE(sm.`key`, 'has_', '/') as `url`, 'N' as `is_default`, 50 as `sort_order`, 'Y' as `is_visible`
+  FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
+                    INNER JOIN `SiteMeta` sm ON si.`id` = sm.`site_id`
+ WHERE sm.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N'
+   and sm.`key` IN ('has_article', 'has_bookmark', 'has_note', 'has_quotation') and si.`id` = [SITE_ID]
  UNION ALL
-SELECT 'home' as `type`, 'nav_home' as `label`, '/' as `url`, 'Y' as `is_default`, 0 as `items`, 0 AS `sort_order`, 'Y' as `is_visible`
+SELECT 'home' as `type`, 'nav_home' as `label`, '/' as `url`, 'Y' as `is_default`, 0 AS `sort_order`, 'Y' as `is_visible`
  UNION ALL
-SELECT 'contact' as `type`, 'nav_contact' as `label`, '/contact' as `url`, 'Y' as `is_default`, 0 as `items`, 90 as `sort_order`, 'Y' as `is_visible`
+SELECT 'contact' as `type`, 'nav_contact' as `label`, '/contact' as `url`, 'Y' as `is_default`, 90 as `sort_order`, 'Y' as `is_visible`
  UNION ALL
-SELECT 'about' as `type`, 'nav_about' as `label`, '/about' as `url`, 'Y' as `is_default`, 0 as `items`, 95 as `sort_order`, 'Y' as `is_visible`
+SELECT 'about' as `type`, 'nav_about' as `label`, '/about' as `url`, 'Y' as `is_default`, 95 as `sort_order`, 'Y' as `is_visible`
  ORDER BY `sort_order`, `type`;

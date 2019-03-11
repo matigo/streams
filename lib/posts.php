@@ -172,6 +172,7 @@ class Posts {
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
+    public function getRSSFeed($site) { return $this->_getRSSFeed($site); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -635,8 +636,12 @@ class Posts {
                 $sqlStr .= readResource(SQL_DIR . '/posts/writePostMentions.sql', $ReplStr);
             }
 
-            // Remove Any Duplicate Posts (If Applicable)
+            // Ensure the PostMeta for the Type is Set
             $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
+            $sqlStr .= readResource(SQL_DIR . '/posts/setPostTypeExists.sql', $ReplStr);
+
+            // Remove Any Duplicate Posts (If Applicable)
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/chkPostDupes.sql', $ReplStr);
 
@@ -2067,6 +2072,27 @@ class Posts {
             if ( array_key_exists($name, $this->settings['personas']) ) { return $this->settings['personas'][$name]; }
         }
         return false;
+    }
+
+    /** ********************************************************************* *
+     *  RSS (XML/JSON) Functions
+     ** ********************************************************************* */
+    /**
+     *  Function Constructs an XML or JSON RSS Feed for a given Site. If one
+     *      is cached and still valid, then it will be returned.
+     */
+    private function _getRSSFeed( $site ) {
+        if ( $site['channel_privacy'] == 'visibility.public' ) {
+            // Determine the Type of Data being Requested (Posts/Social/Quotations/Bookmarks/Custom)
+
+        } else {
+            /* This is a Private Channel, so RSS Is Not Permitted */
+
+        }
+
+        print_r( $this->settings );
+        print_r( $site );
+        die();
     }
 
     /** ********************************************************************* *

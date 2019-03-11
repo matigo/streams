@@ -964,6 +964,9 @@
      * Function Queries the Required Database and Returns the values as an array
      */
     function doSQLQuery( $sqlStr, $params = array(), $dbname = DB_NAME ) {
+        // If We Have Nothing, Return Nothing
+        if ( NoNull($sqlStr) == '' ) { return false; }
+
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $GLOBALS['Perf']['queries']++;
         $qstart = getMicroTime();

@@ -57,6 +57,9 @@ class Route extends Streams {
                 redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . $suffix );
             }
 
+            // Is this a Syndication Request?
+            if ( $this->_isSyndicationRequest($data) ) { exit; }
+
             // Is this a JSON Request?
             $CType = NoNull($_SERVER["CONTENT_TYPE"], 'text/html');
             if ( strtolower($CType) == 'application/json' ) { $this->_handleJSONRequest(); }
@@ -479,7 +482,7 @@ class Route extends Streams {
                 foreach ( $rslt as $Row ) {
                     if ( YNBool($Row['is_visible']) ) {
                         if ( $html != '' ) { $html .= "\r\n"; }
-                        $html .= tabSpace(5) . '<li class="main-nav__item" data-items="' . nullInt($Row['items']) . '">' .
+                        $html .= tabSpace(5) . '<li class="main-nav__item">' .
                                     '<a href="' . $SiteUrl . NoNull($Row['url']) . '" title="">' . NoNull($this->strings[$Row['label']], $Row['label']) . '</a>' .
                                  '</li>';
                     }
@@ -821,6 +824,42 @@ class Route extends Streams {
         // Return the Run Time String
         return "    <!-- Page generated in roughly: $App $lblSecond $SQL SQL $lblQuery -->";
     }
-}
 
+    /** ********************************************************************** *
+     *  RSS (Syndication) Functions
+     ** ********************************************************************** */
+    /**
+     *  Function Determines if Request is an RSS (XML/JSON) Request, Processes the data accordingly, and returns a Boolean response
+     */
+    private function _isSyndicationRequest( $site ) {
+        $valids = array( 'rss', 'rss.xml', 'rss.json', 'feed', 'feed.xml', 'feed.json', 'social.xml', 'social.json', 'podcast.xml', 'podcast.json' );
+        if ( is_array($site['custom_feeds']) ) {
+            foreach ( $site['custom_feeds'] as $feedUrl ) {
+                $valids[] = $feedUrl;
+            }
+        }
+
+        if ( strpos($ReqURI, "?") ) { $ReqURI = substr($ReqURI, 0, strpos($ReqURI, "?")); }
+        return false;
+
+        $fullPath = explode('/', $ReqURI);
+        $lastSeg = NoNull($fullPath[(count($fullPath) - 1)]);
+        if ( in_array($lastSeg, $valids) ) {
+            require_once( LIB_DIR . '/posts.php' );
+            $post = new Posts( $this->settings, $this->strings );
+            $feed = $post->getRSSFeed($site);
+            $this->settings['status'] = $post->getResponseCode();
+            $this->settings['errors'] = $post->getResponseMeta();
+            unset($post);
+
+            // Return the RSS Feed in the Requested Format
+
+            // If We're Here, We've Already Returned the RSS Feed
+            return true;
+        }
+
+        // If We're Here, There is no Syndication Resource Request
+        return false;
+    }
+}
 ?>

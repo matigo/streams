@@ -143,9 +143,10 @@ class Geocode {
     private function _getNameFromCoords( $latitude, $longitude ) {
         $CleanLong = nullInt($longitude);
         $CleanLat = nullInt($latitude);
-        
+
         if ( $CleanLong == 0 && $CleanLat == 0 ) { return ''; }
-        
+
+        /*
         $ReplStr = array( '[COORD_LONG]' => $CleanLong,
                           '[COORD_LAT]'  => $CleanLat,
                          );
@@ -165,6 +166,7 @@ class Geocode {
                 }
             }
         }
+        */
 
         // If We're Here, There Is No Match. Return the Coordinates.
         return round($latitude, 4) . ', ' . round($longitude, 4);
@@ -188,7 +190,7 @@ class Geocode {
         curl_setopt($ch, CURLOPT_URL, $RemoteURL);
         curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         curl_setopt($ch, CURLOPT_FILE, $fp);
-        
+
         // Read the File to Storage
         curl_exec($ch);
         $rslt = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -204,7 +206,7 @@ class Geocode {
         $SourceURL = NoNull($this->settings['source_url'], "http://download.geonames.org/export/dump/timeZones.txt");
         if ( mb_strlen($SourceURL) <= 10 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
         $rslt = $this->_getRemoteFile($SourceURL, $LocalFile);
-        
+
         if ( $rslt == 200 ) {
             $handle = fopen($LocalFile, "r");
             if ($handle) {
@@ -226,11 +228,11 @@ class Geocode {
                     }
                 }
                 fclose($handle);
-                
+
                 $sqlStr = "INSERT INTO `tmpTimezone` (`country_code`, `name`, `gmt_offset`, `dst_offset`, `raw_offset`) " .
                           "VALUES $sqlStr";
                 $isOK = doSQLExecute($sqlStr);
-                
+
                 return array( 'sql' => $isOK,
                               'cnt'  => $cnt
                              );
@@ -239,7 +241,7 @@ class Geocode {
                 $this->_setMetaMessage("Could Not Rebuild Timezone Data", 400);
                 return false;
             }
-    
+
         } else {
             print_r( "Error: $rslt" );
         }
@@ -247,14 +249,14 @@ class Geocode {
         // If We're Here, There Is No Summary (That We Know Of)
         return false;
     }
-    
+
     private function _rebuildCountryInfo() {
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
         $LocalFile = TMP_DIR . '/timezones.txt';
         $SourceURL = NoNull($this->settings['source_url'], "http://download.geonames.org/export/dump/countryInfo.txt");
         if ( mb_strlen($SourceURL) <= 10 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
         $rslt = $this->_getRemoteFile($SourceURL, $LocalFile);
-        
+
         if ( $rslt == 200 ) {
             $handle = fopen($LocalFile, "r");
             if ($handle) {
@@ -284,12 +286,12 @@ class Geocode {
                     }
                 }
                 fclose($handle);
-                
-                $sqlStr = "INSERT INTO `tmpCountry` (`code`, `iso3`, `iso_numeric`, `name`, `capital`, `area`, `population`, `continent`, `tld`, " . 
+
+                $sqlStr = "INSERT INTO `tmpCountry` (`code`, `iso3`, `iso_numeric`, `name`, `capital`, `area`, `population`, `continent`, `tld`, " .
                                                     "`currency_code`, `currency_name`, `gnid`) " .
                           "VALUES $sqlStr";
                 $isOK = doSQLExecute($sqlStr);
-                
+
                 return array( 'sql' => $isOK,
                               'cnt'  => $cnt
                              );
@@ -298,7 +300,7 @@ class Geocode {
                 $this->_setMetaMessage("Could Not Rebuild Country Data", 400);
                 return false;
             }
-    
+
         } else {
             print_r( "Error: $rslt" );
         }
@@ -313,7 +315,7 @@ class Geocode {
         $SourceURL = NoNull($this->settings['source_url'], "http://download.geonames.org/export/dump/iso-languagecodes.txt");
         if ( mb_strlen($SourceURL) <= 10 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
         $rslt = $this->_getRemoteFile($SourceURL, $LocalFile);
-        
+
         if ( $rslt == 200 ) {
             $handle = fopen($LocalFile, "r");
             if ($handle) {
@@ -338,7 +340,7 @@ class Geocode {
                 $sqlStr = "INSERT INTO `tmpLanguage` (`name`, `iso_639_1`, `iso_639_2`, `iso_639_3`) " .
                           "VALUES $sqlStr";
                 $isOK = doSQLExecute($sqlStr);
-                
+
                 return array( 'sql' => $isOK,
                               'cnt' => $cnt
                              );
@@ -347,7 +349,7 @@ class Geocode {
                 $this->_setMetaMessage("Could Not Rebuild Language Data", 400);
                 return false;
             }
-    
+
         } else {
             print_r( "Error: $rslt" );
         }
@@ -379,12 +381,12 @@ class Geocode {
                         $feat_class = sqlScrub($vals[6]);
                         $feat_code = sqlScrub($vals[7]);
                         $country = sqlScrub($vals[8]);
-                        
+
                         $fips = sqlScrub($vals[10]);
                         $sec = sqlScrub($vals[11]);
                         $ter = sqlScrub($vals[12]);
                         $quad = sqlScrub($vals[13]);
-                        
+
                         $pop = nullInt($vals[15]);
                         $elev = nullInt($vals[16]);
                         $timezone = sqlScrub($vals[17]);
@@ -395,7 +397,7 @@ class Geocode {
                                    "'$fips', '$sec', '$ter', '$quad', $pop, $elev, '$timezone', '$moddate')";
                         $cnt++;
                         $tnt++;
-                        
+
                         if ( $tnt >= 2500 ) {
                             $sqlStr = "INSERT INTO `tmpGeoName` (`gnid`, `name`, `latitude`, `longitude`, `lat_int`, `long_int`, " .
                                                                 "`feature_class`, `feature_code`, `country_code`, " .
@@ -419,7 +421,7 @@ class Geocode {
                                                     "`population`, `elevation`, `iana_id`, `updated_at`)" .
                           "VALUES  $sqlStr";
                 $isOK = doSQLExecute($sqlStr);
-                
+
                 return array( 'sql' => $isOK,
                               'cnt' => $cnt
                              );
@@ -431,7 +433,7 @@ class Geocode {
         // If We're Here, There Is No Summary (That We Know Of)
         return false;
     }
-    
+
     private function _rebuildGeoNames() {
         $LocalFile = TMP_DIR . '/allCountries.txt';
 
@@ -451,16 +453,16 @@ class Geocode {
                         $longitude = nullInt($vals[5]);
                         $lat_int = floor($latitude);
                         $long_int = floor($longitude);
-                        
+
                         $feat_class = sqlScrub($vals[6]);
                         $feat_code = sqlScrub($vals[7]);
                         $country = sqlScrub($vals[8]);
-                        
+
                         $fips = sqlScrub($vals[10]);
                         $sec = sqlScrub($vals[11]);
                         $ter = sqlScrub($vals[12]);
                         $quad = sqlScrub($vals[13]);
-                        
+
                         $pop = nullInt($vals[15]);
                         $elev = nullInt($vals[16]);
                         $timezone = sqlScrub($vals[17]);
@@ -471,7 +473,7 @@ class Geocode {
                                    "'$fips', '$sec', '$ter', '$quad', $pop, $elev, '$timezone', '$moddate')";
                         $cnt++;
                         $tnt++;
-                        
+
                         if ( $tnt >= 2500 ) {
                             $sqlStr = "INSERT INTO `tmpGeoName` (`gnid`, `name`, `latitude`, `longitude`, `lat_int`, `long_int`, " .
                                                                 "`feature_class`, `feature_code`, `country_code`, " .
@@ -495,7 +497,7 @@ class Geocode {
                                                     "`population`, `elevation`, `iana_id`, `updated_at`)" .
                           "VALUES  $sqlStr";
                 $isOK = doSQLExecute($sqlStr);
-                
+
                 return array( 'sql' => $isOK,
                               'cnt' => $cnt
                              );
