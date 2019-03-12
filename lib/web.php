@@ -854,15 +854,20 @@ class Route extends Streams {
             $ReqTypes = explode('-', str_ireplace(array_keys($ReplStr), array_values($ReplStr), $ReqURI));
 
             foreach ( $ReqTypes as $req ) {
+                $req = strtolower($req);
                 if ( in_array(NoNull($req), $types) ) {
                     if ( array_key_exists('rss_filter_on', $this->settings) === false ) {
                         $this->settings['rss_filter_on'] = array();
                     }
 
-                    $this->settings['rss_filter_on'][] = NoNull($req);
+                    // Set the Values
+                    if ( in_array(NoNull($req), $valids) === false ) { $this->settings['rss_filter_on'][] = NoNull($req); }
                     if ( in_array($ReqURI, $valids) === false ) { $valids[] = NoNull(str_ireplace('/', '', $ReqURI)); }
                 }
             }
+
+            // Ditch the Filter If Zero Values Exist
+            if ( count($this->settings['rss_filter_on']) <= 0 ) { unset($this->settings['rss_filter_on']); }
         }
 
         $fullPath = explode('/', $ReqURI);
