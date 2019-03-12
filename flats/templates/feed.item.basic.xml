@@ -1,0 +1,12 @@
+        <item>
+            <title>[TITLE]</title>
+            <link>[POST_URL]</link>
+            <pubDate>[POST_DATE]</pubDate>
+            <dc:creator>[AUTHOR_NAME]</dc:creator>
+            <guid isPermaLink="false">[POST_GUID]</guid>
+            <description><![CDATA[[POST_TEXT]
+            ]]></description>
+            <content:encoded><![CDATA[[POST_HTML]
+            ]]></content:encoded>
+            <itunes:block>Yes</itunes:block>
+        </item>

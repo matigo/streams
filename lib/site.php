@@ -196,11 +196,15 @@ class Site {
                                                             'name'            => NoNull($Row['site_name']),
                                                             'description'     => NoNull($Row['description']),
                                                             'keywords'        => NoNull($Row['keywords']),
+                                                            'summary'         => NoNull($Row['summary']),
                                                             'location'        => NoNull($Row['theme']),
+                                                            'license'         => 'CC-BY-4.0',
                                                             'is_default'      => YNBool($Row['is_default']),
                                                             'site_id'         => nullInt($Row['site_id']),
                                                             'site_guid'       => NoNull($Row['site_guid']),
                                                             'site_version'    => NoNull($cver),
+                                                            'updated_at'      => date("Y-m-d\TH:i:s\Z", strtotime($Row['site_updated_at'])),
+                                                            'updated_unix'    => strtotime($Row['site_updated_at']),
 
                                                             'can_edit'        => YNBool($Row['can_edit']),
                                                             'show_geo'        => YNBool($Row['show_geo']),
@@ -211,6 +215,11 @@ class Site {
 
                                                             'page_title'      => NoNull($Row['page_title']),
                                                             'page_type'       => str_replace('post.', '', NoNull($Row['page_type'], 'website')),
+
+                                                            'rss_explicit'    => 'Clean',
+                                                            'rss_cover'       => '',
+                                                            'rss_author'      => '',
+                                                            'rss_mailaddr'    => '',
 
                                                             'channel_guid'    => NoNull($Row['channel_guid']),
                                                             'channel_name'    => NoNull($Row['channel_name']),

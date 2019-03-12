@@ -172,7 +172,7 @@ class Posts {
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
-    public function getRSSFeed($site) { return $this->_getRSSFeed($site); }
+    public function getRSSFeed($site, $format) { return $this->_getRSSFeed($site, $format); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -2083,18 +2083,171 @@ class Posts {
      *  Function Constructs an XML or JSON RSS Feed for a given Site. If one
      *      is cached and still valid, then it will be returned.
      */
-    private function _getRSSFeed( $site ) {
-        if ( $site['channel_privacy'] == 'visibility.public' ) {
-            // Determine the Type of Data being Requested (Posts/Social/Quotations/Bookmarks/Custom)
+    private function _getRSSFeed( $site, $format = 'xml' ) {
+        // Do We Have a Special Request Type?
+        $ReqTypes = array( 'post.article'   => '-',
+                           'post.bookmark'  => '-',
+                           'post.quotation' => '-',
+                           'post.note'      => '-',
+                          );
+        $rtSuffix = '';
+        if ( array_key_exists('rss_filter_on', $this->settings) ) {
+            $ReqTypes['post.article'] = BoolYN(in_array('article', $this->settings['rss_filter_on']));
+            $ReqTypes['post.bookmark'] = BoolYN(in_array('bookmark', $this->settings['rss_filter_on']));
+            $ReqTypes['post.quotation'] = BoolYN(in_array('quotation', $this->settings['rss_filter_on']));
+            $ReqTypes['post.note'] = BoolYN(in_array('note', $this->settings['rss_filter_on']));
 
-        } else {
-            /* This is a Private Channel, so RSS Is Not Permitted */
-
+            $rtSuffix = '-';
+            foreach ( $ReqTypes as $Key=>$Value ) {
+                $rtSuffix .= $Value;
+            }
         }
 
-        print_r( $this->settings );
-        print_r( $site );
-        die();
+        // Check to See If We Have a Cached Version of the Feed
+        $cache_file = $data['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed');
+        $rVal = '';
+
+        if ( nullInt(ENABLE_CACHING) == 1 ) {
+            $rVal = readCache($data['site_id'], $cache_file);
+            if ( $rVal !== false ) { return $rVal; }
+        }
+
+        // If We're Here, Build the Feed
+        $ReplStr = array( '[SITE_URL]'       => sqlScrub($site['HomeURL']),
+                          '[SHOW_ARTICLE]'   => sqlScrub($ReqTypes['post.article']),
+                          '[SHOW_BOOKMARK]'  => sqlScrub($ReqTypes['post.bookmark']),
+                          '[SHOW_QUOTATION]' => sqlScrub($ReqTypes['post.quotation']),
+                          '[SHOW_NOTE]'      => sqlScrub($ReqTypes['post.note']),
+                          '[COUNT]'          => nullInt($site['RssLimit'], 100),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getRSSFeed.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            // If the request is JSON, supply it as such. Otherwise, XML as default
+            if ( $format == 'json' ) {
+                $rVal = $this->_buildJSONFeed($site, $rslt);
+
+            } else {
+                $rVal = $this->_buildXMLFeed($site, $rslt);
+            }
+        }
+
+        if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($data['site_id'], $cache_file, $rVal); }
+
+        // Return the Constructed Data
+        return $rVal;
+    }
+
+    /**
+     *  Function builds a JSON body based on the results from _getRSSFeed
+     */
+    private function _buildJSONFeed( $site, $data ) {
+        $SiteURL = NoNull($site['protocol'], 'http') . '://' . NoNull($site['HomeURL']);
+        $json = array( 'version'        =>  "https://jsonfeed.org/version/1",
+                       'title'          => NoNull($site['name']),
+                       'home_page_url'  => $SiteUrl,
+                       'feed_url'       => $SiteURL . NoNull($this->settings['ReqURI'], '/feed.json'),
+                       'description'    => NoNull($site['summary'], $site['description']),
+
+                       'items'          => array()
+                      );
+
+        // Build the Items
+        if ( is_array($data) ) {
+            foreach ( $data as $post ) {
+                $item = array( 'id'     => NoNull($post['post_guid']),
+                               'title'  => NoNull($post['post_title']),
+                               'content_text'   => NoNull($post['post_text']),
+                               'content_html'   => $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true),
+                               'url'            => NoNull($post['post_url']),
+                               'external_url'   => NoNull($post['source_url']),
+                               'summary'        => NoNull($post['summary']),
+                               'banner_image'   => NoNull($post['banner_image']),
+                               'date_published' => date("c", strtotime($post['publish_at'])),
+                               'date_modified'  => date("c", strtotime($post['updated_at'])),
+                               'author'         => array( 'name'   => NoNull($post['display_name'], $post['handle']),
+                                                          'url'    => $SiteURL,
+                                                          'avatar' => NoNull($post['avatar_url']),
+                                                         ),
+                              );
+
+                // Remove the Unnecessary Elements
+                if ( $item['banner_image'] == '' ) { unset($item['banner_image']); }
+                if ( $item['external_url'] == '' ) { unset($item['external_url']); }
+                if ( $item['author']['name'] == '' ) { unset($item['author']); }
+                if ( $item['summary'] == '' ) { unset($item['summary']); }
+                if ( $item['title'] == '' ) { unset($item['title']); }
+
+                // Add the Array to the Output
+                $json['items'][] = $item;
+            }
+        }
+
+        // Return the Completed Object as JSON
+        return json_encode($json, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+    }
+
+    /**
+     *  Function builds an XML body based on the results from _getRSSFeed
+     */
+    private function _buildXMLFeed( $site, $data ) {
+        $SiteURL = NoNull($site['protocol'], 'http') . '://' . NoNull($site['HomeURL']);
+        $ReplStr = array( '[SITENAME]'  => NoNull($site['name']),
+                          '[HOMEURL]'   => $SiteURL,
+                          '[SUBTITLE]'  => NoNull($site['description']),
+                          '[SUMMARY]'   => NoNull($site['summary'], $site['description']),
+                          '[BUILD_DTS]' => date("D, d M Y H:i:s O", strtotime($site['updated_at'])),
+                          '[SITELANG]'  => 'EN',
+                          '[LICENSE]'   => NoNull($site['license']),
+                          '[GENERATOR]' => APP_NAME . ' (' . APP_VER . ')',
+
+                          '[RSS_URL]'   => $SiteURL . NoNull($this->settings['ReqURI'], '/rss'),
+                          '[RSS_COVER]' => NoNull($site['rss_cover'], ''),
+                          '[RSS_AUTHOR]'=> NoNull($site['rss_author'], ''),
+                          '[EXPLICIT]'  => NoNull($site['rss_explicit'], 'Clean'),
+                          '[MAILADDR]'  => NoNull($site['rss_mailaddr'], ''),
+                          '[RSS_TOPIC]' => '',
+                          '[RSS_ITEMS]' => '',
+                         );
+
+        // Build the RSS Items
+        if ( is_array($data) ) {
+            $fixes = array( 'src="//cdn.10centuries.org/' => 'src="https://cdn.10centuries.org/',
+                            '&' => "&amp;",     "'" => "&apos;",    "â€™" => "&apos;",
+                           );
+            $items = '';
+
+            foreach ( $data as $post ) {
+                $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
+                $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
+
+                $rObj = array( '[TITLE]'        => NoNull($post['post_title']),
+                               '[POST_URL]'     => NoNull($post['source_url'], $post['post_url']),
+                               '[POST_GUID]'    => NoNull($post['post_guid']),
+                               '[POST_DATE]'    => date("D, d M Y H:i:s O", strtotime($post['publish_at'])),
+                               '[POST_UTC]'     => date("c", strtotime($post['publish_at'])),
+                               '[AUTHOR_NAME]'  => NoNull($post['display_name'], $post['handle']),
+                               '[AVATAR_URL]'   => NoNull($post['avatar_url']),
+
+                               '[POST_TYPE]'    => NoNull($post['post_type']),
+                               '[POST_TEXT]'    => NoNull($post['post_text']),
+                               '[POST_HTML]'    => NoNull($html),
+                              );
+
+                $itemType = 'item.basic';
+                if ( YNBool($post['has_audio']) ) { $itemType = 'item.audio'; }
+                if ( $post['post_type'] == 'post.note' ) { $itemType = 'item.note'; }
+
+                if ( $items != '' ) { $items .= "\r\n"; }
+                $items .= readResource(FLATS_DIR . '/templates/feed.' . $itemType . '.xml', $rObj);
+            }
+
+            // Write the Items to the Complete Array
+            $ReplStr['[RSS_ITEMS]'] = $items;
+        }
+
+        // Return the Completed XML Object
+        return readResource(FLATS_DIR . '/templates/feed.main.xml', $ReplStr);
     }
 
     /** ********************************************************************* *

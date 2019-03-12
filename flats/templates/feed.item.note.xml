@@ -1,0 +1,11 @@
+        <item>
+            <link>[POST_URL]</link>
+            <guid>[POST_GUID]</guid>
+            <pubDate>[POST_DATE]</pubDate>
+            <wp:post_type>status</wp:post_type>
+            <wp:status>publish</wp:status>
+            <dc:creator>[AUTHOR_NAME]</dc:creator>
+            <description><![CDATA[
+[POST_HTML]
+            ]]></description>
+        </item>

@@ -16,12 +16,12 @@ class Route extends Streams {
     var $strings;
     var $site;
 
-	function __construct( $settings, $strings ) {
+    function __construct( $settings, $strings ) {
         $this->settings = $settings;
         $this->strings = $strings;
 
         $this->site = new Site($this->settings);
-	}
+    }
 
     /* ************************************************************************************** *
      *  Function determines what needs to be done and returns the appropriate HTML Document.
@@ -813,7 +813,7 @@ class Route extends Streams {
      *  Function Returns the Page Execution Time
      */
     private function _getRunTime() {
-	    $precision = 6;
+        $precision = 6;
         $GLOBALS['Perf']['app_f'] = getMicroTime();
         $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
         $SQL = nullInt( $GLOBALS['Perf']['queries'] );
@@ -832,30 +832,62 @@ class Route extends Streams {
      *  Function Determines if Request is an RSS (XML/JSON) Request, Processes the data accordingly, and returns a Boolean response
      */
     private function _isSyndicationRequest( $site ) {
-        $valids = array( 'rss', 'rss.xml', 'rss.json', 'feed', 'feed.xml', 'feed.json', 'social.xml', 'social.json', 'podcast.xml', 'podcast.json' );
+        $valids = array( 'rss', 'feed' );
+        $types = array( 'rss', 'feed', 'social', 'podcast', 'note', 'article', 'quotation', 'bookmark' );
+        foreach ( $types as $type ) {
+            $valids[] = "$type.json";
+            $valids[] = "$type.xml";
+        }
         if ( is_array($site['custom_feeds']) ) {
             foreach ( $site['custom_feeds'] as $feedUrl ) {
                 $valids[] = $feedUrl;
             }
         }
 
+        // Determine the Request by the Requested URI
+        $ReqURI = NoNull($this->settings['ReqURI']);
         if ( strpos($ReqURI, "?") ) { $ReqURI = substr($ReqURI, 0, strpos($ReqURI, "?")); }
-        return false;
+
+        // Determine if there's a Custom Request
+        if ( strpos($ReqURI, '.xml') || strpos($ReqURI, '.json') ) {
+            $ReplStr = array( '/' => '-', '.xml' => '', '.json' => '' );
+            $ReqTypes = explode('-', str_ireplace(array_keys($ReplStr), array_values($ReplStr), $ReqURI));
+
+            foreach ( $ReqTypes as $req ) {
+                if ( in_array(NoNull($req), $types) ) {
+                    if ( array_key_exists('rss_filter_on', $this->settings) === false ) {
+                        $this->settings['rss_filter_on'] = array();
+                    }
+
+                    $this->settings['rss_filter_on'][] = NoNull($req);
+                    if ( in_array($ReqURI, $valids) === false ) { $valids[] = NoNull(str_ireplace('/', '', $ReqURI)); }
+                }
+            }
+        }
 
         $fullPath = explode('/', $ReqURI);
         $lastSeg = NoNull($fullPath[(count($fullPath) - 1)]);
+        $format = ( strpos($lastSeg, 'json') ) ? 'json' : 'xml';
         if ( in_array($lastSeg, $valids) ) {
             require_once( LIB_DIR . '/posts.php' );
             $post = new Posts( $this->settings, $this->strings );
-            $feed = $post->getRSSFeed($site);
+            $feed = $post->getRSSFeed($site, $format);
             $this->settings['status'] = $post->getResponseCode();
             $this->settings['errors'] = $post->getResponseMeta();
             unset($post);
 
-            // Return the RSS Feed in the Requested Format
+            switch ( $format ) {
+                case 'json':
+                    $this->settings['type'] = 'application/json';
+                    break;
 
-            // If We're Here, We've Already Returned the RSS Feed
-            return true;
+                default:
+                    $this->settings['type'] = 'application/rss+xml';
+            }
+
+            // Return the Response Data
+            formatResult($feed, $this->settings, $this->settings['type'], $this->settings['status'], $this->settings['errors']);
+            exit();
         }
 
         // If We're Here, There is no Syndication Resource Request

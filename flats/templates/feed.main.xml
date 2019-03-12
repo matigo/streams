@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+    <channel>
+        <title>[SITENAME]</title>
+        <atom:link href="[RSS_URL]" rel="self" type="application/rss+xml" />
+        <link>[HOMEURL]</link>
+        <description>[SUMMARY]</description>
+        <lastBuildDate>[BUILD_DTS]</lastBuildDate>
+        <language>[SITELANG]</language>
+        <license>[LICENSE]</license>
+        <image>
+            <url>[RSS_COVER]</url>
+            <title>[SITENAME]</title>
+            <link>[HOMEURL]</link>
+        </image>
+        <itunes:author>[RSS_AUTHOR]</itunes:author>
+        <itunes:explicit>[EXPLICIT]</itunes:explicit>
+        <itunes:image href="[RSS_COVER]" />
+        <itunes:owner>
+            <itunes:name>[RSS_AUTHOR]</itunes:name>
+            <itunes:email>[MAILADDR]</itunes:email>
+        </itunes:owner>
+        <itunes:subtitle>[SUBTITLE]</itunes:subtitle>
+        <sy:updatePeriod>hourly</sy:updatePeriod>
+        <sy:updateFrequency>1</sy:updateFrequency>
+        <generator>[GENERATOR]</generator>
+        <generateTime>[GenTime]</generateTime>
+[RSS_TOPIC][RSS_ITEMS]
+    </channel>
+</rss>
