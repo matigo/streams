@@ -2104,11 +2104,11 @@ class Posts {
         }
 
         // Check to See If We Have a Cached Version of the Feed
-        $cache_file = $data['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed');
+        $cache_file = $site['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed');
         $rVal = '';
 
         if ( nullInt(ENABLE_CACHING) == 1 ) {
-            $rVal = readCache($data['site_id'], $cache_file);
+            $rVal = readCache($site['site_id'], $cache_file);
             if ( $rVal !== false ) { return $rVal; }
         }
 
@@ -2132,7 +2132,7 @@ class Posts {
             }
         }
 
-        if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($data['site_id'], $cache_file, $rVal); }
+        if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($site['site_id'], $cache_file, $rVal); }
 
         // Return the Constructed Data
         return $rVal;
@@ -2148,6 +2148,8 @@ class Posts {
                        'home_page_url'  => $SiteUrl,
                        'feed_url'       => $SiteURL . NoNull($this->settings['ReqURI'], '/feed.json'),
                        'description'    => NoNull($site['summary'], $site['description']),
+                       'favicon'        => '',
+                       'icon'           => '',
 
                        'items'          => array()
                       );
@@ -2169,9 +2171,25 @@ class Posts {
                                                           'url'    => $SiteURL,
                                                           'avatar' => NoNull($post['avatar_url']),
                                                          ),
+                               'attachments'    => array(),
                               );
 
+                // If We Have Attachments, Ensure They're Set
+                if ( array_key_exists('files', $post) && count($post['files']) > 0 ) {
+                    foreach ($post['files'] as $att ) {
+                        $item['attachments'][] = array( 'url'           => NoNull($att['url']),
+                                                        'mime_type'     => NoNull($att['mime']),
+                                                        'size_in_bytes' => nullInt($att['bytes']),
+                                                       );
+                    }
+                }
+
+                // Ensure the Icon Exists
+                if ( $json['favicon'] == '' ) { $json['favicon'] = NoNull($post['avatar_url']); }
+                if ( $json['icon'] == '' ) { $json['icon'] = NoNull($post['avatar_url']); }
+
                 // Remove the Unnecessary Elements
+                if ( count($item['attachments']) <= 0 ) { unset($item['attachments']); }
                 if ( $item['banner_image'] == '' ) { unset($item['banner_image']); }
                 if ( $item['external_url'] == '' ) { unset($item['external_url']); }
                 if ( $item['author']['name'] == '' ) { unset($item['author']); }
@@ -2233,6 +2251,9 @@ class Posts {
                                '[POST_TEXT]'    => NoNull($post['post_text']),
                                '[POST_HTML]'    => NoNull($html),
                               );
+
+                // Ensure a Cover Image Exists (Using the Avatar If Required)
+                if ( $ReplStr['[RSS_COVER]'] == '' ) { $ReplStr['[RSS_COVER]'] = NoNull($post['avatar_url']); }
 
                 $itemType = 'item.basic';
                 if ( YNBool($post['has_audio']) ) { $itemType = 'item.audio'; }

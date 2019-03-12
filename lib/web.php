@@ -435,6 +435,7 @@ class Route extends Streams {
                 $ReplStr = array( '[AVATAR_IMG]'    => $SiteUrl . '/avatars/' . NoNull($this->settings['_avatar_file'], 'default.png'),
                                   '[DISPLAY_NAME]'  => NoNull($this->settings['_display_name']),
                                   '[PERSONA_GUID]'  => NoNull($this->settings['_persona_guid']),
+                                  '[UNREAD_COUNT]'  => nullInt($this->settings['_unread']),
                                   '[STORAGE_TOTAL]' => nullInt($this->settings['_storage_total']),
                                   '[STORAGE_USED]'  => nullInt($this->settings['_storage_used']),
                                   '[HOMEURL]'       => NoNull($this->settings['HomeURL']),

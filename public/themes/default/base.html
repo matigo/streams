@@ -37,7 +37,11 @@
         <meta name="twitter:url" content="[PAGE_URL]" />
         <meta name="twitter:image" content="[BANNER_IMG]" />
 
-        <link rel="webmention" href="[HOMEURL]/api/webmention" />
+        <link rel="alternate" type="application/rss+xml" title="[SITE_NAME]" href="[HOMEURL]/rss">
+        <link rel="alternate" type="application/json" title="[SITE_NAME]" href="[HOMEURL]/feed.json" />
+        <link rel="pingback" href="[API_URL]/xmlrpc">
+        <link rel="micropub" href="[API_URL]/micropub">
+        <link rel="webmention" href="[API_URL]/webmention">
 
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/fontawesome.css" />
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/quill.snow.css?ver=[CSS_VER]" />
