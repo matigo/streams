@@ -6,6 +6,7 @@
     "nav_bookmark": "Bookmarks",
     "nav_note": "Notes",
     "nav_quotation": "Quotations",
+    "nav_subscribe": "Subscribe",
 
     "lblPostedBy": "Written By",
     "lblTags": "Tags",
@@ -56,6 +57,14 @@
     "lblSettingsS2": "Landing Page Preferences",
     "lblSettingsS3": "Metadata Settings",
     "btnSettingsSave": "Save Settings",
+
+    "lblSubscribe": "Subscribe",
+    "lblSubscribeDescr": "This is where you can choose what kinds of items will appear in the syndication feed you subscribe to. Want just some types of posts? Want everything? No problem! You have complete control.",
+    "lblSubscribeHere": "Your Subscription URL",
+    "lblSubscribeS1": "Choose the Items You&apos;d Like to Receive",
+    "lblSubscribeS2": "Choose the Format You&apos;d Like to Receive",
+    "lblSubscribeRSS": "RSS+XML (Normal)",
+    "lblSubscribeJSON": "JSON Feed",
 
     "lblVisibility": "Visibility",
     "optVisPublic": "Visible to Everybody",

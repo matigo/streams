@@ -1,0 +1,63 @@
+                <div class="col-lg-12 col-md-12">
+                    <div class="single-post single-post--fullsize">
+                        <div class="single-post__title single-post__title--contact">
+                            <h2>[lblSubscribe]</h2>
+                        </div>
+                        <div class="single-post__content single-post__content--contact">
+                            <p>[lblSubscribeDescr]</p>
+                        </div>
+                        <div class="single-post__contact">
+
+                                <p class="single-post__site-name">
+                                    <label for="feed-url">[lblSubscribeHere]</label>
+                                    <input id="feed-url" type="text" class="fullwide" name="feed-url" size="30" value="[HOMEURL]/rss.xml" readonly>
+                                </p>
+
+                                <h4>[lblSubscribeS1]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowNote]</strong>
+                                    <label class="switch">
+                                        <input id="show-note" type="checkbox" class="show-type" data-name="note" onclick="buildSubscriptionURL();"[SITE_NOTE]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowArticle]</strong>
+                                    <label class="switch">
+                                        <input id="show-article" type="checkbox" class="show-type" data-name="article" onclick="buildSubscriptionURL();"[SITE_ARTICLE]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowBookmark]</strong>
+                                    <label class="switch">
+                                        <input id="show-bookmark" type="checkbox" class="show-type" data-name="bookmark" onclick="buildSubscriptionURL();"[SITE_BMARKS]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowQuotation]</strong>
+                                    <label class="switch">
+                                        <input id="show-quotation" type="checkbox" class="show-type" data-name="quotation" onclick="buildSubscriptionURL();"[SITE_QUOTES]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <h4>[lblSubscribeS2]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSubscribeRSS]</strong>
+                                    <label class="switch">
+                                        <input id="format-rss" type="checkbox" name="format-type" data-name="xml" onclick="toggleSubscriptionType(this);" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSubscribeJSON]</strong>
+                                    <label class="switch">
+                                        <input id="format-json" type="checkbox" name="format-type" data-name="json" onclick="toggleSubscriptionType(this);">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p>&nbsp;</p>
+                        </div>
+                    </div>
+                </div>

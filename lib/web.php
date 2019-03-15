@@ -47,14 +47,16 @@ class Route extends Streams {
             // Determine if a Redirect is Required
             if ( strtolower($_SERVER['SERVER_NAME']) != NoNull($data['HomeURL']) ) { $data['do_redirect'] = true; }
             if ( $Protocol != $data['protocol'] ) {
-                $suffix = NoNull($this->settings['PgRoot']);
+                $suffix = '/' . NoNull($this->settings['PgRoot']);
                 if ( $suffix != '' ) {
                     for ( $i = 1; $i <= 9; $i++ ) {
                         $itm = NoNull($this->settings['PgSub' . $i]);
                         if ( $itm != '' ) { $suffix .= "/$itm"; }
                     }
                 }
-                redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . $suffix );
+
+                // Redirect to the Appropriate URL
+                redirectTo( $data['protocol'] . '://' . NoNull(str_replace('//', '/', $data['HomeURL'] . $suffix)) );
             }
 
             // Is this a Syndication Request?
@@ -165,7 +167,8 @@ class Route extends Streams {
     private function _getPageHTML( $data ) {
         // If Caching Is Enabled, Check If We Have a Valid Cached Version
         $cache_file = md5($data['site_version'] . '-' . NoNull(APP_VER . CSS_VER) . '-' .
-                          nullInt($this->settings['_account_id']) . '-' . $this->settings['ReqURI'] . '-' . nullInt($this->settings['page']));
+                          nullInt($this->settings['_account_id']) . '.' . nullInt($this->settings['_account_id']) . '-' .
+                          NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
         if ( defined('ENABLE_CACHING') ) {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);

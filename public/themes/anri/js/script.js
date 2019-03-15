@@ -125,6 +125,7 @@ function getMetaValue( name ) {
 
 document.onreadystatechange = function () {
     if (document.readyState == "interactive") {
+        getSubscriptionDefault();
         updatePostTimestamps();
         updateContentHeight();
         updatePostBanners();
@@ -359,7 +360,57 @@ function parsePublish( data ) {
         btns[i].disabled = false;
     }
 }
+/** ************************************************************************* *
+ *  Subscription Functions
+ ** ************************************************************************* */
+function getSubscriptionDefault() {
+    var _addr = '';
+    var els = document.getElementsByClassName('show-type');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].checked ) {
+            if ( _addr != '' ) { _addr += '-'; }
+            _addr += NoNull(els[i].getAttribute('data-name'));
+        }
+    }
+    window.defaultSubscribe = _addr;
+}
+function buildSubscriptionURL() {
+    var _url = window.location.protocol + '//' + window.location.hostname + '/';
+    if ( window.defaultSubscribe === undefined || window.defaultSubscribe === null ) { window.defaultSubscribe = ''; }
+    var _addr = '';
 
+    var els = document.getElementsByClassName('show-type');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].checked ) {
+            if ( _addr != '' ) { _addr += '-'; }
+            _addr += NoNull(els[i].getAttribute('data-name'));
+        }
+    }
+    if ( _addr == window.defaultSubscribe ) { _addr = ''; }
+    var els = document.getElementsByName('format-type');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].checked ) {
+            _type = NoNull(els[i].getAttribute('data-name'));
+            if ( _addr == '' ) { _addr = ((_type) == 'json') ? 'feed' : 'rss'; }
+            _addr += '.' + NoNull(els[i].getAttribute('data-name'));
+        }
+    }
+
+    /* Write the URL to the Page */
+    var els = document.getElementsByName('feed-url');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].value = _url + _addr;
+    }
+}
+
+function toggleSubscriptionType( chk ) {
+    var els = document.getElementsByName('format-type');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].checked = false;
+    }
+    chk.checked = true;
+    buildSubscriptionURL();
+}
 /** ************************************************************************* *
  *  Quotation Functions
  ** ************************************************************************* */
