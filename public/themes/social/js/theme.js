@@ -827,8 +827,8 @@ function showPosition( position ) {
 }
 function openGeoLocation( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
-    var _pos = el.getAttribute('data-value');
-    if ( _pos === undefined || _pos === false || _pos === null ) { return; }
+    var _pos = NoNull(el.getAttribute('data-value'));
+    if ( _pos === undefined || _pos === false || _pos === null || _pos == '' ) { return; }
 
     var ntab = window.open('https://www.google.ca/maps/@' + _pos + ',17z', '_blank');
     ntab.focus();
@@ -1852,7 +1852,10 @@ function buildHTML( post ) {
     var _geo_url = '';
     if ( post.meta !== false && post.meta.geo !== undefined ) {
         _geo_title = (Math.round(post.meta.geo.latitude * 100000) / 100000) + ', ' + (Math.round(post.meta.geo.longitude * 100000) / 100000);
-        _geo_url = post.meta.geo.latitude + ',' + post.meta.geo.longitude;
+        if ( post.meta.geo.description !== false ) { _geo_title = NoNull(post.meta.geo.description); }
+        if ( post.meta.geo.latitude !== false && post.meta.geo.longitude !== false ) {
+            _geo_url = post.meta.geo.latitude + ',' + post.meta.geo.longitude;
+        }
     }
     var _title = NoNull(post.title, _src_title);
     var _icon = getVisibilityIcon( post.privacy );
