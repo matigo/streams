@@ -898,6 +898,13 @@ class Posts {
                 $GeoLong = nullInt($coords[1]);
                 if ( nullInt($coords[2]) != 0 ) { $GeoAlt = nullInt($coords[2]); }
             }
+
+            if ( nullInt($GeoLong) != 0 && nullInt($GeoLat) == 0 || nullInt($GeoLong) == 0 && nullInt($GeoLat) != 0 ) {
+                $GeoLong = '';
+                $GeoLat = '';
+                $GeoAlt = '';
+            }
+            if ( nullInt($GeoLong) != 0 && nullInt($GeoLat) != 0 ) { $GeoFull = ''; }
         }
 
         // Check the Post Text for Additionals
@@ -1017,11 +1024,12 @@ class Posts {
                       'expires_at'    => $ExpiresAt,
 
                       'tags'          => $PostTags,
-                      'meta'          => array( 'source_url'    => $SourceURL,
-                                                'source_title'  => $SourceTitle,
-                                                'geo_latitude'  => $GeoLat,
-                                                'geo_longitude' => $GeoLong,
-                                                'geo_altitude'  => $GeoAlt,
+                      'meta'          => array( 'source_url'      => $SourceURL,
+                                                'source_title'    => $SourceTitle,
+                                                'geo_latitude'    => $GeoLat,
+                                                'geo_longitude'   => $GeoLong,
+                                                'geo_altitude'    => $GeoAlt,
+                                                'geo_description' => $GeoFull,
                                                ),
 
                       'thread_id'     => $ThreadID,
@@ -1422,6 +1430,7 @@ class Posts {
                               '[POST_TYPE]'     => NoNull($post['type']),
                               '[POST_CLASS]'    => $postClass,
                               '[AUTHOR_NAME]'       => NoNull($post['persona']['name']),
+                              '[AUTHOR_GUID]'       => NoNull($post['persona']['guid']),
                               '[AUTHOR_PERSONA]'    => NoNull($post['persona']['display_name'], $post['persona']['as']),
                               '[AUTHOR_PROFILE]'    => NoNull($post['persona']['profile_url']),
                               '[AUTHOR_AVATAR]'     => NoNull($post['persona']['avatar']),

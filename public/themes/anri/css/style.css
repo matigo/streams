@@ -54,6 +54,7 @@ samp {
     color: #333;
     white-space: pre-wrap;
 }
+input { border: 1px solid #ddd; }
 .notifyjs-wrapper { position: fixed !important; }
 .notifyjs-bootstrap-yellow {
     background: #ffffc0 !important;
@@ -580,6 +581,7 @@ samp {
 .single-post--fullsize .single-post__contact {
   max-width: 80%;
   margin: 0px auto;
+  padding: 0.25em 0 0.5em;
 }
 .single-post--fullsize .single-post__content.note { padding: 1em 0 0; }
 .single-post--fullsize .single-post__info.note { padding: 0 0 1em; text-align: left; }
@@ -611,8 +613,9 @@ samp {
 }
 .single-post__title .newpost-h2 {
     font-size: 2em;
-    width: 100%;
+    padding: 0 0.25em;
     text-align: center;
+    width: 100%;
 }
 .single-post__title--about,
 .single-post__title--contact,
@@ -659,6 +662,11 @@ samp {
     padding: 5px 1%;
 }
 .single-post__info .publish { min-width: 8em; }
+.single-post__info .post-edit {
+    border-top: 1px solid #777777;
+    font-size: 1em;
+    padding: 0.25em 0.5em 0 1.75em;
+}
 .single-post__info label {
     width: 13%;
     max-width: 13%;

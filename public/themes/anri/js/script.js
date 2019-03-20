@@ -69,11 +69,22 @@ function hideByClass( _cls ) {
     }
 }
 function writeToZone( name, cdn_url ) {
-    var quill = document.querySelector(".ql-editor");
-    if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
-        quill.innerHTML += '<p><img src="' + cdn_url + '" alt="' + name.replace(/\.[^/.]+$/, '') + '" /></p>';
+    var _tarea = false;
+    var els = document.getElementsByTagName('textarea');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name'));
+        if ( _name == 'content' ) { _tarea = els[i]; }
     }
-    window.scrollTo(0, 0);
+    if ( _tarea !== false ) {
+        if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
+            var _txt = _tarea.value.replace(/\s+$/g, "");
+            var _src = '![' + name.replace(/\.[^/.]+$/, '') + '](' + cdn_url + ')';
+            if ( NoNull(_txt) == '' ) { _txt = ''; }
+            if ( NoNull(_txt) != '' ) { _txt += "\n\n"; }
+            _tarea.value = _txt + _src;
+            updatePublishPostButton();
+        }
+    }
 }
 function getMetaValue( name ) {
     if ( NoNull(name) == '' ) { return ''; }
@@ -128,12 +139,126 @@ document.onreadystatechange = function () {
         getSubscriptionDefault();
         updatePostTimestamps();
         updateContentHeight();
+        collectPostEditData();
         updatePostBanners();
         togglePostType();
+        togglePostEdit();
         prepNewPost();
 
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
+}
+
+function collectPostEditData() {
+    var els = document.getElementsByClassName('newpost-content');
+    if ( els.length > 0 ) {
+        var guid = NoNull(window.location.pathname.replace('write', '').replaceAll('/', ''));
+        if ( guid === undefined || guid === false || guid === null || (guid.length > 0 && guid.length != 36) ) {
+            alert("This GUID is Bad ...");
+            return;
+        }
+
+        if ( guid.length == 36 ) {
+            var params = { 'channel_guid': getMetaValue('channel_guid'),
+                           'persona_guid': getMetaValue('persona_guid')
+                          };
+            doJSONQuery('posts/' + guid, 'GET', params, parsePostEditData);
+        }
+    }
+}
+function parsePostEditData( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        for ( var i = 0; i < ds.length; i++ ) {
+            var els = document.getElementsByName('fdata');
+            for ( var e = 0; e < els.length; e++ ) {
+                var _name = NoNull(els[e].getAttribute('data-name'));
+                switch ( _name.toLowerCase() ) {
+                    case 'content':
+                        els[e].value = ds[i].text;
+                        break;
+
+                    case 'post_geo':
+                        if ( ds[i].meta !== false ) {
+                            if ( ds[i].meta.geo !== undefined && ds[i].meta.geo !== false ) {
+                                els[e].value = listGeo(ds[i].meta.geo);
+                            }
+                        }
+                        break;
+
+                    case 'post_guid':
+                        els[e].value = ds[i].guid;
+                        break;
+
+                    case 'post_privacy':
+                        els[e].value = ds[i].privacy;
+                        break;
+
+                    case 'post_type':
+                        els[e].value = ds[i].type;
+                        break;
+
+                    case 'publish_at':
+                        els[e].value = moment(ds[i].publish_unix * 1000).format('MMMM Do YYYY h:mm a');
+                        break;
+
+                    case 'source-title':
+                        if ( ds[i].meta !== false ) {
+                            if ( ds[i].meta.source !== undefined && ds[i].meta.source.length !== false ) {
+                                els[e].value = ds[i].meta.source.title;
+                            }
+                        }
+                        break;
+
+                    case 'source-url':
+                        if ( ds[i].meta !== false ) {
+                            if ( ds[i].meta.source !== undefined && ds[i].meta.source.length !== false ) {
+                                els[e].value = ds[i].meta.source.url;
+                            }
+                        }
+                        break;
+
+                    case 'tags':
+                        if ( ds[i].tags !== false && ds[i].tags.length > 0 ) {
+                            els[e].value = listTags(ds[i].tags);
+                        }
+                        break;
+
+                    case 'title':
+                        els[e].value = (ds[i].title !== false) ? ds[i].title : '';
+                        break;
+                }
+            }
+        }
+        updatePublishPostButton();
+        togglePostType();
+    }
+}
+function listTags( tagList, asHtml ) {
+    if ( tagList === undefined || tagList === false || tagList === null || tagList.length <= 0 ) { return ''; }
+    if ( asHtml === undefined || asHtml === null || asHtml !== true ) { asHtml = false; }
+    var _tags = '';
+
+    for ( var i = 0; i < tagList.length; i++ ) {
+        if ( NoNull(tagList[i].name) != '' ) {
+            if ( _tags != '' ) { _tags += ', '; }
+            _tags += NoNull(tagList[i].name);
+        }
+    }
+    return _tags;
+}
+function listGeo( geoList, asHtml ) {
+    if ( geoList === undefined || geoList === false || geoList === null || geoList.length <= 0 ) { return ''; }
+    if ( asHtml === undefined || asHtml === null || asHtml !== true ) { asHtml = false; }
+    var _geo = '';
+    if ( geoList.longitude !== undefined && geoList.longitude !== false && geoList.latitude !== undefined && geoList.latitude !== false ) {
+        _geo = geoList.latitude + ', ' + geoList.longitude;
+        if ( geoList.altitude !== undefined && geoList.altitude !== false ) { _geo += ', ' + geoList.altitude; }
+    } else {
+        if ( geoList.description !== undefined && geoList.description !== false && geoList.description != '' ) { _geo = geoList.description; }
+    }
+    return _geo;
 }
 
 /** ************************************************************************* *
@@ -199,6 +324,19 @@ function togglePostType() {
             }
         }
     }
+}
+function togglePostPass(el) {
+    if ( el === undefined || el === false || el === null ) {
+        var els = document.getElementsByName('fdata');
+        for ( var i = 0; i < els.length; i++ ) {
+            var _name = NoNull(els[i].getAttribute('data-name'));
+            if ( _name == 'post_privacy' ) { el = els[i]; }
+        }
+    }
+    if ( el === undefined || el === false || el === null ) { return; }
+
+    var vis = NoNull(el.value.toLowerCase());
+    if ( vis == 'visibility.password' ) { showByClass('ppass'); } else { hideByClass('ppass'); }
 }
 function updateContentHeight(el) {
     if ( el === undefined || el === false || el === null ) {
@@ -278,6 +416,16 @@ function updatePostBanners() {
     for ( var i = 0; i < els.length; i++ ) {
         if ( NoNull(els[i].innerHTML) == '' ) {
             els[i].parentNode.classList.add('hidden');
+        }
+    }
+}
+function togglePostEdit() {
+    var _guid = getMetaValue('persona_guid');
+    if ( _guid.length == 36 ) {
+        var els = document.getElementsByClassName('post-edit');
+        for ( var i = 0; i < els.length; i++ ) {
+            var _by = NoNull(els[i].getAttribute('data-persona-guid'));
+            if ( _by == _guid ) { els[i].classList.remove('hidden'); }
         }
     }
 }

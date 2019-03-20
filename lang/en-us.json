@@ -4,11 +4,14 @@
     "iso-639-1": "en",
     "iso-639-2": "enu",
 
+    "lblEdit": "Edit",
+    "lblTags": "Tags",
+
     "lblEnableJS": "Please Enable JavaScript to View This Site",
     "msgFooter": "Powered by Streams",
     "copyright": "&copy; {year}",
     "version": "Version {version_id}",
-    
+
     "msg401Line1": "Slow Down!",
     "msg401Line2": "You&apos;re making too many requests too quickly.<br>Share the system with everyone.",
     "msg404Line1": "No Resource!",

@@ -5,7 +5,7 @@
                                 <option value="post.article" selected>[optPostArticle]</option>
                                 <option value="post.quotation">[optPostQuotation]</a></option>
                                 <option value="post.bookmark">[optPostBookmark]</a></option>
-                                <option value="post.page">[optPostPage]</a></option>
+                                <option value="post.page" class="hidden">[optPostPage]</a></option>
                                 <option value="post.note">[optPostNote]</a></option>
                             </select>
                             <input class="newpost-small publish-at" type="text" name="fdata" value="" data-name="publish_at" aria-required="false" placeholder="[lblPostDatePH]" autocomplete="off" />
@@ -26,6 +26,10 @@
 
                         <div class="single-post__content">
                             <textarea id="content" class="newpost-content" name="fdata" onkeyup="updateContentHeight(this);" data-name="content" aria-required="true" placeholder="[lblPostContentPH]"></textarea>
+
+                        </div>
+                        <div class="single-post__info text-left">
+                            <form id="dropzone" class="uploads dropzone"></form>
                         </div>
                         <div class="single-post__info text-left">
                             <label for="ftags">[lblPostTags]:</label>
@@ -37,14 +41,14 @@
 
                             <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
                             <label for="fpriv">[lblVisibility]:</label>
-                            <select id="fpriv" class="newpost-half" name="fdata" data-name="post_privacy" aria-required="true">
+                            <select id="fpriv" class="newpost-half" name="fdata" data-name="post_privacy" onchange="togglePostPass(this);" aria-required="true">
                                 <option value="visibility.public" selected>[optVisPublic]</option>
                                 <option value="visibility.private">[optVisPrivate]</a></option>
                                 <option value="visibility.password">[optVisPassword]</a></option>
                                 <option value="visibility.none">[optVisNone]</a></option>
                             </select>
-                            <label for="postpass">[lblPostPassword]:</label>
-                            <input id="postpass" class="newpost-half" type="text" name="fdata" value="" data-name="postpass" aria-required="false" autocomplete="off" />
+                            <label for="postpass" class="ppass hidden">[lblPostPassword]:</label>
+                            <input id="postpass" class="newpost-half ppass hidden" type="text" name="fdata" value="" data-name="postpass" aria-required="false" autocomplete="off" />
                         </div>
                         <div class="single-post__info text-right" style="padding: 15px 0 10px;">
                             <button class="btn btn-publish" data-label="[btnPostPublish]">[btnPostPublish]</button>

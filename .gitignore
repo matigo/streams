@@ -6,5 +6,6 @@
 *.inc
 *.log
 *.tmp
+public/files/*
 jason_fox_box.jpg
 config.php
