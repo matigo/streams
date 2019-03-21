@@ -192,6 +192,7 @@ blockquote {
     max-width: 95%;
     max-width: calc(100% - 1em);
     padding: 0 0.5em 0.5em;
+    text-align: justify;
 }
 .content .post-entry.post-blank {
     border: none;

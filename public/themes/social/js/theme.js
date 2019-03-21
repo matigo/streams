@@ -1246,10 +1246,14 @@ function parseEditPost(data) {
                         case 'post-geo':
                             if ( ds[i].meta !== undefined && ds[i].meta !== false ) {
                                 if ( ds[i].meta.geo !== undefined && ds[i].meta.geo !== false ) {
-                                    var _geo = NoNull(ds[i].meta.geo.latitude) + ', ' + NoNull(ds[i].meta.geo.longitude);
-                                    if ( ds[i].meta.geo.altitude !== false && NoNull(ds[i].meta.geo.altitude) != '' ) {
-                                        _geo += ', ' + NoNull(ds[i].meta.geo.altitude);
+                                    var _geo = '';
+                                    if ( ds[i].meta.geo.latitude !== false && ds[i].meta.geo.longitude !== false ) {
+                                        _geo = NoNull(ds[i].meta.geo.latitude) + ', ' + NoNull(ds[i].meta.geo.longitude);
+                                        if ( ds[i].meta.geo.altitude !== false && NoNull(ds[i].meta.geo.altitude) != '' ) {
+                                            _geo += ', ' + NoNull(ds[i].meta.geo.altitude);
+                                        }
                                     }
+                                    if ( ds[i].meta.geo.description !== false ) { _geo = NoNull(ds[i].meta.geo.description); }
                                     els[e].value = _geo;
                                 }
                             }
