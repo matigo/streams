@@ -128,6 +128,8 @@ function getMetaValue( name ) {
     });
 
     $("#content").keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
+    $("#search-for").keydown(function (e) { if ( e.keyCode === KEY_ENTER ) { performSearch(); } else { clearSearchResults(); } });
+
     $('.btn-publish').click(function() { publishPost(); });
     $('#source-url').on('input', function() { checkSourceUrl(); });
     $('.btn-geo').click(function() { getGeoLocation(this); });
@@ -559,6 +561,166 @@ function toggleSubscriptionType( chk ) {
     chk.checked = true;
     buildSubscriptionURL();
 }
+
+/** ************************************************************************* *
+ *  Search Functions
+ ** ************************************************************************* */
+function clearSearchResults() {
+    var els = document.getElementsByClassName('search-box');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('has-result') ) {
+            els[i].classList.remove('has-result');
+            hideByClass('search-results');
+            hideByClass('search-active');
+        }
+    }
+}
+function performSearch() {
+    var filterOn = '';
+    var els = document.getElementsByName('sdata');
+    var el = false;
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name'));
+        if ( _name == 'for' ) {
+            filterOn = els[i].value;
+            el = els[i];
+        }
+    }
+
+    if ( NoNull(filterOn).length <= 0 ) {
+        $(el).notify("Please Enter Something to Look For", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+        return false;
+    }
+
+    var params = { 'for': filterOn };
+    doJSONQuery('search', 'GET', params, parseSearch);
+    clearSearchResults();
+    disableSearch();
+}
+function parseSearch( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        var _html = '';
+
+        if ( ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _icon = 'fa-newspaper-o';
+                switch ( ds[i].type ) {
+                    case 'post.bookmark':
+                        _icon = 'fa-bookmark';
+                        break;
+
+                    case 'post.note':
+                        _icon = 'fa-comment';
+                        break;
+
+                    case 'post.photo':
+                        _icon = 'fa-picture-o';
+                        break;
+
+                    case 'post.quotation':
+                        _icon = 'fa-quote-left';
+                        break;
+
+                    default:
+                        'fa-newspaper-o';
+                }
+
+                _html += '<li class="srch-item" data-guid="' + ds[i].guid + '">' +
+                            '<h2>' +
+                                '<i class="fa ' + _icon + '"></i>' +
+                                '<a href="' + ds[i].url + '" title="">' + ((ds[i].title) ? ds[i].title : moment(ds[i].publish_unix * 1000).format('MMMM Do YYYY h:mm a')) + '</a>' +
+                            '</h2>' +
+                            '<div class="rslt-toggle rslt-smry">' + ds[i].content.summary + '</div>' +
+                            '<div class="rslt-toggle rslt-smpl hidden">' + ds[i].content.simple + '</div>' +
+                            '<p class="rslt-toggle text-right">' + ((ds[i].content.more) ? '<span class="show-all" onclick="toggleFullResult(this);" data-guid="' + ds[i].guid + '">Show Full</span>' : '&nbsp;') + '</p>' +
+                         '</li>';
+            }
+        }
+
+        var els = document.getElementsByClassName('search-results');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( NoNull(_html) != '' ) {
+                if ( els[i].classList.contains('text-center') ) {
+                    els[i].classList.remove('text-center');
+                }
+                els[i].innerHTML = '<ul>' + _html + '</ul>';
+
+            } else {
+                if ( els[i].classList.contains('text-center') === false ) {
+                    els[i].classList.add('text-center');
+                }
+                els[i].innerHTML = '<p>No results match your query.</p>';
+            }
+        }
+
+        var els = document.getElementsByClassName('search-box');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( els[i].classList.contains('has-result') === false ) {
+                els[i].classList.add('has-result');
+                showByClass('search-results');
+            }
+        }
+
+        var els = document.getElementsByClassName('search-results');
+        for ( var i = 0; i < els.length; i++ ) { els[i].scrollTop = 0; }
+    }
+    enableSearch();
+}
+function toggleFullResult(el) {
+    var _guid = el.getAttribute('data-guid');
+    if ( _guid === undefined || _guid === false || _guid === null ) { return; }
+    if ( NoNull(_guid).length != 36 ) { return; }
+
+    var els = document.getElementsByClassName('srch-item');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _gg = els[i].getAttribute('data-guid');
+        if ( _gg === undefined || _gg === false || _gg === null ) { _gg = ''; }
+        if ( _guid == _gg ) {
+            var tls = els[i].getElementsByClassName('rslt-toggle');
+            for ( var t = 0; t < tls.length; t++ ) {
+                if ( tls[t].classList.contains('hidden') ) { tls[t].classList.remove('hidden'); } else { tls[t].classList.add('hidden'); }
+            }
+        }
+    }
+}
+function enableSearch() {
+    var els = document.getElementsByName('sdata');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            hideByClass('search-active');
+            els[i].disabled = false;
+        }
+    }
+}
+function disableSearch() {
+    var els = document.getElementsByName('sdata');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            setTimeout(function(){ drawDots(); }, 250);
+            showByClass('search-active');
+            els[i].disabled = true;
+        }
+    }
+}
+function drawDots() {
+    var els = document.getElementsByClassName('search-dots');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( els[i].parentNode.classList.contains('hidden') === false ) {
+                var _dots = parseInt(els[i].getAttribute('data-dots'));
+                if ( _dots === undefined || _dots === false || _dots === null || isNaN(_dots) ) { _dots = 0; }
+                if ( _dots < 0 || _dots > 5 ) { _dots = 0; }
+                els[i].innerHTML = '.'.repeat(_dots);
+
+                _dots++;
+                els[i].setAttribute('data-dots', _dots);
+                setTimeout(function(){ drawDots(); }, 333);
+            }
+        }
+    }
+}
+
 /** ************************************************************************* *
  *  Quotation Functions
  ** ************************************************************************* */

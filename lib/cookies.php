@@ -363,11 +363,14 @@ class cookies {
             }
 
             $RememberMe = YNBool(NoNull($cookieVals['remember'], 'N'));
+            if ( array_key_exists('remember', $_COOKIE) !== true ) { unset($cookieVals['remember']); }
+
             foreach( $cookieVals as $key=>$val ) {
                 if( in_array($key, $valids) ) {
                     $LifeSpan = time() + COOKIE_EXPY;
                     if( $RememberMe ) { $LifeSpan = time() + 3600 * 24 * 30; }
                     if ( in_array($item, $longer) ) { $LifeSpan = time() + 3600 * 24 * 365; }
+                    if ( array_key_exists('remember', $_COOKIE) && $RememberMe !== true ) { $LifeSpan = time() - 3600; }
 
                     setcookie( $key, "$val", $LifeSpan, "/", NoNull($domain, strtolower($_SERVER['SERVER_NAME'])) );
                 }

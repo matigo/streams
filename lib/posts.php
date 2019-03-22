@@ -1745,38 +1745,6 @@ class Posts {
         }
         $text = NoNull($fixed);
 
-		// Construct the Footnotes
-        /*
-		$fnotes = '';
-    	if (preg_match_all('/\[(\d+\. .*?)\]/s', $text, $matches)) {
-        	$notes = array();
-            $n = 1;
-
-    		foreach($matches[0] as $fn) {
-    			$note = preg_replace('/\[\d+\. (.*?)\]/s', '\1', $fn);
-    			$notes[$n] = $note;
-
-                if ( $isNote ) {
-                    $text = str_replace($fn, "<sup>$n</sup>", $text);
-                } else {
-                    $text = str_replace($fn, "<sup id=\"fnref:$post_id.$n\"><a rel=\"footnote\" href=\"#fn:$post_id.$n\" title=\"\">$n</a></sup>", $text);
-                }
-    			$n++;
-    		}
-
-            $fnotes .= '<hr><ol>';
-    		for($i=1; $i<$n; $i++) {
-        		if ( $isNote ) {
-            		$fnotes .= "<li class=\"footnote\">$notes[$i]</li>";
-                } else {
-    			    $fnotes .= "<li class=\"footnote\" id=\"fn:$post_id.$i\">$notes[$i] <a rel=\"footnote\" href=\"#fnref:$post_id.$i\" title=\"\">↩</a></li>";
-    			}
-    		}
-    		$fnotes .= '</ol>';
-        }
-        if ( $fnotes != '' ) { $text .= $fnotes; }
-        */
-
         // Handle the Footnotes
         $fnotes = '';
         if ( strpos($text, '[') > 0 ) {
@@ -1824,22 +1792,22 @@ class Posts {
         }
 
         // Handle Code Blocks
-    	if (preg_match_all('/\```(.+?)\```/s', $text, $matches)) {
-    		foreach($matches[0] as $fn) {
-        		$cbRepl = array( '```' => '', '<code><br>' => "<code>", '<br></code>' => '</code>');
-    			$code = "<pre><code>" . str_replace(array_keys($cbRepl), array_values($cbRepl), $fn) . "</code></pre>";
-    			$code = str_replace(array_keys($cbRepl), array_values($cbRepl), $code);
-    			$text = str_replace($fn, $code, $text);
-    		}
+        if (preg_match_all('/\```(.+?)\```/s', $text, $matches)) {
+            foreach($matches[0] as $fn) {
+                $cbRepl = array( '```' => '', '<code><br>' => "<code>", '<br></code>' => '</code>');
+                $code = "<pre><code>" . str_replace(array_keys($cbRepl), array_values($cbRepl), $fn) . "</code></pre>";
+                $code = str_replace(array_keys($cbRepl), array_values($cbRepl), $code);
+                $text = str_replace($fn, $code, $text);
+            }
         }
 
         // Handle Strikethroughs
-    	if (preg_match_all('/\~~(.+?)\~~/s', $text, $matches)) {
-    		foreach($matches[0] as $fn) {
-        		$stRepl = array( '~~' => '' );
-    			$code = "<del>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</del>";
-    			$text = str_replace($fn, $code, $text);
-    		}
+        if (preg_match_all('/\~~(.+?)\~~/s', $text, $matches)) {
+            foreach($matches[0] as $fn) {
+                $stRepl = array( '~~' => '' );
+                $code = "<del>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</del>";
+                $text = str_replace($fn, $code, $text);
+            }
         }
 
         // Get the Markdown Formatted
@@ -1991,6 +1959,8 @@ class Posts {
                          '&#95;'        => '_',             '&amp;#92;'          => '&#92;',         ' </p>'        => '</p>',
                          '&lt;iframe '  => '<iframe ',      '&gt;&lt;/iframe&gt' => '></iframe>',    '&lt;/iframe>' => '</iframe>',
                          '</p></p>'     => '</p>',          '<p><p>'             => '<p>',
+
+                         ':???:'  => "😕",  '...'  => '…',  '--'  => '—',
 
                          '<p><blockquote>' => '<blockquote>'
                         );

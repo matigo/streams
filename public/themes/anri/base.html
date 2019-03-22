@@ -107,10 +107,12 @@
             <svg class="search-popup__close">
                 <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#btn-close"></use>
             </svg>
-            <div class="container  search-popup__container">
-                <form action="index.html">
-                    <input type="text" size="32" placeholder="Search">
-                </form>
+            <div class="container search-popup__container">
+                <div class="search-box">
+                    <input id="search-for" type="text" size="32" name="sdata" data-name="for" placeholder="[lblSearchPH]">
+                    <p class="search-active hidden"><i class="fa fa-spin fa-spinner"></i> [lblSearchActive] <span class="search-dots" data-dots="0"></span></p>
+                </div>
+                <div class="search-results hidden"></div>
             </div>
         </div>
         <div class="content-overlay"></div>

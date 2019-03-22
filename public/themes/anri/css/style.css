@@ -103,6 +103,11 @@ input { border: 1px solid #ddd; }
 .navbar .dropdown:hover, .navbar .dropdown-content { display: block; overflow: visible; }
 .nav-spacer { display: block; padding: 0; min-height: 3em; }
 
+@media (max-width: 768px) {
+    .navbar .navitem { margin: 0; }
+    .navbar .dropdown .dropbtn .hello { display: none; }
+}
+
 /*------------------------------------------------------------------
 [2. Header ]
 */
@@ -349,17 +354,22 @@ input { border: 1px solid #ddd; }
   display: block;
 }
 .search-popup__container {
-  position: relative;
-  height: 100%;
+    position: relative;
+    height: 100%;
 }
-.search-popup form {
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  height: 150px;
-  margin-top: -75px;
+.search-popup .search-box {
+    position: absolute;
+    left: 60px;
+    top: 50%;
+    height: 150px;
+    margin-top: -75px;
 }
-.search-popup form input[type="text"] {
+.search-popup .search-box p {
+    font-style: italic;
+    font-size: 2em;
+}
+.search-popup .search-box.has-result { top: 10%; }
+.search-popup .search-box input[type="text"] {
   width: 100%;
   height: 150px;
   padding: 0;
@@ -368,22 +378,53 @@ input { border: 1px solid #ddd; }
   background: rgba(0, 0, 0, 0);
   font-size: 130px;
 }
-.search-popup form input[type="text"]:focus {
+.search-popup .search-box input[type="text"]:focus {
   outline: none;
 }
+.search-popup .search-results {
+    font-size: 1.25em;
+    padding: 0 3em;
+    position: absolute;
+    overflow-y: auto;
+    height: 75%;
+    top: 20%;
+}
+.search-popup .search-results::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+.search-popup .search-results::-webkit-scrollbar-thumb {
+    background: #FF0000;
+}
+.search-popup .search-results ul { padding: 0; }
+.search-popup .search-results ul li {
+    list-style-image: none;
+    list-style-type: none;
+    list-style: none;
+}
+.search-popup .search-results ul li .fa { padding: 0 0.5em 0 0; }
+.search-popup .search-results .highlight {
+    background: #ff0;
+    border-radius: 0.125em;
+    padding: 0.1em 0.25em;
+}
+
 @media (max-width: 768px) {
   .search-popup__close {
     width: 64px;
     height: 64px;
   }
-  .search-popup form {
-    left: 30px;
-    height: 80px;
+  .search-popup .search-box {
+    left: 1em;
+    height: 5em;
   }
-  .search-popup form input[type="text"] {
-    height: 80px;
-    font-size: 60px;
+  .search-popup .search-box input[type="text"] {
+    height: 2em;
+    font-size: 3em;
+    max-width: 85%;
+    text-overflow: ellipsis;
   }
+  .search-popup .search-results { padding: 0 1em 0 0.5em; }
 }
 /*------------------------------------------------------------------
 [7. Category Title ]
