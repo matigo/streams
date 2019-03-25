@@ -1,0 +1,48 @@
+{
+    "pageAccount": "The Account API",
+    "pageAuth": "The Authentication API",
+    "pageChannels": "Channels",
+    "pageContact-us": "Get In Touch",
+    "pagePersonas": "Personas",
+    "pageTerms": "Terms of Use",
+
+    "navDocs": "API Documentation",
+    "navEndpoints": "Endpoints",
+    "navGlossary": "Glossary",
+    "navHelp": "Help Centre",
+
+    "navAccount": "Account",
+    "navAuth": "Authentication",
+    "navBookmark": "Bookmark",
+    "navChannels": "Channels",
+    "navContact": "Contact",
+    "navContactUs": "Contact",
+    "navFiles": "Files",
+    "navGeocode": "Geo Coding",
+    "navHome": "Home",
+    "navIntro": "Introduction",
+    "navLocker": "Locker",
+    "navPersonas": "Personas",
+    "navPosts": "Posts",
+    "navSearch": "Search",
+    "navSite": "Site",
+    "navStart": "Getting Started",
+    "navTerms": "Terms of Use",
+
+    "page404-title": "Page Not Found",
+    "page404-message": "Seems you&apos;re looking for something that doesn't exist.",
+    "page404-back": "Go Back",
+    "page404-home": "Return Home",
+
+    "pageContact-title": "Get In Touch!",
+    "pageContact-message": "Couldn't find an answer to your quesiton? No worries! Submit an inquiry and we&apos;ll get back to you soon.",
+    "pageContact-name": "Your Name",
+    "pageContact-subject": "Subject",
+    "pageContact-email": "Email Address",
+    "pageContact-msgbody": "Your Message",
+    "pageContact-send": "Send",
+
+    "pageThankYou-title": "Message Received!",
+    "pageThankYou-message": "Thank you for getting in touch.",
+    "pageThankYou-content": "Your message has been received and we&apos;ll be getting back to you shortly."
+}

@@ -139,6 +139,7 @@ class Contact {
     private function _processMessage() {
         $CleanName = NoNull($this->settings['contact-name'], $this->settings['name']);
         $CleanMail = NoNull($this->settings['contact-mail'], $this->settings['mail']);
+        $CleanSubj = NoNull($this->settings['contact-subject'], $this->settings['subject']);
         $CleanMsg = NoNull($this->settings['contact-message'], $this->settings['message']);
 
         // Perform Some Basic Error Checking
@@ -151,6 +152,7 @@ class Contact {
         // Record the Data to the Database
         $ReplStr = array( '[NAME]'    => sqlScrub($CleanName),
                           '[MAIL]'    => sqlScrub($CleanMail),
+                          '[SUBJECT]' => sqlScrub($CleanSubj),
                           '[MESSAGE]' => sqlScrub($CleanMsg),
                           '[SITE_ID]' => nullInt($this->settings['site_id']),
                          );

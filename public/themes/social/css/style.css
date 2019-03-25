@@ -98,6 +98,7 @@ blockquote {
     border-left: 5px solid #00cdcd;
     color: #333;
 }
+ol { margin-top: 0.5em; }
 .darkback { background: rgba(0, 0, 0, 0.75); }
 .darkback .post-list .post-entry { opacity: 0; }
 .hidden { display: none !important; }

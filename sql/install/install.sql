@@ -57,7 +57,7 @@ CREATE INDEX `idx_cats_type` ON `Category` (`is_deleted`, `type`);
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
 VALUES ('Arts', NULL, 'category.podcast', 'catArts'), ('Business', NULL, 'category.podcast', 'catBusiness'),
        ('Comedy', NULL, 'category.podcast', 'catComedy'), ('Education', NULL, 'category.podcast', 'catEducation'),
-       ('Games & Hobbies', NULL, 'category.podcast', 'catGameHobby'), ('Government & Organizations', NULL, 'category.podcast', 'catGovOrg'), 
+       ('Games & Hobbies', NULL, 'category.podcast', 'catGameHobby'), ('Government & Organizations', NULL, 'category.podcast', 'catGovOrg'),
        ('Health', NULL, 'category.podcast', 'catHealth'), ('Kids & Family', NULL, 'category.podcast', 'catKids'),
        ('Music', NULL, 'category.podcast', 'catMusic'), ('News & Politics', NULL, 'category.podcast', 'catNewsPol'),
        ('Religion & Spirituality', NULL, 'category.podcast', 'catSpirit'), ('Science & Medicine', NULL, 'category.podcast', 'catSciMed'),
@@ -75,21 +75,21 @@ VALUES ('Business News', 2, 'category.podcast', 'catBusinessNews'), ('Careers', 
        ('Shopping', 2, 'category.podcast', 'catBusinessShopping');
 
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
-VALUES ('Educational Technology', 4, 'category.podcast', 'catEducationTech'), ('Higher Education', 4, 'category.podcast', 'catEducationHigher'), 
-       ('K-12', 4, 'category.podcast', 'catEducationK12'), ('Language Courses', 4, 'category.podcast', 'catEducationLang'), 
+VALUES ('Educational Technology', 4, 'category.podcast', 'catEducationTech'), ('Higher Education', 4, 'category.podcast', 'catEducationHigher'),
+       ('K-12', 4, 'category.podcast', 'catEducationK12'), ('Language Courses', 4, 'category.podcast', 'catEducationLang'),
        ('Training', 4, 'category.podcast', 'catEducationTrain');
 
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
-VALUES ('Automotive', 5, 'category.podcast', 'catGameHobbyAuto'), ('Aviation', 5, 'category.podcast', 'catGameHobbyAviation'), 
-       ('Hobbies', 5, 'category.podcast', 'catGameHobbyHobbies'), ('Other Games', 5, 'category.podcast', 'catGameHobbyOther'), 
+VALUES ('Automotive', 5, 'category.podcast', 'catGameHobbyAuto'), ('Aviation', 5, 'category.podcast', 'catGameHobbyAviation'),
+       ('Hobbies', 5, 'category.podcast', 'catGameHobbyHobbies'), ('Other Games', 5, 'category.podcast', 'catGameHobbyOther'),
        ('Video Games', 5, 'category.podcast', 'catGameHobbyVide');
 
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
-VALUES ('Local', 6, 'category.podcast', 'catGovOrgLocal'), ('National', 6, 'category.podcast', 'catGovOrgNation'), 
+VALUES ('Local', 6, 'category.podcast', 'catGovOrgLocal'), ('National', 6, 'category.podcast', 'catGovOrgNation'),
        ('Non-Profit', 6, 'category.podcast', 'catGovOrgNPO'), ('Regional', 6, 'category.podcast', 'catGovOrgRegion');
 
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
-VALUES ('Alternative Health', 7, 'category.podcast', 'catHealthAlt'), ('Fitness & Nutrition', 7, 'category.podcast', 'catHealthFit'), 
+VALUES ('Alternative Health', 7, 'category.podcast', 'catHealthAlt'), ('Fitness & Nutrition', 7, 'category.podcast', 'catHealthFit'),
        ('Self-Help', 7, 'category.podcast', 'catHealthSelf'), ('Sexuality', 7, 'category.podcast', 'catHealthSex');
 
 INSERT INTO `Category` (`description`, `parent_id`, `type`, `label`)
@@ -217,7 +217,7 @@ CREATE TRIGGER `after_insert_account`
  BEGIN
     INSERT INTO `AccountPass` (`account_id`, `password`)
     SELECT new.`id` as `account_id`, new.`password`
-     WHERE new.`is_deleted` = 'N' and new.`password` <> IFNULL((SELECT z.`password` FROM `AccountPass` z 
+     WHERE new.`is_deleted` = 'N' and new.`password` <> IFNULL((SELECT z.`password` FROM `AccountPass` z
                                                           WHERE z.`is_deleted` = 'N' and z.`account_id` = new.`id`
                                                           ORDER BY z.`id` DESC LIMIT 1), '');
    END
@@ -229,7 +229,7 @@ CREATE TRIGGER `after_update_account`
  BEGIN
     INSERT INTO `AccountPass` (`account_id`, `password`)
     SELECT new.`id` as `account_id`, new.`password`
-     WHERE new.`is_deleted` = 'N' and new.`password` <> IFNULL((SELECT z.`password` FROM `AccountPass` z 
+     WHERE new.`is_deleted` = 'N' and new.`password` <> IFNULL((SELECT z.`password` FROM `AccountPass` z
                                                           WHERE z.`is_deleted` = 'N' and z.`account_id` = new.`id`
                                                           ORDER BY z.`id` DESC LIMIT 1), '');
    END
@@ -742,6 +742,7 @@ CREATE TABLE IF NOT EXISTS `SiteContact` (
     `site_id`       int(11)        UNSIGNED                     NOT NULL    ,
     `name`          varchar(80)             CHARACTER SET utf8  NOT NULL    ,
     `mail`          varchar(160)            CHARACTER SET utf8  NOT NULL    ,
+    `subject`       varchar(160)            CHARACTER SET utf8      NULL    ,
     `message`       text                                        NOT NULL    ,
 
     `is_read`       enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
@@ -791,7 +792,7 @@ CREATE TABLE IF NOT EXISTS `UsageStats` (
     `request_type`  varchar(8)              CHARACTER SET utf8  NOT NULL    DEFAULT 'GET',
     `request_uri`   varchar(512)                                NOT NULL    ,
     `referrer`      varchar(1024)                                   NULL    ,
-    
+
     `event_at`      timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     `event_on`      varchar(10)             CHARACTER SET utf8  NOT NULL    ,
     `from_ip`       varchar(64)             CHARACTER SET utf8  NOT NULL    ,

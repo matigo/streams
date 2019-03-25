@@ -1,0 +1,38 @@
+    <body>
+[PAGENAV]
+        <header class="header text-white bg-dark pt-9 pb-5" style="background-image: linear-gradient(-20deg, #2b5876 0%, #4e4376 100%);">
+            <div class="container-sm">
+                <h1>[pageContact-title]</h1>
+                <p class="lead">[pageContact-message]
+        </header>
+        <main class="main-content">
+            <section class="section">
+                <div class="container-sm">
+                    <form action="[HOMEURL]/api/contact" method="POST">
+                        <div class="form-group">
+                            <label>[pageContact-name]</label>
+                            <input id="contact-name" class="form-control form-control-lg" type="text" name="contact-name">
+                        </div>
+                        <div class="form-group">
+                            <label>[pageContact-email]</label>
+                            <input id="contact-mail" class="form-control form-control-lg" type="email" name="contact-mail">
+                        </div>
+                        <div class="form-group">
+                            <label>[pageContact-subject]</label>
+                            <input id="contact-subject" class="form-control form-control-lg" type="text" name="contact-subject">
+                        </div>
+                        <div class="form-group">
+                            <label>[pageContact-msgbody]</label>
+                            <textarea id="contact-message" class="form-control form-control-lg" rows="4" name="contact-message"></textarea>
+                        </div>
+                        <div>
+                            <button class="btn btn-lg btn-primary" type="submit">[pageContact-send]</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+[FOOTNAV]
+        <script src="[JS_DIR]/page.js"></script>
+        <script src="[JS_DIR]/script.js"></script>
+    </body>

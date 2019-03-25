@@ -1715,9 +1715,10 @@ class Posts {
         $inCodeBlock = false;
         $fixed = '';
         $last = '';
+
         foreach ( $lines as $line ) {
             $thisLine = NoNull($line);
-            if ( mb_strpos($thisLine, '```') ) { $inCodeBlock = !$inCodeBlock; }
+            if ( mb_strpos($thisLine, '```') !== false ) { $inCodeBlock = !$inCodeBlock; }
             if ( $inCodeBlock ) { $thisLine = $line; }
             $doBR = ( $fixed != '' && $last != '' && $thisLine != '' ) ? true : false;
 
@@ -1738,9 +1739,10 @@ class Posts {
             if ( nullInt(mb_substr($thisLine, 0, 2)) > 0 && $last == '' ) { $fixed .= "\n"; }
             if ( mb_substr($thisLine, 0, 2) == '* ' && $last == '' ) { $fixed .= "\n"; }
             if ( mb_substr($thisLine, 0, 2) == '- ' && $last == '' ) { $fixed .= "\n"; }
+            if ( $inCodeBlock || mb_strpos($thisLine, '```') !== false ) { $doBR = false; }
 
             $fixed .= ( $doBR ) ? '<br>' : "\n";
-            $fixed .= $thisLine;
+            $fixed .= ( $inCodeBlock ) ? $line : $thisLine;
             $last = NoNull($thisLine);
         }
         $text = NoNull($fixed);
@@ -1794,7 +1796,7 @@ class Posts {
         // Handle Code Blocks
         if (preg_match_all('/\```(.+?)\```/s', $text, $matches)) {
             foreach($matches[0] as $fn) {
-                $cbRepl = array( '```' => '', '<code><br>' => "<code>", '<br></code>' => '</code>');
+                $cbRepl = array( '```' => '', '<code><br>' => "<code>", '<br></code>' => '</code>', "\n" => '<br>', ' ' => "&nbsp;" );
                 $code = "<pre><code>" . str_replace(array_keys($cbRepl), array_values($cbRepl), $fn) . "</code></pre>";
                 $code = str_replace(array_keys($cbRepl), array_values($cbRepl), $code);
                 $text = str_replace($fn, $code, $text);
