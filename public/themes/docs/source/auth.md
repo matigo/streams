@@ -11,7 +11,13 @@
 
 ### Access Tokens
 
-Access tokens are used to authenticate requests against the 10Centuries API, and a `Channel GUID`[1. A `Channel GUID` is a Channel's unique identifier. [Learn more about Channels here]([HOMEURL]/channels).] is used during the authentication process to create an Access Token. You can find the `Channel GUID` for a website or service by viewing the source of the site you'd like to sign into, and looking at the `content` value for `<meta name="client_guid" />`. This will be simplified in future releases of the platform.
+Access tokens are used to authenticate requests against the 10Centuries API, and a `Channel GUID`[1. A `Channel GUID` is a Channel's unique identifier. [Learn more about Channels here]([HOMEURL]/channels).] is used during the authentication process to create an Access Token. Every [Channel]([HOMEURL]/channels) has a 36-character global unique identifier and can be found in the `<head>` of any 10Centuries-based web site as a `<meta>` record. For example, this website's Channel GUID is as follows:
+
+```
+<meta name="channel_guid" content="[CHANNEL_GUID]" />;
+```
+
+For applications that sign a person into a 10Centuries-based web site, it is recommended to ask for the site's URL, then programmatically read the `<meta>` tags.
 
 Note that not all API endpoints require the use of an Access Token, but all API endpoints will accept them.
 
@@ -122,17 +128,17 @@ If the Access Token is still valid, the API will respond with a JSON package:
 
 ```
 {
-    "meta": {
-        "code": 200,
-        "text": false,
-        "list": false
-    },
-    "data": {
-        "account": {an Account object},
-        "distributors": [{a list of Channels where the Account can be used}],
-        "is_active": true,
-        "updated_at": "[NOW_AT]",
-        "updated_unix": [NOW_UNIX]
-    }
+  "meta": {
+    "code": 200,
+    "text": false,
+    "list": false
+  },
+  "data": {
+    "account": {an Account object},
+    "distributors": [{a list of Channels where the Account can be used}],
+    "is_active": true,
+    "updated_at": "[NOW_AT]",
+    "updated_unix": [NOW_UNIX]
+  }
 }
 ```

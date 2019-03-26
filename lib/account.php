@@ -65,6 +65,7 @@ class Account {
                 break;
 
             case 'profile':
+            case 'bio':
                 $rVal = $this->_getPublicProfile();
                 break;
 
@@ -110,10 +111,6 @@ class Account {
             case 'resetpassword':
             case 'resetpass':
                 $rVal = $this->_resetPassword();
-                break;
-
-            case 'security':
-                $rVal = $this->_setSecurityInfo();
                 break;
 
             case 'welcome':
@@ -620,10 +617,16 @@ class Account {
                                'timezone'       => Nonull($Row['timezone']),
 
                                'display_name'   => NoNull($Row['display_name']),
+                               'mail_address'   => NoNull($Row['mail_address']),
+
                                'language'       => array( 'code' => NoNull($Row['language_code']),
                                                           'name' => NoNull($strings['lang_name'], $Row['language_name']),
                                                          ),
                                'personas'       => $this->_getAccountPersonas($Row['account_id']),
+                               'bucket'         => array( 'storage'   => 0,
+                                                          'available' => 0,
+                                                          'files'     => 0,
+                                                         ),
 
                                'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                                'created_unix'   => strtotime($Row['created_at']),
@@ -801,137 +804,6 @@ class Account {
 
         // If We're Here, Nothing Was Done
         return false;
-    }
-
-    private function _setSecurityInfo() {
-        $CleanLifeMin = nullInt($this->settings['life_span'], (COOKIE_EXPY / 60));
-        $CleanPassOne = NoNull($this->settings['pass_one']);
-        $CleanPassTwo = NoNull($this->settings['pass_two']);
-
-        // Verify We Have Minutes
-        if ( $CleanLifeMin <= 0 ) { return "Invalid Token Lifespan Supplied"; }
-        if ( $CleanPassOne == "" ) { return "Invalid Password Supplied"; }
-        if ( mb_strlen($CleanPassOne) <= 5 ) { return "Password Is Too Short"; }
-        if ( $CleanPassOne != $CleanPassTwo ) { return "Passwords Do Not Match"; }
-
-        // Do We Need a Unique Password?
-        if ( defined('PASSWORD_UNIQUES') ) {
-            if ( nullInt(PASSWORD_UNIQUES) > 0 ) {
-                if ( $this->_checkPasswordUnique() === false ) { return "You Have Used This Password Before"; }
-            }
-        }
-
-        // Create The SQL Query and Update
-        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
-                          '[ACTION_BY]'    => nullInt($this->settings['_account_id']),
-                          '[PERSON_ID]'    => nullInt($this->settings['_person_id']),
-                          '[USERPASS]'     => sqlScrub($CleanPassOne),
-                          '[SHA_SALT]'     => sqlScrub(SHA_SALT),
-                          '[TYPE]'         => 'security.token.lifespan',
-                          '[VALUE]'        => $CleanLifeMin,
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/setPassword.sql', $ReplStr, true) . SQL_SPLITTER .
-                  readResource(SQL_DIR . '/account/setAccountMeta.sql', $ReplStr, true) . SQL_SPLITTER .
-                  readResource(SQL_DIR . '/account/setAccountPassHistory.sql', $ReplStr, true) . SQL_SPLITTER .
-                  readResource(SQL_DIR . '/account/markPassChg.sql', $ReplStr, true);
-        $isOK = doSQLExecute($sqlStr);
-
-        // Record the Event
-        setActivityRecord( $this->settings['_account_id'], 'account.update', 'action.complete', $this->settings['_account_id'],
-                           "Updated Security Info for Account " . $this->settings['_account_id'] );
-
-        // Return the Account's Security Information
-        return $this->_getSecurityInfo();
-    }
-
-    /**
-     *  Function Verifies Whether a Password Has Been Used for a Given Account in the Past
-     */
-    private function _checkPasswordUnique() {
-        $CleanPass = NoNull($this->settings['pass_one']);
-
-        // Basic Stuff ...
-        if ( $CleanPass == '' ) { return false; }
-
-        // Build and Run the Query
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[USERPASS]'   => sqlScrub($CleanPass),
-                          '[SHA_SALT]'   => sqlScrub(SHA_SALT),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/chkPasswordUnique.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            foreach ( $rslt as $Row ) {
-                if ( nullInt($Row['records']) > 0 ) { return false; }
-            }
-        }
-
-        // If We're Here, Assume It's Good
-        return true;
-    }
-
-    /**
-     *  Function Returns an Account's Security Preferences
-     */
-    private function _getSecurityInfo() {
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[PERSON_ID]'  => nullInt($this->settings['_person_id']),
-                          '[TOKEN_LIFE]' => (COOKIE_EXPY / 60),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/getSecurityPrefs.sql', $ReplStr, true);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            $data = array();
-            foreach ( $rslt as $Row ) {
-                $data[ NoNull($Row['type']) ] = NoNull($Row['value']);
-            }
-
-            // If We Have Data, Return It
-            if ( count($data) > 0 ) { return $data; }
-        }
-
-        // Return an Empty Array if There Is No Information
-        return array();
-    }
-
-    /** ********************************************************************* *
-     *  Account Creation Processes (Called Mainly from SSO on New Record)
-     ** ********************************************************************* */
-    private function _createAccount( $data ) {
-        $reqs = array( 'username', 'email', 'first_ro', 'person_id' );
-        $rVal = false;
-
-        // Perform Some Basic Validation
-        foreach ( $reqs as $item ) {
-            if ( !array_key_exists($item, $data) ) { return "Missing [$item] Value"; }
-        }
-
-        // Create the Account Record with Minimal Permissions
-        $uname = explode('@', $data['username']);
-        $ReplStr = array( '[USERNAME]' => sqlScrub(NoNull($uname[0], $data['username'])),
-                          '[USERPASS]' => getRandomString(64),
-                          '[MAILADDR]' => sqlScrub(NoNull($data['email'])),
-                          '[DISPNAME]' => sqlScrub(NoNull($data['first_ro'])),
-                          '[SAMLGUID]' => sqlScrub(NoNull($data['guid'])),
-                          '[SAML_CHK]' => sqlScrub(NoNull($data['guid'], '(intentionally blank)')),
-                          '[PERSONID]' => nullInt($data['person_id']),
-                          '[SHA_SALT]' => sqlScrub(SHA_SALT),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/createAccount.sql', $ReplStr);
-        $rslt = doSQLExecute($sqlStr);
-        if ( $rslt > 0 ) {
-            // Set a Scope
-            $this->_setScope($rslt, 'none');
-
-            // Return the Basic Account Object
-            $rVal = $this->_getAccountInfo($rslt);
-
-            // Record the Activity
-            setActivityRecord( $rslt, 'account.create', 'action.complete', $rslt, "Created Account [$rslt] via SSO" );
-        }
-
-        // Return the Account Object or an Unhappy Boolean
-        return $rVal;
     }
 
     /** ********************************************************************* *

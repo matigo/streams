@@ -1705,6 +1705,7 @@ class Posts {
      *  Function Converts a Text String to HTML Via Markdown
      */
     private function _getMarkdownHTML( $text, $post_id, $isNote = false, $showLinkURL = false ) {
+        $illegals = array( '<' => '&lt;', '>' => '&gt;' );
         $Excludes = array("\r", "\n", "\t");
         $ValidateUrls = false;
         if ( defined('VALIDATE_URLS') ) { $ValidateUrls = YNBool(VALIDATE_URLS); }
@@ -1742,7 +1743,7 @@ class Posts {
             if ( $inCodeBlock || mb_strpos($thisLine, '```') !== false ) { $doBR = false; }
 
             $fixed .= ( $doBR ) ? '<br>' : "\n";
-            $fixed .= ( $inCodeBlock ) ? $line : $thisLine;
+            $fixed .= ( $inCodeBlock ) ? str_replace(array_keys($illegals), array_values($illegals), $line) : $thisLine;
             $last = NoNull($thisLine);
         }
         $text = NoNull($fixed);

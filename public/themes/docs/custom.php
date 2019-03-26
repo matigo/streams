@@ -67,16 +67,32 @@ class Docs {
         $mdFile = THEME_DIR . '/' . NoNull($data['location']) . "/source/$PageUrl.md";
         $this->settings['_location'] = NoNull($data['location']);
         $this->settings['_siteurl'] = NoNull($SiteUrl);
+        $JoinUnix = strtotime('2012-08-01T09:00:00Z');
+        $UpdUnix = strtotime('2019-02-01T18:30:00Z');
         $ima = time();
 
         $ReplStr = array( '[SITE_NAME]' => $data['name'],
                           '[HOMEURL]'   => NoNull($this->settings['HomeURL']),
                           '[LANG_CD]'   => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
+                          '[CSS_VER]'   => CSS_VER,
+                          '[GENERATOR]' => GENERATOR . " (" . APP_VER . ")",
+                          '[APP_NAME]'  => APP_NAME,
+                          '[APP_VER]'   => APP_VER,
                           '[IMG_DIR]'   => $this->settings['_siteurl'] . '/img',
                           '[JS_DIR]'    => $this->settings['_siteurl'] . '/js',
 
-                          '[NOW_AT]'    => date("Y-m-d\TH:i:s\Z", $ima),
-                          '[NOW_UNIX]'  => $ima,
+                          '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
+                          '[CLIENT_GUID]'  => NoNull($data['client_guid']),
+                          '[SITE_GUID]'    => NoNull($data['site_guid']),
+
+                          '[UPDATED_AT]'   => date("Y-m-d\TH:i:s\Z", $UpdUnix),
+                          '[UPDATED_UNIX]' => $UpdUnix,
+                          '[NOW_AT]'       => date("Y-m-d\TH:i:s\Z", $ima),
+                          '[NOW_UNIX]'     => $ima,
+
+                          '[JOIN_AT]'      => date("Y-m-d\TH:i:s\Z", $JoinUnix),
+                          '[JOIN_UNIX]'    => $JoinUnix,
+                          '[JOIN_DAYS]'    => round(abs($ima - $JoinUnix) / 86400),
 
                           '[FOOTNAV]'   => $this->_getNavigation('foot'),
                           '[PAGENAV]'   => $this->_getNavigation('page'),
@@ -98,8 +114,8 @@ class Docs {
             $html = $post->getMarkdownHTML( $txt, 0, false, true );
 
             // Clean up the HTML Output
-            $expand = array( '<h1>' => 7, '<h2>' => 7, '<h3>' => 7, '<h4>' => 7, '<h5>' => 7, '<h6>' => 7,
-                             '<p>' => 7, '<ul>' => 7, '</ul>' => 7, '<li>' => 8,
+            $expand = array( '<h1>' => 7, '<h2>' => 7, '<h3>'  => 7, '<h4>' => 7, '<h5>' => 7, '<h6>' => 7,
+                             '<p>'  => 7, '<ul>' => 7, '</ul>' => 7, '<li>' => 8,
                             );
             foreach ( $expand as $tag=>$cnt ) {
                 $html = str_replace($tag, "\r\n" . tabSpace($cnt) . $tag, $html);

@@ -195,7 +195,7 @@ class Auth {
         // Get the Maximum Age of an Account's Password (28.25 years by default)
         $PassAge = 10000;
         if ( defined('PASSWORD_LIFE') ) { $PassAge = nullInt(PASSWORD_LIFE, 10000); }
-        
+
         // Get the Home URL Address (For Site-Level Access)
         $HomeURL = NoNull($this->settings['HomeURL']);
 
@@ -293,9 +293,9 @@ class Auth {
      *      and returns a Token or Unhappy Boolean
      */
     private function _performLogin() {
-        $ChanGUID = sqlScrub($this->settings['channel_guid']);
-        $AcctName = sqlScrub($this->settings['account_name']);
-        $AcctPass = sqlScrub($this->settings['account_pass']);
+        $ChanGUID = NoNull($this->settings['channel_guid'], $this->settings['channel']);
+        $AcctName = NoNull($this->settings['account_name'], $this->settings['email']);
+        $AcctPass = NoNull($this->settings['account_pass'], $this->settings['password']);
         $isWebReq = YNBool(NoNull($this->settings['webreq']));
         $LangCd = DEFAULT_LANG;
         $Token = false;
@@ -304,8 +304,8 @@ class Auth {
         // Ensure We Have the Data, and Check the Database
         if ( $AcctName != "" && $AcctPass != "" && $AcctName != $AcctPass ) {
             $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChanGUID),
-                              '[USERADDR]'     => $AcctName,
-                              '[USERPASS]'     => $AcctPass,
+                              '[USERADDR]'     => sqlScrub($AcctName),
+                              '[USERPASS]'     => sqlScrub($AcctPass),
                               '[SHA_SALT]'     => SHA_SALT,
                              );
             $DaysInactive = 0;
@@ -441,13 +441,13 @@ class Auth {
         $this->_setMetaMessage("Invalid or Expired Token Supplied", 400);
         return array();
     }
-    
+
     /**
      *  Function Returns an Array Containing the Personas and Channels an Account can Write To
      */
     private function _getValidChannels( $AccountID ) {
         if ( nullInt($AccountID) <= 0 ) { return false; }
-        
+
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID) );
         $sqlStr = readResource(SQL_DIR . '/auth/getValidChannels.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
@@ -455,7 +455,7 @@ class Auth {
             $data = array();
             $pids = array();
             $sets = array();
-            
+
             foreach ( $rslt as $Row ) {
                 if ( in_array(nullInt($Row['persona_id']), $pids) === false ) {
                     $sets[nullInt($Row['persona_id'])] = array( 'guid'      => NoNull($Row['guid']),
