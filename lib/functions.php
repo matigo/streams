@@ -15,7 +15,7 @@
 
         if ( is_numeric($number) ) { $rVal = $number; }
         if ( $rVal == 0 && $default > 0 ) {
-	        $rVal = $default;
+            $rVal = $default;
         }
 
         // Return the Numeric Value
@@ -41,6 +41,68 @@
     }
 
     /**
+     *  Function returns an array of Unique words in a string (ideally for database insertion)
+     */
+    function UniqueWords( $string ) {
+        if ( NoNull($string) == '' ) { return false; }
+        $rVal = array();
+
+        // Replace Some Characters
+        $ReplStr = array( '’' => "'", '“' => '"', '”' => '"', '-' => ' ' );
+        $text = str_replace(array_keys($ReplStr), array_values($ReplStr), $string);
+
+        // Eliminate any Punctuation
+        $punc = array( '!', '.', ',', '&', '?', '<', '>', '_', '(', ')', '*', '/', '\\', '-', '=', ';', ':', '`', '[', ']', '{', '}', '"', "'");
+        $text = NoNull(str_replace($punc, '', html_entity_decode(strip_tags($text), ENT_COMPAT | ENT_HTML5 | ENT_QUOTES, 'UTF-8')));
+        $uniques = array();
+        $words = explode(' ', " $text ");
+        foreach ( $words as $word ) {
+            $word = NoNull($word);
+            if ( mb_strlen($word) > 1 && mb_strlen($word) <= 64 && in_array($word, $rVal) === false ) { $rVal[] = strtolower($word); }
+        }
+
+        // Return an Array of Unique Words (if we have at least one)
+        if ( count($rVal) > 0 ) { return $rVal; }
+        return false;
+    }
+
+    /**
+     *  Function takes a URL, strips out the protocol and any suffix data, then builds a GUID representation so that
+     *      it can be compared against other URLs for uniqueness. If the Url is invalid, an unhappy boolean is returned
+     */
+    function getGuidFromUrl( $url ) {
+        $url = NoNull($url);
+        if ( mb_strlen($url) <= 5 ) { return false; }
+
+        if ( mb_substr($url, 0, 8) == 'https://' ) { $url = mb_substr($url, 8); }
+        if ( mb_substr($url, 0, 7) == 'http://' ) { $url = mb_substr($url, 7); }
+        $url = str_replace('//', '/', $url);
+        $chkSlash = true;
+        $cnt = 0;
+
+        while ( $chkSlash ) {
+            if ( $cnt >= 10 ) { return false; }
+            if ( mb_substr($url, -1) == '/' ) {
+                $url = mb_substr($url, 0, mb_strlen($url) - 1);
+            } else {
+                $chkSlash = false;
+            }
+            $cnt++;
+        }
+
+        // Construct a GUID for the Site Based on an MD5 of the "clean" URL
+        $UrlGuid = substr(md5($url),  0,  8) . '-' .
+                   substr(md5($url),  8,  4) . '-' .
+                   substr(md5($url), 12,  4) . '-' .
+                   substr(md5($url), 16,  4) . '-' .
+                   substr(md5($url), 20, 12);
+
+        // If the Url Guid Appears Valid, Return It. Otherwise, Unhappy Boolean
+        if ( strlen($UrlGuid) == 36 ) { return $UrlGuid; }
+        return false;
+    }
+
+    /**
      * Function Checks the Validity of a supplied URL and returns a cleaned string
      */
     function cleanURL( $URL ) {
@@ -48,6 +110,37 @@
 
         // Return the Cleaned URL Value
         return $rVal;
+    }
+
+    /**
+     *  Function Records a Summarized RSS Feed to the local storage
+     */
+    function saveFeedObject( $feed ) {
+        if ( is_array($feed) ) {
+            if ( NoNull($feed['guid']) == '' ) { return; }
+            $cacheFile = TMP_DIR . '/feeds/' . $feed['guid'] . '.data';
+            if ( checkDIRExists( TMP_DIR . '/feeds' ) ) {
+                $fh = fopen($cacheFile, 'w');
+                fwrite($fh, json_encode($feed, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                fclose($fh);
+            }
+        }
+    }
+
+    /**
+     *  Function Reads a Feed's Cached JSON data based on the GUID passed
+     *      If the data does not exist, an unhappy boolean is returned.
+     */
+    function readFeedObject( $feedGuid ) {
+        if ( strlen(NoNull($feedGuid)) <> 36 ) { return false; }
+        if ( checkDIRExists( TMP_DIR . '/feeds' ) ) {
+            $cacheFile = TMP_DIR . '/feeds/' . $feedGuid . '.data';
+            if ( file_exists( $cacheFile ) ) {
+                $json = file_get_contents( $cacheFile );
+                return json_decode($json);
+            }
+        }
+        return false;
     }
 
     /**
@@ -61,16 +154,16 @@
         $valids = array();
 
         // Load the Valid TLDs Array
-	    if ( checkDIRExists( TMP_DIR ) ) {
-    	    $cacheFile = TMP_DIR . '/valid_tlds.data';
-    	    if ( file_exists( $cacheFile ) ) {
-    		    $data = file_get_contents( $cacheFile );
-    		    $valids = unserialize($data);
-    	    }
-	    }
+        if ( checkDIRExists( TMP_DIR ) ) {
+            $cacheFile = TMP_DIR . '/valid_tlds.data';
+            if ( file_exists( $cacheFile ) ) {
+                $data = file_get_contents( $cacheFile );
+                $valids = unserialize($data);
+            }
+        }
 
         // Return a Boolean Response
-	    return in_array($tld, $valids);
+        return in_array($tld, $valids);
     }
 
     /**
@@ -102,9 +195,9 @@
                 if ( !in_array('dev', $valids) ) { $valids[] = 'dev'; }
 
                 if ( checkDIRExists( TMP_DIR ) ) {
-            	    $fh = fopen($cacheFile, 'w');
-            	    fwrite($fh, serialize($valids));
-            	    fclose($fh);
+                    $fh = fopen($cacheFile, 'w');
+                    fwrite($fh, serialize($valids));
+                    fclose($fh);
                 }
             }
         }
@@ -118,7 +211,7 @@
      *  Value Passed
      */
     function YNBool( $Val ) {
-        $valids = array( 'yes', 'y', 'on', '1', 1 );
+        $valids = array( 'true', 'yes', 'y', 'on', '1', 1 );
         return in_array(strtolower($Val), $valids);
     }
 
@@ -130,33 +223,33 @@
     }
 
     /**
-     *	Function Deletes all of the Files (Not Directories) in a Specified Location
+     *  Function Deletes all of the Files (Not Directories) in a Specified Location
      */
     function scrubDIR( $DIR ) {
-    	$FileName = "";
-    	$Excludes = array( 'rss.cache' );
-	    $rVal = false;
-	    $i = 0;
+        $FileName = "";
+        $Excludes = array( 'rss.cache' );
+        $rVal = false;
+        $i = 0;
 
-		if (is_dir($DIR)) {
-			$objects = scandir($DIR);
-			foreach ($objects as $object) {
-				if ($object != "." && $object != "..") {
-					$FileName = $DIR . "/" . $object;
-					if ( filetype($FileName) != "dir" ) {
-					    unlink($FileName);
-					    $i++;
+        if (is_dir($DIR)) {
+            $objects = scandir($DIR);
+            foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                    $FileName = $DIR . "/" . $object;
+                    if ( filetype($FileName) != "dir" ) {
+                        unlink($FileName);
+                        $i++;
                     }
-				}
-			}
-			reset($objects);
-		}
+                }
+            }
+            reset($objects);
+        }
 
-		// If We've Deleted Some Files, then Set a Happy Return Boolean
-		if ( $i > 0 ) { $rVal = true; }
+        // If We've Deleted Some Files, then Set a Happy Return Boolean
+        if ( $i > 0 ) { $rVal = true; }
 
-		// Return a Boolean Value
-		return $rVal;
+        // Return a Boolean Value
+        return $rVal;
     }
 
     /**
@@ -203,60 +296,60 @@
     }
 
     /**
-     *	Function Generates an XML Element
+     *  Function Generates an XML Element
      */
-	function generateXML( $tag_in, $value_in = "", $attribute_in = "" ){
-		$rVal = "";
-		$attributes_out = "";
-		if (is_array($attribute_in)){
-			if (count($attribute_in) != 0){
-				foreach($attribute_in as $k=>$v) {
-					$attributes_out .= " ".$k."=\"".$v."\"";
-				}
-			}
-		}
+    function generateXML( $tag_in, $value_in = "", $attribute_in = "" ){
+        $rVal = "";
+        $attributes_out = "";
+        if (is_array($attribute_in)){
+            if (count($attribute_in) != 0){
+                foreach($attribute_in as $k=>$v) {
+                    $attributes_out .= " ".$k."=\"".$v."\"";
+                }
+            }
+        }
 
-		// Return the XML Tag
-		return "<".$tag_in."".$attributes_out.((trim($value_in) == "") ? "/>" : ">".$value_in."</".$tag_in.">" );
-	}
+        // Return the XML Tag
+        return "<".$tag_in."".$attributes_out.((trim($value_in) == "") ? "/>" : ">".$value_in."</".$tag_in.">" );
+    }
 
-	function tabSpace( $num ) {
-    	$rVal = '';
-    	if ( $num <= 0 ) { return $rVal; }
-    	for ( $i = 0; $i < $num; $i++ ) { $rVal .= '    '; }
+    function tabSpace( $num ) {
+        $rVal = '';
+        if ( $num <= 0 ) { return $rVal; }
+        for ( $i = 0; $i < $num; $i++ ) { $rVal .= '    '; }
 
         // Return the Spaces
-    	return $rVal;
-	}
+        return $rVal;
+    }
 
     /**
      *
      */
-	function arrayToXML( $array_in ) {
-		$rVal = "";
-		$attributes = array();
+    function arrayToXML( $array_in ) {
+        $rVal = "";
+        $attributes = array();
 
-		foreach($array_in as $k=>$v) {
-			if ($k[0] == "@"){
-				// attribute...
-				$attributes[str_replace("@","",$k)] = $v;
-			} else {
-				if (is_array($v)){
-					$rVal .= generateXML($k,arrayToXML($v),$attributes);
-					$attributes = array();
-				} else if (is_bool($v)) {
-					$rVal .= generateXML($k,(($v==true)? "true" : "false"),$attributes);
-					$attributes = array();
-				} else {
-					$rVal .= generateXML($k,$v,$attributes);
-					$attributes = array();
-				}
-			}
-		}
+        foreach($array_in as $k=>$v) {
+            if ($k[0] == "@"){
+                // attribute...
+                $attributes[str_replace("@","",$k)] = $v;
+            } else {
+                if (is_array($v)){
+                    $rVal .= generateXML($k,arrayToXML($v),$attributes);
+                    $attributes = array();
+                } else if (is_bool($v)) {
+                    $rVal .= generateXML($k,(($v==true)? "true" : "false"),$attributes);
+                    $attributes = array();
+                } else {
+                    $rVal .= generateXML($k,$v,$attributes);
+                    $attributes = array();
+                }
+            }
+        }
 
-		// Return the XML
-		return $rVal;
-	}
+        // Return the XML
+        return $rVal;
+    }
 
     // Eliminate the White Space and (Optionally) Style Information from a String
     function scrubWhiteSpace( $String, $ScrubStyles = false ) {
@@ -370,31 +463,31 @@
      * Functions are Used in uksort() Operations
      */
     function arraySortAsc( $a, $b ) {
-		if ($a == $b) return 0;
-		return ($a > $b) ? -1 : 1;
-	}
+        if ($a == $b) return 0;
+        return ($a > $b) ? -1 : 1;
+    }
 
     function arraySortDesc( $a, $b ) {
-		if ($a == $b) return 0;
-		return ($a > $b) ? 1 : -1;
-	}
+        if ($a == $b) return 0;
+        return ($a > $b) ? 1 : -1;
+    }
 
     /**
      * Function Determines if String "Starts With" the supplied String
      */
-	function startsWith($haystack, $needle) {
-    	return !strncmp($haystack, $needle, strlen($needle));
+    function startsWith($haystack, $needle) {
+        return !strncmp($haystack, $needle, strlen($needle));
     }
 
     /**
      * Function Determines if String "Ends With" the supplied String
      */
-	function endsWith($haystack, $needle) {
-		$length = strlen($needle);
-		if ($length == 0) { return true; }
+    function endsWith($haystack, $needle) {
+        $length = strlen($needle);
+        if ($length == 0) { return true; }
 
-		return (substr($haystack, -$length) === $needle);
-	}
+        return (substr($haystack, -$length) === $needle);
+    }
 
     /**
      * Function Confirms a directory exists and makes one if it doesn't
@@ -414,56 +507,56 @@
      * Function Returns the Number of Files contained within a directory
      */
     function countDIRFiles( $DIR ) {
-	    $rVal = 0;
+        $rVal = 0;
 
-	    // Only check if the directory exists (of course)
-	    if ( file_exists($DIR) ) {
-			foreach ( glob($DIR . "/*.token") as $filename) {
-			    $rVal += 1;
-			}
-	    }
+        // Only check if the directory exists (of course)
+        if ( file_exists($DIR) ) {
+            foreach ( glob($DIR . "/*.token") as $filename) {
+                $rVal += 1;
+            }
+        }
 
-		// Return the Number of Files
-		return $rVal;
+        // Return the Number of Files
+        return $rVal;
     }
 
     /**
      * Function returns an array from an Object
      */
     function objectToArray($d) {
-		if (is_object($d)) {
-			$d = get_object_vars($d);
-		}
+        if (is_object($d)) {
+            $d = get_object_vars($d);
+        }
 
-		if (is_array($d)) {
-			return array_map(__FUNCTION__, $d);
-		}
-		else {
-			return $d;
-		}
-	}
+        if (is_array($d)) {
+            return array_map(__FUNCTION__, $d);
+        }
+        else {
+            return $d;
+        }
+    }
 
-	/**
-	 *  Function Returns a Boolean Stating Whether a String is a Link or Not
-	 */
-	function isValidURL( $text ) {
-    	if ( strpos($text, '.') > 0 && strpos($text, '.') < strlen($text) ) { return true; }
-    	return false;
-	}
+    /**
+     *  Function Returns a Boolean Stating Whether a String is a Link or Not
+     */
+    function isValidURL( $text ) {
+        if ( strpos($text, '.') > 0 && strpos($text, '.') < strlen($text) ) { return true; }
+        return false;
+    }
 
-	/**
-	 *  Function Returns the Protocol (HTTP/HTTPS) Being Used
-	 *  Updated to resolve a problem when running behind a load balancer
-	 */
-	function getServerProtocol() {
-    	$rVal = strtolower(NoNull($_SERVER['REQUEST_SCHEME'], $_SERVER['HTTP_X_FORWARDED_PROTO']));
-    	if ( NoNull($_SERVER['HTTP_CF_VISITOR']) != '' ) {
+    /**
+     *  Function Returns the Protocol (HTTP/HTTPS) Being Used
+     *  Updated to resolve a problem when running behind a load balancer
+     */
+    function getServerProtocol() {
+        $rVal = strtolower(NoNull($_SERVER['REQUEST_SCHEME'], $_SERVER['HTTP_X_FORWARDED_PROTO']));
+        if ( NoNull($_SERVER['HTTP_CF_VISITOR']) != '' ) {
             $cf_proto = json_decode($_SERVER['HTTP_CF_VISITOR']);
             $cf_array = objectToArray($cf_proto);
             if ( array_key_exists('scheme', $cf_array) ) { $rVal = strtolower($cf_array['scheme']); }
-    	}
+        }
         return strtolower(NoNull($rVal, 'http'));
-	}
+    }
 
     /**
      * Function returns a person's IPv4 address
@@ -528,25 +621,25 @@
     }
 
     /**
-     *	Function Returns a Gravatar URL for a Given Email Address
-     *	Note: Code based on source from https://en.gravatar.com/site/implement/images/php/
+     *  Function Returns a Gravatar URL for a Given Email Address
+     *  Note: Code based on source from https://en.gravatar.com/site/implement/images/php/
      */
     function getGravatarURL( $emailAddr, $size = 80, $default = 'mm', $rating = 'g', $img = false, $atts = array() ) {
-    	$rVal = "";
+        $rVal = "";
 
-    	if ( NoNull($emailAddr) != "" ) {
-	    	$rVal = "//gravatar.com/avatar/" . md5( strtolower( NoNull($emailAddr) ) ) . "?s=$size&d=$default&r=$rating";
-		    if ( $img ) {
-		        $rVal = '<img src="' . $rVal . '"';
-		        foreach ( $atts as $key => $val ) {
-    		        $rVal .= ' ' . $key . '="' . $val . '"';
-		        }
-		        $rVal .= ' />';
-		    }
-    	}
+        if ( NoNull($emailAddr) != "" ) {
+            $rVal = "//gravatar.com/avatar/" . md5( strtolower( NoNull($emailAddr) ) ) . "?s=$size&d=$default&r=$rating";
+            if ( $img ) {
+                $rVal = '<img src="' . $rVal . '"';
+                foreach ( $atts as $key => $val ) {
+                    $rVal .= ' ' . $key . '="' . $val . '"';
+                }
+                $rVal .= ' />';
+            }
+        }
 
-    	// Return the URL
-    	return $rVal;
+        // Return the URL
+        return $rVal;
     }
 
     /**
@@ -556,9 +649,9 @@
         $rVal = 0;
 
         if(preg_match_all('!HTTP/1.1 ([0-9a-zA-Z]*) !', $header, $matches, PREG_SET_ORDER)) {
-        	foreach($matches as $match) {
+            foreach($matches as $match) {
                 $rVal = nullInt( $match[1] );
-        	}
+            }
         }
 
         // Return the HTTP Response Code
@@ -683,8 +776,8 @@
      */
     function redirectTo( $URL, $Referer = '' ) {
         if ( NoNull($Referer) != '' ) { header( "Referer: $Referer" ); }
-    	header( "Location: $URL" );
-    	die;
+        header( "Location: $URL" );
+        die;
     }
 
     /***********************************************************************
@@ -976,21 +1069,21 @@
         $r = 0;
 
         // Do Not Proceed If We Don't Have SQL Settings
-		if ( !defined('DB_SERV') ) { return false; }
-		if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
+        if ( !defined('DB_SERV') ) { return false; }
+        if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
 
         // Determine Which Database is Required, and Connect If We Don't Already Have a Connection
-		if ( !$mysql_db ) {
-    		$mysql_db = mysqli_connect(DB_SERV, DB_USER, DB_PASS, $dbname);
+        if ( !$mysql_db ) {
+            $mysql_db = mysqli_connect(DB_SERV, DB_USER, DB_PASS, $dbname);
             if ( !$mysql_db || mysqli_connect_errno() ) {
                 writeNote("doSQLQuery Connection Error :: " . mysqli_connect_error(), true);
                 return false;
             }
             mysqli_set_charset($mysql_db, DB_CHARSET);
-		}
+        }
 
-		// If We Have a Good Connection, Go!
-		if ( $mysql_db ) {
+        // If We Have a Good Connection, Go!
+        if ( $mysql_db ) {
             // If We're In Debug, Capture the SQL Query
             if ( defined('DEBUG_ENABLED') ) {
                 if ( DEBUG_ENABLED == 1 ) {
@@ -1051,10 +1144,10 @@
         $rVal = -1;
 
         // Do Not Proceed If We Don't Have SQL Settings
-		if ( !defined('DB_SERV') ) { return false; }
-		if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
+        if ( !defined('DB_SERV') ) { return false; }
+        if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
 
-		// Strip Out The SQL Queries (If There Are Many)
+        // Strip Out The SQL Queries (If There Are Many)
         if ( strpos($sqlStr, SQL_SPLITTER) > 0 ) {
             $sqlQueries = explode(SQL_SPLITTER, $sqlStr);
         } else {
@@ -1069,7 +1162,7 @@
                 return $rVal;
             }
             mysqli_set_charset($mysql_db, DB_CHARSET);
-		}
+        }
 
         // Execute Each Statement
         if ( $mysql_db ) {
@@ -1110,6 +1203,7 @@
      * Function returns a SQL-safe String
      */
     function sqlScrub( $str ) {
+        if ( NoNull($str) == '' ) { return ''; }
         $rVal = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $str);
 
         if( is_array($str) ) { return array_map(__METHOD__, $str); }
@@ -1175,11 +1269,11 @@
      */
     function getChrTable() {
         return array('jNn7uY2ETd6JUOSVkAMyhCt3qw1WcpIv5P0LK4DfXFzbl8xemrB9RHGgoiQZsa',
-            		 '3tDL8pPwScIbnE0gsjvK2QxoVhrf17eG6yM4BJkOTXWzNduiFHZqAC9UmY5Ral',
-            		 'JyADsUFtkjzXqLG0SMb1egmhw8Q6cETpVfI5xdl42H9vROKYuNiWonPC73rBaZ',
-            		 '2ZTSUXQFPgK7nwOi0N5s8z1rjqC4E6VHkRypo3J9hdBImxAGltWeMvYfLuDbca',
-            		 '8NlPjJIHE7naFyewTqmdsK5YQhU9gp6WRXBVGouMDALtr0c324bzCSfOv1iZkx',
-            		 'OPwcLs1zy69KpNjm0hFGaEte5UIrfVBXZYQWv27S34MJHkTbdgDARlConqx8iu'
+                     '3tDL8pPwScIbnE0gsjvK2QxoVhrf17eG6yM4BJkOTXWzNduiFHZqAC9UmY5Ral',
+                     'JyADsUFtkjzXqLG0SMb1egmhw8Q6cETpVfI5xdl42H9vROKYuNiWonPC73rBaZ',
+                     '2ZTSUXQFPgK7nwOi0N5s8z1rjqC4E6VHkRypo3J9hdBImxAGltWeMvYfLuDbca',
+                     '8NlPjJIHE7naFyewTqmdsK5YQhU9gp6WRXBVGouMDALtr0c324bzCSfOv1iZkx',
+                     'OPwcLs1zy69KpNjm0hFGaEte5UIrfVBXZYQWv27S34MJHkTbdgDARlConqx8iu'
                     );
     }
 
@@ -1187,132 +1281,132 @@
      * Function converts an AlphaNumeric Value to an Integer based on the
      *      static characters passed.
      */
-	function alphaToInt($alpha) {
+    function alphaToInt($alpha) {
         $chrTable = getChrTable();
 
         // Perform Some Basic Error Checking
-		if (!$alpha) { return null; }
-		if ( strlen($alpha) != 6 ) { return 0; }
+        if (!$alpha) { return null; }
+        if ( strlen($alpha) != 6 ) { return 0; }
 
-		$radic = strlen($chrTable[0]);
-		$offset = strpos($chrTable[0], $alpha[0]);
-		if ($offset === false) return false;
-		$value = 0;
+        $radic = strlen($chrTable[0]);
+        $offset = strpos($chrTable[0], $alpha[0]);
+        if ($offset === false) return false;
+        $value = 0;
 
-		for ($i=1; $i < strlen($alpha); $i++) {
-			if ($i >= count($chrTable)) break;
+        for ($i=1; $i < strlen($alpha); $i++) {
+            if ($i >= count($chrTable)) break;
 
-			$pos = (strpos($chrTable[$i], $alpha[$i]) + $radic - $offset) % $radic;
-			if ($pos === false) return false;
+            $pos = (strpos($chrTable[$i], $alpha[$i]) + $radic - $offset) % $radic;
+            if ($pos === false) return false;
 
-			$value = $value * $radic + $pos;
-		}
+            $value = $value * $radic + $pos;
+        }
 
-		$value = $value * $radic + $offset;
+        $value = $value * $radic + $offset;
 
         // Return the Integer Value
-		return $value;
-	}
+        return $value;
+    }
 
     /**
      * Function converts an Integer to an AlphaNumeric Value based on the
      *      static characters passed.
      */
-	function intToAlpha($num) {
+    function intToAlpha($num) {
         if ( nullInt( $num ) <= 0 ) { return ""; }
 
         $chrTable = getChrTable();
-		$digit = 5;
-		$radic = strlen( $chrTable[0] );
-		$alpha = '';
+        $digit = 5;
+        $radic = strlen( $chrTable[0] );
+        $alpha = '';
 
-		$num2 = floor($num / $radic);
-		$mod = $num - $num2 * $radic;
-		$offset = $mod;
+        $num2 = floor($num / $radic);
+        $mod = $num - $num2 * $radic;
+        $offset = $mod;
 
-		for ($i=0; $i<$digit; $i++) {
-			$mod = $num2 % $radic;
-			$num2 = ($num2 - $mod) / $radic;
+        for ($i=0; $i<$digit; $i++) {
+            $mod = $num2 % $radic;
+            $num2 = ($num2 - $mod) / $radic;
 
-			$alpha = $chrTable[ $digit-$i ][ ($mod + $offset )% $radic ] . $alpha;
-		}
-		$alpha = $chrTable[0][ $offset ] . $alpha;
+            $alpha = $chrTable[ $digit-$i ][ ($mod + $offset )% $radic ] . $alpha;
+        }
+        $alpha = $chrTable[0][ $offset ] . $alpha;
 
         // Return the AlphaNumeric Value
-		return $alpha;
-	}
+        return $alpha;
+    }
 
     /***********************************************************************
      *  HTTP Asyncronous Calls
      ***********************************************************************/
     /**
-     *	Function Calls a URL Asynchronously, and Returns Nothing
-     *	Source: http://stackoverflow.com/questions/962915/how-do-i-make-an-asynchronous-get-request-in-php
+     *  Function Calls a URL Asynchronously, and Returns Nothing
+     *  Source: http://stackoverflow.com/questions/962915/how-do-i-make-an-asynchronous-get-request-in-php
      */
-	function curlPostAsync( $url, $params ) {
-	    foreach ($params as $key => &$val) {
-			if (is_array($val)) $val = implode(',', $val);
-			$post_params[] = $key.'='.urlencode($val);
-	    }
-	    $post_string = implode('&', $post_params);
-	    $parts=parse_url($url);
+    function curlPostAsync( $url, $params ) {
+        foreach ($params as $key => &$val) {
+            if (is_array($val)) $val = implode(',', $val);
+            $post_params[] = $key.'='.urlencode($val);
+        }
+        $post_string = implode('&', $post_params);
+        $parts=parse_url($url);
 
-	    $fp = fsockopen($parts['host'], isset($parts['port'])?$parts['port']:80, $errno, $errstr, 30);
+        $fp = fsockopen($parts['host'], isset($parts['port'])?$parts['port']:80, $errno, $errstr, 30);
 
-	    $out = "POST ".$parts['path']." HTTP/1.1\r\n";
-	    $out.= "Host: ".$parts['host']."\r\n";
-	    $out.= "Content-Type: application/x-www-form-urlencoded\r\n";
-	    $out.= "Content-Length: ".strlen($post_string)."\r\n";
-	    $out.= "Connection: Close\r\n\r\n";
-	    if (isset($post_string)) $out.= $post_string;
+        $out = "POST ".$parts['path']." HTTP/1.1\r\n";
+        $out.= "Host: ".$parts['host']."\r\n";
+        $out.= "Content-Type: application/x-www-form-urlencoded\r\n";
+        $out.= "Content-Length: ".strlen($post_string)."\r\n";
+        $out.= "Connection: Close\r\n\r\n";
+        if (isset($post_string)) $out.= $post_string;
 
-	    fwrite($fp, $out);
-	    fclose($fp);
-	}
+        fwrite($fp, $out);
+        fclose($fp);
+    }
 
 
     /**
-     *	Function Calls a URL Asynchronously, and Returns Nothing
-     *	Source: http://codeissue.com/issues/i64e175d21ea182/how-to-make-asynchronous-http-calls-using-php
+     *  Function Calls a URL Asynchronously, and Returns Nothing
+     *  Source: http://codeissue.com/issues/i64e175d21ea182/how-to-make-asynchronous-http-calls-using-php
      */
     function httpPostAsync( $url, $paramstring, $method = 'get', $timeout = '30', $returnresponse = false ) {
-		$method = strtoupper($method);
-		$urlParts = parse_url($url);
-		$fp = fsockopen($urlParts['host'],
-						isset( $urlParts['port'] ) ? $urlParts['port'] : 80,
-						$errno, $errstr, $timeout);
-		$rVal = false;
+        $method = strtoupper($method);
+        $urlParts = parse_url($url);
+        $fp = fsockopen($urlParts['host'],
+                        isset( $urlParts['port'] ) ? $urlParts['port'] : 80,
+                        $errno, $errstr, $timeout);
+        $rVal = false;
 
-		//If method="GET", add querystring parameters
-		if ($method='GET')
-			$urlParts['path'] .= '?'.$paramstring;
+        //If method="GET", add querystring parameters
+        if ($method='GET')
+            $urlParts['path'] .= '?'.$paramstring;
 
-		$out = "$method ".$urlParts['path']." HTTP/1.1\r\n";
-		$out.= "Host: ".$urlParts['host']."\r\n";
-		$out.= "Connection: Close\r\n";
+        $out = "$method ".$urlParts['path']." HTTP/1.1\r\n";
+        $out.= "Host: ".$urlParts['host']."\r\n";
+        $out.= "Connection: Close\r\n";
 
-		//If method="POST", add post parameters in http request body
-		if ($method='POST') {
-			$out.= "Content-Type: application/x-www-form-urlencoded\r\n";
-			$out.= "Content-Length: ".strlen($paramstring)."\r\n\r\n";
-			$out.= $paramstring;
-		}
+        //If method="POST", add post parameters in http request body
+        if ($method='POST') {
+            $out.= "Content-Type: application/x-www-form-urlencoded\r\n";
+            $out.= "Content-Length: ".strlen($paramstring)."\r\n\r\n";
+            $out.= $paramstring;
+        }
 
-		fwrite($fp, $out);
+        fwrite($fp, $out);
 
-		//Wait for response and return back response only if $returnresponse=true
-		if ( $returnresponse ) {
-			$rVal = stream_get_contents($fp);
-		} else {
-			$rVal = true;
-		}
+        //Wait for response and return back response only if $returnresponse=true
+        if ( $returnresponse ) {
+            $rVal = stream_get_contents($fp);
+        } else {
+            $rVal = true;
+        }
 
-		// Close the Connection
-		fclose($fp);
+        // Close the Connection
+        fclose($fp);
 
-		// Return the Result
-		return $rVal;
-	}
+        // Return the Result
+        return $rVal;
+    }
 
     /** ***************************************************************************************** *
      *  External JSON API Functions
@@ -1388,34 +1482,34 @@
     function saveCache( $SiteID, $Name, $data ) {
         $TypeDIR = TMP_DIR . '/' . intToAlpha($SiteID);
 
-	    if ( checkDIRExists( TMP_DIR ) && checkDIRExists( $TypeDIR ) ) {
-		    $tmpFile = "$TypeDIR/$Name.data";
-		    $fh = fopen($tmpFile, 'w');
-		    fwrite($fh, serialize($data));
-		    fclose($fh);
-	    }
+        if ( checkDIRExists( TMP_DIR ) && checkDIRExists( $TypeDIR ) ) {
+            $tmpFile = "$TypeDIR/$Name.data";
+            $fh = fopen($tmpFile, 'w');
+            fwrite($fh, serialize($data));
+            fclose($fh);
+        }
 
-	    // Return a Happy Boolean
-	    return true;
+        // Return a Happy Boolean
+        return true;
     }
 
     function readCache( $SiteID, $Name ) {
         $TypeDIR = TMP_DIR . '/' . intToAlpha($SiteID);
-	    $rVal = false;
+        $rVal = false;
 
-	    if ( checkDIRExists( TMP_DIR ) && checkDIRExists( $TypeDIR ) ) {
-    	    $tmpFile = "$TypeDIR/$Name.data";
-    	    if ( file_exists($tmpFile) ) {
-        	    $age = filemtime($tmpFile);
+        if ( checkDIRExists( TMP_DIR ) && checkDIRExists( $TypeDIR ) ) {
+            $tmpFile = "$TypeDIR/$Name.data";
+            if ( file_exists($tmpFile) ) {
+                $age = filemtime($tmpFile);
 
-        	    if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
-    		    $data = file_get_contents( $tmpFile );
-    		    if ( NoNull($data) != '' ) { $rVal = unserialize($data); }
-    	    }
-	    }
+                if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
+                $data = file_get_contents( $tmpFile );
+                if ( NoNull($data) != '' ) { $rVal = unserialize($data); }
+            }
+        }
 
-	    // Return the Cached Data or an Unhappy Boolean
-	    return $rVal;
+        // Return the Cached Data or an Unhappy Boolean
+        return $rVal;
     }
 
     /***********************************************************************
@@ -1425,120 +1519,120 @@
      * Function Saves a Setting with a Specific Token to the Temp Directory
      */
     function saveSetting( $Token, $key, $value ) {
-    	$settings = array();
+        $settings = array();
 
-	    // Check to see if the Settings File Exists or Not
-	    if ( checkDIRExists( TOKEN_DIR ) ) {
-		    $tmpFile = TOKEN_DIR . "/$Token.inc";
-		    if ( file_exists( $tmpFile ) ) {
-			    $data = file_get_contents( $tmpFile );
-			    $settings = unserialize($data);
-		    }
+        // Check to see if the Settings File Exists or Not
+        if ( checkDIRExists( TOKEN_DIR ) ) {
+            $tmpFile = TOKEN_DIR . "/$Token.inc";
+            if ( file_exists( $tmpFile ) ) {
+                $data = file_get_contents( $tmpFile );
+                $settings = unserialize($data);
+            }
 
-		    // Add or Update the Specified Key
-		    $settings[ $key ] = NoNull($value);
+            // Add or Update the Specified Key
+            $settings[ $key ] = NoNull($value);
 
-		    // Write the File Back to the Settings Folder
-		    $fh = fopen($tmpFile, 'w');
-		    fwrite($fh, serialize($settings));
-		    fclose($fh);
-	    }
+            // Write the File Back to the Settings Folder
+            $fh = fopen($tmpFile, 'w');
+            fwrite($fh, serialize($settings));
+            fclose($fh);
+        }
 
-	    // Return a Happy Boolean
-	    return true;
+        // Return a Happy Boolean
+        return true;
     }
 
     /**
      * Function Reads a Setting with a Specific Token from the Temp Directory
      */
     function readSetting( $Token, $key ) {
-	    $rVal = "";
+        $rVal = "";
 
-	    // Check to see if the Settings File Exists or Not
-	    $tmpFile = TOKEN_DIR . "/$Token.inc";
-	    if ( file_exists( $tmpFile ) ) {
-		    $data = file_get_contents( $tmpFile );
-		    $settings = unserialize($data);
-	    }
+        // Check to see if the Settings File Exists or Not
+        $tmpFile = TOKEN_DIR . "/$Token.inc";
+        if ( file_exists( $tmpFile ) ) {
+            $data = file_get_contents( $tmpFile );
+            $settings = unserialize($data);
+        }
 
-	    // If an Asterisk was Passed, Return Everything
-	    if ( $key == '*' ) {
-		    $rVal = $settings;
-	    } else {
-		    // Check to see if the Key Exists
-		    if ( array_key_exists($key, $settings) ) {
-			    $rVal = NoNull( $settings[ $key ] );
-		    }
-	    }
+        // If an Asterisk was Passed, Return Everything
+        if ( $key == '*' ) {
+            $rVal = $settings;
+        } else {
+            // Check to see if the Key Exists
+            if ( array_key_exists($key, $settings) ) {
+                $rVal = NoNull( $settings[ $key ] );
+            }
+        }
 
-	    // Return the Setting Value
-	    return $rVal;
+        // Return the Setting Value
+        return $rVal;
     }
 
     /**
      * Function Deletes a Setting with a Specific Token from the Temp Directory
      */
     function deleteSetting( $Token, $key ) {
-	    $rVal = false;
+        $rVal = false;
 
-	    // Check to see if the Settings File Exists or Not
-	    $tmpFile = TOKEN_DIR . "/$Token.inc";
-	    if ( file_exists( $tmpFile ) ) {
-		    $data = file_get_contents( $tmpFile );
-		    $settings = unserialize($data);
+        // Check to see if the Settings File Exists or Not
+        $tmpFile = TOKEN_DIR . "/$Token.inc";
+        if ( file_exists( $tmpFile ) ) {
+            $data = file_get_contents( $tmpFile );
+            $settings = unserialize($data);
 
-		    // Remove the Specified Key
-		    unset( $settings[$key] );
+            // Remove the Specified Key
+            unset( $settings[$key] );
 
-		    // Write the File Back to the Settings Folder
-		    $fh = fopen($tmpFile, 'w');
-		    fwrite($fh, serialize($settings));
-		    fclose($fh);
+            // Write the File Back to the Settings Folder
+            $fh = fopen($tmpFile, 'w');
+            fwrite($fh, serialize($settings));
+            fclose($fh);
 
-		    // Set the Happy Boolean
-		    $rVal = true;
-	    }
+            // Set the Happy Boolean
+            $rVal = true;
+        }
 
-	    // Return the Setting Value
-	    return $rVal;
+        // Return the Setting Value
+        return $rVal;
     }
 
     /**
      * Function Clears Out a Settings File
      */
     function clearSettings( $Token ) {
-	    $rVal = false;
+        $rVal = false;
 
-	    // Clear the File (if it exists)
-	    $tmpFile = TOKEN_DIR . "/$Token.inc";
-	    if ( file_exists( $tmpFile ) ) {
-		    // Create an Empty Array
-		    $settings = array();
+        // Clear the File (if it exists)
+        $tmpFile = TOKEN_DIR . "/$Token.inc";
+        if ( file_exists( $tmpFile ) ) {
+            // Create an Empty Array
+            $settings = array();
 
-		    // Write the File to the Settings Folder
-		    $fh = fopen($tmpFile, 'w');
-		    fwrite($fh, serialize($settings));
-		    fclose($fh);
+            // Write the File to the Settings Folder
+            $fh = fopen($tmpFile, 'w');
+            fwrite($fh, serialize($settings));
+            fclose($fh);
 
-		    $rVal = true;
-	    }
+            $rVal = true;
+        }
 
-	    // Return the Boolean (Stating Whether a File has been Wiped Out or Not)
-	    return $rVal;
+        // Return the Boolean (Stating Whether a File has been Wiped Out or Not)
+        return $rVal;
     }
 
     /**
-     *	Function Determines if a Setting File Exists or Not
+     *  Function Determines if a Setting File Exists or Not
      */
     function validateSettingFile( $Token ) {
-	    $rVal = false;
+        $rVal = false;
 
-	    // Check if the File Exists
-	    $setFile = TOKEN_DIR . "/$Token.inc";
-	    if ( file_exists( $setFile ) ) { $rVal = true; }
+        // Check if the File Exists
+        $setFile = TOKEN_DIR . "/$Token.inc";
+        if ( file_exists( $setFile ) ) { $rVal = true; }
 
-	    // Return the Boolean Response
-	    return $rVal;
+        // Return the Boolean Response
+        return $rVal;
 
     }
 
@@ -1546,13 +1640,13 @@
      *  Server Identification Functions
      ***********************************************************************/
     function getServerGUID() {
-	    $fileName = CONF_DIR . "/server.inc";
+        $fileName = CONF_DIR . "/server.inc";
         $rVal = '';
 
-	    if ( file_exists( $fileName ) ) {
-		    $data = file_get_contents( $fileName );
-		    $rVal = NoNull($data);
-	    }
+        if ( file_exists( $fileName ) ) {
+            $data = file_get_contents( $fileName );
+            $rVal = NoNull($data);
+        }
 
         // If We Don't Have Data, Create a Server Record
         if ( $rVal == '' ) {
@@ -1581,10 +1675,10 @@
                 // Write the Server GUID file
                 if ( $guid != '' ) {
                     $fh = fopen($fileName, 'w');
-        		    fwrite($fh, $guid);
-        		    fclose($fh);
+                    fwrite($fh, $guid);
+                    fclose($fh);
 
-        		    $rVal = $guid;
+                    $rVal = $guid;
                 }
             }
         }
@@ -1597,7 +1691,7 @@
      *  Stats Recording
      ***********************************************************************/
     function recordUsageStat( $data, $http_code, $message = '' ) {
-	    $precision = 6;
+        $precision = 6;
         $GLOBALS['Perf']['app_f'] = getMicroTime();
         $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
         $SqlOps = nullInt( $GLOBALS['Perf']['queries'] ) + 1;
@@ -1741,7 +1835,7 @@
      *  Function Returns the Run Time and Number of SQL Queries Performed to Fulfill Request
      */
     function getRunTime( $format = 'html' ) {
-	    $precision = 6;
+        $precision = 6;
         $GLOBALS['Perf']['app_f'] = getMicroTime();
         $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
         $SQL = nullInt( $GLOBALS['Perf']['queries'] );
@@ -1792,15 +1886,15 @@
             $v = get_browser(null, true);
 
             date_default_timezone_set('utc');
-      		$UnixTime = time();
+            $UnixTime = time();
             $yW = date('yW', $UnixTime);
-    		$log_file = "logs/filter-$yW.log";
+            $log_file = "logs/filter-$yW.log";
 
-    		$fh = fopen($log_file, 'a');
-    		$stringData = "('$IPAddress', $UnixTime, '$SiteURL', '$ReqURI', " .
-    		               "'" . sqlScrub($v['parent']) . "', '" . sqlScrub($v['platform']) . "', '$UsrAgnt'),\n";
-    		fwrite($fh, $stringData);
-    		fclose($fh);
+            $fh = fopen($log_file, 'a');
+            $stringData = "('$IPAddress', $UnixTime, '$SiteURL', '$ReqURI', " .
+                           "'" . sqlScrub($v['parent']) . "', '" . sqlScrub($v['platform']) . "', '$UsrAgnt'),\n";
+            fwrite($fh, $stringData);
+            fclose($fh);
         }
     }
 
@@ -1808,124 +1902,124 @@
      *  Browser Agent Functions
      ***********************************************************************/
     function parse_user_agent() {
-    	$platform = null;
-    	$browser  = null;
-    	$version  = null;
-    	$empty = array( 'platform' => $platform, 'browser' => $browser, 'version' => $version );
+        $platform = null;
+        $browser  = null;
+        $version  = null;
+        $empty = array( 'platform' => $platform, 'browser' => $browser, 'version' => $version );
         $u_agent = false;
 
         if( isset($_SERVER['HTTP_USER_AGENT']) ) { $u_agent = $_SERVER['HTTP_USER_AGENT']; } else { return $empty; }
-    	if( !$u_agent ) return $empty;
+        if( !$u_agent ) return $empty;
 
-    	if( preg_match('/\((.*?)\)/im', $u_agent, $parent_matches) ) {
-    		preg_match_all('/(?P<platform>BB\d+;|Android|CrOS|Tizen|iPhone|iPad|iPod|Linux|Macintosh|Windows(\ Phone)?|Silk|linux-gnu|BlackBerry|PlayBook|X11|(New\ )?Nintendo\ (WiiU?|3?DS)|Xbox(\ One)?)
-    				(?:\ [^;]*)?
-    				(?:;|$)/imx', $parent_matches[1], $result, PREG_PATTERN_ORDER);
-    		$priority = array( 'Xbox One', 'Xbox', 'Windows Phone', 'Tizen', 'Android', 'CrOS', 'X11' );
-    		$result['platform'] = array_unique($result['platform']);
-    		if( count($result['platform']) > 1 ) {
-    			if( $keys = array_intersect($priority, $result['platform']) ) {
-    				$platform = reset($keys);
-    			} else {
-    				$platform = $result['platform'][0];
-    			}
-    		} elseif( isset($result['platform'][0]) ) {
-    			$platform = $result['platform'][0];
-    		}
-    	}
-    	if( $platform == 'linux-gnu' || $platform == 'X11' ) {
-    		$platform = 'Linux';
-    	} elseif( $platform == 'CrOS' ) {
-    		$platform = 'Chrome OS';
-    	}
-    	preg_match_all('%(?P<browser>Camino|Kindle(\ Fire)?|Firefox|Iceweasel|Safari|MSIE|Trident|AppleWebKit|TizenBrowser|Chrome|
-    				Vivaldi|IEMobile|Opera|OPR|Silk|Midori|Edge|CriOS|UCBrowser|
-    				Baiduspider|Googlebot|YandexBot|bingbot|Lynx|Version|Wget|curl|
-    				Valve\ Steam\ Tenfoot|
-    				NintendoBrowser|PLAYSTATION\ (\d|Vita)+)
-    				(?:\)?;?)
-    				(?:(?:[:/ ])(?P<version>[0-9A-Z.]+)|/(?:[A-Z]*))%ix',
-    		$u_agent, $result, PREG_PATTERN_ORDER);
-    	// If nothing matched, return null (to avoid undefined index errors)
-    	if( !isset($result['browser'][0]) || !isset($result['version'][0]) ) {
-    		if( preg_match('%^(?!Mozilla)(?P<browser>[A-Z0-9\-]+)(/(?P<version>[0-9A-Z.]+))?%ix', $u_agent, $result) ) {
-    			return array( 'platform' => $platform ?: null, 'browser' => $result['browser'], 'version' => isset($result['version']) ? $result['version'] ?: null : null );
-    		}
-    		return $empty;
-    	}
-    	if( preg_match('/rv:(?P<version>[0-9A-Z.]+)/si', $u_agent, $rv_result) ) {
-    		$rv_result = $rv_result['version'];
-    	}
-    	$browser = $result['browser'][0];
-    	$version = $result['version'][0];
-    	$lowerBrowser = array_map('strtolower', $result['browser']);
-    	$find = function ( $search, &$key, &$value = null ) use ( $lowerBrowser ) {
-    		$search = (array)$search;
-    		foreach( $search as $val ) {
-    			$xkey = array_search(strtolower($val), $lowerBrowser);
-    			if( $xkey !== false ) {
-    				$value = $val;
-    				$key   = $xkey;
-    				return true;
-    			}
-    		}
-    		return false;
-    	};
-    	$key = 0;
-    	$val = '';
-    	if( $browser == 'Iceweasel' ) {
-    		$browser = 'Firefox';
-    	} elseif( $find('Playstation Vita', $key) ) {
-    		$platform = 'PlayStation Vita';
-    		$browser  = 'Browser';
-    	} elseif( $find(array( 'Kindle Fire', 'Silk' ), $key, $val) ) {
-    		$browser  = $val == 'Silk' ? 'Silk' : 'Kindle';
-    		$platform = 'Kindle Fire';
-    		if( !($version = $result['version'][$key]) || !is_numeric($version[0]) ) {
-    			$version = $result['version'][array_search('Version', $result['browser'])];
-    		}
-    	} elseif( $find('NintendoBrowser', $key) || $platform == 'Nintendo 3DS' ) {
-    		$browser = 'NintendoBrowser';
-    		$version = $result['version'][$key];
-    	} elseif( $find('Kindle', $key, $platform) ) {
-    		$browser = $result['browser'][$key];
-    		$version = $result['version'][$key];
-    	} elseif( $find('OPR', $key) ) {
-    		$browser = 'Opera Next';
-    		$version = $result['version'][$key];
-    	} elseif( $find('Opera', $key, $browser) ) {
-    		$find('Version', $key);
-    		$version = $result['version'][$key];
-    	} elseif( $find(array( 'IEMobile', 'Edge', 'Midori', 'Vivaldi', 'Valve Steam Tenfoot', 'Chrome' ), $key, $browser) ) {
-    		$version = $result['version'][$key];
-    	} elseif( $browser == 'MSIE' || ($rv_result && $find('Trident', $key)) ) {
-    		$browser = 'MSIE';
-    		$version = $rv_result ?: $result['version'][$key];
-    	} elseif( $find('UCBrowser', $key) ) {
-    		$browser = 'UC Browser';
-    		$version = $result['version'][$key];
-    	} elseif( $find('CriOS', $key) ) {
-    		$browser = 'Chrome';
-    		$version = $result['version'][$key];
-    	} elseif( $browser == 'AppleWebKit' ) {
-    		if( $platform == 'Android' && !($key = 0) ) {
-    			$browser = 'Android Browser';
-    		} elseif( strpos($platform, 'BB') === 0 ) {
-    			$browser  = 'BlackBerry Browser';
-    			$platform = 'BlackBerry';
-    		} elseif( $platform == 'BlackBerry' || $platform == 'PlayBook' ) {
-    			$browser = 'BlackBerry Browser';
-    		} else {
-    			$find('Safari', $key, $browser) || $find('TizenBrowser', $key, $browser);
-    		}
-    		$find('Version', $key);
-    		$version = $result['version'][$key];
-    	} elseif( $pKey = preg_grep('/playstation \d/i', array_map('strtolower', $result['browser'])) ) {
-    		$pKey = reset($pKey);
-    		$platform = 'PlayStation ' . preg_replace('/[^\d]/i', '', $pKey);
-    		$browser  = 'NetFront';
-    	}
-    	return array( 'platform' => $platform ?: null, 'browser' => $browser ?: null, 'version' => $version ?: null );
+        if( preg_match('/\((.*?)\)/im', $u_agent, $parent_matches) ) {
+            preg_match_all('/(?P<platform>BB\d+;|Android|CrOS|Tizen|iPhone|iPad|iPod|Linux|Macintosh|Windows(\ Phone)?|Silk|linux-gnu|BlackBerry|PlayBook|X11|(New\ )?Nintendo\ (WiiU?|3?DS)|Xbox(\ One)?)
+                    (?:\ [^;]*)?
+                    (?:;|$)/imx', $parent_matches[1], $result, PREG_PATTERN_ORDER);
+            $priority = array( 'Xbox One', 'Xbox', 'Windows Phone', 'Tizen', 'Android', 'CrOS', 'X11' );
+            $result['platform'] = array_unique($result['platform']);
+            if( count($result['platform']) > 1 ) {
+                if( $keys = array_intersect($priority, $result['platform']) ) {
+                    $platform = reset($keys);
+                } else {
+                    $platform = $result['platform'][0];
+                }
+            } elseif( isset($result['platform'][0]) ) {
+                $platform = $result['platform'][0];
+            }
+        }
+        if( $platform == 'linux-gnu' || $platform == 'X11' ) {
+            $platform = 'Linux';
+        } elseif( $platform == 'CrOS' ) {
+            $platform = 'Chrome OS';
+        }
+        preg_match_all('%(?P<browser>Camino|Kindle(\ Fire)?|Firefox|Iceweasel|Safari|MSIE|Trident|AppleWebKit|TizenBrowser|Chrome|
+                    Vivaldi|IEMobile|Opera|OPR|Silk|Midori|Edge|CriOS|UCBrowser|
+                    Baiduspider|Googlebot|YandexBot|bingbot|Lynx|Version|Wget|curl|
+                    Valve\ Steam\ Tenfoot|
+                    NintendoBrowser|PLAYSTATION\ (\d|Vita)+)
+                    (?:\)?;?)
+                    (?:(?:[:/ ])(?P<version>[0-9A-Z.]+)|/(?:[A-Z]*))%ix',
+            $u_agent, $result, PREG_PATTERN_ORDER);
+        // If nothing matched, return null (to avoid undefined index errors)
+        if( !isset($result['browser'][0]) || !isset($result['version'][0]) ) {
+            if( preg_match('%^(?!Mozilla)(?P<browser>[A-Z0-9\-]+)(/(?P<version>[0-9A-Z.]+))?%ix', $u_agent, $result) ) {
+                return array( 'platform' => $platform ?: null, 'browser' => $result['browser'], 'version' => isset($result['version']) ? $result['version'] ?: null : null );
+            }
+            return $empty;
+        }
+        if( preg_match('/rv:(?P<version>[0-9A-Z.]+)/si', $u_agent, $rv_result) ) {
+            $rv_result = $rv_result['version'];
+        }
+        $browser = $result['browser'][0];
+        $version = $result['version'][0];
+        $lowerBrowser = array_map('strtolower', $result['browser']);
+        $find = function ( $search, &$key, &$value = null ) use ( $lowerBrowser ) {
+            $search = (array)$search;
+            foreach( $search as $val ) {
+                $xkey = array_search(strtolower($val), $lowerBrowser);
+                if( $xkey !== false ) {
+                    $value = $val;
+                    $key   = $xkey;
+                    return true;
+                }
+            }
+            return false;
+        };
+        $key = 0;
+        $val = '';
+        if( $browser == 'Iceweasel' ) {
+            $browser = 'Firefox';
+        } elseif( $find('Playstation Vita', $key) ) {
+            $platform = 'PlayStation Vita';
+            $browser  = 'Browser';
+        } elseif( $find(array( 'Kindle Fire', 'Silk' ), $key, $val) ) {
+            $browser  = $val == 'Silk' ? 'Silk' : 'Kindle';
+            $platform = 'Kindle Fire';
+            if( !($version = $result['version'][$key]) || !is_numeric($version[0]) ) {
+                $version = $result['version'][array_search('Version', $result['browser'])];
+            }
+        } elseif( $find('NintendoBrowser', $key) || $platform == 'Nintendo 3DS' ) {
+            $browser = 'NintendoBrowser';
+            $version = $result['version'][$key];
+        } elseif( $find('Kindle', $key, $platform) ) {
+            $browser = $result['browser'][$key];
+            $version = $result['version'][$key];
+        } elseif( $find('OPR', $key) ) {
+            $browser = 'Opera Next';
+            $version = $result['version'][$key];
+        } elseif( $find('Opera', $key, $browser) ) {
+            $find('Version', $key);
+            $version = $result['version'][$key];
+        } elseif( $find(array( 'IEMobile', 'Edge', 'Midori', 'Vivaldi', 'Valve Steam Tenfoot', 'Chrome' ), $key, $browser) ) {
+            $version = $result['version'][$key];
+        } elseif( $browser == 'MSIE' || ($rv_result && $find('Trident', $key)) ) {
+            $browser = 'MSIE';
+            $version = $rv_result ?: $result['version'][$key];
+        } elseif( $find('UCBrowser', $key) ) {
+            $browser = 'UC Browser';
+            $version = $result['version'][$key];
+        } elseif( $find('CriOS', $key) ) {
+            $browser = 'Chrome';
+            $version = $result['version'][$key];
+        } elseif( $browser == 'AppleWebKit' ) {
+            if( $platform == 'Android' && !($key = 0) ) {
+                $browser = 'Android Browser';
+            } elseif( strpos($platform, 'BB') === 0 ) {
+                $browser  = 'BlackBerry Browser';
+                $platform = 'BlackBerry';
+            } elseif( $platform == 'BlackBerry' || $platform == 'PlayBook' ) {
+                $browser = 'BlackBerry Browser';
+            } else {
+                $find('Safari', $key, $browser) || $find('TizenBrowser', $key, $browser);
+            }
+            $find('Version', $key);
+            $version = $result['version'][$key];
+        } elseif( $pKey = preg_grep('/playstation \d/i', array_map('strtolower', $result['browser'])) ) {
+            $pKey = reset($pKey);
+            $platform = 'PlayStation ' . preg_replace('/[^\d]/i', '', $pKey);
+            $browser  = 'NetFront';
+        }
+        return array( 'platform' => $platform ?: null, 'browser' => $browser ?: null, 'version' => $version ?: null );
     }
 
     /***********************************************************************
@@ -1933,24 +2027,24 @@
      ***********************************************************************/
     /**
      * Function records a note to the File System when DEBUG_ENABLED > 0
-     *		Note: Timezone is currently set to Asia/Tokyo, but this should
-     *			  be updated to follow the user's time zone.
+     *      Note: Timezone is currently set to Asia/Tokyo, but this should
+     *            be updated to follow the user's time zone.
      */
-	function writeNote( $Message, $doOverride = false ) {
+    function writeNote( $Message, $doOverride = false ) {
         if ( defined('DEBUG_ENABLED') === false ) { return; }
         if ( DEBUG_ENABLED != 0 || $doOverride === true ) {
             date_default_timezone_set(TIMEZONE);
-      		$ima = time();
+            $ima = time();
             $yW = date('yW', $ima);
-    		$log_file = LOG_DIR . "/debug-$yW.log";
+            $log_file = LOG_DIR . "/debug-$yW.log";
 
-    		$fh = fopen($log_file, 'a');
+            $fh = fopen($log_file, 'a');
             $ima_str = date("F j, Y h:i:s A", $ima );
-    		$stringData = "[$ima_str] | Note: $Message \n";
-    		fwrite($fh, $stringData);
-    		fclose($fh);
+            $stringData = "[$ima_str] | Note: $Message \n";
+            fwrite($fh, $stringData);
+            fclose($fh);
         }
-	}
+    }
 
     function writeDebug( $text, $prefix = 'debug' ) {
         if ( defined('DEBUG_ENABLED') === false ) { return; }
@@ -1972,7 +2066,7 @@
      * Function formats the Error Message for {Procedure} - Error and Returns it
      */
     function formatErrorMessage( $Location, $Message ) {
-    	writeNote( "{$Location} - $Message", false );
+        writeNote( "{$Location} - $Message", false );
         return "$Message";
     }
 

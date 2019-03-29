@@ -149,7 +149,7 @@ If the process was successful, the API will respond with a JSON package:
     "list": false
   },
   "data": {
-    "guid": "{Persona GUID}",
+    "guid": "{Account GUID}",
     "type": "{Account Type}",
     "timezone": "Asia/Tokyo",
     "display_name": "Examplo"
@@ -226,7 +226,7 @@ If the process was successful, the API will respond with a JSON package:
     "list": false
   },
   "data": {
-    "guid": "{Persona GUID}",
+    "guid": "{Account GUID}",
     "type": "{Account Type}",
     "timezone": "Asia/Tokyo",
     "display_name": "Examplo"

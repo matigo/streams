@@ -620,13 +620,29 @@ CREATE TABLE IF NOT EXISTS `PostMeta` (
 CREATE INDEX `idx_pmeta_main` ON `PostMeta` (`is_deleted`, `post_id` DESC, `key`);
 CREATE INDEX `idx_pmeta_post` ON `PostMeta` (`is_deleted`, `post_id` DESC);
 
+DROP TABLE IF EXISTS `PostSearch`;
+CREATE TABLE IF NOT EXISTS `PostSearch` (
+    `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `word`          varchar(255)                                NOT NULL    DEFAULT '',
+    `length`        smallint       UNSIGNED                     NOT NULL    DEFAULT 0,
+    `hash`          char(40)                                    NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`post_id`, `word`),
+    FOREIGN KEY (`post_id`) REFERENCES `Post` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_psrch_main` ON `PostSearch` (`is_deleted`, `post_id` DESC, `word`);
+CREATE INDEX `idx_psrch_hash` ON `PostSearch` (`is_deleted`, `hash`);
+
 DROP TABLE IF EXISTS `PostTags`;
 CREATE TABLE IF NOT EXISTS `PostTags` (
     `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
     `key`           varchar(128)                                NOT NULL    DEFAULT '',
     `value`         varchar(128)                                NOT NULL    DEFAULT '',
 
-    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
     `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`post_id`, `key`),
@@ -730,6 +746,201 @@ CREATE TRIGGER `after_update_post`
     SELECT new.`id`, new.`title`, new.`value`, new.`canonical_url`, new.`channel_id`, new.`slug`, new.`type`, new.`privacy_type`,
            new.`publish_at`, new.`expires_at`, new.`hash`, new.`updated_by`
      WHERE new.`is_deleted` = 'N' and new.`hash` NOT IN (SELECT z.`hash` FROM `PostHistory` z WHERE z.`is_deleted` = 'N' and z.`post_id` = new.`id`);
+   END
+;;
+
+DROP TRIGGER IF EXISTS `before_insert_postsrch`;;
+CREATE TRIGGER `before_insert_postsrch`
+BEFORE INSERT ON `PostSearch`
+   FOR EACH ROW
+ BEGIN
+    SET new.`length` = LENGTH(new.`word`);
+    SET new.`hash` = MD5(new.`word`);
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_postsrch`;;
+CREATE TRIGGER `before_update_postsrch`
+ BEFORE UPDATE ON `PostSearch`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' THEN 'N' ELSE 'Y' END;
+    SET new.`updated_at` = Now();
+   END
+;;
+
+/** ************************************************************************* *
+ *  Syndicated
+ ** ************************************************************************* */
+DROP TABLE IF EXISTS `SyndFeed`;
+CREATE TABLE IF NOT EXISTS `SyndFeed` (
+    `id`            int(11)       UNSIGNED                      NOT NULL    AUTO_INCREMENT,
+    `title`         varchar(255)                                NOT NULL    ,
+    `description`   varchar(2048)                                   NULL    ,
+    `url`           varchar(512)                                NOT NULL    ,
+
+    `guid`          char(36)                                    NOT NULL    ,
+    `hash`          char(40)                                    NOT NULL    ,
+    `channel_id`    int(11)        UNSIGNED                         NULL    ,
+    `polled_at`     timestamp                                   NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`channel_id`) REFERENCES `Channel` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_syndfeed_main` ON `SyndFeed` (`is_deleted`, `guid`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_update_syndfeed`;;
+CREATE TRIGGER `before_update_syndfeed`
+BEFORE UPDATE ON `SyndFeed`
+   FOR EACH ROW
+ BEGIN
+    SET new.`updated_at` = Now();
+   END
+;;
+
+DROP TABLE IF EXISTS `SyndFeedMeta`;
+CREATE TABLE IF NOT EXISTS `SyndFeedMeta` (
+    `feed_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `key`           varchar(64)                                 NOT NULL    ,
+    `value`         varchar(2048)                                   NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`feed_id`, `key`),
+    FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_syndfmeta_main` ON `SyndFeedMeta` (`is_deleted`, `feed_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_update_syndfeedmeta`;;
+CREATE TRIGGER `before_update_syndfeedmeta`
+BEFORE UPDATE ON `SyndFeedMeta`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`value`, '') = '' THEN 'Y' ELSE 'N' END;
+    SET new.`updated_at` = Now();
+   END
+;;
+
+DROP TABLE IF EXISTS `SyndFeedItem`;
+CREATE TABLE IF NOT EXISTS `SyndFeedItem` (
+    `id`            int(11)       UNSIGNED                      NOT NULL    AUTO_INCREMENT,
+    `feed_id`       int(11)       UNSIGNED                      NOT NULL    ,
+    `title`         varchar(255)                                    NULL    ,
+    `url`           varchar(2048)                               NOT NULL    ,
+
+    `publish_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `guid`          char(36)                                    NOT NULL    ,
+    `hash`          char(40)                                    NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_syndfitem_main` ON `SyndFeedItem` (`is_deleted`, `feed_id`, `guid`);
+CREATE INDEX `idx_syndfitem_pub` ON `SyndFeedItem` (`is_deleted`, `feed_id`, `publish_at`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_insert_sfitem`;;
+CREATE TRIGGER `before_insert_sfitem`
+BEFORE INSERT ON `SyndFeedItem`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+   END
+;;
+
+DROP TABLE IF EXISTS `SyndFeedItemMeta`;
+CREATE TABLE IF NOT EXISTS `SyndFeedItemMeta` (
+    `item_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `key`           varchar(64)                                 NOT NULL    ,
+    `value`         varchar(2048)                                   NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`item_id`, `key`),
+    FOREIGN KEY (`item_id`) REFERENCES `SyndFeedItem` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_syndimeta_main` ON `SyndFeedItemMeta` (`is_deleted`, `item_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_update_syndfitemmeta`;;
+CREATE TRIGGER `before_update_syndfitemmeta`
+BEFORE UPDATE ON `SyndFeedItemMeta`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`value`, '') = '' THEN 'Y' ELSE 'N' END;
+    SET new.`updated_at` = Now();
+   END
+;;
+
+DROP TABLE IF EXISTS `SyndFeedItemSearch`;
+CREATE TABLE IF NOT EXISTS `SyndFeedItemSearch` (
+    `item_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `word`          varchar(255)                                NOT NULL    DEFAULT '',
+    `length`        smallint       UNSIGNED                     NOT NULL    DEFAULT 0,
+    `hash`          char(40)                                    NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`item_id`, `word`),
+    FOREIGN KEY (`item_id`) REFERENCES `SyndFeedItem` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_sfisrch_main` ON `SyndFeedItemSearch` (`is_deleted`, `item_id`, `word`);
+CREATE INDEX `idx_sfisrch_hash` ON `SyndFeedItemSearch` (`is_deleted`, `hash`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_insert_sfisrch`;;
+CREATE TRIGGER `before_insert_sfisrch`
+BEFORE INSERT ON `SyndFeedItemSearch`
+   FOR EACH ROW
+ BEGIN
+    SET new.`length` = LENGTH(new.`word`);
+    SET new.`hash` = MD5(new.`word`);
+   END
+;;
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_update_sfisrch`;;
+CREATE TRIGGER `before_update_sfisrch`
+ BEFORE UPDATE ON `SyndFeedItemSearch`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' THEN 'N' ELSE 'Y' END;
+    SET new.`updated_at` = Now();
+   END
+;;
+
+DROP TABLE IF EXISTS `SyndFollow`;
+CREATE TABLE IF NOT EXISTS `SyndFollow` (
+    `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
+    `feed_id`       int(11)        UNSIGNED                     NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`account_id`, `feed_id`),
+    FOREIGN KEY (`account_id`) REFERENCES `Account` (`id`),
+    FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_syndfolw_main` ON `SyndFollow` (`is_deleted`, `account_id`);
+CREATE INDEX `idx_syndfolw_feed` ON `SyndFollow` (`is_deleted`, `feed_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_update_syndfollow`;;
+CREATE TRIGGER `before_update_syndfollow`
+BEFORE UPDATE ON `SyndFollow`
+   FOR EACH ROW
+ BEGIN
+    SET new.`updated_at` = Now();
    END
 ;;
 

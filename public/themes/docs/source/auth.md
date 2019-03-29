@@ -57,15 +57,15 @@ If the authentication attempt is successful, the API will respond with a JSON pa
 
 ```
 {
-    "meta": {
-        "code": 200,
-        "text": false,
-        "list": false
-    },
-    "data": {
-        "token": "{A Valid Authentication Token}",
-        "lang_cd": "en-us"
-    }
+  "meta": {
+    "code": 200,
+    "text": false,
+    "list": false
+  },
+  "data": {
+    "token": "{A Valid Authentication Token}",
+    "lang_cd": "en-us"
+  }
 }
 ```
 
@@ -92,18 +92,18 @@ If the process was successful, the API will respond with a JSON package:
 
 ```
 {
-    "meta": {
-        "code": 200,
-        "text": false,
-        "list": false
-    },
-    "data": {
-        "account": false,
-        "distributors": false,
-        "is_active": false,
-        "updated_at": "[NOW_AT]",
-        "updated_unix": [NOW_UNIX]
-    }
+  "meta": {
+    "code": 200,
+    "text": false,
+    "list": false
+  },
+  "data": {
+    "account": false,
+    "distributors": false,
+    "is_active": false,
+    "updated_at": "[NOW_AT]",
+    "updated_unix": [NOW_UNIX]
+  }
 }
 ```
 

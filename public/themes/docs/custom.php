@@ -94,6 +94,8 @@ class Docs {
                           '[JOIN_UNIX]'    => $JoinUnix,
                           '[JOIN_DAYS]'    => round(abs($ima - $JoinUnix) / 86400),
 
+                          '[EXAMPLE_URL]'  => urlencode($this->settings['HomeURL']),
+
                           '[FOOTNAV]'   => $this->_getNavigation('foot'),
                           '[PAGENAV]'   => $this->_getNavigation('page'),
                           '[SIDENAV]'   => $this->_getNavigation('side'),
