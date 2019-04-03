@@ -8,5 +8,5 @@ SELECT 'home' as `type`, 'nav_home' as `label`, '/' as `url`, 'Y' as `is_default
  UNION ALL
 SELECT 'contact' as `type`, 'nav_contact' as `label`, '/contact' as `url`, 'Y' as `is_default`, 90 as `sort_order`, 'Y' as `is_visible`
  UNION ALL
-SELECT 'about' as `type`, 'nav_about' as `label`, '/about' as `url`, 'Y' as `is_default`, 95 as `sort_order`, 'Y' as `is_visible`
+SELECT 'about' as `type`, 'nav_about' as `label`, '/about' as `url`, 'Y' as `is_default`, 95 as `sort_order`, 'N' as `is_visible`
  ORDER BY `sort_order`, `type`;

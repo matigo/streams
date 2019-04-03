@@ -637,11 +637,16 @@ class Posts {
             }
 
             // Ensure the PostMeta for the Type is Set
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                              '[POST_ID]'    => nullInt($data['post_id'], $rslt),
+            $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                              '[POST_ID]'      => nullInt($data['post_id'], $rslt),
+                              '[SQL_SPLITTER]' => SQL_SPLITTER,
                              );
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/setPostTypeExists.sql', $ReplStr);
+
+            // Record the Files Attached (If Applicable)
+            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
+            $sqlStr .= readResource(SQL_DIR . '/posts/setPostFiles.sql', $ReplStr);
 
             // Remove Any Duplicate Posts (If Applicable)
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
@@ -1057,15 +1062,6 @@ class Posts {
     /** ********************************************************************* *
      *  Web-Presentation Functions
      ** ********************************************************************* */
-    private function _checkPageCategory() {
-        $valids = array('quotation', 'bookmark', 'tag', 'note', 'blog', 'article');
-        if ( in_array(strtolower(NoNull($this->settings['PgRoot'])), $valids) ) {
-            print_r( "Let's Show Posts From: " . strtolower(NoNull($this->settings['PgRoot'])));
-            if ( NoNull($this->settings['PgSub1']) != '' ) { print_r( " -> " . NoNull($this->settings['PgSub1'])); }
-            die();
-        }
-    }
-
     /**
      *  Function Returns a Tag Key Should One Be Requested
      */
@@ -2157,12 +2153,15 @@ class Posts {
                               );
 
                 // If We Have Attachments, Ensure They're Set
-                if ( array_key_exists('files', $post) && count($post['files']) > 0 ) {
-                    foreach ($post['files'] as $att ) {
-                        $item['attachments'][] = array( 'url'           => NoNull($att['url']),
-                                                        'mime_type'     => NoNull($att['mime']),
-                                                        'size_in_bytes' => nullInt($att['bytes']),
-                                                       );
+                if ( YNBool($post['has_audio']) ) {
+                    $encl = $this->_getPostEnclosure($post['post_id'], 100);
+                    if ( is_array($encl) ) {
+                        foreach ( $encl as $att ) {
+                            $item['attachments'][] = array( 'url'           => $SiteURL . NoNull($att['url']),
+                                                            'mime_type'     => NoNull($att['type']),
+                                                            'size_in_bytes' => nullInt($att['size']),
+                                                           );
+                        }
                     }
                 }
 
@@ -2221,6 +2220,11 @@ class Posts {
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
 
+                $encl = false;
+                if ( YNBool($post['has_audio']) ) {
+                    $encl = $this->_getPostEnclosure($post['post_id']);
+                }
+
                 $rObj = array( '[TITLE]'        => NoNull($post['post_title']),
                                '[POST_URL]'     => NoNull($post['source_url'], $post['post_url']),
                                '[POST_GUID]'    => NoNull($post['post_guid']),
@@ -2228,7 +2232,17 @@ class Posts {
                                '[POST_UTC]'     => date("c", strtotime($post['publish_at'])),
                                '[AUTHOR_NAME]'  => NoNull($post['display_name'], $post['handle']),
                                '[AVATAR_URL]'   => NoNull($post['avatar_url']),
+                               '[EXPLICIT]'     => NoNull($post['explicit'], NoNull($site['rss_explicit'], 'Clean')),
 
+                               '[ENCL_LINK]'    => (($encl !== false) ? $SiteURL . NoNull($encl['url']) : ''),
+                               '[ENCL_NAME]'    => (($encl !== false) ? NoNull($encl['name']) : ''),
+                               '[ENCL_SIZE]'    => (($encl !== false) ? nullInt($encl['size']) : ''),
+                               '[ENCL_TIME]'    => (($encl !== false) ? NoNull($encl['time'], '00:00') : ''),
+                               '[ENCL_TYPE]'    => (($encl !== false) ? NoNull($encl['type']) : ''),
+
+                               '[POST_BANR]'    => NoNull($post['post_banner'], $site['rss_cover']),
+                               '[POST_SUBS]'    => NoNull($post['post_subtitle']),
+                               '[POST_SUMM]'    => NoNull($post['post_summary']),
                                '[POST_TYPE]'    => NoNull($post['post_type']),
                                '[POST_TEXT]'    => NoNull($post['post_text']),
                                '[POST_HTML]'    => NoNull($html),
@@ -2251,6 +2265,38 @@ class Posts {
 
         // Return the Completed XML Object
         return readResource(FLATS_DIR . '/templates/feed.main.xml', $ReplStr);
+    }
+
+    /**
+     *  Function Returns a Completed <enclosure> Element for the XML RSS Feed
+     */
+    private function _getPostEnclosure( $PostID, $Limit = 1 ) {
+        if ( nullInt($PostID) > 0 ) {
+            $ReplStr = array( '[POST_ID]' => nullInt($PostID),
+                              '[COUNT]'   => nullInt($Limit, 1),
+                             );
+            $sqlStr = readResource(SQL_DIR . '/posts/getPostEnclosure.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                $data = array();
+                foreach ( $rslt as $Row ) {
+                    $data[] = array( 'name' => NoNull($Row['public_name']),
+                                     'size' => nullInt($Row['bytes']),
+                                     'type' => NoNull($Row['type']),
+                                     'url'  => NoNull($Row['url']),
+                                    );
+                }
+
+                // Return the Data
+                if ( count($data) > 0 ) {
+                    if ( $Limit == 1 ) { return $data[0]; }
+                    return $data;
+                }
+            }
+        }
+
+        // If We're Here, There's Nothing
+        return false;
     }
 
     /** ********************************************************************* *

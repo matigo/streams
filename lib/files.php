@@ -489,6 +489,7 @@ class Files {
                                    'medium'     => false,
                                    'thumb'      => false,
                                    'meta'       => false,
+                                   'is_image'   => YNBool($Row['is_image']),
 
                                    'created_at'   => (($is_deleted) ? false : date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at']))),
                                    'created_unix' => (($is_deleted) ? false : strtotime($Row['created_at'])),
@@ -522,6 +523,13 @@ class Files {
 
             // Add the Meta to the Object if it's Applicable
             if ( is_array($meta) ) { $data['meta'] = $meta; }
+
+            // Do We Need to add a Specific Data Thumbnail?
+            if ( $data['is_image'] === false ) {
+                $data['medium'] = $this->settings['HomeURL'] . '/images/file_binary.png';
+                $data['thumb'] = $this->settings['HomeURL'] . '/images/file_binary.png';
+
+            }
 
             // Return the File Object
             return $data;

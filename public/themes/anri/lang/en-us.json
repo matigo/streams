@@ -86,7 +86,7 @@
     "lblContactThankYou": "Thank you for getting in touch!",
     "msgLoginNote": "Enter your account credentials here to sign into this website. Don&apos;t have an account? You can <a href=\"https://10centuries.org\" title=\"10Centuries\">create one here</a>.",
     "msgLoginNoDice": "Either the login name or the password you provided isn&apos;t quite right. Please try again.",
-    "msg403Result": "Sorry, but you need to be signed in to use this page.",
+    "msg403Result": "Sorry, but you do not have access to this page.",
     "msg404Result": "Sorry! The requested page could not be found or it is currently unavailable.",
     "msgMissingValue": "This Is Missing",
     "msgMissingPass": "Please Set a Really Good Password",

@@ -378,10 +378,8 @@
             for ( var i = 0; i < ds.length; i++ ) {
                 if ( ds[i].cdn_url !== undefined && ds[i].cdn_url !== false ) {
                     if (file.previewElement) {
-                        var prop_url = (ds[i].medium !== false) ? ds[i].medium : ds[i].cdn_url;
-
-                        file.previewElement.onclick = (function(){ writeToZone(ds[i].name, prop_url); });
-                        writeToZone(ds[i].name, prop_url);
+                        file.previewElement.onclick = (function(){ writeToZone(ds[i]); });
+                        writeToZone(ds[i]);
                         return file.previewElement.classList.add("dz-complete");
                     }
                 }

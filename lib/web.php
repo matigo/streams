@@ -88,6 +88,13 @@ class Route extends Streams {
                         $data['do_redirect'] = true;
                         break;
 
+                    case 'settings':
+                    case 'write':
+                        if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
+                            redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
+                        }
+                        break;
+
                     default:
                         /* Do Nothing Here */
                 }
@@ -436,6 +443,7 @@ class Route extends Streams {
             if ( file_exists( $OpsBarFile ) ) {
                 $SiteUrl = NoNull($this->settings['HomeURL']);
                 $ReplStr = array( '[AVATAR_IMG]'    => $SiteUrl . '/avatars/' . NoNull($this->settings['_avatar_file'], 'default.png'),
+                                  '[ACCESS_LEVEL]'  => NoNull($this->settings['_access_level'], 'read'),
                                   '[DISPLAY_NAME]'  => NoNull($this->settings['_display_name']),
                                   '[PERSONA_GUID]'  => NoNull($this->settings['_persona_guid']),
                                   '[UNREAD_COUNT]'  => nullInt($this->settings['_unread']),

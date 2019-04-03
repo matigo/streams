@@ -68,7 +68,7 @@ function hideByClass( _cls ) {
         els[i].classList.add('hidden');
     }
 }
-function writeToZone( name, cdn_url ) {
+function writeToZone( obj ) {
     var _tarea = false;
     var els = document.getElementsByTagName('textarea');
     for ( var i = 0; i < els.length; i++ ) {
@@ -76,9 +76,9 @@ function writeToZone( name, cdn_url ) {
         if ( _name == 'content' ) { _tarea = els[i]; }
     }
     if ( _tarea !== false ) {
-        if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
+        if ( obj.cdn_url !== undefined && obj.cdn_url !== false && obj.cdn_url !== null ) {
             var _txt = _tarea.value.replace(/\s+$/g, "");
-            var _src = '![' + name.replace(/\.[^/.]+$/, '') + '](' + cdn_url + ')';
+            var _src = '![' + obj.name.replace(/\.[^/.]+$/, '') + '](' + obj.cdn_url + ')';
             if ( NoNull(_txt) == '' ) { _txt = ''; }
             if ( NoNull(_txt) != '' ) { _txt += "\n\n"; }
             _tarea.value = _txt + _src;
@@ -150,7 +150,6 @@ document.onreadystatechange = function () {
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
 }
-
 function collectPostEditData() {
     var els = document.getElementsByClassName('newpost-content');
     if ( els.length > 0 ) {
@@ -376,6 +375,16 @@ function updatePublishPostButton() {
         }
     }
 }
+function checkAccessLevel() {
+    var els = document.getElementsByClassName('ops-newpost');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _access = els[i].getAttribute('data-access');
+            if ( _access === undefined || _access === null || NoNull(_access) != 'write' ) { _access = 'read'; }
+            if ( _access == 'write' ) { els[i].classList.remove('hidden'); }
+        }
+    }
+}
 function updatePostTimestamps() {
     // Set the Moment Locale
     var el = document.getElementById('pref-lang');
@@ -403,6 +412,7 @@ function updatePostTimestamps() {
             els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fa fa-comments"></i> ' : '') + moment(_ts * 1000).format(_fmt);
         }
     }
+    checkAccessLevel();
 }
 function updatePostBanners() {
     var home_url = getMetaValue('home_url') + '/';

@@ -1,5 +1,6 @@
 SELECT fm.`file_id`, f.`account_id`, CONCAT(f.`location`, f.`local_name`) as `cdn_path`,
        f.`public_name`, f.`local_name`, f.`hash`, f.`bytes`, f.`type`, f.`guid`,
+       CASE WHEN f.`type` LIKE 'image%' THEN 'Y' ELSE 'N' END as `is_image`,
        f.`expires_at`, f.`is_deleted`, f.`created_at`, f.`updated_at`,
        fm.`key`, fm.`value`,
        CASE WHEN fm.`key` LIKE 'geo.%' AND f.`account_id` <> [ACCOUNT_ID] THEN 'N'

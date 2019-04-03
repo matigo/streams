@@ -5,7 +5,10 @@ SELECT po.`persona_id`, pa.`last_name`, pa.`first_name`, pa.`display_name`, pa.`
        CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', tp.`site_url`, po.`canonical_url`) as `post_url`,
        (SELECT z.`value` FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`is_private` = 'N' and z.`key` = 'source_url' and z.`post_id` = po.`id` LIMIT 1) as `source_url`,
        po.`type` as `post_type`, po.`guid` as `post_guid`, po.`hash`, po.`value` as `post_text`,
-       'N' as `has_audio`,
+       IFNULL((SELECT MAX(CASE WHEN fi.`type` LIKE 'audio%' THEN 'Y' ELSE 'N' END) as `has_audio`
+                 FROM `PostFile` pf INNER JOIN `File` fi ON pf.`file_id` = fi.`id`
+                WHERE fi.`is_deleted` = 'N' and IFNULL(fi.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) > Now()
+                  and pf.`is_deleted` = 'N' and pf.`post_id` = po.`id`), 'N') as `has_audio`,
        DATE_FORMAT(po.`publish_at`, '%Y-%m-%dT%H:%i:%sZ') as `publish_at`,
        DATE_FORMAT(po.`updated_at`, '%Y-%m-%dT%H:%i:%sZ') as `updated_at`
   FROM `Site` si INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`

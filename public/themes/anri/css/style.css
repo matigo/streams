@@ -55,6 +55,22 @@ samp {
     white-space: pre-wrap;
 }
 input { border: 1px solid #ddd; }
+audio {
+    border: none;
+    border-radius: 2em;
+
+    display: inline-block !important;
+    min-height: 2em;
+    padding: 0;
+    margin: 0.5em 0 0;
+    width: 100%;
+
+    -webkit-transition: all 0.5s linear;
+    -moz-transition: all 0.5s linear;
+    -o-transition: all 0.5s linear;
+    transition: all 0.5s linear;
+    -moz-box-shadow: 2px 2px 4px 0px #006773;
+}
 .notifyjs-wrapper { position: fixed !important; }
 .notifyjs-bootstrap-yellow {
     background: #ffffc0 !important;
@@ -96,7 +112,7 @@ input { border: 1px solid #ddd; }
 .navbar .dropdown { float: right; overflow: hidden; }
 .navbar .dropdown .dropbtn { background: transparent; border: 0; color: #fff; font-size: 1em; outline: none; padding: 0.25em 1em; margin: 0; }
 .navbar .dropdown .dropbtn .hello { display: inline-block; font-size: 1.125em; margin-right: 1em; padding: 0.333em 0 0; }
-.navbar .dropdown .dropbtn .avatar { border-radius: 2.5em; max-height: 2.5em; max-width: 2.5em; }
+.navbar .dropdown .dropbtn .avatar { border-radius: 2.5em; max-height: 2.5em; max-width: 2.5em; min-height: 2.5em; min-width: 2.5em; }
 .dropdown-content { background-color: #f9f9f9; box-shadow: 0 0.25em 0.5em 0 rgba(0,0,0,0.2); min-width: 8em; position: absolute; right: 0; z-index: 1; }
 .dropdown-content a { color: #000; display: block; float: none; padding: 0.5em 1em; text-decoration: none; text-align: right; }
 .dropdown-content a:hover { background-color: #ddd; }
@@ -748,7 +764,8 @@ input { border: 1px solid #ddd; }
   padding: 20px 0px;
   line-height: 28px;
 }
-.single-post__content p { margin-bottom: 20px; }
+.single-post__content p { margin: 0.5em 0; }
+.single-post__content p .audio-title, .single-post__content p.audio-title { margin: 0; padding: 0 0 0 1.5em; font-style: italic; }
 .single-post__content.note p { margin: 0 0 0.5em; }
 .single-post__content.note p .account { cursor: pointer; font-weight: bold; }
 .single-post__content img {
@@ -1275,9 +1292,9 @@ input { border: 1px solid #ddd; }
 }
 .single-post__contact label {
   display: block;
-  font-size: 0.75em;
+  font-size: 1em;
   font-weight: normal;
-  color: #777777;
+  color: #333;
 }
 .single-post__contact textarea {
   width: 100%;

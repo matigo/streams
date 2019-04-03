@@ -29,7 +29,6 @@
         <sy:updatePeriod>hourly</sy:updatePeriod>
         <sy:updateFrequency>1</sy:updateFrequency>
         <generator>[GENERATOR]</generator>
-        <generateTime>[GenTime]</generateTime>
 [RSS_TOPIC][RSS_ITEMS]
     </channel>
 </rss>
