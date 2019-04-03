@@ -563,6 +563,7 @@ class Posts {
                           '[POST_ID]'      => nullInt($data['post_id']),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/writePost.sql', $ReplStr);
+        writeNote($sqlStr, true);
         $rslt = doSQLExecute($sqlStr);
 
         // If It's Good, Record the Meta Data & Collect the Post Object to Return
@@ -888,6 +889,7 @@ class Posts {
         // More Elements
         $ParentID = 0;
         $ThreadID = 0;
+        $PublishUnix = strtotime($PublishAt);
 
         // Additional Meta
         $SourceURL = NoNull($this->settings['source_url'], $this->settings['source']);
@@ -965,7 +967,7 @@ class Posts {
                     $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $PostSlug);
 
                     // If the Slug is Not Empty, Set the Canonical URL Value
-                    if ( $PostSlug != '' ) { $CanonURL = "/article/$PostSlug"; }
+                    if ( $PostSlug != '' ) { $CanonURL = NoNull('/' . NoNull(date('Y/m/d', $PublishUnix), 'article') . "/$PostSlug"); }
                 }
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
@@ -2328,6 +2330,7 @@ class Posts {
         $ReplStr = array( ' ' => '-', '--' => '-' );
         $dash = '-';
         $tag = strtolower(trim(preg_replace('/[\s-]+/', $dash, preg_replace('/[^A-Za-z0-9-]+/', $dash, preg_replace('/[&]/', 'and', preg_replace('/[\']/', '', iconv('UTF-8', 'ASCII//TRANSLIT', NoNull($TagName)))))), $dash));
+
         for ( $i = 0; $i < 10; $i++ ) {
             $tag = str_replace(array_keys($ReplStr), array_values($ReplStr), $tag);
             if ( mb_substr($tag, 0, 1) == '-' ) { $tag = mb_substr($tag, 1); }
@@ -2351,7 +2354,7 @@ class Posts {
                                   '[POST_GUID]'    => sqlScrub($PostGUID),
                                   '[POST_SLUG]'    => sqlScrub($TrySlug),
                                  );
-                $sqlStr = readResource(SQL_DIR . '/chkUniqueSlug.sql', $ReplStr);
+                $sqlStr = readResource(SQL_DIR . '/posts/chkUniqueSlug.sql', $ReplStr);
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
