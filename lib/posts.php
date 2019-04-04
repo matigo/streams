@@ -2147,7 +2147,7 @@ class Posts {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
-                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre>');
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre><sup><ol><ul><li>');
 
                 $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
 
@@ -2231,9 +2231,8 @@ class Posts {
                               "â" => '–', "" => '–', "" => '', "" => '',
                               "\n\n " => "\n\n", );
             $fixes = array( 'src="//cdn.10centuries.org/' => 'src="https://cdn.10centuries.org/',
-                            '\x80' => '',   "'" => "&apos;",            "â€™" => "&apos;",  "’" => "&apos;",
-                            '\x99' => '',   '</p> <p>' => '</p><p>',    "" => '',     "" => '',
-                            'target="_blank"' => '',    '""' => '"',
+                            "'" => "&apos;", "â€™" => "&apos;", "’" => "&apos;",
+                            '</p> <p>' => '</p><p>', 'target="_blank"' => '', '""' => '"',
                            );
             $items = '';
 
@@ -2241,7 +2240,7 @@ class Posts {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
-                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre>');
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre><sup><ol><ul><li>');
 
                 $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
 
