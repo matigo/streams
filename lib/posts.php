@@ -2135,11 +2135,21 @@ class Posts {
 
         // Build the Items
         if ( is_array($data) ) {
+            $inplace = array( '[HOMEURL]' => $SiteURL, '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
+                              "â" => '–', "" => '–', "" => '', "" => '', );
+
             foreach ( $data as $post ) {
+                $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
+                $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
+                $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
+
+                $text = strip_tags(str_replace('</p>', "</p>\n\n", $html));
+
                 $item = array( 'id'     => NoNull($post['post_guid']),
-                               'title'  => NoNull($post['post_title']),
-                               'content_text'   => NoNull($post['post_text']),
-                               'content_html'   => $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true),
+                               'title'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_title'])),
+                               'content_text'   => NoNull($text),
+                               'content_html'   => NoNull($html),
                                'url'            => NoNull($post['post_url']),
                                'external_url'   => NoNull($post['source_url']),
                                'summary'        => NoNull($post['summary']),
@@ -2212,21 +2222,30 @@ class Posts {
 
         // Build the RSS Items
         if ( is_array($data) ) {
+            $inplace = array( '[HOMEURL]' => $SiteURL, '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
+                              "â" => '–', "" => '–', "" => '', "" => '', );
             $fixes = array( 'src="//cdn.10centuries.org/' => 'src="https://cdn.10centuries.org/',
-                            '&' => "&amp;",     "'" => "&apos;",    "â€™" => "&apos;",
+                            '\x80' => '',   "'" => "&apos;",            "â€™" => "&apos;",  "’" => "&apos;",
+                            '\x99' => '',   '</p> <p>' => '</p><p>',    "" => '',     "" => '',
+                            'target="_blank"' => '',    '""' => '"',
                            );
             $items = '';
 
             foreach ( $data as $post ) {
+                $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
+                $html = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/i",'<$1$2>', $html);
+
+                $text = strip_tags(str_replace('</p>', "</p>\n\n", $html));
 
                 $encl = false;
                 if ( YNBool($post['has_audio']) ) {
                     $encl = $this->_getPostEnclosure($post['post_id']);
                 }
 
-                $rObj = array( '[TITLE]'        => NoNull($post['post_title']),
+                $rObj = array( '[TITLE]'        => NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_title'])),
                                '[POST_URL]'     => NoNull($post['source_url'], $post['post_url']),
                                '[POST_GUID]'    => NoNull($post['post_guid']),
                                '[POST_DATE]'    => date("D, d M Y H:i:s O", strtotime($post['publish_at'])),
@@ -2245,7 +2264,7 @@ class Posts {
                                '[POST_SUBS]'    => NoNull($post['post_subtitle']),
                                '[POST_SUMM]'    => NoNull($post['post_summary']),
                                '[POST_TYPE]'    => NoNull($post['post_type']),
-                               '[POST_TEXT]'    => NoNull($post['post_text']),
+                               '[POST_TEXT]'    => NoNull($text),
                                '[POST_HTML]'    => NoNull($html),
                               );
 
@@ -2261,11 +2280,41 @@ class Posts {
             }
 
             // Write the Items to the Complete Array
-            $ReplStr['[RSS_ITEMS]'] = $items;
+            $ReplStr['[RSS_ITEMS]'] = str_replace(array_keys($ReplStr), array_values($ReplStr), $items);
+        }
+
+        // Construct the Completed XML Object
+        $xmlOut = readResource(FLATS_DIR . '/templates/feed.main.xml', $ReplStr);
+
+        // Clean Up the Issues
+        $forbid = array( '<title></title>' => '', '<itunes:subtitle></itunes:subtitle>' => '', '<itunes:summary></itunes:summary>' => '',
+                         '<itunes:image href=""/>' => '', '<itunes:duration>00:00</itunes:duration>' => '', '<itunes:email></itunes:email>' => '',
+                         '<itunes:name></itunes:name>' => '', '<itunes:author></itunes:author>' => '',
+                         '<blockquote>  <p>' => '<blockquote><p>',
+                        );
+        $xmlOut = str_replace(array_keys($forbid), array_values($forbid), $xmlOut);
+
+        $pattern = "#<\s*?itunes:owner\b[^>]*>(.*?)</itunes:owner\b[^>]*>#s";
+        preg_match($pattern, $xmlOut, $matches);
+        if ( is_array($matches) && count($matches) > 0 ) {
+            if ( NoNull($matches[1]) == '' ) {
+                $xmlOut = str_replace($matches[0], '', $xmlOut);
+            }
+        }
+
+        $lines = explode("\n", $xmlOut);
+        if ( is_array($lines) ) {
+            $xmlOut = '';
+            foreach( $lines as $line ) {
+                if ( NoNull($line) != '' ) {
+                    if ( $xmlOut != '' ) { $xmlOut .= "\n"; }
+                    $xmlOut .= rtrim($line);
+                }
+            }
         }
 
         // Return the Completed XML Object
-        return readResource(FLATS_DIR . '/templates/feed.main.xml', $ReplStr);
+        return NoNull($xmlOut);
     }
 
     /**

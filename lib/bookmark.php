@@ -174,7 +174,7 @@ class Bookmark {
 
         // If There Is No Title from Meta, Grab It From the Head
         if ( $PageTitle === false ) { $PageTitle = NoNull($nodes->item(0)->nodeValue); }
-        
+
         // Get the Page Text
         $xpath = new DOMXPath($doc);
         $els = $xpath->query("//*[contains(@class, 'e-content')]");
@@ -182,13 +182,17 @@ class Bookmark {
             if ( NoNull($value->nodeValue) != '' ) { $PageText = NoNull($value->nodeValue); }
         }
 
+        // Prep a Final Clean of the Strings
+        $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
+                          "â" => '–', "" => '–', "" => '', "" => '', );
+
         // Return the Summary Data If We Have It
         if ( NoNull($data) != '' ) {
-            return array( 'title'    => $PageTitle,
-                          'summary'  => $PageDescr,
+            return array( 'title'    => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageTitle)),
+                          'summary'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageDescr)),
                           'image'    => $PageImage,
-                          'keywords' => $PageKeys,
-                          'text'     => $PageText,
+                          'keywords' => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageKeys)),
+                          'text'     => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageText)),
                          );
         }
 
