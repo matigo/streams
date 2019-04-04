@@ -344,7 +344,16 @@ function addPostRecord( data ) {
 
     if ( req !== undefined && req !== false && req !== null ) {
         req.onsuccess = function (evt) { console.log('Insertion in DB successful [' + data.guid + ']'); };
-        req.onerror = function() { console.error("addPostRecord error", this.error); };
+        req.onerror = function() {
+            console.error("addPostRecord error", this.error);
+            console.log("_idx" + _idx);
+            console.log( obj );
+        };
+        req.onabort = function() {
+            console.log("addPostRecord aborted");
+            console.log("_idx" + _idx);
+            console.log( obj );
+        };
     }
 }
 function removePostRecord( _guid ) {

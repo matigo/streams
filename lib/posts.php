@@ -563,7 +563,6 @@ class Posts {
                           '[POST_ID]'      => nullInt($data['post_id']),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/writePost.sql', $ReplStr);
-        writeNote($sqlStr, true);
         $rslt = doSQLExecute($sqlStr);
 
         // If It's Good, Record the Meta Data & Collect the Post Object to Return
