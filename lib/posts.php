@@ -2136,19 +2136,24 @@ class Posts {
         // Build the Items
         if ( is_array($data) ) {
             $inplace = array( '[HOMEURL]' => $SiteURL, '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
-                              "â" => '–', "" => '–', "" => '', "" => '', );
+                              "â" => '–', "" => '–', "" => '', "" => '',
+                              "\n\n " => "\n\n", );
+            $fixes = array( 'src="//cdn.10centuries.org/' => 'src="https://cdn.10centuries.org/',
+                            "'" => "&apos;",    '""' => '"',    "â€™" => "&apos;",  "’" => "&apos;",
+                            '</p> <p>' => '</p><p>',    'target="_blank"' => '',
+                           );
 
             foreach ( $data as $post ) {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
-                $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
+                $html = str_replace(array_keys($fixes), array_values($fixes), $html);
                 $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
 
                 $text = strip_tags(str_replace('</p>', "</p>\n\n", $html));
 
                 $item = array( 'id'     => NoNull($post['post_guid']),
                                'title'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_title'])),
-                               'content_text'   => NoNull($text),
+                               'content_text'   => NoNull(str_replace(array_keys($inplace), array_values($inplace), $text)),
                                'content_html'   => NoNull($html),
                                'url'            => NoNull($post['post_url']),
                                'external_url'   => NoNull($post['source_url']),
@@ -2234,7 +2239,7 @@ class Posts {
             foreach ( $data as $post ) {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
-                $html = str_ireplace(array_keys($fixes), array_values($fixes), $html);
+                $html = str_replace(array_keys($fixes), array_values($fixes), $html);
                 $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
                 $html = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/i",'<$1$2>', $html);
 
