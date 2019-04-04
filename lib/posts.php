@@ -2147,9 +2147,9 @@ class Posts {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
-                $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre>');
 
-                $text = strip_tags(str_replace('</p>', "</p>\n\n", $html));
+                $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
 
                 $item = array( 'id'     => NoNull($post['post_guid']),
                                'title'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_title'])),
@@ -2228,7 +2228,8 @@ class Posts {
         // Build the RSS Items
         if ( is_array($data) ) {
             $inplace = array( '[HOMEURL]' => $SiteURL, '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
-                              "â" => '–', "" => '–', "" => '', "" => '', );
+                              "â" => '–', "" => '–', "" => '', "" => '',
+                              "\n\n " => "\n\n", );
             $fixes = array( 'src="//cdn.10centuries.org/' => 'src="https://cdn.10centuries.org/',
                             '\x80' => '',   "'" => "&apos;",            "â€™" => "&apos;",  "’" => "&apos;",
                             '\x99' => '',   '</p> <p>' => '</p><p>',    "" => '',     "" => '',
@@ -2240,10 +2241,9 @@ class Posts {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
                 $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
-                $html = strip_tags($html, '<blockquote><p><a><strong><em><img>');
-                $html = preg_replace("/<([a-z][a-z0-9]*)[^>]*?(\/?)>/i",'<$1$2>', $html);
+                $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre>');
 
-                $text = strip_tags(str_replace('</p>', "</p>\n\n", $html));
+                $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
 
                 $encl = false;
                 if ( YNBool($post['has_audio']) ) {
@@ -2269,7 +2269,7 @@ class Posts {
                                '[POST_SUBS]'    => NoNull($post['post_subtitle']),
                                '[POST_SUMM]'    => NoNull($post['post_summary']),
                                '[POST_TYPE]'    => NoNull($post['post_type']),
-                               '[POST_TEXT]'    => NoNull($text),
+                               '[POST_TEXT]'    => NoNull(str_replace(array_keys($inplace), array_values($inplace), $text)),
                                '[POST_HTML]'    => NoNull($html),
                               );
 
