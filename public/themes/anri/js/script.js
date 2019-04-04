@@ -133,7 +133,6 @@ function getMetaValue( name ) {
     $('.btn-publish').click(function() { publishPost(); });
     $('#source-url').on('input', function() { checkSourceUrl(); });
     $('.btn-geo').click(function() { getGeoLocation(this); });
-
 })(jQuery);
 
 document.onreadystatechange = function () {
