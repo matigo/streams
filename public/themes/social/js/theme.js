@@ -80,6 +80,7 @@ jQuery(function($) {
 
     $('.btn-newpost').click(function() { toggleNewPost(true); });
     $('.btn-signin').click(function() { toggleView('signin'); });
+    $('.btn-signout').click(function() { processSignOut(); });
     $('.btn-cancel').click(function() { toggleView('consume'); });
 
     $('.btn-readmore').click(function() { getPrevious(); });
@@ -578,7 +579,27 @@ function parseSignIn( data ) {
         $(".btn-auth").notify("Could Not Sign You In", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
     }
 }
+function processSignOut() {
+    var params = {};
 
+    var metas = document.getElementsByTagName('meta');
+    var reqs = ['channel_guid', 'client_guid'];
+    for (var i=0; i<metas.length; i++) {
+        if ( reqs.indexOf(metas[i].getAttribute("name")) >= 0 ) {
+            params[ metas[i].getAttribute("name") ] = NoNull(metas[i].getAttribute("content"));
+        }
+    }
+    var els = document.getElementsByName('cdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        params[ els[i].id ] = NoNull(els[i].value);
+    }
+
+    doJSONQuery('auth/logout', 'POST', params, parseSignOut);
+}
+function parseSignOut( data ) {
+    deleteStorage('token');
+    window.location.reload();
+}
 function getReplyChannelGUID() {
     if ( window.personas !== false && window.personas.length > 0 ) {
         if ( window.personas[0].channel_guid === undefined ) {

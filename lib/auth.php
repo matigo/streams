@@ -122,6 +122,7 @@ class Auth {
                 $rVal = $this->_performLogin();
                 break;
 
+            case 'signout':
             case 'logout':
                 $rVal = $this->_performLogout();
                 break;
