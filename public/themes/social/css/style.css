@@ -855,6 +855,7 @@ body.dark code, kbd, pre, samp {
     background: #eee;
     padding: 0.0625em 0.333em 0.0625em 0.25em;
 }
+body.dark select option { background: #252424; background-color: #252424; }
 body.dark .header { background: #434c73; }
 body.dark .content p .account { color: #eee; }
 body.dark .content p a { color: #cc7722; }

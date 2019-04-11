@@ -708,7 +708,8 @@ CREATE TRIGGER `before_insert_post`
 BEFORE INSERT ON `Post`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(z.`hash`, 1, 8), '-', SUBSTRING(z.`hash`, 9, 4), '-', SUBSTRING(z.`hash`, 13, 4), '-', SUBSTRING(z.`hash`, 17, 4), '-', SUBSTRING(z.`hash`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) z); END IF;
     IF new.`canonical_url` IS NULL THEN SET new.`canonical_url` = CONCAT(REPLACE(new.`type`, 'post.', '/'), '/', new.`guid`); END IF;
     IF new.`slug` IS NULL THEN SET new.`slug` = new.`guid`; END IF;
     SET new.`hash` = SHA1(CONCAT(new.`id`, IFNULL(new.`title`, ''), IFNULL(new.`value`, ''), IFNULL(new.`canonical_url`, ''), new.`channel_id`,
