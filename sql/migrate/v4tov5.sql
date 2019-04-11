@@ -12,7 +12,7 @@ UPDATE `Post`
    SET `type` = 'post.article'
  WHERE `persona_id` = 3 and `title` IS NOT NULL;
 
-SELECT * 
+SELECT *
   FROM `Post`
  WHERE `persona_id` = 3 and `title` IS NOT NULL
  ORDER BY `id` DESC
@@ -22,6 +22,8 @@ SELECT * FROM `Channel`;
 
 SELECT * FROM `SiteUrl`
  LIMIT 25;
+
+
 
 
 SELECT 3 as `persona_id`, 1 as `client_id`, p.`title`, REPLACE(REPLACE(REPLACE(pc.`value`, 'https://cdn.10centuries.org/NtyZNP/', 'https://blog.sumudu.me/files/nDATlw/'), '//cdn.10centuries.org/OELwyN/', 'https://blog.sumudu.me/files/nDATlw/'), 'https:https://', 'https://') as `value`,
@@ -50,7 +52,7 @@ SELECT 3 as `persona_id`, 1 as `client_id`, p.`title`, REPLACE(REPLACE(REPLACE(p
  WHERE p.`is_deleted` = 'N' and p.`type` IN ('post.blog')
    and u.`id` = 13 and 'sumudu.me' IN (s.`url`, s.`custom_url`)
  ORDER BY p.`publish_at`;
- 
+
 SELECT pt.`key`, COUNT(pt.`post_id`) as `instances`
   FROM `Post` p INNER JOIN `PostTags` pt ON p.`id` = pt.`post_id`
  WHERE pt.`is_deleted` = 'N' and p.`is_deleted` = 'N' and p.`persona_id` = 1

@@ -1283,7 +1283,9 @@ function parseEditPost(data) {
                                             _geo += ', ' + NoNull(ds[i].meta.geo.altitude);
                                         }
                                     }
-                                    if ( ds[i].meta.geo.description !== false ) { _geo = NoNull(ds[i].meta.geo.description); }
+                                    if ( ds[i].meta.geo.description !== undefined && ds[i].meta.geo.description !== false && NoNull(ds[i].meta.geo.description) != '' ) {
+                                        _geo = NoNull(ds[i].meta.geo.description);
+                                    }
                                     els[e].value = _geo;
                                 }
                             }

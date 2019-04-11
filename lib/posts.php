@@ -752,9 +752,10 @@ class Posts {
         $CleanKey = strtolower($KeyPrefix);
         switch ( $CleanKey ) {
             case 'geo':
-                return array( 'longitude' => false,
-                              'latitude'  => false,
-                              'altitude'  => false
+                return array( 'longitude'   => false,
+                              'latitude'    => false,
+                              'altitude'    => false,
+                              'description' => false
                              );
                 break;
 

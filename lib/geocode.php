@@ -131,7 +131,7 @@ class Geocode {
     /** ********************************************************************* *
      *  Public Functions
      ** ********************************************************************* */
-    public function getNameFromCoords( $latitude, $longitude ) { return $this->_getNameFromCoords( $latitude, $longitude); }
+    public function getNameFromCoords( $latitude, $longitude, $description ) { return $this->_getNameFromCoords( $latitude, $longitude, $description); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -140,7 +140,8 @@ class Geocode {
      *  Function Returns the Name of a Location based on the Latitude and Longitude Values.
      *  If a name is not found, or the matching score is too high, the coordinates are returned.
      */
-    private function _getNameFromCoords( $latitude, $longitude ) {
+    private function _getNameFromCoords( $latitude, $longitude, $description = '' ) {
+        $CleanDesc = NoNull($descripton);
         $CleanLong = nullInt($longitude);
         $CleanLat = nullInt($latitude);
 
@@ -169,7 +170,7 @@ class Geocode {
         */
 
         // If We're Here, There Is No Match. Return the Coordinates.
-        return round($latitude, 4) . ', ' . round($longitude, 4);
+        return NoNull($CleanDesc, round($latitude, 4) . ', ' . round($longitude, 4));
     }
 
     /** ********************************************************************* *

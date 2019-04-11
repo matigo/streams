@@ -363,7 +363,7 @@ class cookies {
             }
 
             $RememberMe = YNBool(NoNull($cookieVals['remember'], 'N'));
-            if ( array_key_exists('remember', $_COOKIE) !== true ) { unset($cookieVals['remember']); }
+            if ( $RememberMe !== true ) { unset($cookieVals['remember']); }
 
             foreach( $cookieVals as $key=>$val ) {
                 if( in_array($key, $valids) ) {
