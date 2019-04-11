@@ -537,7 +537,7 @@ function validateSignIn() {
 }
 function callSignIn() {
     if ( validateSignIn() ) {
-        var params = {};
+        var params = { 'remember': 'Y' };
 
         var metas = document.getElementsByTagName('meta');
         var reqs = ['channel_guid', 'client_guid'];
