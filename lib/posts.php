@@ -644,6 +644,13 @@ class Posts {
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/setPostTypeExists.sql', $ReplStr);
 
+            // Set the PostSearch Unique Word Values (If Applicable)
+            if ( is_array($data['words']) && count($data['words']) > 0 ) {
+                $ReplStr['[WORD_LIST]'] = sqlScrub(implode(',', $data['words']));
+                $sqlStr .= SQL_SPLITTER;
+                $sqlStr .= readResource(SQL_DIR . '/posts/setPostSearch.sql', $ReplStr);
+            }
+
             // Record the Files Attached (If Applicable)
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/setPostFiles.sql', $ReplStr);
@@ -921,6 +928,9 @@ class Posts {
             $PostTags .= $hash_list;
         }
 
+        // Get the Unique Word List
+        $wordList = UniqueWords($Value);
+
         // Token Definition
         $TokenGUID = '';
         $TokenID = 0;
@@ -1019,6 +1029,7 @@ class Posts {
 
                       'title'         => $Title,
                       'value'         => $this->_cleanContent($Value),
+                      'words'         => $wordList,
 
                       'canonical_url' => $CanonURL,
                       'reply_to'      => $ReplyTo,

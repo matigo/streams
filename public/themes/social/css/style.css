@@ -75,13 +75,13 @@ code,
 kbd,
 pre,
 samp {
-    font-family: monospace, monospace;
+    font-family: monospace;
     font-size: 0.95em;
     color: #333;
     white-space: pre-wrap;
 }
 code {
-    background: transparent;
+    background: #eee;
     display: inline-block;
 }
 pre {

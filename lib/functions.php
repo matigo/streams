@@ -57,8 +57,8 @@
         $uniques = array();
         $words = explode(' ', " $text ");
         foreach ( $words as $word ) {
-            $word = NoNull($word);
-            if ( mb_strlen($word) > 1 && mb_strlen($word) <= 64 && in_array($word, $rVal) === false ) { $rVal[] = strtolower($word); }
+            $word = strtolower(NoNull($word));
+            if ( mb_strlen($word) > 1 && mb_strlen($word) <= 64 && in_array($word, $rVal) === false ) { $rVal[] = $word; }
         }
 
         // Return an Array of Unique Words (if we have at least one)
