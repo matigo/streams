@@ -352,14 +352,21 @@ class cookies {
 
             if ( $fullDomain !== false ) { $fullDomain = true; }
             if ( $fullDomain ) {
-                $parts = explode('.', strtolower($_SERVER['SERVER_NAME']));
+                $parts = explode('.', $domain);
                 $domain = '';
                 $limit = (count($parts) - 1);
                 if ( $limit < 2 ) { $limit = 2; }
+
                 $cnt = 1;
                 for ( $i = count($parts) - 1; $i >= 0; $i-- ) {
                     $domain = '.' . $parts[$i] . $domain;
-                    if ( $cnt >= $limit ) { break; }
+                    if ( $cnt >= $limit ) {
+                        if ( isValidTLD($parts[$i]) ) {
+                            $limit++;
+                        } else {
+                            break;
+                        }
+                    }
                     $cnt++;
                 }
             }
