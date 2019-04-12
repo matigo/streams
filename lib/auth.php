@@ -212,13 +212,14 @@ class Auth {
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
-                    $storage = 5368709120;
+                    $storage = (1024 * 1024 * 1024 * 5);
 
                     $rVal = array( '_account_id'     => nullInt($Row['account_id']),
                                    '_email'          => NoNull($Row['email']),
                                    '_display_name'   => NoNull($Row['display_name']),
                                    '_avatar_file'    => NoNull($Row['avatar_url'], 'default.png'),
                                    '_account_type'   => NoNull($Row['type']),
+                                   '_channel_guid'   => NoNull($Row['default_channel']),
                                    '_persona_guid'   => NoNull($Row['default_persona']),
                                    '_access_level'   => NoNull($Row['access_level'], 'read'),
                                    '_language_code'  => NoNull($Row['language_code']),
@@ -294,9 +295,9 @@ class Auth {
      *      and returns a Token or Unhappy Boolean
      */
     private function _performLogin() {
-        $ChanGUID = NoNull($this->settings['channel_guid'], $this->settings['channel']);
-        $AcctName = NoNull($this->settings['account_name'], $this->settings['email']);
-        $AcctPass = NoNull($this->settings['account_pass'], $this->settings['password']);
+        $ChanGUID = NoNull($this->settings['channel_guid']);
+        $AcctName = NoNull($this->settings['account_name']);
+        $AcctPass = NoNull($this->settings['account_pass']);
         $isWebReq = YNBool(NoNull($this->settings['webreq']));
         $LangCd = DEFAULT_LANG;
         $Token = false;

@@ -218,7 +218,7 @@ class Account {
                                                        'display_name'   => NoNull($Row['display_name']),
                                                        'avatar_url'     => NoNull($Row['avatar_url'], 'default.png'),
                                                        'type'           => NoNull($Row['type']),
-                                                       'is_you'         => YNBool($Row['account_id'] == $this->settings['_account_id']),
+                                                       'is_you'         => YNBool(BoolYN($Row['account_id'] == $this->settings['_account_id'])),
 
                                                        'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                                                        'created_unix'   => strtotime($Row['created_at']),

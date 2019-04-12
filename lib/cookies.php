@@ -354,10 +354,12 @@ class cookies {
             if ( $fullDomain ) {
                 $parts = explode('.', strtolower($_SERVER['SERVER_NAME']));
                 $domain = '';
+                $limit = (count($parts) - 1);
+                if ( $limit < 2 ) { $limit = 2; }
                 $cnt = 1;
                 for ( $i = count($parts) - 1; $i >= 0; $i-- ) {
                     $domain = '.' . $parts[$i] . $domain;
-                    if ( $cnt >= 2 ) { break; }
+                    if ( $cnt >= $limit ) { break; }
                     $cnt++;
                 }
             }

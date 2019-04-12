@@ -5,6 +5,10 @@ SELECT a.`id` as `account_id`, a.`email`, a.`type`, a.`display_name`, a.`languag
        (SELECT z.`guid` FROM `Persona` z
          WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`
          ORDER BY z.`is_active` DESC, z.`id` LIMIT 1) as `default_persona`,
+       (SELECT z.`guid` FROM `Channel` z
+         WHERE z.`is_deleted` = 'N' and z.`type` = 'channel.site' and z.`privacy_type` = 'visibility.public'
+           and z.`account_id` = a.`id`
+         ORDER BY z.`id` LIMIT 1) as `default_channel`,
        (SELECT CASE WHEN MAX(ca.`can_write`) = 'Y' THEN 'write'
                     WHEN MAX(ca.`can_read`) = 'Y' THEN 'read'
                     ELSE 'none' END as `access`

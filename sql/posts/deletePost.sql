@@ -3,6 +3,11 @@ DELETE px FROM `PostHistory` px INNER JOIN `Post` po ON px.`post_id` = po.`id`
  WHERE po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
    and po.`guid` = '[POST_GUID]' and pa.`account_id` = [ACCOUNT_ID];
 [SQL_SPLITTER]
+DELETE px FROM `PostSearch` px INNER JOIN `Post` po ON px.`post_id` = po.`id`
+                               INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
+ WHERE po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
+   and po.`guid` = '[POST_GUID]' and pa.`account_id` = [ACCOUNT_ID];
+[SQL_SPLITTER]
 DELETE px FROM `PostMention` px INNER JOIN `Post` po ON px.`post_id` = po.`id`
                                 INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
  WHERE po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'

@@ -878,8 +878,8 @@ class Posts {
      *      and Returns an Array of Information or a Single, Unhappy Boolean
      */
     private function _validateWritePostData() {
-        $ChannelGUID = NoNull($this->settings['channel_guid']);
-        $PersonaGUID = NoNull($this->settings['persona_guid']);
+        $ChannelGUID = NoNull($this->settings['channel_guid'], $this->settings['_channel_guid']);
+        $PersonaGUID = NoNull($this->settings['persona_guid'], $this->settings['_persona_guid']);
         $Title = NoNull($this->settings['post_title'], $this->settings['title']);
         $Value = NoNull($this->settings['post_text'], NoNull($this->settings['text'], $this->settings['content']));
         $CanonURL = NoNull($this->settings['canonical_url'], $this->settings['post_url']);
@@ -958,6 +958,16 @@ class Posts {
         if ( strtotime($ExpiresAt) === false ) { $ExpiresAt = ''; }
         if ($PublishAt != '') { $PublishAt = $this->_convertTimeToUTC($PublishAt); }
         if ($ExpiresAt != '') { $ExpiresAt = $this->_convertTimeToUTC($ExpiresAt); }
+
+        // Ensure the Expiration Is Valid (If It Exists)
+        if ( strtotime($ExpiresAt) !== false && strtotime($ExpiresAt) > time() ) {
+            if ( strtotime($ExpiresAt) < strtotime($PublishAt) ) {
+                $this->_setMetaMessage("The Post Object Cannot Expire Before it is Published", 400); $isValid = false;
+            }
+
+        } else {
+            $ExpiresAt = '';
+        }
 
         switch ( strtolower($PostType) ) {
             case 'post.quotation':

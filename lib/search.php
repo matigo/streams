@@ -242,7 +242,7 @@ class Search {
 
                                      'author'   => array( 'name'         => NoNull($Row['name']),
                                                           'display_name' => NoNull($Row['display_name']),
-                                                          'avatar_url'   => NoNull($Row['avatar_url']),
+                                                          'avatar'       => NoNull($Row['avatar_url']),
                                                          ),
                                     );
                 }
