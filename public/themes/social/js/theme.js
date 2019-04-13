@@ -1652,12 +1652,13 @@ function getRefreshRate() {
     return _tlsec;
 }
 function getVisibleTypes() {
-    var valids = ['post.article', 'post.blog', 'post.bookmark', 'post.note', 'post.photo', 'post.quotation', 'post.todo'];
+    var valids = ['post.article', 'post.bookmark', 'post.note', 'post.quotation'];
     var _types = '';
 
     for ( var i = 0; i < valids.length; i++ ) {
         var _type = valids[i];
         var _val = readStorage(_type);
+        if ( _val === undefined || _val === null ) { _val = 'N'; }
         if ( _val != 'N' ) {
             if ( _types != '' ) { _types += ','; }
             _types += _type;
@@ -1665,7 +1666,7 @@ function getVisibleTypes() {
     }
 
     // Return the Types
-    return _types;
+    return NoNull(_types, valids.join(','));
 }
 function validateTimeline( _tl ) {
     var valids = ['global', 'mentions'];

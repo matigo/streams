@@ -23,11 +23,13 @@ SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as 
                 WHERE z.`is_deleted` = 'N' and z.`key` = 'show_quotation' and z.`site_id` = si.`id`), 'Y') as `show_quotation`,
        si.`version` as `site_version`, si.`updated_at` as `site_updated_at`,
        CASE WHEN si.`account_id` = [ACCOUNT_ID] THEN 'Y' ELSE 'N' END as `can_edit`,
-       CASE WHEN lu.`id` <> su.`id` THEN 'Y' ELSE 'N' END as `do_redirect`, 0 as `sort_order`
+       CASE WHEN lu.`id` <> su.`id` THEN 'Y'
+            WHEN lu.`url` <> LOWER('[SITE_URL]') THEN 'Y'
+            ELSE 'N' END as `do_redirect`, 0 as `sort_order`
   FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                     INNER JOIN `SiteUrl` su ON si.`id` = su.`site_id`
                     INNER JOIN `SiteUrl` lu ON su.`site_id` = lu.`site_id`
- WHERE si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y' and lu.`url` = '[SITE_URL]'
+ WHERE si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y' and lu.`url` IN ('[SITE_URL]', 'www.[SITE_URL]')
  UNION ALL
 SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as `site_url`,
        si.`name` as `site_name`, si.`description`, si.`keywords`, si.`https`, si.`theme`, si.`is_default`,
