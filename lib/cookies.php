@@ -280,6 +280,13 @@ class cookies {
         $URLPath = explode( '/', $ReqURI );
         $route = $this->_getRouting();
 
+        // Ensure There Are No Blanks in the URL Path
+        $FullPath = explode('/', $ReqURI);
+        $URLPath = array();
+        foreach ( $FullPath as $sec ) {
+            if ( NoNull($sec) != '' ) { $URLPath[] = NoNull($sec); }
+        }
+
         // Determine If We're In a Sub-Folder
         foreach ( $BasePath as $Folder ) {
         	if ( $Folder != "" ) {
