@@ -129,6 +129,7 @@ function getMetaValue( name ) {
 
     $("#content").keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
     $("#search-for").keydown(function (e) { if ( e.keyCode === KEY_ENTER ) { performSearch(); } else { clearSearchResults(); } });
+    $("#search-filter").keydown(function (e) { performFilter(); });
 
     $('.btn-publish').click(function() { publishPost(); });
     $('#source-url').on('input', function() { checkSourceUrl(); });
@@ -411,6 +412,37 @@ function updatePostTimestamps() {
             els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fa fa-comments"></i> ' : '') + moment(_ts * 1000).format(_fmt);
         }
     }
+
+    var els = document.getElementsByClassName('archive-item');
+    if ( els.length > 0 ) {
+        var list = document.getElementsByClassName('archive-list');
+        var _lbl = '';
+
+        for ( var i = 0; i < els.length; i++ ) {
+            var _ts = parseInt(els[i].getAttribute('data-dateunix'));
+            var _label = moment(_ts * 1000).format('MMMM YYYY');
+            if ( _label != _lbl ) {
+                var _li = document.createElement('li');
+                var _txt = document.createTextNode(_label);
+                _li.classList.add('archive-group');
+                _li.appendChild(_txt);
+
+                list[0].insertBefore(_li, els[i]);
+                _lbl = _label;
+            }
+        }
+
+        var els = document.getElementsByClassName('date-title');
+        if ( els.length > 0 ) {
+            for ( var i = 0; i < els.length; i++ ) {
+                var _ts = parseInt(els[i].getAttribute('data-dateunix'));
+                var _fmt = 'dddd MMMM Do YYYY h:mm a';
+
+                if ( moment(_ts * 1000).isSame(today, 'day') ) { _fmt = 'h:mm a'; }
+                if ( isNaN(_ts) === false ) { els[i].innerHTML = moment(_ts * 1000).format(_fmt); }
+            }
+        }
+    }
     checkAccessLevel();
 }
 function updatePostBanners() {
@@ -569,6 +601,13 @@ function toggleSubscriptionType( chk ) {
     }
     chk.checked = true;
     buildSubscriptionURL();
+}
+
+/** ************************************************************************* *
+ *  Archive Functions
+ ** ************************************************************************* */
+function performFilter() {
+    console.log( "Let's Look For Stuff!" );
 }
 
 /** ************************************************************************* *

@@ -1328,6 +1328,12 @@ class Posts {
                           '[COUNT]'      => nullInt($Count),
                           '[PAGE]'       => nullInt($Page),
                          );
+
+        // If We're Returning a List of Archives, Do That
+        if ( in_array(NoNull($this->settings['PgRoot']), array('archive', 'archives')) ) {
+            return $this->_getSiteArchives( $data['site_guid'] );
+        }
+
         $sqlStr = readResource(SQL_DIR . '/posts/getPagePostIDs.sql', $ReplStr);
         if ( $TagKey != '' ) { $sqlStr = readResource(SQL_DIR . '/posts/getTagPostIDs.sql', $ReplStr); }
         $rslt = doSQLQuery($sqlStr);
@@ -1377,6 +1383,76 @@ class Posts {
         $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/post.welcome.html';
         if ( !file_exists($flatFile) ) { $flatFile = FLATS_DIR .'/templates/post.welcome.html'; }
         return readResource($flatFile, $ReplStr);
+    }
+
+    private function _getSiteArchives( $SiteGuid ) {
+        if ( mb_strlen(NoNull($SiteGuid)) != 36 ) { return ''; }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_GUID]'  => sqlScrub($SiteGuid),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getArchives.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $SiteUrl = NoNull($this->settings['HomeURL']);
+            $cnt = array();
+            $html = '';
+
+            foreach ( $rslt as $Row ) {
+                $icon = '';
+                $priv = '';
+                $type = strtolower(NoNull($Row['type']));
+
+                if ( array_key_exists($type, $cnt) === false ) { $cnt[$type] = 0; }
+                $cnt[$type]++;
+
+                switch ( $type ) {
+                    case 'post.quotation':
+                        $icon = '<i class="fa fa-quote-left"></i> ';
+                        break;
+
+                    case 'post.bookmark':
+                        $icon = '<i class="fa fa-bookmark"></i> ';
+                        break;
+
+                    default:
+                        $icon = '<i class="fa fa-newspaper-o"></i> ';
+                }
+
+                $meta = ' data-guid="' . NoNull($Row['guid']) . '"' .
+                        ' data-type="' . NoNull($Row['type']) . '"' .
+                        ' data-dateunix="' . strtotime($Row['publish_at']) . '"' .
+                        ' data-privacy="' . NoNull($Row['privacy_type']) . '"' .
+                        ' data-tags="' . NoNull($Row['tag_list']) . '"' .
+                        ' data-cnt="' . $cnt[$type] . '"';
+
+                $tscl = '';
+                if ( NoNull($Row['title']) == '' ) {
+                    $tscl = ' class="date-title" data-dateunix="' . strtotime($Row['publish_at']) . '"';
+                }
+
+                $html = tabSpace(8) . '<li class="archive-item"' . $meta . '>' . "\r\n" .
+                        tabSpace(9) . '<span class="archive-num">' . number_format($cnt[$type]) . '</span> ' .
+                                      $icon .
+                                      '<span class="archive-title">' .
+                                        '<a href="' . $SiteUrl . NoNull($Row['canonical_url']) . '"' . $tscl . ' title="">' .
+                                            NoNull($Row['title'], date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at']))) .
+                                        '</a>' .
+                                      '</span>' . "\r\n" .
+                        tabSpace(8) . '</li>' . "\r\n" . $html;
+            }
+
+            if ( $html != '' ) { $html = tabSpace(7) . '<ul class="archive-list">' . "\r\n" .
+                                         $html .
+                                         tabSpace(7) . "</ul>";
+                                }
+
+            // Return the Formatted HTML
+            return $html;
+        }
+
+        // If We're Here, There's Nothing
+        return '';
     }
 
     /**
