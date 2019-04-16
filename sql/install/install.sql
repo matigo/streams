@@ -430,7 +430,7 @@ CREATE TABLE IF NOT EXISTS `File` (
 
     `name`          varchar(256)                                NOT NULL    ,
     `local_name`    varchar(80)                                 NOT NULL    ,
-    `public_name`   varchar(80)                                 NOT NULL    ,
+    `public_name`   varchar(256)                                NOT NULL    ,
     `hash`          varchar(64)             CHARACTER SET utf8  NOT NULL    ,
     `bytes`         int(11)        UNSIGNED                     NOT NULL    ,
     `location`      varchar(1024)                               NOT NULL    ,

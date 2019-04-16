@@ -308,10 +308,10 @@ class Posts {
                 }
 
                 // Write the Record to the Cache
-                $this->settings["post-$pid"] = array( 'guid'   => NoNull($Row['guid']),
-                                                      'as'     => '@' . NoNull($Row['name']),
-                                                      'is_you' => YNBool($Row['is_you']),
-                                                     );
+                $this->settings["post-$pid"][] = array( 'guid'   => NoNull($Row['guid']),
+                                                        'as'     => '@' . NoNull($Row['name']),
+                                                        'is_you' => YNBool($Row['is_you']),
+                                                       );
             }
 
             // If We Have Data, Return It
