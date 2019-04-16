@@ -1489,7 +1489,7 @@ function parseReplyBox( data ) {
                 }
             }
 
-            if ( txt_plus !== '' ) { txt += "\r\n\r\n//" + txt_plus; }
+            if ( txt_plus !== '' ) { txt += "\r\n\r\n// " + txt_plus; }
             /*
             document.getElementById('reply_text').innerHTML = '<strong>In Reply To:</strong> <em>' + blurb.content.text + '</em>';
             */
