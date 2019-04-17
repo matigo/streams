@@ -987,7 +987,13 @@ class Posts {
                     $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $PostSlug);
 
                     // If the Slug is Not Empty, Set the Canonical URL Value
-                    if ( $PostSlug != '' ) { $CanonURL = NoNull('/' . NoNull(date('Y/m/d', $PublishUnix), 'article') . "/$PostSlug"); }
+                    if ( $PostSlug != '' ) {
+                        $SlugPrefix = '';
+                        if ( nullInt($PublishUnix) >= strtotime('2000-01-01 00:00:00') ) {
+                            $SlugPrefix = date('Y/m/d', $PublishUnix);
+                        }
+                        $CanonURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$PostSlug");
+                    }
                 }
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
@@ -2494,6 +2500,19 @@ class Posts {
     private function _checkUniqueSlug( $ChannelGUID, $PostGUID, $PostSlug ) {
         $Excludes = array('feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'profile');
 
+        // Ensure the PostSlug is not ending in a dash
+        if ( strpos($PostSlug, '-') >= 0 ) {
+            $blks = explode('-', $PostSlug);
+            $PostSlug = '';
+            foreach ( $blks as $blk ) {
+                if ( NoNull($blk) != '' ) {
+                    if ( $PostSlug != '' ) { $PostSlug .= '-'; }
+                    $PostSlug .= NoNull($blk);
+                }
+            }
+        }
+
+        // Check the Slug against the Database (this should really be turned into a complete SQL solution)
         for ( $i = 0; $i <= 49; $i++ ) {
             $TrySlug = $PostSlug;
             if ( $i > 0 ) { $TrySlug = "$PostSlug-$i"; }
@@ -2508,7 +2527,7 @@ class Posts {
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
-                        if ( nullInt($Row) <= 0 ) { return $PostSlug; }
+                        if ( nullInt($Row['post_count']) <= 0 ) { return $PostSlug; }
                     }
                 }
             }
