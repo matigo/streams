@@ -156,6 +156,10 @@ document.onreadystatechange = function () {
 
         var mode = readStorage('privacy');
         setVisibility(mode);
+
+        $('#writePost').on('shown.bs.modal', function () {
+            $('#content').trigger('focus');
+        });
     }
 }
 

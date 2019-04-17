@@ -310,10 +310,13 @@ ol { margin-top: 0.5em; }
 .compose .modal-body .write-area {
     background: transparent;
     display: block;
-    max-height: 150px;
+    max-height: 7em;
+    min-height: 7em;
     overflow-x: hidden;
     overflow-y: auto;
     padding: 0.25em;
+    max-width: 100%;
+    min-width: 100%;
     width: 100%;
 }
 .compose .modal-body .write-area::-webkit-scrollbar {
@@ -325,6 +328,8 @@ ol { margin-top: 0.5em; }
     border: 1px solid #00cdcd;
     border-radius: 4px;
 }
+.compose .modal-body .write-area::placeholder { padding: 2.25em 0 0; text-align: center; }
+.compose .modal-body .write-area::-ms-input-placeholder { padding: 2.25em 0 0; text-align: center; }
 .compose .modal-body .form-element {
     background: transparent;
     border: 1px solid #00cdcd;
