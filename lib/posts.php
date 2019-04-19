@@ -123,6 +123,7 @@ class Posts {
 
         switch ( $Activity ) {
             case 'delete':
+            case '':
                 $rVal = $this->_deletePost();
                 break;
 
@@ -839,14 +840,17 @@ class Posts {
      */
     private function _deletePost() {
         $PostGUID = NoNull($this->settings['PgSub1'], $this->settings['post_guid']);
+        $ChannelGUID = NoNull($this->settings['channel_guid']);
         $isOK = false;
 
         // Ensure we Have a GUID
-        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        if ( mb_strlen($PostGUID) < 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
 
-        // Collect the Channel.GUID Value for the Post
-        $ChannelGUID = $this->_getPostChannel($PostGUID);
-        if ( $ChannelGUID === false ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        // Collect the Channel.GUID Value for the Post (if Required)
+        if ( mb_strlen($ChannelGUID) < 30 ) {
+            $ChannelGUID = $this->_getPostChannel($PostGUID);
+            if ( $ChannelGUID === false ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        }
 
         // Remove the Record from the Database
         $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
@@ -855,6 +859,7 @@ class Posts {
                           '[SQL_SPLITTER]' => sqlScrub(SQL_SPLITTER),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/deletePost.sql', $ReplStr);
+        writeNote($sqlStr, true);
         $rslt = doSQLExecute($sqlStr);
         if ( $rslt ) {
             $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr);

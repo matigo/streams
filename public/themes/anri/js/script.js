@@ -132,6 +132,10 @@ function getMetaValue( name ) {
     $("#search-filter").keydown(function (e) { performFilter(); });
 
     $('.btn-publish').click(function() { publishPost(); });
+    $('.btn-delete-cancel').click(function() { cancelDelete(); });
+    $('.btn-delete-post').click(function() { performDelete(); });
+    $('.btn-delete').click(function() { deletePost(); });
+
     $('#source-url').on('input', function() { checkSourceUrl(); });
     $('.btn-geo').click(function() { getGeoLocation(this); });
 })(jQuery);
@@ -374,6 +378,15 @@ function updatePublishPostButton() {
             if ( els[i].disabled !== _isBlank ) { els[i].disabled = _isBlank; }
         }
     }
+
+    var parts = window.location.pathname.split('/');
+    var _guid = parts[(parts.length - 1)];
+    if ( _guid.length < 30 ) { _guid = ''; }
+    if ( _guid.length > 30 || _isBlank === false ) {
+        showByClass('btn-delete');
+    } else {
+        hideByClass('btn-delete');
+    }
 }
 function checkAccessLevel() {
     var els = document.getElementsByClassName('ops-newpost');
@@ -469,6 +482,83 @@ function togglePostEdit() {
         for ( var i = 0; i < els.length; i++ ) {
             var _by = NoNull(els[i].getAttribute('data-persona-guid'));
             if ( _by == _guid ) { els[i].classList.remove('hidden'); }
+        }
+    }
+}
+
+/** ************************************************************************* *
+ *  Post Deletion Functions
+ ** ************************************************************************* */
+function cancelDelete() {
+    hideByClass('confirm-delete');
+    showByClass('btn-delete');
+}
+function deletePost() {
+    showByClass('confirm-delete');
+    hideByClass('btn-delete');
+}
+function performDelete() {
+    var _channel = false;
+    var _guid = false;
+
+    var metas = document.getElementsByTagName('meta');
+    for (var i = 0; i < metas.length; i++) {
+        var _name = NoNull(metas[i].getAttribute("name"));
+        if ( _name == 'channel_guid' ) { _channel = NoNull(metas[i].getAttribute("content")); }
+    }
+
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].value) != '' ) {
+            var _name = NoNull(els[i].getAttribute('data-name'));
+            if ( _name == 'post_guid' ) { _guid = els[i].value; }
+        }
+    }
+
+    /* If we have (what appears to be) a valid Post GUID, delete the post from the database */
+    if ( _guid !== false && _guid.length == 36 ) {
+        var btns = document.getElementsByClassName('btn');
+        for ( var i = 0; i < btns.length; i++ ) {
+            btns[i].disabled = true;
+        }
+
+        var btns = document.getElementsByClassName('btn-delete-post');
+        for ( var i = 0; i < btns.length; i++ ) {
+            btns[i].innerHTML = '<i class="fa fa-spin fa-spinner"></i>';
+            btns[i].disabled = true;
+        }
+
+        var params = { 'channel_guid': _channel,
+                       'post_guid': _guid
+                      };
+        doJSONQuery('posts', 'DELETE', params, parseDelete);
+    }
+    if ( _guid !== false && _guid.length <= 5 ) {
+        /* If we're here, the author is trying to delete a post that's never been saved */
+        var _url = window.location.protocol + '//' + window.location.hostname + '/write';
+        window.location.href = _url;
+    }
+}
+function parseDelete( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        // Redirect to an empty Write page (since this is where we are anyway)
+        var _url = window.location.protocol + '//' + window.location.hostname + '/write';
+        window.location.href = _url;
+
+    } else {
+        /* Show an Error Message */
+        var _msg = NoNull(data.meta.text, 'Could not delete post');
+        $(".btn-delete-post").notify(_msg, { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+
+        var btns = document.getElementsByClassName('btn');
+        for ( var i = 0; i < btns.length; i++ ) {
+            btns[i].disabled = false;
+        }
+
+        var btns = document.getElementsByClassName('btn-delete-post');
+        for ( var i = 0; i < btns.length; i++ ) {
+            var _name = btns[i].getAttribute('data-label');
+            btns[i].innerHTML = NoNull(_name, 'Yes, Delete Post');
         }
     }
 }
