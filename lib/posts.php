@@ -2122,14 +2122,28 @@ class Posts {
             $name = '';
 
             if ( NoNull(substr($clean_word, 0, 1)) == '@' ) {
-                $name_scrub = array('@', '#', '?', '.', ',', '!', '/', "'", "\r", "\t", "\n", '//', '</');
-                $name = NoNull(str_replace($name_scrub, '', $clean_word));
+                $name_scrub = array('@', '#', "\r", "\t", "\n", '//', '/', '</');
+                $name = NoNull($clean_word);
+
+                for ( $i = 0; $i < (count($name_scrub) - 1); $i++ ) {
+                    $name = NoNull(str_replace($name_scrub, '', $name));
+                }
+
+                // Handle Contractions and trailing thingies ...
+                $name_scrub = array('?', '.', ',', '!', '/', "'", '<', '>');
+                foreach ( $name_scrub as $char ) {
+                    if ( mb_strpos($name, $char) ) {
+                        $name = NoNull(substr($name, 0, mb_strpos($name, $char)));
+                    }
+                }
 
                 if ($name != '' && in_array($name, $pnames) === false ) {
                     $pid = $this->_getPersonaIDFromName($name);
                     if ( $pid !== false && $pid > 0 ) {
                         if ( $lst != '' ) { $lst .= ","; }
                         $lst .= "($post_id, $pid)";
+
+                        $pnames[] = $name;
                     }
                 }
             }
