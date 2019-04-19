@@ -4,7 +4,7 @@ SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as 
                 WHERE z.`is_deleted` = 'N' and z.`key` = 'summary' and z.`site_id` = si.`id`), '') as `summary`,
        IFNULL((SELECT IFNULL(z.`title`, z.`value`) FROM `Post` z
                 WHERE z.`is_deleted` = 'N' and z.`channel_id` = ch.`id` and z.`canonical_url` = '[REQ_URI]'
-                ORDER BY z.`id` LIMIT 1), 'website') as `page_title`,
+                ORDER BY z.`id` LIMIT 1), si.`name`) as `page_title`,
        IFNULL((SELECT z.`type` FROM `Post` z
                 WHERE z.`is_deleted` = 'N' and z.`channel_id` = ch.`id` and z.`canonical_url` = '[REQ_URI]'
                 ORDER BY z.`id` LIMIT 1), 'website') as `page_type`,

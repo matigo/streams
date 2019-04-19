@@ -172,6 +172,7 @@ class Posts {
      ** ********************************************************************* */
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
+    public function getPersonaPosts() { return $this->_getTimeline('persona'); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
     public function getRSSFeed($site, $format) { return $this->_getRSSFeed($site, $format); }
 
@@ -1705,7 +1706,7 @@ class Posts {
                                                           'as'          => '@' . NoNull($post['persona_name']),
                                                           'name'        => NoNull($post['display_name']),
                                                           'avatar'      => NoNull($post['avatar_url']),
-                                                          'you_follow'  => false,
+                                                          'you_follow'  => YNBool($post['is_you']),
                                                           'is_you'      => YNBool($post['is_you']),
 
                                                           'profile_url' => NoNull($post['profile_url']),
@@ -1740,7 +1741,7 @@ class Posts {
      */
     private function _getTimeline( $path = 'global' ) {
         $path = NoNull(strtolower($path), 'global');
-        $validTLs = array( 'global', 'mentions' );
+        $validTLs = array( 'global', 'mentions', 'persona' );
         if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
 
         // Get the Types Requested (Default is Social Posts Only)
@@ -1770,17 +1771,21 @@ class Posts {
         $SinceUnix = nullInt($this->settings['since']);
         $UntilUnix = nullInt($this->settings['until']);
 
+        // Is this for a Persona?
+        $PersonaGUID = NoNull($this->settings['_for_guid'], $this->settings['_persona_guid']);
+
         // How Many Posts?
         $CleanCount = nullInt($this->settings['count'], 100);
         if ( $CleanCount > 250 ) { $CleanCount = 250; }
         if ( $CleanCount <= 0 ) { $CleanCount = 100; }
 
         // Get the Posts
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[SINCE_UNIX]' => nullInt($SinceUnix),
-                          '[UNTIL_UNIX]' => nullInt($UntilUnix),
-                          '[POST_TYPES]' => NoNull($CleanTypes),
-                          '[COUNT]'      => nullInt($CleanCount),
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[SINCE_UNIX]'   => nullInt($SinceUnix),
+                          '[UNTIL_UNIX]'   => nullInt($UntilUnix),
+                          '[POST_TYPES]'   => NoNull($CleanTypes),
+                          '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
+                          '[COUNT]'        => nullInt($CleanCount),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getTimeline' . ucfirst($path) . '.sql', $ReplStr);
         if ( $sqlStr != '' ) {

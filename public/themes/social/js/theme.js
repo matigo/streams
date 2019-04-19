@@ -878,7 +878,7 @@ function toggleProfile( el ) {
         for ( var i = 0; i < els.length; i++ ) {
             els[i].classList.add('hidden');
         }
-    } , 25);
+    }, 25);
 
     // Reset the Modal
     var _html = '<p style="display: block; text-align: center; width: 100%;"><i class="fa fa-spin fa-spinner"></i> Reading Profile Data</p>';
@@ -893,6 +893,11 @@ function toggleProfile( el ) {
         var _ip = btns[i].getAttribute('data-personal');
         if ( _ip === undefined || _ip === false || _ip === null || _ip != 'Y' ) { _ip = 'N'; }
         if ( _ip == 'N' ) { btns[i].classList.remove('hidden'); }
+    }
+    var els = document.getElementsByClassName('profile-posts');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].classList.add('hidden');
+        els[i].innerHTML = '';
     }
 
     // Collect the GUID
@@ -939,16 +944,56 @@ function parseProfile( data ) {
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
                         '<strong class="sites full-wide"><a target="_blank" href="' + ds.site_url + '" title="">' + ds.site_url.replace('https://', '').replace('http://', '') + '</a></strong>' +
                         '<em class="since full-wide">Member Since ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ' (' + numberWithCommas(ds.days) + ' days)</em>' +
-                        NoNull(ds.bio.html, '<p>&nbsp;</p>') +
+                        NoNull(ds.bio.html) +
                         _edit +
-                    '</div>';
+                    '</div>' +
+                    '<div class="content-posts profile-posts hidden"></div>';
         }
+
+        // Get the Account Posts (If Applicable)
+        setTimeout(function() { getProfilePosts( ((ds.is_you) ? 'me' : ds.guid) ); }, 100);
     }
 
     // Set the HTML Accordingly
     var els = document.getElementsByClassName('profile-body');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _html;
+    }
+}
+function getProfilePosts( _guid ) {
+    if ( _guid === undefined || _guid === false || _guid === null ) { return ; }
+    if ( _guid.length == 36 || _guid == 'me' ) {
+        var params = { 'types': 'post.article,post.note,post.quotation,post.bookmark',
+                       'count': 50
+                      };
+        doJSONQuery('account/' + _guid + '/posts', 'GET', params, parseProfilePosts);
+    }
+}
+function parseProfilePosts( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        var _html = '';
+
+        if ( ds.length !== undefined && ds.length > 0 ) {
+            var today = moment().format('YYYY-MM-DD HH:mm:ss');
+
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _ts = ds[i].publish_unix * 1000;
+                _html += '<li class="profile-post ' + ds[i].type.replace('post.', '') + '">' +
+                            ((NoNull(ds[i].title) != '') ? '<h4><a href="' + NoNull(ds[i].canonical_url) + '" target="_blank" title="">' + NoNull(ds[i].title) + '</a></h4>' : '' ) +
+                            ((NoNull(ds[i].title) != '') ? '<h6><a href="' + NoNull(ds[i].canonical_url) + '" target="_blank" title="">' + NoNull(ds[i].canonical_url) + '</a></h6>' : '' ) +
+                            NoNull(ds[i].content) +
+                            '<p class="time">' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('dddd MMMM Do YYYY h:mm:ss a')) + '</p>' +
+                         '</li>';
+            }
+            if ( _html != '' ) { _html = '<ul onmouseover="this.style.overflowY=\'scroll\'" onmouseout="this.style.overflowY=\'hidden\'">' + _html + '</ul>'; }
+        }
+
+        var els = document.getElementsByClassName('profile-posts');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].classList.remove('hidden');
+            els[i].innerHTML = NoNull(_html, '<ul><li><p class="text-center">There are no recent posts to display.</p></li></ul>');
+        }
     }
 }
 function setPublicProfile() {

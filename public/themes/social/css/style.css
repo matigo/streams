@@ -279,6 +279,86 @@ ol { margin-top: 0.5em; }
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.content-area .persona-bio { margin-bottom: 1em; }
+.content-posts ul {
+    border: 3px solid #ebe5f5;
+    border-radius: 2em;
+    border-top-left-radius: 0;
+    display: inline-block;
+    list-style: none;
+    list-style-type: none;
+    max-width: calc(100% - 2em);
+    max-height: 20em;
+    margin: 0 1em 0 0.5em;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+.content-posts ul::-webkit-scrollbar { width: 0px; }
+.content-posts ul::-webkit-scrollbar * { background:transparent; }
+.content-posts ul::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.1) !important; }
+.content-posts ul li.profile-post {
+    border-bottom: 1px solid #ebe5f5;
+    overflow: hidden;
+    padding: 0.5em 1.5em 0 0.5em;
+    margin: 0;
+}
+.content-posts ul li.profile-post .account {
+    font-weight: bold;
+}
+.content-posts ul li.profile-post .time {
+    display: block;
+    font-size: 0.85em;
+    font-style: italic;
+    text-align: right;
+    width: 100%;
+}
+.content-posts ul li.profile-post.article {
+    max-height: 15em;
+}
+.content-posts ul li.profile-post.article h4 {
+    font-style: normal;
+    font-weight: bold;
+    margin: 0;
+    padding: 0.5em 0 0;
+    overflow: hidden;
+}
+.content-posts ul li.profile-post.article h4 a,
+.content-posts ul li.profile-post.article h4 a:hover,
+.content-posts ul li.profile-post.article h4 a:active,
+.content-posts ul li.profile-post.article h4 a:focus {
+    color: #000;
+    outline: none;
+}
+.content-posts ul li.profile-post.article h6 {
+    font-size: 0.8em;
+    font-style: italic;
+    margin: 0;
+    padding: 0 0 0.5em;
+}
+.content-posts ul li.profile-post.article h6 a,
+.content-posts ul li.profile-post.article h6 a:hover,
+.content-posts ul li.profile-post.article h6 a:active,
+.content-posts ul li.profile-post.article h6 a:focus {
+    color: #551a8b;
+    outline: none;
+}
+.content-posts ul li.profile-post.article p {
+    padding: 0 0 0 1em;
+}
+.content-posts ul li.profile-post img {
+    border: 1px solid #ebe5f5;
+    padding: 0.25em;
+    max-width: 100%;
+}
+.content-posts ul li.profile-post audio,
+.content-posts ul li.profile-post canvas,
+.content-posts ul li.profile-post progress,
+.content-posts ul li.profile-post video {
+    display: inline-block;
+    width: 100%;
+}
 .threadview {
     display: block;
     min-height: 100%;
@@ -872,6 +952,22 @@ body.dark .content .post-entry.selected { background: #333; }
 body.dark .content .post-entry.reply-to { background: #666; }
 body.dark .content-area .content-source-url { color: #cc7722; }
 body.dark .content-area p img { border-color: #434c73; }
+
+body.dark .content-posts ul { border: 3px solid #434c73; }
+body.dark .content-posts ul::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.1) !important; }
+body.dark .content-posts ul li.profile-post { border-bottom: 1px solid #434c73; }
+body.dark .content-posts ul li.profile-post.article h4 a,
+body.dark .content-posts ul li.profile-post.article h4 a:hover,
+body.dark .content-posts ul li.profile-post.article h4 a:active,
+body.dark .content-posts ul li.profile-post.article h4 a:focus {
+    color: #fff;
+}
+body.dark .content-posts ul li.profile-post.article h6 a,
+body.dark .content-posts ul li.profile-post.article h6 a:hover,
+body.dark .content-posts ul li.profile-post.article h6 a:active,
+body.dark .content-posts ul li.profile-post.article h6 a:focus {
+    color: #ccc;
+}
 body.dark .modal-content { background: #252424; }
 body.dark .btn {
     background: transparent;

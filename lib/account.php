@@ -69,6 +69,10 @@ class Account {
                 $rVal = $this->_getPublicProfile();
                 break;
 
+            case 'posts':
+                $rVal = $this->_getProfilePosts();
+                break;
+
             case 'me':
                 if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
                 $rVal = $this->_getProfile();
@@ -720,6 +724,29 @@ class Account {
 
         // If We're Here, There Is No Persona
         return false;
+    }
+
+    /**
+     *  Function Collects the Most Recent posts associated with a Persona
+     */
+    private function _getProfilePosts() {
+        $CleanGUID = NoNull($this->settings['guid'], $this->settings['PgSub1']);
+        if ( $CleanGUID == 'me' && NoNull($this->settings['_persona_guid']) != '' ) {
+            $CleanGUID = $this->settings['_persona_guid'];
+        }
+
+        $this->settings['_for_guid'] = NoNull($CleanGUID);
+
+        require_once(LIB_DIR . '/posts.php');
+        $posts = new Posts($this->settings);
+        $data = $posts->getPersonaPosts();
+        unset($posts);
+
+        // If we have data, return it
+        if ( is_array($data) && count($data) > 0 ) { return $data; }
+
+        // If We're Here, There's Nothing
+        return array();
     }
 
     private function _getAccountPersonas( $AccountID = 0 ) {

@@ -783,7 +783,7 @@ class Route extends Streams {
             $rslt = NoNull($this->strings[$lblName], NoNull($data['page_title'], $data['name']));
             return htmlspecialchars(strip_tags($rslt), ENT_QUOTES, 'UTF-8');
         } else {
-            return NoNull($this->strings[$lblName], $data['name']);
+            return NoNull($this->strings[$lblName], NoNull($data['page_title'], $data['name']));
         }
     }
 
