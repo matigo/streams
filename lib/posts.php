@@ -2122,7 +2122,7 @@ class Posts {
             $name = '';
 
             if ( NoNull(substr($clean_word, 0, 1)) == '@' ) {
-                $name_scrub = array('@', '#', '?', '.', ',', '!', "\r", "\t", "\n", '//', '</');
+                $name_scrub = array('@', '#', '?', '.', ',', '!', '/', "'", "\r", "\t", "\n", '//', '</');
                 $name = NoNull(str_replace($name_scrub, '', $clean_word));
 
                 if ($name != '' && in_array($name, $pnames) === false ) {
