@@ -174,7 +174,7 @@ class Route extends Streams {
     private function _getPageHTML( $data ) {
         // If Caching Is Enabled, Check If We Have a Valid Cached Version
         $cache_file = md5($data['site_version'] . '-' . NoNull(APP_VER . CSS_VER) . '-' .
-                          nullInt($this->settings['_account_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
+                          nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
                           NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
         if ( defined('ENABLE_CACHING') ) {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
@@ -559,6 +559,7 @@ class Route extends Streams {
                        '[POPULAR_LIST]' => $this->_getPopularPosts(),
                        '[PREFERENCES]'  => $this->_getPreferencesPanel($data),
                        '[PAGINATION]'   => $this->_getPagination($data),
+                       '[POST_CLASS]'   => '',
                       );
 
         // Return the Strings
