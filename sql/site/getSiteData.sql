@@ -22,6 +22,7 @@ SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as 
        IFNULL((SELECT z.`value` FROM `SiteMeta` z
                 WHERE z.`is_deleted` = 'N' and z.`key` = 'show_quotation' and z.`site_id` = si.`id`), 'Y') as `show_quotation`,
        si.`version` as `site_version`, si.`updated_at` as `site_updated_at`,
+       lu.`is_active` as `url_active`, UNIX_TIMESTAMP(lu.`updated_at`) as `url_ua`,
        CASE WHEN si.`account_id` = [ACCOUNT_ID] THEN 'Y' ELSE 'N' END as `can_edit`,
        CASE WHEN lu.`id` <> su.`id` THEN 'Y'
             WHEN lu.`url` <> LOWER('[SITE_URL]') THEN 'Y'
@@ -38,9 +39,10 @@ SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as 
        ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
        '' as `client_guid`, 'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'N' as `show_bookmark`, 'N' as `show_quotation`,
        '0' as `site_version`, Now() as `site_updated_at`,
+       'Y' as `url_active`, 0 as `url_ua`,
        'N' as `can_edit`, 'Y' as `do_redirect`, 1 as `sort_order`
   FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                     INNER JOIN `SiteUrl` su ON si.`id` = su.`site_id`
  WHERE si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and si.`is_default` = 'Y' and su.`is_active` = 'Y'
- ORDER BY `sort_order`, `url_id` DESC
+ ORDER BY `sort_order`, `url_id` DESC, `url_active` DESC, `url_ua` DESC
  LIMIT 1;
