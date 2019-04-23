@@ -2127,7 +2127,7 @@ class Posts {
 
         foreach ( $words as $word ) {
             $invalids = array('#', "\r", "\t", "\n", '//', '/', '</');
-            $clean_word = NoNull(str_replace(array_keys($invalids), '', $word));
+            $clean_word = NoNull(str_replace($invalids, '', $word));
             $name = '';
 
             if ( NoNull(substr($clean_word, 0, 1)) == '@' ) {
