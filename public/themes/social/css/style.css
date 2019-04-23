@@ -246,8 +246,14 @@ ol { margin-top: 0.5em; }
 }
 .content-area {
     display: inline-block;
+    max-height: 17em;
+    overflow: hidden;
     padding: 1em 0.5em 0;
     width: calc(100% - 6em);
+}
+.content-area.toggle-action-bar.full-post,
+.content-area .full-post {
+    max-height: 100%;
 }
 .content-area p img {
     border: 0.125em solid #00cdcd;
@@ -643,6 +649,15 @@ ol { margin-top: 0.5em; }
 .metaline {
     display: block;
     width: 100%;
+}
+.metaline.content-expand {
+    background-image: linear-gradient(to bottom, transparent, #fff);
+    display: inline-block;
+    padding: 3em 0 0;
+    position: relative;
+    margin: 0 0 -4em;
+    bottom: 65px;
+    float: left;
 }
 .metaline.tags ul {
     list-style: none;

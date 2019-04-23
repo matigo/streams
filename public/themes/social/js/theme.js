@@ -43,6 +43,16 @@ function strip_tags(html, allowed_tags) {
     }
     return html.replace(new RegExp("(<" + allowed_tags + ".*?>)", "gi"), "");
 }
+function checkIfOverflow( el ) {
+    if ( el === undefined || el === false || el === null ) { return false; }
+
+    var curOverflow = el.style.overflow;
+    if ( !curOverflow || curOverflow === "visible" ) { el.style.overflow = "hidden"; }
+    var isOverflowing = el.clientWidth < el.scrollWidth || el.clientHeight < el.scrollHeight;
+    el.style.overflow = curOverflow;
+
+    return isOverflowing;
+}
 function randName(len) {
     if ( len === undefined || len === false || len === null ) { len = 8; }
     if ( parseInt(len) <= 0 ) { len = 8; }
@@ -1815,7 +1825,45 @@ function parseTimeline(data) {
         }
         hideByClass('load-spinner');
         updatePostTimestamps();
+        updateForOverflow();
         if ( _showmore ) { showByClass('readmore'); } else { hideByClass('readmore'); }
+    }
+}
+function updateForOverflow() {
+    var els = document.getElementsByClassName('content-area');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('full-post') === false ) {
+            if ( checkIfOverflow(els[i]) ) {
+                var _guid = NoNull(els[i].getAttribute('data-guid'));
+
+                var tls = document.getElementsByClassName('content-expand');
+                for ( var t = 0; t < tls.length; t++ ) {
+                    var _gg = NoNull(tls[t].getAttribute('data-guid'));
+                    if ( _guid == _gg ) {
+                        tls[t].classList.remove('hidden');
+                    }
+                }
+            }
+        }
+    }
+}
+function toggleOverflow( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        console.log( "GUID: " + _guid );
+
+        var els = document.getElementsByClassName('content-area');
+        for ( var i = 0; i < els.length; i++ ) {
+            var _gg = NoNull(els[i].getAttribute('data-guid'));
+            if ( _gg == _guid ) {
+                if ( els[i].classList.contains('full-post') === false ) {
+                    els[i].classList.add('full-post');
+                }
+            }
+        }
+
+        el.classList.add('hidden');
     }
 }
 function showZeroPosts() {
@@ -1949,11 +1997,12 @@ function buildHTML( post ) {
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
     if ( _src_url != '' ) { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
     var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
-                '<div class="content-area toggle-action-bar">' +
+                '<div class="content-area toggle-action-bar" data-guid="' + post.guid + '">' +
                     '<strong class="persona full-wide">' + post.persona.as + '</strong>' +
                     _ttxt +
                     post.content +
                 '</div>' +
+                '<div class="metaline content-expand pad text-center hidden" onClick="toggleOverflow(this);" data-guid="' + post.guid + '"><p>Show Full Post</p></div>' +
                 '<div class="metaline tags pad"><ul></ul></div>' +
                 ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
                 '<div class="metaline pad text-right">' +
