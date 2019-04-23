@@ -860,7 +860,6 @@ class Posts {
                           '[SQL_SPLITTER]' => sqlScrub(SQL_SPLITTER),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/deletePost.sql', $ReplStr);
-        writeNote($sqlStr, true);
         $rslt = doSQLExecute($sqlStr);
         if ( $rslt ) {
             $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr);
@@ -2127,7 +2126,7 @@ class Posts {
         $lst = '';
 
         foreach ( $words as $word ) {
-            $invalids = array('//', '</');
+            $invalids = array('#', "\r", "\t", "\n", '//', '/', '</');
             $clean_word = NoNull(str_replace(array_keys($invalids), '', $word));
             $name = '';
 
