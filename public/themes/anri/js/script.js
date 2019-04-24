@@ -149,6 +149,7 @@ document.onreadystatechange = function () {
         updatePostBanners();
         togglePostType();
         togglePostEdit();
+        getMessageList();
         prepNewPost();
 
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
@@ -940,6 +941,90 @@ function isValidUrl( _url ) {
     var a  = document.createElement('a');
     a.href = _url;
     return (a.host && a.host != window.location.host);
+}
+
+/** ************************************************************************* *
+ *  Message Functions
+ ** ************************************************************************* */
+function getMessageCheckValue( _name ) {
+    _name = NoNull(_name);
+    if ( _name.length <= 0 ) { return false; }
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _nn = NoNull(els[i].getAttribute('data-name'));
+        if ( _nn == _name ) { return els[i].checked; }
+    }
+    return false;
+}
+function getMessageCount() {
+    var els = document.getElementsByClassName('unread-count');
+    if ( els.length > 0 ) {
+        doJSONQuery('contact/count', 'GET', {}, parseMessageCount);
+    }
+}
+function parseMessageCount( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.unread !== undefined && ds.unread !== false ) {
+            var _unread = parseInt(ds.unread);
+            if ( _unread === undefined || _unread === false || _unread === null || _unread < 0 ) { _unread = 0; }
+
+            var els = document.getElementsByClassName('unread-count');
+            for ( var i = 0; i < els.length; i++ ) {
+                els[i].innerHTML = numberWithCommas(_unread);
+                els[i].setAttribute('data-count', _unread);
+
+                els[i].classList.add('hidden');
+                if ( _unread > 0 ) { els[i].classList.remove('hidden'); }
+            }
+        }
+    }
+    setTimeout(getMessageCount, 60000);
+}
+function getMessageList() {
+    var els = document.getElementsByClassName('message-list');
+    if ( els.length > 0 ) {
+        doJSONQuery('contact/list', 'GET', {}, parseMessageList);
+    }
+}
+function parseMessageList( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = false;
+        if ( data.data !== undefined && data.data !== false && data.data.length > 0 ) { ds = data.data; }
+        if ( ds !== false && ds.length > 0 ) {
+            var show_spam = getMessageCheckValue('show_spam');
+            var html = '';
+
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _subject = NoNull(ds[i].subject);
+                var _name = NoNull(ds[i].name);
+                if ( ds[i].email !== false && ds[i].email != '' ) { _name += ' (' + NoNull(ds[i].email) + ')'; }
+
+                if ( ds[i].is_spam === false || show_spam ) {
+                    html += '<div class="message" data-guid="' + NoNull(ds[i].guid) + '">' +
+                                '<div class="message-from' + ((ds[i].is_read) ? '' : ' unread') + '">' + _name + '</div>' +
+                                '<div class="message-source">' + NoNull(ds[i].from_url) + '</div>' +
+                                ((_subject != '') ? '<div class="message-subject' + ((ds[i].is_read) ? '' : ' unread') + '">' + _subject + '</div>' : '') +
+                                '<div class="message-content">' + ds[i].message.html + '</div>' +
+                                '<div class="message-date dt-published" data-dateunix="' + NoNull(ds[i].created_unix) + '">' + NoNull(ds[i].created_at) + '</div>' +
+                                '<div class="message-actions hidden">' +
+                                    '<button class="btn btn-msg-action" data-read="Mark as Read" data-unread="Mark Unread"><i class="fa fa-square-o"></i> [btnMessageRead]</button>' +
+                                    '<button class="btn btn-msg-action"><i class="fa fa-trash"></i> Delete</button>' +
+                                '</div>' +
+                            '</div>';
+                }
+            }
+
+            if ( html != '' ) {
+                var els = document.getElementsByClassName('message-list');
+                for ( var i = 0; i < els.length; i++ ) {
+                    els[i].innerHTML = html;
+                }
+                updatePostTimestamps();
+            }
+        }
+        setTimeout(getMessageCount, 60000);
+    }
 }
 
 /** ************************************************************************* *

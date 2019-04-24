@@ -89,6 +89,7 @@ class Route extends Streams {
                         break;
 
                     case 'settings':
+                    case 'messages':
                     case 'write':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
                             redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
@@ -102,7 +103,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('write', 'settings');
+                $checks = array('write', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
@@ -441,15 +442,23 @@ class Route extends Streams {
 
         if ( $this->settings['_logged_in'] ) {
             if ( file_exists( $OpsBarFile ) ) {
+                require_once(LIB_DIR . '/contact.php');
+                $msgs = new Contact($this->settings);
+                $data = $msgs->getMessageCount();
+                unset($msgs);
+
                 $SiteUrl = NoNull($this->settings['HomeURL']);
                 $ReplStr = array( '[AVATAR_IMG]'    => $SiteUrl . '/avatars/' . NoNull($this->settings['_avatar_file'], 'default.png'),
                                   '[ACCESS_LEVEL]'  => NoNull($this->settings['_access_level'], 'read'),
                                   '[DISPLAY_NAME]'  => NoNull($this->settings['_display_name']),
                                   '[PERSONA_GUID]'  => NoNull($this->settings['_persona_guid']),
-                                  '[UNREAD_COUNT]'  => nullInt($this->settings['_unread']),
                                   '[STORAGE_TOTAL]' => nullInt($this->settings['_storage_total']),
                                   '[STORAGE_USED]'  => nullInt($this->settings['_storage_used']),
                                   '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
+
+                                  '[UNREAD_COUNT]'  => nullInt($data['unread']),
+                                  '[UNREAD_CLASS]'  => ((nullInt($data['unread']) > 0) ? '' : ' hidden'),
+                                  '[MY_HOME]'       => NoNull($data['my_home']),
                                  );
                 if ( is_array($this->strings) ) {
                     foreach ( $this->strings as $key=>$val ) {

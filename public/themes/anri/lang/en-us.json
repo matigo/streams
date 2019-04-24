@@ -23,6 +23,15 @@
     "lblContactMail": "Email",
     "lblContactMessage": "Message",
 
+    "lblMessages": "Your Messages",
+    "lblMessageDescr": "&nbsp;",
+    "lblMessageList": "Inbox",
+    "lblMessageIncludeRead": "Show Read Messages",
+    "lblMessageIncludeSpam": "Show Spam Messages",
+    "btnMessageRead": "Mark Read",
+    "btnMessageUnread": "Mark Unread",
+    "btnMessageDelete": "Delete",
+
     "lblLogin": "Login",
     "lblLoginRetry": "Try Again?",
     "lblLoginName": "Account ID",

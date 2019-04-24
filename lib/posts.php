@@ -2521,7 +2521,7 @@ class Posts {
      *  Function Checks that a Post Slug is Unique and Valid
      */
     private function _checkUniqueSlug( $ChannelGUID, $PostGUID, $PostSlug ) {
-        $Excludes = array('feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'profile');
+        $Excludes = array('feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'profile', 'settings', 'messages');
 
         // Ensure the PostSlug is not ending in a dash
         if ( strpos($PostSlug, '-') >= 0 ) {

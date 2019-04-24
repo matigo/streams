@@ -1200,6 +1200,13 @@
     }
 
     /**
+     *  Function Returns a Completed SQL Statement based on the SQL String and Parameter Array Provided
+     */
+    function prepSQLQuery($sqlStr, $ReplStr) {
+        return str_replace(array_keys($ReplStr), array_values($ReplStr), $sqlStr);
+    }
+
+    /**
      * Function returns a SQL-safe String
      */
     function sqlScrub( $str ) {

@@ -1462,6 +1462,40 @@ audio {
   text-decoration: none;
   opacity: 0.8;
 }
+.single-post__contact .message {
+    display: block;
+    border-bottom: 1px solid #ccc;
+    padding: 0.5em 1em;
+    margin: 0;
+    width: 100%;
+}
+.single-post__contact .message:last-child { border: 0; }
+.single-post__contact .message .message-from {
+    display: inline-block;
+    max-width: calc(100% - 22em);
+    min-width: calc(100% - 22em);
+    width: calc(100% - 22em);
+}
+.single-post__contact .message .message-source {
+    display: block;
+    font-size: 1.1em;
+    text-align: justify;
+    width: 100%;
+}
+.single-post__contact .message .message-source {
+    display: inline-block;
+    text-align: right;
+    max-width: 20em;
+    min-width: 20em;
+    width: 20em;
+}
+.single-post__contact .message .message-date {
+    display: block;
+    width: 100%;
+}
+.single-post__contact .message .message-content { padding: 0.5em 1em; }
+.single-post__contact .message .message-content p { margin: 0 0 0.5em; }
+.single-post__contact .message .unread { font-weight: bold; }
 .single-post__site-details {
   display: inline-block;
   min-width: 49%;
