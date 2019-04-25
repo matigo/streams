@@ -3,7 +3,7 @@
 /**
  * @author Jason F. Irwin
  * @copyright 2016
- * 
+ *
  * Class contains the rules and methods called for Email Functions
  */
 require_once(LIB_DIR . '/functions.php');
@@ -53,7 +53,7 @@ class Email {
         // Return The Array of Data or an Unhappy Boolean
         return $rVal;
     }
-    
+
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub1']));
         $rVal = false;
@@ -70,7 +70,7 @@ class Email {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -88,7 +88,7 @@ class Email {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -105,7 +105,7 @@ class Email {
             default:
                 // Do Nothing
         }
-        
+
         // Return the Array of Data or an Unhappy Boolean
         return $rVal;
     }
@@ -164,7 +164,7 @@ class Email {
         // Return the Response Array or an Unhappy String
         return $rVal;
     }
-    
+
     private function _sendNewAccountNotices( $AccountID ) {
         if ( nullInt($AccountID) <= 0 ) { return false; }
 
@@ -223,9 +223,9 @@ class Email {
         $rVal = false;
 
         if ( $SendTo != '' && NoNull($mailHTML, $mailText) != '' ) {
-        	$SendFrom = NoNull($data['from_addr'], MAIL_ADDRESS);
+        	$SendFrom = NoNull($data['send_from'], MAIL_ADDRESS);
         	$SendName = NoNull($data['from_name'], APP_NAME);
-        	$ReplyTo = MAIL_ADDRESS;
+        	$ReplyTo = NoNull($data['from_addr'], MAIL_ADDRESS);
 
             $mail = new PHPMailer();
             $mail->IsSMTP();
@@ -255,16 +255,16 @@ class Email {
                 $rVal = false;
             } else {
             	$rVal = true;
-            }                
+            }
 
             // Get the Timing
             $reqDone = getMicroTime();
 
         } else {
-            print_r( "Missing Something! \r\n" );
-            print_r( "Send To: $SendTo \r\n" );
-            print_r( "HTML: $mailHTML \r\n" );
-            print_r( "Text: $mailText \r\n" );
+            writeNote("Mail Elements Incomplete!", true);
+            writeNote("Send To: $SendTo", true);
+            writeNote("HTML: $mailHTML", true);
+            writeNote("Text: $mailText", true);
         }
 
         // If We're Here, Something Was Not Quite Right

@@ -7,17 +7,24 @@
                             <p>[lblMessageDescr]</p>
                         </div>
                         <div class="single-post__contact">
-                            <p class="single-post__site-details">
+                            <p class="single-post__site-details text-right">
                                 <strong class="switch-label">[lblMessageIncludeRead]</strong>
                                 <label class="switch">
                                     <input type="checkbox" name="fdata" data-name="show_read" onclick="getMessageList();" checked>
                                     <span class="slider round"></span>
                                 </label>
                             </p>
-                            <p class="single-post__site-details">
+                            <p class="single-post__site-details text-right">
                                 <strong class="switch-label">[lblMessageIncludeSpam]</strong>
                                 <label class="switch">
                                     <input type="checkbox" name="fdata" data-name="show_spam" onclick="getMessageList();">
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details text-right">
+                                <strong class="switch-label">[lblMessageSendEmail]</strong>
+                                <label class="switch">
+                                    <input type="checkbox" name="fdata" data-name="send_mail" onclick="setMessageMailPreference(this);"[PREF_CONMAIL]>
                                     <span class="slider round"></span>
                                 </label>
                             </p>

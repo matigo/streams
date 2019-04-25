@@ -2,7 +2,7 @@
 
 /**
  * @author Jason F. Irwin
- * 
+ *
  * Class Responds to the Data Route and Returns the Appropriate Data
  */
 require_once(CONF_DIR . '/versions.php');
@@ -24,7 +24,7 @@ class Streams {
     }
 
     /* ********************************************************************* *
-     *  Function determines what needs to be done and returns the 
+     *  Function determines what needs to be done and returns the
      *      appropriate JSON Content
      * ********************************************************************* */
     function buildResult() {
@@ -41,12 +41,7 @@ class Streams {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
                     break;
-                
-                case 'files':
-                case 'cdn':
-                    print_r( "Let's get some CDN action going!" );
-                    break;
-                
+
                 default:
                     require_once(LIB_DIR . '/web.php');
                     break;
@@ -117,7 +112,7 @@ class Streams {
 
         if ( HTTPS_ENABLED == 1 && $protocol == 'https' ) { $rVal = true; }
         if ( HTTPS_ENABLED == 0 && $protocol == 'http' ) { $rVal = true; }
-        
+
         // Return the Boolean Response
         return $rVal;
     }

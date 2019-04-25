@@ -57,20 +57,24 @@ class Contact {
 
         switch ( $Activity ) {
             case 'count':
-                $rVal = $this->_getMessageCount();
+                return $this->_getMessageCount();
                 break;
 
             case 'list':
             case '':
-                $rVal = $this->_getMessageList();
+                return $this->_getMessageList();
+                break;
+
+            case 'trigger':
+                return $this->_triggerEmailNotifications();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If We're Here, It's No Good. Return an Unhappy Boolean.
+        return false;
     }
 
     private function _performPostAction() {
@@ -79,7 +83,7 @@ class Contact {
 
         switch ( $Activity ) {
             case '':
-                $rVal = $this->_processMessage();
+                return $this->_processMessage();
                 break;
 
             default:
@@ -100,17 +104,21 @@ class Contact {
             return false;
         }
 
+        // If We Have a GUID, We're Deleting a Message
+        if ( mb_strlen($Activity) == 36 ) { $Activity = 'scrub'; }
+
         switch ( $Activity ) {
+            case 'scrub':
             case '':
-                $rVal = false;
+                return $this->_deleteMessage();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If we here, nothing was done. Return an Unhappy Boolean.
+        return false;
     }
 
     /**
@@ -255,9 +263,7 @@ class Contact {
             if ( NoNull(MAIL_USERPASS) == '' ) { $canSend = false; }
 
             // If We Have Passed _basic_ Validation, Send the Message
-            if ( $canSend ) {
-
-            }
+            if ( $canSend ) { $this->_sendEmailNotification(); }
         }
 
         // Redirect to a "Thank You" Page
@@ -265,6 +271,105 @@ class Contact {
         redirectTo($OutUrl);
     }
 
+    private function _sendEmailNotification() {
+        $ReplStr = array( '[SITE_ID]' => nullInt($this->settings['site_id']) );
+        $sqlStr = readResource(SQL_DIR . '/contact/getEmailNotifications.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            require_once(LIB_DIR . '/posts.php');
+            require_once(LIB_DIR . '/email.php');
+            $post = new Posts($this->settings);
+            $mail = new Email($this->settings);
+            $cnt = 0;
+
+            foreach ( $rslt as $Row ) {
+                $ReplStr = array( '[RECD_URL]' => NoNull($Row['url']),
+                                  '[SITE_URL]' => NoNull($Row['site_url']),
+                                  '[ACCOUNT_NAME]' => NoNull($Row['account_name']),
+
+                                  '[FROM_NAME]' => NoNull($Row['name']),
+                                  '[FROM_MAIL]' => NoNull($Row['mail']),
+
+                                  '[SUBJECT]'   => NoNull($Row['subject']),
+                                  '[MESSAGE]'   => $post->getMarkdownHTML($Row['message'], 0, false, true),
+                                  '[PLAINTXT]'  => NoNull($Row['message']),
+                                  '[GUID]'      => NoNull($Row['guid']),
+                                  '[RECD_AT]'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
+                                  '[RECD_UNIX]' => strtotime($Row['created_at']),
+                                 );
+                $msgHTML = readResource(FLATS_DIR . '/templates/email.contact.html', $ReplStr);
+                $msgText = readResource(FLATS_DIR . '/templates/email.contact.txt', $ReplStr);
+
+                // Construct the Mailer Array
+                $BaseSubject = "You've received a message via " . NoNull($Row['url']);
+                $msg = array( 'send_to' => NoNull($Row['account_mail']),
+                              'send_cc' => '',
+                              'subject' => NoNull($Row['subject'], $BaseSubject),
+                              'html'    => $msgHTML,
+                              'text'    => $msgText,
+
+                              'from_addr' => NoNull($Row['mail']),
+                              'from_name' => NoNull($Row['name'], NoNull($Row['url'])),
+                             );
+
+                $isOK = $mail->sendMail($msg);
+
+                // Mark the Message as Sent
+                $ReplStr = array( '[MSG_GUID]' => NoNull($Row['guid']),
+                                  '[SITE_ID]'  => nullInt($this->settings['site_id']),
+                                 );
+                $sqlStr = readResource(SQL_DIR . '/contact/setMessageMailed.sql', $ReplStr);
+                $upd = doSQLExecute($sqlStr);
+
+                // Increment the Counter
+                $cnt++;
+            }
+            unset($post);
+            unset($mail);
+
+            // Return the Number of Mails Attempted
+            return $cnt;
+        }
+
+        // If We're Here, No Messages Were Sent
+        return 0;
+    }
+
+    /**
+     *  Function Confirms that a _site_id is set and triggers the _sendEmailNotification() function
+     */
+    private function _triggerEmailNotifications() {
+        if ( nullInt($this->settings['site_id']) > 0 ) {
+            $rslt = $this->_sendEmailNotification();
+            return array( 'sent' => $rslt );
+        }
+
+        // If We're Here, It's Not Good
+        $this->_setMetaMessage("There is no Site Record specified for the Token", 400);
+        return false;
+    }
+
+    /**
+     *  Function Marks a Message as Deleted
+     */
+    private function _deleteMessage() {
+        $CleanGuid = NoNull($this->settings['PgSub2'], $this->settings['PgSub1']);
+        if ( mb_strlen($CleanGuid) == 36 ) {
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                              '[MSG_GUID]'   => sqlScrub($CleanGuid),
+                              '[SITE_ID]'    => nullInt($this->settings['site_id']),
+                             );
+            $sqlStr = readResource(SQL_DIR . '/contact/setDeleted.sql', $ReplStr);
+            $isOK = doSQLExecute($sqlStr);
+
+            // Return an Updated Message List
+            return $this->_getMessageList();
+        }
+
+        // If We're Here, the GUID is Bad
+        $this->_setMetaMessage("Invalid Message GUID Supplied", 400);
+        return false;
+    }
 
     /** ********************************************************************* *
      *  Class Functions

@@ -1,0 +1,10 @@
+Hello [ACCOUNT_NAME],
+
+You received a message from [FROM_NAME] via [RECD_URL]:
+
+[PLAINTXT]
+
+-----
+
+Received at: [RECD_AT]
+Email: [FROM_MAIL]

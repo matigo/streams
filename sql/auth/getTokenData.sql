@@ -9,6 +9,9 @@ SELECT a.`id` as `account_id`, a.`email`, a.`type`, a.`display_name`, a.`languag
          WHERE z.`is_deleted` = 'N' and z.`type` = 'channel.site' and z.`privacy_type` = 'visibility.public'
            and z.`account_id` = a.`id`
          ORDER BY z.`id` LIMIT 1) as `default_channel`,
+       IFNULL((SELECT m.`value` FROM `AccountMeta` m
+                WHERE m.`is_deleted` = 'N' and m.`key` = 'preference.contact.mail'
+                  and m.`account_id` = a.`id`), 'N') as `pref_contact_mail`,
        (SELECT CASE WHEN MAX(ca.`can_write`) = 'Y' THEN 'write'
                     WHEN MAX(ca.`can_read`) = 'Y' THEN 'read'
                     ELSE 'none' END as `access`

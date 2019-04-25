@@ -107,6 +107,10 @@ class Account {
                 $rVal = $this->_createAccountLocal();
                 break;
 
+            case 'preference':
+                return $this->_setPreference();
+                break;
+
             case 'profile':
             case 'me':
                 $rVal = $this->_setProfile();
@@ -841,11 +845,16 @@ class Account {
      */
     private function _setPreference() {
         $CleanValue = NoNull($this->settings['value']);
-        $CleanType = NoNull($this->settings['type']);
-        $rVal = "Could Not Record Account Preference";
+        $CleanType = NoNull($this->settings['type'], $this->settings['key']);
 
-        if ( $CleanValue == '' ) { return "Invalid Value Passed"; }
-        if ( $CleanType == '' ) { return "Invalid Type Passed"; }
+        if ( $CleanValue == '' ) {
+            $this->_setMetaMessage("Invalid Value Passed", 400);
+            return false;
+        }
+        if ( $CleanType == '' ) {
+            $this->_setMetaMessage("Invalid Type Key Passed", 400);
+            return false;
+        }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[VALUE]'      => sqlScrub($CleanValue),
@@ -853,17 +862,19 @@ class Account {
                          );
         $sqlStr = readResource(SQL_DIR . '/account/setPreference.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
-        if ( $rslt ) { $rVal = $this->_getPreference(); }
+        if ( $rslt ) { return $this->_getPreference(); }
 
         // Return the Preference Object or an Unhappy String
-        return $rVal;
+        $this->_setMetaMessage("Could Not Record Account Preference", 400);
+        return false;
     }
 
     private function _getPreference( $type = '' ) {
-        $CleanType = NoNull($type, $this->settings['type']);
-        $rVal = '';
-
-        if ( $CleanType == '' ) { return "Invalid Type Passed"; }
+        $CleanType = NoNull($type, NoNull($this->settings['type'], $this->settings['key']));
+        if ( $CleanType == '' ) {
+            $this->_setMetaMessage("Invalid Type Key Passed", 400);
+            return false;
+        }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[TYPE_KEY]'   => strtolower(sqlScrub($CleanType)),
@@ -884,11 +895,11 @@ class Account {
             }
 
             // If We Have Data, Return it
-            if ( count($data) > 0 ) { $rVal = (count($data) == 1) ? $data[0] : $data; }
+            if ( count($data) > 0 ) { return (count($data) == 1) ? $data[0] : $data; }
         }
 
-        // Return the Preference Object or an Unhappy String
-        return $rVal;
+        // Return the Preference Object or an empty array
+        return array();
     }
 
     /** ********************************************************************* *

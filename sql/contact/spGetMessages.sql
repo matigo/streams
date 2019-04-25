@@ -37,10 +37,18 @@ BEGIN
                 WHEN sc.`message` LIKE '%cialis%' THEN 'Y'
                 WHEN sc.`message` LIKE '%brands%' THEN 'Y'
                 WHEN sc.`message` LIKE '%agency%' THEN 'Y'
+                WHEN sc.`message` LIKE '%afiliate%' THEN 'Y'
                 WHEN sc.`message` LIKE '%about.me%' THEN 'Y'
+                WHEN sc.`message` LIKE '%f r e e%' THEN 'Y'
+                WHEN sc.`message` LIKE '%voip%' THEN 'Y'
+                WHEN sc.`message` LIKE '%to advertise%' THEN 'Y'
+                WHEN sc.`message` LIKE '%you have been hacked%' THEN 'Y'
+                WHEN sc.`message` LIKE '%?asturbat?on%' THEN 'Y'
+                WHEN sc.`message` LIKE '%v?deo%' THEN 'Y'
                 WHEN sc.`message` LIKE '%SEO%' THEN 'Y'
                 WHEN sc.`mail` IN ('plan.b.fundingoptions@gmail.com', 'melody_fan@gmail.com') THEN 'Y'
                 WHEN sc.`mail` LIKE ('%@mail.ru') THEN 'Y'
+                WHEN sc.`mail` LIKE ('%.email') THEN 'Y'
                 ELSE 'N' END as `is_spam`,
            sc.`created_at`, sc.`updated_at`
       FROM `SiteContact` sc INNER JOIN `SiteUrl` su ON sc.`site_id` = su.`site_id`
@@ -57,7 +65,7 @@ BEGIN
           FROM tmp
          WHERE tmp.`is_spam` = 'N';
 
-    ELSE 
+    ELSE
         SELECT my_home as `my_home`, tmp.`url`, tmp.`name`, tmp.`mail`, tmp.`subject`, tmp.`message`,
                tmp.`guid`, tmp.`is_read`, tmp.`is_mailed`, tmp.`is_spam`,
                tmp.`created_at`, tmp.`updated_at`

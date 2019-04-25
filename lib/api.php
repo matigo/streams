@@ -149,6 +149,7 @@ class Route extends Streams {
                 if ( is_string($data) ) {
                     $mtxt = NoNull($data, NoNull($message, "Invalid Request"));
                     $code = 400;
+
                 } else {
                     $mtxt = "Invalid API Endpoint";
                     $code = 404;

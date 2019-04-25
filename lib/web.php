@@ -559,6 +559,7 @@ class Route extends Streams {
                        '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
                        '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
                        '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
+                       '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
                        '[ACCESS_LEVEL]' => NoNull($this->settings['_access_level'], 'read'),
                        '[BANNER_IMG]'   => $banner_img,

@@ -956,6 +956,22 @@ function getMessageCheckValue( _name ) {
     }
     return false;
 }
+function setMessageMailPreference( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _chkVal = getMessageCheckValue('send_mail');
+    var params = { 'value': ((_chkVal) ? 'Y' : 'N'),
+                   'type': 'contact.mail'
+                  };
+    doJSONQuery('account/preference', 'POST', params, parseMailPreference);
+}
+function parseMailPreference( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.value !== undefined && ds.value == 'Y' ) {
+            doJSONQuery('contact/trigger', 'GET', {}, false);
+        }
+    }
+}
 function getMessageCount() {
     var els = document.getElementsByClassName('unread-count');
     if ( els.length > 0 ) {
@@ -990,40 +1006,51 @@ function getMessageList() {
 function parseMessageList( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = false;
+        var html = '';
+
         if ( data.data !== undefined && data.data !== false && data.data.length > 0 ) { ds = data.data; }
         if ( ds !== false && ds.length > 0 ) {
             var show_spam = getMessageCheckValue('show_spam');
-            var html = '';
-
+            var show_read = getMessageCheckValue('show_read');
             for ( var i = 0; i < ds.length; i++ ) {
                 var _subject = NoNull(ds[i].subject);
                 var _name = NoNull(ds[i].name);
                 if ( ds[i].email !== false && ds[i].email != '' ) { _name += ' (' + NoNull(ds[i].email) + ')'; }
 
-                if ( ds[i].is_spam === false || show_spam ) {
+                if ( (ds[i].is_read === false || show_read) && (ds[i].is_spam === false || show_spam) ) {
                     html += '<div class="message" data-guid="' + NoNull(ds[i].guid) + '">' +
                                 '<div class="message-from' + ((ds[i].is_read) ? '' : ' unread') + '">' + _name + '</div>' +
                                 '<div class="message-source">' + NoNull(ds[i].from_url) + '</div>' +
                                 ((_subject != '') ? '<div class="message-subject' + ((ds[i].is_read) ? '' : ' unread') + '">' + _subject + '</div>' : '') +
                                 '<div class="message-content">' + ds[i].message.html + '</div>' +
                                 '<div class="message-date dt-published" data-dateunix="' + NoNull(ds[i].created_unix) + '">' + NoNull(ds[i].created_at) + '</div>' +
-                                '<div class="message-actions hidden">' +
-                                    '<button class="btn btn-msg-action" data-read="Mark as Read" data-unread="Mark Unread"><i class="fa fa-square-o"></i> [btnMessageRead]</button>' +
-                                    '<button class="btn btn-msg-action"><i class="fa fa-trash"></i> Delete</button>' +
+                                '<div class="message-actions">' +
+                                    '<button class="btn btn-msg-action" onClick="setMessageDeleted(this);" data-guid="' + NoNull(ds[i].guid) + '"><i class="fa fa-trash"></i> Delete</button>' +
                                 '</div>' +
                             '</div>';
                 }
             }
+        }
 
-            if ( html != '' ) {
-                var els = document.getElementsByClassName('message-list');
-                for ( var i = 0; i < els.length; i++ ) {
-                    els[i].innerHTML = html;
-                }
-                updatePostTimestamps();
-            }
+        if ( html === undefined || html == '' ) {
+            html = '<div class="message">' +
+                    '<div class="message-content text-center">There are no messages to show.</div>' +
+                   '</div>';
+        }
+
+        var els = document.getElementsByClassName('message-list');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].innerHTML = html;
         }
         setTimeout(getMessageCount, 60000);
+        updatePostTimestamps();
+    }
+}
+function setMessageDeleted(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        doJSONQuery('contact/' + _guid, 'DELETE', {}, parseMessageList);
     }
 }
 

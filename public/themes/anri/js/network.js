@@ -12,18 +12,20 @@ function doJSONQuery( endpoint, type, parameters, afterwards ) {
         window.network_active = true;
         if ( xhr.readyState == 4 ) {
             window.network_active = false;
-            var rsp = JSON.parse( xhr.responseText );
-            afterwards( rsp );
+            var rsp = false;
+            if ( xhr.responseText != '' ) { rsp = JSON.parse(xhr.responseText); }
+            if ( afterwards !== false ) { afterwards(rsp); }
         }
     };
     xhr.onerror = function() {
         window.network_active = false;
-        var rsp = JSON.parse( xhr.responseText );
-        afterwards( rsp );
+        var rsp = false;
+        if ( xhr.responseText != '' ) { rsp = JSON.parse(xhr.responseText); }
+        if ( afterwards !== false ) { afterwards(rsp); }
     }
     xhr.ontimeout = function() {
         window.network_active = false;
-        afterwards( false );
+        if ( afterwards !== false ) { afterwards(false); }
     }
     var suffix = '';
     if ( type == 'GET' ) { suffix = jsonToQueryString(parameters); }

@@ -1745,9 +1745,14 @@
      *  Function formats the result in the appropriate format and returns the data
      */
     function formatResult( $data, $sets, $type = 'text/html', $status = 200, $meta = false, $more = false ) {
+        $validTypes = array('application/json', 'application/octet-stream', 'application/xml', 'text/html');
         $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1');
         $szOrigin = NoNull($_SERVER['HTTP_ORIGIN'], '*');
         $appType = NoNull($type, 'text/html');
+
+        if ( in_array($appType, $validTypes) === false ) {
+            $appType = ($sets['Route'] == 'api') ? 'application/json' : 'text/html';
+        }
 
         // If We Have an Array, Convert it to the Appropriate Format
         if ( is_array($data) || is_bool($data) ) {
