@@ -222,9 +222,20 @@ class Route extends Streams {
         $ReplStr['[NAVMENU]'] = $this->_getSiteNav($data);
         $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
 
-        // Save the File to Cache if Required
+        // Save the File to Cache if Required and Populate the Base Sections
         if ( defined('ENABLE_CACHING') ) {
-            if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($data['site_id'], $cache_file, $html); }
+            if ( nullInt(ENABLE_CACHING) == 1 ) {
+                saveCache($data['site_id'], $cache_file, $html);
+
+                $SiteLogin = NoNull($this->strings['lblLogin']);
+                if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
+                $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
+                                  '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
+                                  '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                                  '[POPULAR_LIST]' => $this->_getPopularPosts(),
+                                 );
+                $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+            }
         }
 
         // Get the Run-time
