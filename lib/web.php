@@ -186,6 +186,7 @@ class Route extends Streams {
                     $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
                                       '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
                                       '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                                      '[POPULAR_LIST]' => $this->_getPopularPosts(),
                                       '[GenTime]'      => $this->_getRunTime(),
                                      );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
@@ -565,12 +566,18 @@ class Route extends Streams {
                        '[BANNER_IMG]'   => $banner_img,
                        '[AUTHOR_TOOLS]' => $this->_getAuthoringTools($data),
                        '[SETTINGS]'     => $this->_getSettingsPanel($data),
-                       '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
-                       '[POPULAR_LIST]' => $this->_getPopularPosts(),
                        '[PREFERENCES]'  => $this->_getPreferencesPanel($data),
                        '[PAGINATION]'   => $this->_getPagination($data),
                        '[POST_CLASS]'   => '',
                       );
+
+        // Add the Requisite Items when Caching is Not Enabled
+        if ( defined('ENABLE_CACHING') ) {
+            if ( nullInt(ENABLE_CACHING) != 1 ) {
+                $rVal['[SITE_OPSBAR]'] = $this->_getSiteOpsBar($data);
+                $rVal['[POPULAR_LIST]'] = $this->_getPopularPosts();
+            }
+        }
 
         // Return the Strings
         return $rVal;
