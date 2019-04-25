@@ -181,6 +181,7 @@ class Route extends Streams {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
+                    $this->_getLanguageStrings($data['location']);
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
                     $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
