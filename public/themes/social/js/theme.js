@@ -434,6 +434,7 @@ function restorePosts() {
             if ( i < 75 ) { cursor.continue(); } else {
                 getTimeline();
             }
+            updateForOverflow();
 
         } else {
             getTimeline();
@@ -1977,10 +1978,10 @@ function checkPostExists(post) {
 function buildHTML( post ) {
     if ( post === undefined || post === false || post === null ) { return ''; }
     var _src_title = '';
-    var _src_url = '';
+    var _src_url = NoNull(post.canonical_url);
     if ( post.meta !== false && post.meta.source !== undefined ) {
         _src_title = post.meta.source.title;
-        _src_url = post.meta.source.url;
+        _src_url = NoNull(post.meta.source.url, post.canonical_url);
     }
     var _geo_title = '';
     var _geo_url = '';
@@ -1995,7 +1996,7 @@ function buildHTML( post ) {
     var _icon = getVisibilityIcon( post.privacy );
 
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
-    if ( _src_url != '' ) { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
+    if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
     var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
                 '<div class="content-area toggle-action-bar" data-guid="' + post.guid + '">' +
                     '<strong class="persona full-wide">' + post.persona.as + '</strong>' +
@@ -2081,6 +2082,7 @@ function parseThreadView(data) {
             if ( els[i].offsetTop >= 150 ) { els[i].scrollIntoView(); }
         }
         updatePostTimestamps();
+        updateForOverflow();
     }
 }
 function closeThreadView() {
