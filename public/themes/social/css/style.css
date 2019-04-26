@@ -946,6 +946,11 @@ a.u-bookmark-of {
     border-color: #551a8b;
 }
 .btn-publish { min-width: 5em; }
+.btn-show-full {
+    background: #fff;
+    font-size: 1.1em;
+    opacity: 0.75;
+}
 
 body.dark {
     background: #252424;
@@ -962,6 +967,7 @@ body.dark .content p .account { color: #eee; }
 body.dark .content p a { color: #cc7722; }
 body.dark .metaline time { color: #eee; }
 body.dark .metaline.geo span { color: #cc7722; }
+body.dark .metaline.content-expand { background-image: linear-gradient(to bottom, transparent, #252424); }
 body.dark .threadview .thread { background: #252424; }
 body.dark .content .post-entry.selected { background: #333; }
 body.dark .content .post-entry.reply-to { background: #666; }
@@ -991,6 +997,10 @@ body.dark .btn {
 body.dark .btn-primary {
     background: #434c73;
     border-color: #434c73;
+}
+body.dark .btn-show-full {
+    background: #252424;
+    border: 0;
 }
 body.dark .compose .modal-body .form-element { color: #eee; }
 body.dark .dropdown-menu { background: #252424; }
