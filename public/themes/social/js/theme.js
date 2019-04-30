@@ -1815,9 +1815,6 @@ function parseTimeline(data) {
             return;
         }
 
-        var _showmore = true;
-        if ( data.meta.more !== undefined && data.meta.more !== null ) { _showmore = data.meta.more; }
-
         for ( var i = 0; i < ds.length; i++ ) {
             if ( checkPostExists(ds[i]) === false ) {
                 writePostToTL(ds[i]);
@@ -1825,9 +1822,9 @@ function parseTimeline(data) {
             }
         }
         hideByClass('load-spinner');
+        showByClass('readmore');
         updatePostTimestamps();
         updateForOverflow();
-        if ( _showmore ) { showByClass('readmore'); } else { hideByClass('readmore'); }
     }
 }
 function updateForOverflow() {

@@ -350,9 +350,10 @@ function updateContentHeight(el) {
         if ( els.length > 0 ) { el = els[0]; }
     }
     if ( el === undefined || el === null ) { return; }
+    var _height = el.style.height;
 
-    el.style.height = '1px';
-    el.style.height = (25 + el.scrollHeight) + 'px';
+    if ( _height != (25 + el.scrollHeight) + 'px' ) { _height = (25 + el.scrollHeight) + 'px'; }
+    if ( el.style.height != _height ) { el.style.height = _height; }
     updatePublishPostButton();
 }
 function updatePublishPostButton() {
