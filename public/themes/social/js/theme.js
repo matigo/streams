@@ -2004,7 +2004,9 @@ function buildHTML( post ) {
                 '<div class="metaline tags pad"><ul></ul></div>' +
                 ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
                 '<div class="metaline pad text-right">' +
-                    '<time class="dt-published" datetime="' + post.publish_at + '" data-dateunix="' + post.publish_unix + '" data-thread-guid="' + post.guid + '" data-privacy="' + post.privacy + '">' + _icon + post.publish_at + '</time>' +
+                    '<time class="dt-published" datetime="' + post.publish_at + '" data-dateunix="' + post.publish_unix + '" data-thread-guid="' + post.guid + '" data-privacy="' + post.privacy + '" data-url="' + post.canonical_url + '">' +
+                        '<a href="' + post.canonical_url + '" class="time-url" target="_blank">' + _icon + post.publish_at + '</a>' +
+                    '</time>' +
                 '</div>' +
                 '<div class="metaline pad post-actions hidden" data-guid="' + post.guid + '"></div>';
     return _html;
@@ -2127,14 +2129,17 @@ function updatePostTimestamps() {
     var els = document.getElementsByClassName('dt-published');
     for ( var i = 0; i < els.length; i++ ) {
         var _icon = getVisibilityIcon(els[i].getAttribute('data-privacy'));
+        var _url = NoNull(els[i].getAttribute('data-url'));
         var _cnt = parseInt(els[i].getAttribute('data-thread-count'));
         var _ts = parseInt(els[i].getAttribute('data-dateunix'));
 
         if ( _cnt === undefined || _cnt === null || isNaN(_cnt) ) { _cnt = 0; }
 
         if ( isNaN(_ts) === false ) {
-            els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fas fa-comments"></i> ' : '') + _icon +
-                               ((moment(_ts * 1000).isSame(today, 'day') ) ? moment(_ts * 1000).format('h:mm a') : moment(_ts * 1000).format('dddd MMMM Do YYYY h:mm:ss a'));
+            els[i].innerHTML = '<a href="' + _url + '" class="time-url" target="_blank">' +
+                                   ((_cnt >= 1 && _guid == '') ? '<i class="fas fa-comments"></i> ' : '') + _icon +
+                                   ((moment(_ts * 1000).isSame(today, 'day') ) ? moment(_ts * 1000).format('h:mm a') : moment(_ts * 1000).format('dddd MMMM Do YYYY h:mm:ss a')) +
+                               '</a>';
         }
     }
 }
