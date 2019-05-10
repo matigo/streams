@@ -44,6 +44,13 @@
                                     </label>
                                 </p>
                                 <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowLocations]</strong>
+                                    <label class="switch">
+                                        <input id="show-location" type="checkbox" name="show-location"[SITE_PLACES]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
                                     <strong class="switch-label">[lblSettingsShowQuotation]</strong>
                                     <label class="switch">
                                         <input id="show-quotation" type="checkbox" name="show-quotation"[SITE_QUOTES]>
@@ -52,6 +59,18 @@
                                 </p>
 
                                 <h4>[lblSettingsS3]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsPrivateSite]</strong>
+                                    <label class="switch">
+                                        <input id="site-locked" type="checkbox" onclick="toggleSitePassword(this);" name="site-locked"[SITE_LOCKED]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <input id="site-pass" type="text" class="fullwide hidden" name="site-pass" size="30" aria-required="true" value="[SITE_PASS]" placeholder="[lblSettingsSitePassPH]">
+                                </p>
+
+                                <h4>[lblSettingsS4]</h4>
                                 <p class="single-post__site-details">
                                     <strong class="switch-label">[lblSettingsShowGeo]</strong>
                                     <label class="switch">

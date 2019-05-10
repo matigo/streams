@@ -29,5 +29,9 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
  WHERE po.`is_deleted` = 'N' and po.`id` IN ([POST_IDS])
    and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                   WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
+                  WHEN ch.`privacy_type` = 'visibility.password' AND '[SITE_TOKEN]' <> ''
+                         THEN CASE WHEN '[SITE_TOKEN]' IN (SELECT SHA2(CONCAT(si.`guid`, '.', UNIX_TIMESTAMP(zsu.`updated_at`), '.', DATE_FORMAT(DATE_SUB(Now(), INTERVAL cnt.`num` HOUR), '%Y-%m-%d %H:00:00')), 256) as `hash`
+                                                             FROM `SiteUrl` zsu INNER JOIN (SELECT 0 as `num` UNION ALL SELECT  1 as `num` UNION ALL SELECT  2 as `num`) cnt ON `num` >= 0
+                                                            WHERE zsu.`is_deleted` = 'N' and zsu.`is_active` = 'Y' and zsu.`site_id` = si.`id`) THEN 'Y' ELSE 'N' END
                   ELSE 'N' END
  ORDER BY po.`publish_at` DESC, po.`id` DESC;

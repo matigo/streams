@@ -172,22 +172,29 @@ class Site {
      *  Function Collects the Site Data and Returns an Array
      */
     private function _getSiteData() {
+        $SitePass = NoNull($this->settings['site_pass'], $this->settings['site-pass']);
         $SiteURL = sqlScrub( NoNull($this->settings['site_url'],$_SERVER['SERVER_NAME']) );
         if ( is_array($this->cache[strtolower($SiteURL)]) ) { return $this->cache[strtolower($SiteURL)]; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub($this->settings['site_token']),
+                          '[SITE_PASS]'  => sqlScrub($SitePass),
                           '[SITE_URL]'   => strtolower($SiteURL),
                           '[REQ_URI]'    => sqlScrub($this->settings['ReqURI']),
                          );
-        $sqlStr = readResource(SQL_DIR . '/site/getSiteData.sql', $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetSiteData([ACCOUNT_ID], '[SITE_URL]', '[REQ_URI]', '[SITE_TOKEN]', '[SITE_PASS]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
-        $rVal = false;
-
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
+                if ( NoNull($Row['site_token']) != '' && $SitePass != '' ) {
+                    $LifeSpan = time() + COOKIE_EXPY;
+                    setcookie( 'site_token', NoNull($Row['site_token']), $LifeSpan, "/", NoNull(strtolower($_SERVER['SERVER_NAME'])) );
+                }
+
                 $cver = NoNull($Row['site_version']) . '-' .
-                        NoNull($Row['can_edit']) . NoNull($Row['show_geo']) . NoNull($Row['show_note']) .
-                        NoNull($Row['show_article']) . NoNull($Row['show_bookmark']) . NoNull($Row['show_quotation']) . '-' .
+                        NoNull($Row['can_edit'], 'N') . NoNull($Row['site_locked'], 'N') .
+                        NoNull($Row['show_geo'], 'N') . NoNull($Row['show_article'], 'N') . NoNull($Row['show_bookmark'], 'N') .
+                        NoNull($Row['show_location'], 'N') . NoNull($Row['show_note'], 'N') . NoNull($Row['show_quotation'], 'N') . '-' .
                         NoNull($this->settings['_language_code'], $this->settings['DispLang']);
                 $this->cache[strtolower($SiteURL)] = array( 'HomeURL'         => NoNull($Row['site_url']),
                                                             'api_url'         => getApiUrl(),
@@ -211,6 +218,7 @@ class Site {
                                                             'show_note'       => YNBool($Row['show_note']),
                                                             'show_article'    => YNBool($Row['show_article']),
                                                             'show_bookmark'   => YNBool($Row['show_bookmark']),
+                                                            'show_location'   => YNBool($Row['show_location']),
                                                             'show_quotation'  => YNBool($Row['show_quotation']),
 
                                                             'page_title'      => NoNull($Row['page_title']),
@@ -230,6 +238,7 @@ class Site {
                                                             'protocol'        => (YNBool($Row['https'])) ? 'https' : 'http',
                                                             'https'           => YNBool($Row['https']),
                                                             'do_redirect'     => YNBool($Row['do_redirect']),
+                                                            'site_locked'     => YNBool($Row['site_locked']),
                                                            );
             }
         }
@@ -349,17 +358,33 @@ class Site {
         if ( NoNull($this->settings['site_name'], $this->settings['site-name']) == '' ) { $this->_setMetaMessage("Invalid Site Name Supplied", 400); }
         $isWebReq = YNBool(NoNull($this->settings['web-req'], $this->settings['webreq']));
 
+        $Visibility = 'visibility.public';
+        $SitePass = '';
+        if ( YNBool(NoNull($this->settings['site_locked'], $this->settings['site-locked'])) ) {
+            $Visibility = 'visibility.password';
+
+            $SitePass = NoNull($this->settings['site_pass'], $this->settings['site-pass']);
+            if ( mb_strlen($SitePass) <= 6 ) {
+                $this->_setMetaMessage("Supplied Site Password is Far Too Weak", 400);
+                return false;
+            }
+            if ( $SitePass == str_repeat('*', 12) ) { $SitePass = ''; }
+        }
+
         // Get a Site.ID Value
         $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub(NoNull($this->settings['channel_guid'], $this->settings['channel-guid'])),
                           '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                           '[SITE_NAME]'    => sqlScrub(NoNull($this->settings['site_name'], $this->settings['site-name'])),
                           '[SITE_DESCR]'   => sqlScrub(NoNull($this->settings['site_descr'], $this->settings['site-descr'])),
                           '[SITE_KEYS]'    => sqlScrub(NoNull($this->settings['site_keys'], $this->settings['site-keys'])),
+                          '[PRIVACY]'      => sqlScrub($Visibility),
+                          '[SITE_PASS]'    => sqlScrub($SitePass),
 
                           '[SHOW_GEO]'     => BoolYN(YNBool(NoNull($this->settings['show_geo'], $this->settings['show-geo']))),
                           '[SHOW_NOTE]'    => BoolYN(YNBool(NoNull($this->settings['show_note'], $this->settings['show-note']))),
                           '[SHOW_BLOG]'    => BoolYN(YNBool(NoNull($this->settings['show_article'], $this->settings['show-article']))),
                           '[SHOW_BKMK]'    => BoolYN(YNBool(NoNull($this->settings['show_bookmark'], $this->settings['show-bookmark']))),
+                          '[SHOW_LOCS]'    => BoolYN(YNBool(NoNull($this->settings['show_location'], $this->settings['show-location']))),
                           '[SHOW_QUOT]'    => BoolYN(YNBool(NoNull($this->settings['show_quotation'], $this->settings['show-quotation']))),
                          );
         $sqlStr = readResource(SQL_DIR . '/site/setSiteData.sql', $ReplStr);
@@ -367,8 +392,10 @@ class Site {
 
         if ( $isOK > 0 ) {
             $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr) . SQL_SPLITTER .
-                      readResource(SQL_DIR . '/site/setSiteGeoVisibility.sql', $ReplStr);
+                      readResource(SQL_DIR . '/site/setSiteGeoVisibility.sql', $ReplStr) . SQL_SPLITTER .
+                      readResource(SQL_DIR . '/site/setSitePassword.sql', $ReplStr);
             $isOK = doSQLExecute($sqlStr);
+
         } else {
             if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
         }

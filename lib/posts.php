@@ -396,6 +396,7 @@ class Posts {
         // Construct the Replacement Array and Run the Query
         $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                           '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
+                          '[SITE_TOKEN]'   => sqlScrub(NoNull($this->settings['site_token'])),
                           '[POST_IDS]'     => sqlScrub($posts),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getPostsByIDs.sql', $ReplStr);
@@ -909,6 +910,17 @@ class Posts {
         $GeoLong = NoNull($this->settings['geo_longitude'], $this->settings['geo_long']);
         $GeoLat = NoNull($this->settings['geo_latitude'], $this->settings['geo_lat']);
         $GeoAlt = NoNull($this->settings['geo_altitude'], $this->settings['geo_alt']);
+
+        // Ensure the Latitude & Longitude is Semi-Accurate
+        if ( nullInt($GeoLong) != 0 ) {
+            $GeoLong = nullInt($GeoLong);
+            if ( $GeoLong > 180 || $GeoLong < -180 ) { $GeoLong = ''; }
+        }
+        if ( nullInt($GeoLat) != 0 ) {
+            $GeoLat = nullInt($GeoLat);
+            if ( $GeoLat > 90 || $GeoLat < -90 ) { $GeoLat = ''; }
+        }
+
         $GeoFull = NoNull($this->settings['post_geo'], $this->settings['geo']);
         if ( $GeoFull != '' ) {
             $coords = explode(',', $GeoFull);
@@ -1003,8 +1015,15 @@ class Posts {
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
 
+            case 'post.location':
+                if ( nullInt($GeoLong) == 0 && nullInt($GetLat) == 0 ) {
+                    $this->_setMetaMessage("Please Provide an accurate Latitude & Longtitude.", 400); $isValid = false;
+                }
+                break;
+
             case 'post.draft':
             case 'post.note':
+            case 'post.page':
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
 
@@ -1211,6 +1230,7 @@ class Posts {
 
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                           '[SITE_GUID]'  => sqlScrub($data['site_guid']),
                           '[CANON_URL]'  => sqlScrub($CanonURL),
                           '[PGROOT]'     => sqlScrub($PgRoot),
@@ -1332,6 +1352,7 @@ class Posts {
 
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                           '[SITE_GUID]'  => sqlScrub($data['site_guid']),
                           '[CANON_URL]'  => sqlScrub($CanonURL),
                           '[TAG_KEY]'    => sqlScrub($TagKey),
@@ -1400,6 +1421,7 @@ class Posts {
         if ( mb_strlen(NoNull($SiteGuid)) != 36 ) { return ''; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                           '[SITE_GUID]'  => sqlScrub($SiteGuid),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getArchives.sql', $ReplStr);
@@ -1787,6 +1809,7 @@ class Posts {
                           '[COUNT]'        => nullInt($CleanCount),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getTimeline' . ucfirst($path) . '.sql', $ReplStr);
+        writeNote($sqlStr, true);
         if ( $sqlStr != '' ) {
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {

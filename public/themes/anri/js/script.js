@@ -152,6 +152,13 @@ document.onreadystatechange = function () {
         getMessageList();
         prepNewPost();
 
+        var els = document.getElementsByName('site-locked');
+        if ( els.length > 0 ) {
+            for ( var i = 0; i < els.length; i++ ) {
+                toggleSitePassword(els[i]);
+            }
+        }
+
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
 }
@@ -492,6 +499,18 @@ function togglePostEdit() {
         for ( var i = 0; i < els.length; i++ ) {
             var _by = NoNull(els[i].getAttribute('data-persona-guid'));
             if ( _by == _guid ) { els[i].classList.remove('hidden'); }
+        }
+    }
+}
+function toggleSitePassword(el) {
+    var els = document.getElementsByName('site-pass');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( el.checked ) {
+            els[i].setAttribute('required', '');
+            els[i].classList.remove('hidden');
+        } else {
+            els[i].removeAttribute('required', '');
+            els[i].classList.add('hidden');
         }
     }
 }

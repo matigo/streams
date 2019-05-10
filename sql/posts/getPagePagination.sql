@@ -1,6 +1,11 @@
 SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`, MAX(tmp.`is_exact`) as `exacts`
   FROM (SELECT pg.`post_id`, pg.`publish_at`, pg.`is_exact`
-          FROM (SELECT CASE WHEN ch.`privacy_type` <> 'visibility.public' THEN 'N'
+          FROM (SELECT CASE WHEN ch.`privacy_type` = 'visibility.password' AND '[SITE_TOKEN]' <> ''
+                                 THEN CASE WHEN '[SITE_TOKEN]' IN (SELECT SHA2(CONCAT(si.`guid`, '.', UNIX_TIMESTAMP(zsu.`updated_at`), '.', DATE_FORMAT(DATE_SUB(Now(), INTERVAL cnt.`num` HOUR), '%Y-%m-%d %H:00:00')), 256) as `hash`
+                                                                     FROM `SiteUrl` zsu INNER JOIN (SELECT 0 as `num` UNION ALL SELECT  1 as `num` UNION ALL SELECT  2 as `num`) cnt ON `num` >= 0
+                                                                    WHERE zsu.`is_deleted` = 'N' and zsu.`is_active` = 'Y' and zsu.`site_id` = si.`id`) THEN 'Y' ELSE 'N' END
+                            WHEN ch.`privacy_type` <> 'visibility.public' AND si.`account_id` = [ACCOUNT_ID] THEN 'Y'
+                            WHEN ch.`privacy_type` <> 'visibility.public' THEN 'N'
                             WHEN po.`privacy_type` = 'visibility.none' AND pa.`account_id` <> [ACCOUNT_ID] THEN 'N'
                             WHEN po.`privacy_type` <> 'visibility.public' THEN IFNULL(tmp.`can_read`, 'N')
                             ELSE 'Y' END as `is_visible`,
@@ -39,7 +44,7 @@ SELECT COUNT(DISTINCT tmp.`post_id`) as `post_count`, MAX(tmp.`is_exact`) as `ex
                             LEFT OUTER JOIN (SELECT ca.`persona_id`, ca.`channel_id`, ca.`can_read`, ca.`can_write`
                                                FROM `Account` a INNER JOIN `Persona` pa ON a.`id` = pa.`account_id`
                                                                 INNER JOIN `ChannelAuthor` ca ON pa.`id` = ca.`persona_id`
-                                              WHERE ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N' 
+                                              WHERE ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
                                                 and a.`id` = [ACCOUNT_ID]) tmp ON po.`persona_id` = tmp.`persona_id` AND ch.`id` = tmp.`channel_id`
                  WHERE po.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and si.`is_deleted` = 'N'
                    and IFNULL(po.`expires_at`, Now()) >= Now() and si.`guid` = '[SITE_GUID]'

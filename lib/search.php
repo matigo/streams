@@ -197,6 +197,7 @@ class Search {
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[CHANNEL_ID]' => nullInt($this->settings['_channel_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                           '[SCORING]'    => $CleanScores,
                           '[COUNT]'      => nullInt($Count, 50),
                          );
@@ -265,6 +266,7 @@ class Search {
      */
     private function _populateClass() {
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                           '[SITE_ID]'    => nullInt($this->settings['site_id']),
                          );
         $sqlStr = readResource(SQL_DIR . '/search/getSearchPermissions.sql', $ReplStr);

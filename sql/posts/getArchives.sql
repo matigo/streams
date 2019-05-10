@@ -13,7 +13,11 @@ SELECT po.`id` as `post_id`, IFNULL(po.`title`, pm.`value`) as `title`, po.`cano
  WHERE po.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and si.`is_deleted` = 'N'
    and po.`type` IN ('post.article', 'post.bookmark', 'post.quotation') and po.`publish_at` <= Now()
    and IFNULL(po.`expires_at`, Now()) >= Now() and si.`guid` = '[SITE_GUID]'
-   and 'Y' = CASE WHEN ch.`privacy_type` <> 'visibility.public' THEN 'N'
+   and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.password' AND '[SITE_TOKEN]' <> ''
+                        THEN CASE WHEN '[SITE_TOKEN]' IN (SELECT SHA2(CONCAT(si.`guid`, '.', UNIX_TIMESTAMP(zsu.`updated_at`), '.', DATE_FORMAT(DATE_SUB(Now(), INTERVAL cnt.`num` HOUR), '%Y-%m-%d %H:00:00')), 256) as `hash`
+                                                            FROM `SiteUrl` zsu INNER JOIN (SELECT 0 as `num` UNION ALL SELECT  1 as `num` UNION ALL SELECT  2 as `num`) cnt ON `num` >= 0
+                                                           WHERE zsu.`is_deleted` = 'N' and zsu.`is_active` = 'Y' and zsu.`site_id` = si.`id`) THEN 'Y' ELSE 'N' END
+                  WHEN ch.`privacy_type` <> 'visibility.public' THEN 'N'
                   WHEN po.`privacy_type` = 'visibility.none' AND pa.`account_id` <> [ACCOUNT_ID] THEN 'N'
                   WHEN po.`privacy_type` <> 'visibility.public' THEN IFNULL(tmp.`can_read`, 'N')
                   WHEN po.`publish_at` > Now() AND pa.`account_id` <> [ACCOUNT_ID] THEN 'N'

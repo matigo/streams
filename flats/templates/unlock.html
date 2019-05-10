@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>[SITE_NAME]</title>
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="cleartype" content="on" />
+        <meta charset="utf-8" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="generator" content="[GENERATOR]" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-capable" content="no" />
+        <meta name="mobile-web-app-capable" content="no">
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="Robots" content="noindex, nofollow" />
+
+        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/bootstrap.min.css">
+        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/unlock.css?v=[CSS_VER]">
+
+        <!--[if lt IE 9]>
+            <script src="[JS_DIR]/html5shiv.min.js"></script>
+            <script src="[JS_DIR]/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <header class="sign-up log-in">
+            <div class="bg">
+                <img class="wave-purple" src="[IMG_DIR]/wave-purple-2.png" alt="">
+                <img class="wave-white" src="[IMG_DIR]/wave-white.png" alt="">
+            </div>
+            <div class="sign-up-content">
+                <div class="container">
+                    <div class="row form-method hidden">
+                        <div class="form-trial col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                            <div class="logo">
+                                <h3>[SITE_NAME]</h3>
+                            </div>
+                            <form action="[HOMEURL]/api/auth/login" method="POST">
+                                <h3>[unlockLogIn]</h3>
+                                <div class="name">
+                                    <input id="account-name" type="email" name="account-name" placeholder="[unlockAcctNamePH]" autocomplete="username" required>
+                                </div>
+                                <div class="password">
+                                    <input id="account-pass" type="password" name="account-pass" placeholder="[unlockAcctPassPH]" autocomplete="current-password" required>
+                                </div>
+                                <div class="submit">
+                                    <button class="form-submit" name="submit">[unlockLogInBtn]</button>
+                                    <input type="hidden" name="channel-guid" value="[CHANNEL_GUID]">
+                                    <input type="hidden" name="client-guid" value="[CLIENT_GUID]">
+                                    <input type="hidden" name="web-req" value="Y">
+                                </div>
+                                <div class="log-in-option clearfix">
+                                    <div class="log-in-checkbox">
+                                        <input id="remember" type="checkbox" name="remember" value="Y" checked>
+                                        <label for="remember">[unlockRememberMe]</label>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="sign-social">
+                                <span>or</span>
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-3 col-sm-3 hidden-xs">&nbsp;</div>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-4">
+                                        <button class="social-green" onclick="toggleForm();">[unlockAccessCode]</button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-3 col-sm-3 hidden-xs">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row form-method">
+                        <div class="form-trial col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                            <div class="logo">
+                                <h3>[SITE_NAME]</h3>
+                            </div>
+                            <form action="[HOMEURL]" method="POST">
+                                <h3>[unlockAccessCode]</h3>
+                                <div class="password">
+                                    <input id="site_pass" type="password" name="site_pass" placeholder="[unlockAccessCodePH]" autocomplete="current-password" required>
+                                </div>
+                                <div class="submit">
+                                    <button class="form-submit" name="submit">[unlockAccessBtn]</button>
+                                    <input type="hidden" name="channel-guid" value="[CHANNEL_GUID]">
+                                    <input type="hidden" name="client-guid" value="[CLIENT_GUID]">
+                                    <input type="hidden" name="web-req" value="Y">
+                                </div>
+                            </form>
+                            <div class="sign-social">
+                                <span>or</span>
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-3 col-sm-3 hidden-xs">&nbsp;</div>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-4">
+                                        <button class="social-green" onclick="toggleForm();">[unlockLogIn]</button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-3 col-sm-3 hidden-xs">&nbsp;</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <script type="text/javascript" src="[JS_DIR]/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="[JS_DIR]/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            function toggleForm() {
+                var els = document.getElementsByClassName('form-method');
+                for ( var i = 0; i < els.length; i++ ) {
+                    if ( els[i].classList.contains('hidden') ) {
+                        els[i].classList.remove('hidden');
+                    } else {
+                        els[i].classList.add('hidden');
+                    }
+                }
+            }
+        </script>
+    </body>
+[GenTime]
+</html>

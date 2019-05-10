@@ -85,6 +85,7 @@ class Route extends Streams {
                         unset($auth);
 
                         $this->settings['remember'] = false;
+                        $this->settings['PgRoot'] = '/';
                         $data['do_redirect'] = true;
                         break;
 
@@ -173,8 +174,11 @@ class Route extends Streams {
      *  Function Returns an Array With the Appropriate Content
      */
     private function _getPageHTML( $data ) {
+        $LockPrefix = '';
+        if ( $data['site_locked'] ) { $LockPrefix = getRandomString(18); }
+
         // If Caching Is Enabled, Check If We Have a Valid Cached Version
-        $cache_file = md5($data['site_version'] . '-' . NoNull(APP_VER . CSS_VER) . '-' .
+        $cache_file = md5($data['site_version'] . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
                           nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
                           NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
         if ( defined('ENABLE_CACHING') ) {
@@ -199,42 +203,73 @@ class Route extends Streams {
         $ThemeLocation = THEME_DIR . '/' . $data['location'];
         if ( checkDIRExists($ThemeLocation) === false ) { $data['location'] = 'default'; }
 
-        // Collect the Preliminary Values
-        $this->_getLanguageStrings($data['location']);
-        $ReplStr = $this->_getContentArray($data);
-        $ReqFile = $this->_getContentPage($data);
+        if ( $data['site_locked'] ) {
+            $HomeUrl = NoNull($this->settings['HomeURL']);
+            $ReplStr =  array( '[FONT_DIR]'     => $HomeUrl . '/templates/fonts',
+                               '[CSS_DIR]'      => $HomeUrl . '/templates/css',
+                               '[IMG_DIR]'      => $HomeUrl . '/templates/img',
+                               '[JS_DIR]'       => $HomeUrl . '/templates/js',
+                               '[HOMEURL]'      => $HomeUrl,
 
-        // Populate the Appropriate Language Strings
-        if ( is_array($this->strings) ) {
-            foreach ( $this->strings as $Key=>$Value ) {
-                $ReplStr["[$Key]"] = NoNull($Value);
+                               '[CSS_VER]'      => CSS_VER,
+                               '[GENERATOR]'    => GENERATOR . " (" . APP_VER . ")",
+                               '[APP_NAME]'     => APP_NAME,
+                               '[APP_VER]'      => APP_VER,
+                               '[LANG_CD]'      => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
+                               '[YEAR]'         => date('Y'),
+
+                               '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
+                               '[CLIENT_GUID]'  => NoNull($data['client_guid']),
+                               '[TOKEN]'        => ((YNBool($this->settings['_logged_in'])) ? NoNull($this->settings['token']) : ''),
+
+                               '[SITE_URL]'     => $this->settings['HomeURL'],
+                               '[SITE_NAME]'    => NoNull($data['name']),
+                              );
+            if ( is_array($this->strings) ) {
+                foreach ( $this->strings as $key=>$val ) {
+                    $ReplStr["[$key]"] = $val;
+                }
             }
+            $html = readResource( FLATS_DIR . "/templates/unlock.html", $ReplStr );
 
-            // Set the Site Login String
-            $SiteLogin = NoNull($this->strings['lblLogin']);
-            if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
-            $ReplStr['[lblSiteLogin]'] = NoNull($SiteLogin, $this->strings['lblLogin']);
-        }
+        } else {
+            // Collect the Preliminary Values
+            $this->_getLanguageStrings($data['location']);
+            $ReplStr = $this->_getContentArray($data);
+            $ReqFile = $this->_getContentPage($data);
 
-        // If We're Here, We Have Data to Show
-        $ReplStr['[PAGEHTML]'] = $this->_getPageContent($data);
-        $ReplStr['[CONTENT]'] = readResource($ReqFile, $ReplStr);
-        $ReplStr['[NAVMENU]'] = $this->_getSiteNav($data);
-        $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
+            // Populate the Appropriate Language Strings
+            if ( is_array($this->strings) ) {
+                foreach ( $this->strings as $Key=>$Value ) {
+                    $ReplStr["[$Key]"] = NoNull($Value);
+                }
 
-        // Save the File to Cache if Required and Populate the Base Sections
-        if ( defined('ENABLE_CACHING') ) {
-            if ( nullInt(ENABLE_CACHING) == 1 ) {
-                saveCache($data['site_id'], $cache_file, $html);
-
+                // Set the Site Login String
                 $SiteLogin = NoNull($this->strings['lblLogin']);
                 if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
-                $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
-                                  '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
-                                  '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
-                                  '[POPULAR_LIST]' => $this->_getPopularPosts(),
-                                 );
-                $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+                $ReplStr['[lblSiteLogin]'] = NoNull($SiteLogin, $this->strings['lblLogin']);
+            }
+
+            // If We're Here, We Have Data to Show
+            $ReplStr['[PAGEHTML]'] = $this->_getPageContent($data);
+            $ReplStr['[CONTENT]'] = readResource($ReqFile, $ReplStr);
+            $ReplStr['[NAVMENU]'] = $this->_getSiteNav($data);
+            $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
+
+            // Save the File to Cache if Required and Populate the Base Sections
+            if ( defined('ENABLE_CACHING') ) {
+                if ( nullInt(ENABLE_CACHING) == 1 ) {
+                    saveCache($data['site_id'], $cache_file, $html);
+
+                    $SiteLogin = NoNull($this->strings['lblLogin']);
+                    if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
+                    $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
+                                      '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
+                                      '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
+                                      '[POPULAR_LIST]' => $this->_getPopularPosts(),
+                                     );
+                    $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+                }
             }
         }
 
@@ -533,6 +568,11 @@ class Route extends Streams {
         $ApiUrl = getApiUrl();
         $CdnUrl = getCdnUrl();
 
+        $SitePass = '';
+        if ( $data['channel_privacy'] == 'visibility.password' ) {
+            $SitePass = str_repeat('*', 12);
+        }
+
         $banner_img = NoNull($data['banner_img']);
         if ( NoNull($banner_img) == '' ) { $banner_img = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/images/default_banner.jpg'); }
 
@@ -570,8 +610,11 @@ class Route extends Streams {
                        '[SITE_NOTE]'    => $this->_checkboxValue($data, 'show_note'),
                        '[SITE_ARTICLE]' => $this->_checkboxValue($data, 'show_article'),
                        '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
+                       '[SITE_PLACES]'  => $this->_checkboxValue($data, 'show_location'),
                        '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
                        '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
+                       '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
+                       '[SITE_PASS]'    => $SitePass,
                        '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
                        '[ACCESS_LEVEL]' => NoNull($this->settings['_access_level'], 'read'),
@@ -885,6 +928,9 @@ class Route extends Streams {
                 $valids[] = $feedUrl;
             }
         }
+
+        // Do Not Continue if the Site is Locked
+        if ( $data['site_locked'] ) { return false; }
 
         // Determine the Request by the Requested URI
         $ReqURI = NoNull($this->settings['ReqURI']);

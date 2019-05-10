@@ -12,6 +12,15 @@
     "copyright": "&copy; {year}",
     "version": "Version {version_id}",
 
+    "unlockLogIn": "Sign In with Your Account",
+    "unlockLogInBtn": "Sign In",
+    "unlockAcctNamePH": "(Your Email Address)",
+    "unlockAcctPassPH": "(Your Password)",
+    "unlockRememberMe": "Remember Me",
+    "unlockAccessCode": "Enter with Your Access Code",
+    "unlockAccessCodePH": "(Your Access Code)",
+    "unlockAccessBtn": "Enter Site",
+
     "msg401Line1": "Slow Down!",
     "msg401Line2": "You&apos;re making too many requests too quickly.<br>Share the system with everyone.",
     "msg404Line1": "No Resource!",

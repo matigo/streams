@@ -10,10 +10,15 @@ SELECT tmp.`score`, tmp.`post_id`, po.`type`, po.`guid`, po.`title`, po.`value`,
                                        CASE WHEN GREATEST(IFNULL(ca.`can_write`, 'N'), IFNULL(ca.`can_read`, 'N')) = 'Y' THEN 'Y'
                                             WHEN GREATEST(CASE WHEN ch.`privacy_type` = 'visibility.none' THEN 0 WHEN ch.`privacy_type` = 'visibility.private' THEN 1 WHEN ch.`privacy_type` = 'visibility.password' THEN 2 ELSE 9 END,
                                                           CASE WHEN po.`privacy_type` = 'visibility.none' THEN 0 WHEN po.`privacy_type` = 'visibility.private' THEN 1 WHEN po.`privacy_type` = 'visibility.password' THEN 2 ELSE 9 END) = 9 THEN 'Y'
+                                            WHEN ch.`privacy_type` = 'visibility.password' AND '[SITE_TOKEN]' <> ''
+                                                 THEN CASE WHEN '[SITE_TOKEN]' IN (SELECT SHA2(CONCAT(si.`guid`, '.', UNIX_TIMESTAMP(zsu.`updated_at`), '.', DATE_FORMAT(DATE_SUB(Now(), INTERVAL cnt.`num` HOUR), '%Y-%m-%d %H:00:00')), 256) as `hash`
+                                                                                     FROM `SiteUrl` zsu INNER JOIN (SELECT 0 as `num` UNION ALL SELECT  1 as `num` UNION ALL SELECT  2 as `num`) cnt ON `num` >= 0
+                                                                                    WHERE zsu.`is_deleted` = 'N' and zsu.`is_active` = 'Y' and zsu.`site_id` = si.`id`) THEN 'Y' ELSE 'N' END
                                             ELSE 'N' END as `is_visible`,
 [SCORING]
                                        0 AS `score`
                                   FROM `Channel` ch INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
+                                                    INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                                                     INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                                                LEFT OUTER JOIN `ChannelAuthor` ca ON ch.`id` = ca.`channel_id` AND ca.`is_deleted` = 'N'
                                                LEFT OUTER JOIN `Persona` cp ON ca.`persona_id` = cp.`id` AND cp.`is_deleted` = 'N' AND cp.`account_id` = [ACCOUNT_ID]

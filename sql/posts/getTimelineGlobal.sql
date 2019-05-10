@@ -19,12 +19,15 @@ SELECT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_gui
                     INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                     INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
  WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-   and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and su.`is_active` = 'Y' 
+   and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
    and po.`type` IN ([POST_TYPES])
+   and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+                  WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
+                  ELSE 'N' END
    and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                   WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
                   ELSE 'N' END
-   and po.`publish_at` BETWEEN CASE WHEN [SINCE_UNIX] = 0 THEN DATE_SUB(Now(), INTERVAL 2 WEEK) ELSE FROM_UNIXTIME([SINCE_UNIX]) END AND 
+   and po.`publish_at` BETWEEN CASE WHEN [SINCE_UNIX] = 0 THEN DATE_SUB(Now(), INTERVAL 2 WEEK) ELSE FROM_UNIXTIME([SINCE_UNIX]) END AND
                                CASE WHEN [UNTIL_UNIX] = 0 THEN Now() ELSE FROM_UNIXTIME([UNTIL_UNIX]) END
  ORDER BY CASE WHEN [SINCE_UNIX] = 0 THEN 1 ELSE po.`publish_at` END, po.`publish_at` DESC
  LIMIT 0, [COUNT];
