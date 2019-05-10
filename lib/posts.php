@@ -841,29 +841,29 @@ class Posts {
      */
     private function _deletePost() {
         $PostGUID = NoNull($this->settings['PgSub1'], $this->settings['post_guid']);
-        $ChannelGUID = NoNull($this->settings['channel_guid']);
+        $ChannelGUID = false;
         $isOK = false;
 
         // Ensure we Have a GUID
         if ( mb_strlen($PostGUID) < 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
 
-        // Collect the Channel.GUID Value for the Post (if Required)
-        if ( mb_strlen($ChannelGUID) < 30 ) {
-            $ChannelGUID = $this->_getPostChannel($PostGUID);
-            if ( $ChannelGUID === false ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
-        }
-
         // Remove the Record from the Database
-        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
-                          '[POST_GUID]'    => sqlScrub($PostGUID),
-                          '[CHANNEL_GUID]' => sqlScrub($ChannelGUID),
-                          '[SQL_SPLITTER]' => sqlScrub(SQL_SPLITTER),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/posts/deletePost.sql', $ReplStr);
-        $rslt = doSQLExecute($sqlStr);
-        if ( $rslt ) {
-            $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr);
-            $isOK = doSQLExecute($sqlStr);
+        $TokenGUID = NoNull($this->settings['_token_guid']);
+        $TokenID = nullInt($this->settings['_token_id']);
+
+        if ( $TokenID > 0 ) {
+            $ReplStr = array( '[POST_GUID]'  => sqlScrub($PostGUID),
+                              '[TOKEN_ID]'   => nullInt($TokenID),
+                              '[TOKEN_GUID]' => sqlScrub($TokenGUID),
+                             );
+            $sqlStr = prepSQLQuery("CALL DeletePost([TOKEN_ID], '[TOKEN_GUID]', '[POST_GUID]');", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    $ChannelGUID = NoNull($Row['channel_guid']);
+                    $rslt = array( 'post_id' => nullInt($Row['post_id']) );
+                }
+            }
         }
 
         // Return an Array of Data

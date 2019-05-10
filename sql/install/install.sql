@@ -207,7 +207,12 @@ CREATE TRIGGER `before_account`
 BEFORE INSERT ON `Account`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 DROP TRIGGER IF EXISTS `after_insert_account`;;
@@ -296,7 +301,12 @@ BEFORE INSERT ON `Client`
    FOR EACH ROW
  BEGIN
     IF new.`secret` IS NULL THEN SET new.`secret` = sha2(CONCAT(Now(), ROUND(RAND() * 100), uuid()), 512); END IF;
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -348,7 +358,12 @@ CREATE TRIGGER `before_persona`
 BEFORE INSERT ON `Persona`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -416,7 +431,12 @@ CREATE TRIGGER `before_site`
 BEFORE INSERT ON `Site`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -469,7 +489,12 @@ CREATE TRIGGER `before_file`
 BEFORE INSERT ON `File`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -523,7 +548,12 @@ CREATE TRIGGER `before_insert_channel`
 BEFORE INSERT ON `Channel`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -853,7 +883,12 @@ CREATE TRIGGER `before_insert_sfitem`
 BEFORE INSERT ON `SyndFeedItem`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
 
@@ -977,7 +1012,12 @@ CREATE TRIGGER `before_insert_sitecontact`
 BEFORE INSERT ON `SiteContact`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = uuid(); END IF;
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
     SET new.`hash` = SHA1(new.`message`);
    END
 ;;

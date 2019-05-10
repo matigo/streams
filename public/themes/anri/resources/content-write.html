@@ -26,7 +26,7 @@
 
                         <div class="single-post__content">
                             <textarea id="content" class="newpost-content" name="fdata" onkeyup="updateContentHeight(this);" data-name="content" aria-required="true" placeholder="[lblPostContentPH]"></textarea>
-
+                            <div class="content-shadow">Lorem Ipsum Dolor Sit Kis Amet</div>
                         </div>
                         <div class="single-post__info text-left">
                             <form id="dropzone" class="uploads dropzone"></form>
@@ -51,14 +51,14 @@
                             <input id="postpass" class="newpost-half ppass hidden" type="text" name="fdata" value="" data-name="postpass" aria-required="false" autocomplete="off" />
                         </div>
                         <div class="single-post__info text-right">
-                            <button class="btn btn-danger btn-delete" style="float: left; min-width: 8em;" data-label="[btnPostDelete]">[btnPostDelete]</button>
-                            <button class="btn btn-publish" style="min-width: 8em;" data-label="[btnPostPublish]">[btnPostPublish]</button>
+                            <button class="btn btn-danger btn-delete" style="float: left;" data-label="[btnPostDelete]">[btnPostDelete]</button>
+                            <button class="btn btn-publish" data-label="[btnPostPublish]">[btnPostPublish]</button>
                             <input type="hidden" name="fdata" data-name="post_guid" value="">
                         </div>
-                        <div class="single-post__info confirm-delete text-left hidden">
+                        <div class="single-post__info confirm-delete hidden">
                             <p>[lblPostDeleteConfirm]</p>
-                            <button class="btn btn-danger btn-delete-post" style="min-width: 8em; margin-right: 5em;" onclick="performDelete();" data-label="[btnPostDeleteYes]">[btnPostDeleteYes]</button>
-                            <button class="btn btn-delete-cancel" style="min-width: 8em;" data-label="[btnPostDeleteNo]">[btnPostDeleteNo]</button>
+                            <button class="btn btn-danger btn-delete-post" onclick="performDelete();" data-label="[btnPostDeleteYes]">[btnPostDeleteYes]</button>
+                            <button class="btn btn-delete-cancel" data-label="[btnPostDeleteNo]">[btnPostDeleteNo]</button>
                         </div>
                         <div class="single-post__info text-left" style="padding: 0 0 25px;">
                             <p><em class="autosavemsg">&nbsp;</em></p>

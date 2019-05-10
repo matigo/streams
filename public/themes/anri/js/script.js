@@ -237,7 +237,7 @@ function parsePostEditData( data ) {
                 }
             }
         }
-        updatePublishPostButton();
+        updateContentHeight();
         togglePostType();
     }
 }
@@ -350,10 +350,18 @@ function updateContentHeight(el) {
         if ( els.length > 0 ) { el = els[0]; }
     }
     if ( el === undefined || el === null ) { return; }
-    var _height = el.style.height;
+    var _shadow = 0;
 
-    if ( _height != (25 + el.scrollHeight) + 'px' ) { _height = (25 + el.scrollHeight) + 'px'; }
-    if ( el.style.height != _height ) { el.style.height = _height; }
+    var els = document.getElementsByClassName('content-shadow');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = el.value.replaceAll("\n", '<br>') + '&nbsp;';
+        _shadow = els[i].offsetHeight || els[i].scrollHeight;
+        els[i].style.width = el.offsetWidth + 'px';
+    }
+    if ( _shadow === undefined || _shadow === null || isNaN(_shadow) ) { _shadow = 0; }
+    var _elHeight = (50 + _shadow) + 'px';
+
+    if ( el.style.height != _elHeight ) { el.style.height = _elHeight; }
     updatePublishPostButton();
 }
 function updatePublishPostButton() {
@@ -493,10 +501,12 @@ function togglePostEdit() {
  ** ************************************************************************* */
 function cancelDelete() {
     hideByClass('confirm-delete');
+    showByClass('btn-publish');
     showByClass('btn-delete');
 }
 function deletePost() {
     showByClass('confirm-delete');
+    hideByClass('btn-publish');
     hideByClass('btn-delete');
 }
 function performDelete() {
