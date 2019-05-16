@@ -23,8 +23,8 @@ BEGIN
            si.`name` as `site_name`, si.`description`, si.`keywords`, si.`https`, si.`theme`, si.`is_default`,
            IFNULL((SELECT z.`value` FROM `SiteMeta` z
                     WHERE z.`is_deleted` = 'N' and z.`key` = 'summary' and z.`site_id` = si.`id`), '') as `summary`,
-           NULL as `page_title`,
-           NULL as `page_type`,
+           CAST(NULL AS CHAR(512)) as `page_title`,
+           CAST(NULL AS CHAR(64)) as `page_type`,
            ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
            (SELECT z.`guid` FROM `Client` z
              WHERE z.`is_deleted` = 'N' and z.`is_active` = 'Y' and z.`name` = 'Default Client') as `client_guid`,
@@ -64,9 +64,9 @@ BEGIN
         UPDATE tmp INNER JOIN `Post` po ON tmp.`channel_id` = po.`channel_id` AND po.`canonical_url` = `request_uri`
            SET tmp.`page_title` = IFNULL(po.`title`, po.`value`),
                tmp.`page_type` = po.`type`
-         WHERE tmp.`do_redirect` = 'N';
+         WHERE tmp.`do_redirect` = 'N' and po.`id` > 0;
     END IF;
-    
+
     /* Is the Site locked? */
     SELECT CASE WHEN tmp.`can_edit` = 'Y' THEN 'N'
                 ELSE tmp.`site_locked` END as `site_locked` INTO `x_site_locked`
@@ -129,9 +129,9 @@ BEGIN
            IFNULL(meta.`show_bookmark`, tmp.`show_bookmark`) as `show_bookmark`,
            IFNULL(meta.`show_location`, tmp.`show_location`) as `show_location`,
            IFNULL(meta.`show_quotation`, tmp.`show_quotation`) as `show_quotation`,
-           tmp.`site_version`, tmp.`site_updated_at`, 
+           tmp.`site_version`, tmp.`site_updated_at`,
            CASE WHEN tmp.`can_edit` = 'Y' THEN 'N'
-                WHEN tmp.`site_locked` = 'Y' AND IFNULL(`x_pass_valid`, 'N') = 'Y' THEN 'N' 
+                WHEN tmp.`site_locked` = 'Y' AND IFNULL(`x_pass_valid`, 'N') = 'Y' THEN 'N'
                 ELSE tmp.`site_locked` END as `site_locked`,
            CASE WHEN IFNULL(`site_pass`, '') <> '' AND IFNULL(`x_pass_valid`, 'N') = 'Y'
                 THEN SHA2(CONCAT(tmp.`site_guid`, '.', tmp.`url_ua`, '.', DATE_FORMAT(Now(), '%Y-%m-%d %H:00:00')), 256)

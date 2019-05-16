@@ -63,9 +63,16 @@ BEGIN
     IF IFNULL(`count_only`, '') = 'Y' THEN
         SELECT my_home as `my_home`, COUNT(DISTINCT tmp.`guid`) as `unread`
           FROM tmp
-         WHERE tmp.`is_spam` = 'N';
+         WHERE tmp.`is_read` = 'N' and tmp.`is_spam` = 'N';
 
     ELSE
+        /* Set the Non-Spam Messages as Read */
+        UPDATE `SiteContact` sc INNER JOIN tmp ON sc.`guid` = tmp.`guid`
+           SET sc.`is_read` = 'Y',
+               sc.`updated_at` = Now()
+         WHERE tmp.`is_read` = 'N' and tmp.`is_spam` = 'N';
+
+        /* Return the Messages */
         SELECT my_home as `my_home`, tmp.`url`, tmp.`name`, tmp.`mail`, tmp.`subject`, tmp.`message`,
                tmp.`guid`, tmp.`is_read`, tmp.`is_mailed`, tmp.`is_spam`,
                tmp.`created_at`, tmp.`updated_at`
