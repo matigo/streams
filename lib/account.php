@@ -222,10 +222,10 @@ class Account {
                     foreach ( $rslt as $Row ) {
                         $AcctID = nullInt($Row['account_id']);
                         $lang_label = 'lbl_' . NoNull($Row['language_code']);
-                        $this->cache[$AcctID] = array( 'id'             => $AcctID,
-                                                       'display_name'   => NoNull($Row['display_name']),
+                        $this->cache[$AcctID] = array( 'display_name'   => NoNull($Row['display_name']),
                                                        'avatar_url'     => NoNull($Row['avatar_url'], 'default.png'),
                                                        'type'           => NoNull($Row['type']),
+                                                       'guid'           => NoNull($Row['guid']),
                                                        'is_you'         => YNBool(BoolYN($Row['account_id'] == $this->settings['_account_id'])),
 
                                                        'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
@@ -740,6 +740,9 @@ class Account {
         }
 
         $this->settings['_for_guid'] = NoNull($CleanGUID);
+
+        writeNote( "Guid: $CleanGUID", true );
+        writeNote( "PgSub1: " . $this->settings['PgSub1'], true );
 
         require_once(LIB_DIR . '/posts.php');
         $posts = new Posts($this->settings);

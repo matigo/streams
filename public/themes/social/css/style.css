@@ -295,8 +295,9 @@ ol { margin-top: 0.5em; }
     list-style-type: none;
     max-width: calc(100% - 2em);
     max-height: 20em;
-    margin: 0 1em 0 0.5em;
+    margin: 1em 0.5em 0 0.5em;
     padding: 0;
+    width: 100%;
     overflow-x: hidden;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
@@ -309,6 +310,7 @@ ol { margin-top: 0.5em; }
     overflow: hidden;
     padding: 0.5em 1.5em 0 0.5em;
     margin: 0;
+    width: 100%;
 }
 .content-posts ul li.profile-post .account {
     font-weight: bold;
@@ -479,8 +481,12 @@ ol { margin-top: 0.5em; }
 }
 .dropdown-menu .persona-avatar,
 .btn-persona .persona-avatar {
+    background: transparent;
+    margin: 0 0.5em 0 0;
     max-height: 2.25em;
+    min-height: 2.25em;
     max-width: 2.25em;
+    min-width: 2.25em;
 }
 .compose .modal-footer {
     border-top: none !important;
@@ -805,6 +811,21 @@ a.u-bookmark-of {
 }
 @media (min-width: 769px) {
     .footer { display: none; }
+}
+@media (max-width: 450px) {
+    .modal-publish-buttons,
+    .modal-action-buttons {
+        width: 100%;
+    }
+    .modal-action-buttons { margin-top: 0.5em; }
+    .channel-list {
+        margin-top: -3.5em;
+        max-height: 15em;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        position: fixed;
+    }
 }
 
 .interact {

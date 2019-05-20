@@ -1,4 +1,5 @@
 SELECT pa.`id` as `persona_id`, pa.`name`, pa.`last_name`, pa.`first_name`, pa.`display_name`, pa.`avatar_img`, pa.`guid`, pa.`is_active`,
+       CASE WHEN ch.`privacy_type` IN ('visibility.none', 'visibility.password') THEN 'Y' ELSE 'N' END as `is_private`,
        si.`id` as `site_id`, si.`name` as `site_name`, CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `site_url`,
        ch.`guid` as `channel_guid`, si.`guid` as `site_guid`
   FROM `Persona` pa INNER JOIN `ChannelAuthor` ca ON pa.`id` = ca.`persona_id`

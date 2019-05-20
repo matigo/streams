@@ -208,7 +208,7 @@ class Auth {
                               '[LIFESPAN]'     => nullInt(TOKEN_EXPY),
                               '[HOMEURL]'      => sqlScrub($HomeURL),
                              );
-            $sqlStr = readResource(SQL_DIR . '/auth/getTokenData.sql', $ReplStr);
+            $sqlStr = prepSQLQuery("CALL GetTokenData([TOKEN_ID], '[TOKEN_GUID]', [PASSWORD_AGE], [LIFESPAN], '[HOMEURL]');", $ReplStr);
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
@@ -226,23 +226,17 @@ class Auth {
                                    '_welcome_done'      => YNBool($Row['welcome_done']),
                                    '_theme'             => NoNull($Row['theme'], 'default'),
                                    '_timezone'          => NoNull($Row['timezone'], 'UTC'),
-                                   '_storage_total'     => $storage,
-                                   '_storage_used'      => 0,
+                                   '_storage_total'     => nullInt($Row['storage_limit']),
+                                   '_storage_used'      => nullInt($Row['storage_used']),
+                                   '_storage_files'     => nullInt($Row['file_count']),
                                    '_send_contact_mail' => YNBool($Row['pref_contact_mail']),
                                    '_pass_change'       => YNBool($Row['password_change']),
                                    '_token_id'          => alphaToInt($data[1]),
                                    '_token_guid'        => NoNull($data[2]),
                                    '_logged_in'         => true,
                                   );
-
-                    // Ensure the Password Change Requirement is Set If Required
-                    if ( YNBool($Row['password_change']) ) { $this->_requirePasswordChange($Row['account_id']); }
                 }
             }
-
-            // Touch the Token Record to Mark it as Active
-            $sqlStr = readResource(SQL_DIR . '/auth/touchToken.sql', $ReplStr);
-            $isOK = doSQLExecute($sqlStr);
         }
 
         // Set the Cache and Return an Array of Data or an Unhappy Boolean
@@ -359,18 +353,6 @@ class Auth {
     }
 
     /**
-     *  Function Sets the "Require Password Change" Account.Meta Value for a Given Account
-     *  Note: Guest and Admin Accounts never require this
-     */
-    private function _requirePasswordChange($AccountID) {
-        if ( nullInt($AccountID) > 1 ) {
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID) );
-            $sqlStr = readResource(SQL_DIR . '/auth/setReqPassChg.sql', $ReplStr, true);
-            $isOK = doSQLExecute($sqlStr);
-        }
-    }
-
-    /**
      *  Function Marks an Account as Expired
      */
     private function _expireAccount($AccountID) {
@@ -475,6 +457,7 @@ class Auth {
                                                                           'site_guid'    => NoNull($Row['site_guid']),
                                                                           'site_name'    => NoNull($Row['site_name']),
                                                                           'url'          => NoNull($Row['site_url']),
+                                                                          'is_private'   => YNBool($Row['is_private'])
                                                                          );
             }
 

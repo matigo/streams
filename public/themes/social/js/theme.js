@@ -66,6 +66,18 @@ function randName(len) {
     }
     return txt;
 }
+function setHeadMeta( _name, _value ) {
+    if ( _name === undefined || _name === false || _name === null || _name.length <= 3 ) { return; }
+    if ( _value === undefined || _value === false || _value === null ) { _value = ''; }
+
+    var metas = document.getElementsByTagName('meta');
+    for ( var i = 0; i < metas.length; i++ ) {
+        var _attrib = NoNull(metas[i].getAttribute("name"));
+        if ( _attrib == _name ) {
+            if ( metas[i].getAttribute("content") != _value ) { metas[i].setAttribute('content', _value); }
+        }
+    }
+}
 function writeToZone( name, cdn_url ) {
     if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
         var els = document.getElementsByClassName('write-area');
@@ -450,7 +462,6 @@ function restorePosts() {
 /** ************************************************************************* *
  *  Authentication Functions
  ** ************************************************************************* */
-window.publish_to = false;
 window.personas = false;
 function checkAuthToken() {
     var access_token = getAuthToken();
@@ -474,41 +485,40 @@ function parseAuthToken( data ) {
         var chan_guid = '';
         var psna_guid = '';
 
+        // Construct the List of Distributions
         if ( ds.distributors !== undefined && ds.distributors !== false && ds.distributors.length > 0 ) {
+            var _list = '';
             for ( var i = 0; i < ds.distributors.length; i++ ) {
                 if ( chan_guid == '' && ds.distributors[i].channels !== undefined && ds.distributors[i].channels !== false ) {
                     chan_guid = ds.distributors[i].channels[0].channel_guid;
                     psna_guid = ds.distributors[i].guid;
-                    window.publish_to = ds.distributors[i];
+                }
+
+                var _chan = ( ds.distributors[i].channels.length == 1 ) ? ds.distributors[i].channels[0].channel_guid : '';
+                var _name = '@' + ds.distributors[i].name + ' (' + ds.distributors[i].display + ')';
+                var _cls = '';
+                if ( ds.distributors[i].guid == psna_guid ) { _cls = ' active'; }
+                _list += '<li class="persona-select' + _cls + '">' +
+                            '<a onclick="setPersona(this);" data-persona-guid="' + ds.distributors[i].guid + '" data-channel-guid="' + _chan + '">' +
+                            '<img src="' + ds.distributors[i].avatar + '" class="persona-avatar" alt="" />' + _name +
+                            '</a>' +
+                         '</li>';
+            }
+
+            if ( _list != '' ) {
+                var els = document.getElementsByClassName('persona-list');
+                for ( var i = 0; i < els.length; i++ ) {
+                    els[i].innerHTML = _list;
                 }
             }
         }
 
-        // Ensure the Authorization Token and Channel GUID are properly set
-        var metas = document.getElementsByTagName('meta');
-        for ( var i = 0; i < metas.length; i++ ) {
-            switch ( metas[i].getAttribute("name") ) {
-                case 'authorization':
-                    if ( auth_token.length >= 20 && metas[i].getAttribute("content") != auth_token ) {
-                        metas[i].setAttribute('content', auth_token);
-                    }
-                    break;
-
-                case 'channel_guid':
-                    if ( chan_guid.length >= 20 && metas[i].getAttribute("content") != chan_guid ) {
-                        metas[i].setAttribute('content', chan_guid);
-                    }
-                    break;
-
-                case 'persona_guid':
-                    if ( psna_guid.length >= 20 && metas[i].getAttribute("content") != psna_guid ) {
-                        metas[i].setAttribute('content', psna_guid);
-                    }
-                    break;
-
-                default:
-                    /* Do Nothing */
-            }
+        // Set the Page Meta Values
+        if ( auth_token.length >= 20  ) { setHeadMeta('authorization', auth_token); }
+        if ( chan_guid.length >= 20  ) { setHeadMeta('channel_guid', chan_guid); }
+        if ( psna_guid.length >= 20  ) {
+            setHeadMeta('persona_guid', psna_guid);
+            loadChannelList(psna_guid);
         }
 
         // Set the Web-App for Usage
@@ -522,7 +532,6 @@ function parseAuthToken( data ) {
         }
 
     } else {
-        window.publish_to = false;
         window.personas = false;
         clearAuthToken();
     }
@@ -962,7 +971,7 @@ function parseProfile( data ) {
         }
 
         // Get the Account Posts (If Applicable)
-        setTimeout(function() { getProfilePosts( ((ds.is_you) ? 'me' : ds.guid) ); }, 100);
+        setTimeout(function() { getProfilePosts(ds.guid); }, 100);
     }
 
     // Set the HTML Accordingly
@@ -1156,10 +1165,12 @@ function toggleActionBar( el ) {
     var _threaded = false;
     var _starred = false;
     var _canedit = false;
+    var _pin = 'pin.none';
     for ( var s = 0; s < 10; s++ ) {
         _threaded = sobj.getAttribute('data-threaded');
         _starred = sobj.getAttribute('data-starred');
         _canedit = sobj.getAttribute('data-owner');
+        _pin = NoNull(pel.getAttribute('data-pin'));
         if ( _starred !== undefined && _starred !== false && _starred !== null ) { s = 10; }
         sobj = sobj.parentNode;
     }
@@ -1180,7 +1191,7 @@ function toggleActionBar( el ) {
     if ( window.navigator.onLine && _closed ) {
         for ( var i = 0; i < els.length; i++ ) {
             els[i].classList.remove('hidden');
-            els[i].innerHTML = buildActionBar(_canedit, _threaded);
+            els[i].innerHTML = buildActionBar(_canedit, _threaded, _pin.replace('pin.', ''));
 
             if ( _starred == 'Y' ) {
                 var btns = els[i].getElementsByClassName('fa-star');
@@ -1193,12 +1204,14 @@ function toggleActionBar( el ) {
         }
     }
 }
-function buildActionBar(can_edit, threaded) {
+function buildActionBar(can_edit, threaded, pin) {
+    var valid_pins = ['blue', 'green', 'orange', 'red', 'yellow', 'none'];
     if ( threaded === undefined || threaded === null || threaded == 'N' ) { threaded = false; }
     if ( threaded == 'Y' ) { threaded = true; }
     if ( can_edit === undefined || can_edit === null ) { can_edit = false; }
     if ( can_edit === true || can_edit == 'Y' ) { can_edit = true; }
     if ( can_edit !== true && can_edit !== false ) { can_edit = false; }
+    if ( pin === undefined || pin === false || pin === null || valid_pins.indexOf(pin) < 0) { pin = 'none'; }
 
     var _token = getAuthToken();
     var _sin = ( _token !== undefined && _token !== false && _token !== null && _token.length >= 20 ) ? true : false;
@@ -1216,7 +1229,7 @@ function buildActionBar(can_edit, threaded) {
         if ( btns[b].visible ) {
             if ( _sin && btns[b].rsin ) {
                 if ( btns[b].action != 'thread' || (btns[b].action == 'thread' && threaded) ) {
-                    html += '<button class="btn btn-action"' + _onclick + ' data-action="' + btns[b].action + '"><i class="' + btns[b].icon + '"></i></button>';
+                    html += '<button class="btn btn-action' + ((btns[b].action == 'pin') ? ' ' + pin : '') + '"' + _onclick + ' data-action="' + btns[b].action + '"><i class="' + btns[b].icon + '"></i></button>';
                 }
             }
             if ( btns[b].rsin === false ) {
@@ -1501,7 +1514,9 @@ function parseStarPost(data) {
 
                     var acts = els[e].getElementsByClassName('post-actions');
                     for ( var b = 0; b < acts.length; b++ ) {
-                        acts[b].innerHTML = buildActionBar(ds[i].can_edit);
+                        var _threaded = false;
+                        if ( ds[i].thread !== false ) { _threaded = true; }
+                        acts[b].innerHTML = buildActionBar(ds[i].can_edit, _threaded, ds[i].attributes.pin);
 
                         if ( ds[i].attributes.starred ) {
                             var btns = acts[b].getElementsByClassName('fa-star');
@@ -1621,9 +1636,51 @@ function performPin(btn) {
     }
 }
 function actionPinPost(_guid, _value) {
-    alert("Let's Set [" + _guid + '] as [' + _value + ']');
+    var _req = 'POST';
+    if ( _guid === undefined || _guid === false || _guid === null || _guid.length <= 30 ) { return; }
+    if ( _value === undefined || _value === false || _value === null || _value == 'pin.none' ) { _req = 'DELETE'; }
+    var params = { 'persona_guid': getPersonaGUID(),
+                   'value': _value,
+                   'guid': _guid
+                  };
+    doJSONQuery('posts/pin', _req, params, parsePinPost);
 }
+function parsePinPost(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        for ( var i = 0; i < ds.length; i++ ) {
+            var els = document.getElementsByClassName('post-entry');
+            for ( var e = 0; e < els.length; e++ ) {
+                if ( els[e].getAttribute('data-guid') == ds[i].guid ) {
+                    els[e].setAttribute('data-pin', ds[i].attributes.pin);
 
+                    var acts = els[e].getElementsByClassName('post-actions');
+                    for ( var b = 0; b < acts.length; b++ ) {
+                        var _threaded = false;
+                        if ( ds[i].thread !== false ) { _threaded = true; }
+                        acts[b].innerHTML = buildActionBar(ds[i].can_edit, _threaded, ds[i].attributes.pin);
+
+                        var btns = acts[b].getElementsByClassName('btn-action');
+                        for ( var c = 0; c < btns.length; c++ ) {
+                            var _action = btns[c].getAttribute('data-action');
+                            if ( _action == 'pin' ) {
+                                btns[c].classList.remove('none');
+                                btns[c].classList.remove('orange');
+                                btns[c].classList.remove('yellow');
+                                btns[c].classList.remove('black');
+                                btns[c].classList.remove('green');
+                                btns[c].classList.remove('blue');
+                                btns[c].classList.remove('red');
+
+                                btns[c].classList.add(ds[i].attributes.pin.replace('pin.', ''));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 function cancelReplyPost(btn) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
     var _nom = btn.getAttribute('data-name');
@@ -1920,7 +1977,8 @@ function writePostToTL( _post, _view ) {
         _div.setAttribute('data-guid', _post.guid);
         _div.setAttribute('data-type', _post.type);
         _div.setAttribute('data-url', _post.canonical_url);
-        _div.setAttribute('data-starred', 'N');
+        _div.setAttribute('data-pin', _post.attributes.pin);
+        _div.setAttribute('data-starred', ((_post.attributes.starred) ? 'Y' : 'N'));
         _div.setAttribute('data-threaded', ((_post.reply_to !== false) ? 'Y' : 'N'));
         _div.setAttribute('data-owner', ((_post.persona.is_you === true) ? 'Y' : 'N'));
         _div.innerHTML = buildHTML(_post);
@@ -2335,8 +2393,92 @@ function toggleBodyScroll( _unlock ) {
         document.body.classList.add('darkback');
     }
 }
-function setPersona( guid ) {
-    alert("This Isn't Quite Ready, Yet");
+function loadChannelList( _persona_guid ) {
+    if ( _persona_guid === undefined || _persona_guid === false || _persona_guid === null ) { return; }
+    if ( _persona_guid.length < 20 ) { _persona_guid = getMetaValue('persona-guid'); }
+    if ( _persona_guid.length < 20 ) { return; }
+    var ds = window.personas;
+
+    for ( var i = 0; i < ds.distributors.length; i++ ) {
+        if ( ds.distributors[i].guid == _persona_guid ) {
+            if ( ds.distributors[i].channels.length < 1 ) {
+                alert("This Persona Doesn't Have Anywhere to Publish!" );
+                return;
+            }
+
+            _channel_guid = NoNull(ds.distributors[i].channels[0].channel_guid);
+            if ( _channel_guid.length >= 20  ) { setHeadMeta('channel_guid', _channel_guid); }
+            var _channel_url = ds.distributors[i].channels[0].url.replace('https://', '').replace('http://', '');
+
+            if ( ds.distributors[i].channels.length > 1 ) {
+                var _list = '';
+                for ( var c = 0; c < ds.distributors[i].channels.length; c++ ) {
+                    if ( _channel_guid == '' ) { _channel_guid = NoNull(ds.distributors[i].channels[0].channel_guid); }
+                    var _url = ds.distributors[i].channels[c].url.replace('https://', '').replace('http://', '');
+                    _list += '<li>' +
+                                '<a onclick="setChannel(this);" data-guid="' + ds.distributors[i].channels[c].channel_guid + '" data-url="' + _url + '">' +
+                                    (( ds.distributors[i].channels[c].is_private ) ? '<i class="fa fa-lock"></i> ' : '') +
+                                    ds.distributors[i].channels[c].site_name + ' (' + _url + ')';
+                                '</a>' +
+                             '</li>';
+                }
+
+                var els = document.getElementsByClassName('channel-list');
+                for ( var c = 0; c < els.length; c++ ) {
+                    els[c].innerHTML = _list;
+                }
+                var btns = document.getElementsByClassName('publish-dropdown');
+                for ( var c = 0; c < btns.length; c++ ) {
+                    btns[c].classList.add('btn-primary');
+                    btns[c].innerHTML = _channel_url;
+                    btns[c].disabled = false;
+                }
+
+            } else {
+                var btns = document.getElementsByClassName('publish-dropdown');
+                for ( var c = 0; c < btns.length; c++ ) {
+                    btns[c].classList.remove('btn-primary');
+                    btns[c].innerHTML = _channel_url;
+                    btns[c].disabled = true;
+                }
+            }
+        }
+    }
+}
+function setChannel( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _channel_guid = NoNull(el.getAttribute('data-guid'));
+    var _channel_url = NoNull(el.getAttribute('data-url'));
+    if ( _channel_guid.length >= 20  ) {
+        setHeadMeta('channel_guid', _channel_guid);
+
+        var els = document.getElementsByClassName('publish-dropdown');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].innerHTML = _channel_url;
+        }
+    }
+}
+function setPersona( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _persona_guid = NoNull(el.getAttribute('data-persona-guid'));
+    var _channel_guid = NoNull(el.getAttribute('data-channel-guid'));
+    var _avatar_url = '';
+    var ds = window.personas;
+
+    for ( var i = 0; i < ds.distributors.length; i++ ) {
+        if ( ds.distributors[i].guid == _persona_guid ) { _avatar_url = ds.distributors[i].avatar; }
+    }
+
+    if ( _persona_guid.length >= 20 ) {
+        if ( _persona_guid.length >= 20  ) { setHeadMeta('persona_guid', _persona_guid); }
+
+        var els = document.getElementsByClassName('persona-select');
+        for ( var i = 0; i < els.length; i++ ) { els[i].classList.remove('active'); }
+        var els = document.getElementsByClassName('active-avatar');
+        for ( var i = 0; i < els.length; i++ ) { els[i].src = _avatar_url; }
+        el.parentNode.classList.add('active');
+        loadChannelList(_persona_guid);
+    }
 }
 function setVisibility(mode) {
     saveStorage('privacy', mode);

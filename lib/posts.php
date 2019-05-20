@@ -101,6 +101,10 @@ class Posts {
                 $rVal = $this->_writePost();
                 break;
 
+            case 'pin':
+                $rVal = $this->_setPostPin();
+                break;
+
             case 'star':
                 $rVal = $this->_setPostStar();
                 break;
@@ -172,7 +176,7 @@ class Posts {
      ** ********************************************************************* */
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
-    public function getPersonaPosts() { return $this->_getTimeline('persona'); }
+    public function getPersonaPosts() { return $this->_getTLStream('persona'); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
     public function getRSSFeed($site, $format) { return $this->_getRSSFeed($site, $format); }
 
@@ -698,6 +702,38 @@ class Posts {
         return false;
     }
 
+    private function _setPostPin() {
+        $PersonaGUID = NoNull($this->settings['persona_guid']);
+        $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
+        $PinValue = NoNull($this->settings['pin_value'], $this->settings['value']);
+        $ReqType = NoNull(strtolower($this->settings['ReqType']));
+
+        // Ensure we Have the requisite GUIDs
+        if ( mb_strlen($PersonaGUID) <= 30 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); return false; }
+        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        $this->settings['guid'] = $PostGUID;
+        $this->settings['ReqType'] = 'GET';
+
+        // Prep the Action Record (if applicable)
+        $sOK = $this->_preparePostAction();
+
+        // Build and Run the SQL Query
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[POST_GUID]'    => sqlScrub($PostGUID),
+                          '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
+                          '[IS_POST]'      => sqlScrub(BoolYN(($ReqType == 'post'))),
+                          '[VALUE]'        => sqlScrub($PinValue),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/setPostPin.sql', $ReplStr);
+        $rslt = doSQLExecute($sqlStr);
+
+        // Return the Updated Post
+        return $this->_getPostByGUID();
+    }
+
+    /**
+     *  Function Records (or Resets) a Post Pin for a Post/Persona combination
+     */
     private function _setPostStar() {
         $PersonaGUID = NoNull($this->settings['persona_guid']);
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
@@ -1733,6 +1769,12 @@ class Posts {
                                                           'profile_url' => NoNull($post['profile_url']),
                                                          ),
 
+                                     'attributes'       => array( 'pin'     => NoNull($Row['pin_type'], 'pin.none'),
+                                                                  'starred' => YNBool($Row['is_starred']),
+                                                                  'muted'   => YNBool($Row['is_muted']),
+                                                                  'points'  => nullInt($Row['points']),
+                                                                 ),
+
                                      'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['publish_at'])),
                                      'publish_unix' => strtotime($post['publish_at']),
                                      'expires_at'   => ((NoNull($post['expires_at']) == '') ? false : date("Y-m-d\TH:i:s\Z", strtotime($post['expires_at']))),
@@ -1754,6 +1796,77 @@ class Posts {
         }
 
         // If We're Here, There Are No Posts
+        return array();
+    }
+
+    /**
+     *  Function Collects the Specified Timeline and Returns a Happy Array
+     */
+    private function _getTLStream( $path = 'global' ) {
+        $path = NoNull(strtolower($path), 'global');
+        $validTLs = array( 'global', 'mentions', 'persona' );
+        if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
+
+        // Get the Types Requested (Default is Social Posts Only)
+        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark' );
+        $CleanTypes = '';
+        $rTypes = explode(',', NoNull($this->settings['types'], $this->settings['post_types']));
+        if ( is_array($rTypes) ) {
+            foreach ( $rTypes as $rType ) {
+                $rType = strtolower($rType);
+                if ( in_array($rType, $validTypes) ) {
+                    if ( $CleanTypes != '' ) { $CleanTypes .= ','; }
+                    $CleanTypes .=  sqlScrub($rType);
+                }
+            }
+        } else {
+            if ( is_string($rTypes) ) {
+                $rType = strtolower($rTypes);
+                if ( in_array($rType, $validTypes) ) {
+                    if ( $CleanTypes != '' ) { $CleanTypes .= ','; }
+                    $CleanTypes .= sqlScrub($rType);
+                }
+            }
+        }
+        if ( $CleanTypes == '' ) { $CleanTypes = "post.note"; }
+
+        // Get the Time Range
+        $SinceUnix = nullInt($this->settings['since']);
+        $UntilUnix = nullInt($this->settings['until']);
+
+        // Is this for a Persona?
+        $PersonaGUID = NoNull($this->settings['_for_guid'], $this->settings['_persona_guid']);
+
+        // How Many Posts?
+        $CleanCount = nullInt($this->settings['count'], 100);
+        if ( $CleanCount > 250 ) { $CleanCount = 250; }
+        if ( $CleanCount <= 0 ) { $CleanCount = 100; }
+
+        // Get the Posts
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[SINCE_UNIX]'   => nullInt($SinceUnix),
+                          '[UNTIL_UNIX]'   => nullInt($UntilUnix),
+                          '[POST_TYPES]'   => NoNull($CleanTypes),
+                          '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
+                          '[COUNT]'        => nullInt($CleanCount),
+                         );
+        $sqlStr = prepSQLQuery("CALL Get" . ucfirst($path) . "Timeline([ACCOUNT_ID], '[PERSONA_GUID]', '[POST_TYPES]', [SINCE_UNIX], [UNTIL_UNIX], [COUNT]);", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            return $this->_processTimeline($rslt);
+
+        } else {
+            // If there are no results, and the Since/Until is set as 0, expand the criteria
+            if ( nullInt($this->settings['since']) <= 0 ) {
+                $this->settings['before'] = 0;
+                $this->settings['since'] = 1;
+
+                // Run the Query One More Time
+                return $this->_getTLStream($path);
+            }
+        }
+
+        // If We're Here, No Posts Could Be Retrieved
         return array();
     }
 
@@ -1809,7 +1922,6 @@ class Posts {
                           '[COUNT]'        => nullInt($CleanCount),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getTimeline' . ucfirst($path) . '.sql', $ReplStr);
-        writeNote($sqlStr, true);
         if ( $sqlStr != '' ) {
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
