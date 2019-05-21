@@ -2,8 +2,9 @@ DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetSiteData;;
 CREATE PROCEDURE GetSiteData( IN `account_id` int(11), IN `site_url` varchar(128), IN `request_uri` varchar(256), IN `site_token` varchar(256), IN `site_pass` varchar(512) )
 BEGIN
-    DECLARE `x_site_locked` ENUM('N', 'Y');
-    DECLARE `x_pass_valid` ENUM('N', 'Y');
+    DECLARE `x_site_locked` enum('N','Y');
+    DECLARE `x_pass_valid`  enum('N','Y');
+    DECLARE `has_content`   enum('N','Y');
 
    /** ********************************************************************** **
      *  Function collects the pertinent Site information for a given URL.
@@ -96,6 +97,18 @@ BEGIN
         ORDER BY zz.`pass_valid` DESC
         LIMIT 1;
     END IF;
+    
+    /* Does the Site Contain at least one Post object? */
+    SELECT zz.`has_posts` INTO `has_content`
+      FROM (SELECT 'Y' as `has_posts`
+              FROM `Channel` ch INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
+                                INNER JOIN tmp ON ch.`site_id` = tmp.`site_id`
+             WHERE ch.`is_deleted` = 'N' and po.`is_deleted` = 'N'
+             UNION ALL
+            SELECT 'N' as `has_posts`
+             ORDER BY `has_posts` DESC
+             LIMIT 1) zz
+     LIMIT 1;
 
     /* Prepare the Meta If Any Exists */
     DROP TEMPORARY TABLE IF EXISTS meta;
@@ -129,7 +142,7 @@ BEGIN
            IFNULL(meta.`show_bookmark`, tmp.`show_bookmark`) as `show_bookmark`,
            IFNULL(meta.`show_location`, tmp.`show_location`) as `show_location`,
            IFNULL(meta.`show_quotation`, tmp.`show_quotation`) as `show_quotation`,
-           tmp.`site_version`, tmp.`site_updated_at`,
+           tmp.`site_version`, tmp.`site_updated_at`, `has_content` as `has_content`,
            CASE WHEN tmp.`can_edit` = 'Y' THEN 'N'
                 WHEN tmp.`site_locked` = 'Y' AND IFNULL(`x_pass_valid`, 'N') = 'Y' THEN 'N'
                 ELSE tmp.`site_locked` END as `site_locked`,

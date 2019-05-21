@@ -249,6 +249,10 @@ function callPuckAction( btn ) {
             resetTimeline('mentions');
             break;
 
+        case 'tl-actions':
+            resetTimeline('actions');
+            break;
+
         case 'settings':
             togglePreferences();
             break;
@@ -1786,7 +1790,7 @@ function getVisibleTypes() {
     return NoNull(_types, valids.join(','));
 }
 function validateTimeline( _tl ) {
-    var valids = ['global', 'mentions'];
+    var valids = ['global', 'mentions', 'actions'];
     var _view = readStorage('timeline');
     if ( _view === undefined || _view === false || _view === null || valids.indexOf(_view) < 0 ) { _view = 'global'; }
     if ( _tl === undefined || _tl === false || _tl === null || valids.indexOf(_tl) < 0 ) { _tl = NoNull(_view, 'global'); }
@@ -1798,6 +1802,10 @@ function validateTimeline( _tl ) {
         switch ( _tl ) {
             case 'mentions':
                 _icon = 'far fa-comments';
+                break;
+
+            case 'actions':
+                _icon = 'fas fa-highlighter';
                 break;
         }
         els[i].innerHTML = '<i class="' + _icon + '"></i>';

@@ -212,6 +212,7 @@ class Site {
                                                             'site_version'    => NoNull($cver),
                                                             'updated_at'      => date("Y-m-d\TH:i:s\Z", strtotime($Row['site_updated_at'])),
                                                             'updated_unix'    => strtotime($Row['site_updated_at']),
+                                                            'has_content'     => YNBool($Row['has_content']),
 
                                                             'can_edit'        => YNBool($Row['can_edit']),
                                                             'show_geo'        => YNBool($Row['show_geo']),

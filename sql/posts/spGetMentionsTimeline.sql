@@ -1,13 +1,13 @@
 DELIMITER ;;
-DROP PROCEDURE IF EXISTS GetGlobalTimeline;;
-CREATE PROCEDURE GetGlobalTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
+DROP PROCEDURE IF EXISTS GetMentionsTimeline;;
+CREATE PROCEDURE GetMentionsTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
 BEGIN
     DECLARE `min_id` int(11);
 
     /** ********************************************************************** **
-     *  Function returns the Visible Timeline for the Global Timeline
+     *  Function returns the Visible Posts for the Mentions Timeline
      *
-     *  Usage: CALL GetGlobalTimeline(1, 'post.article, post.bookmark, post.note, post.quotation', 0, 0, 75);
+     *  Usage: CALL GetMentionsTimeline(1, '', 'post.article, post.bookmark, post.note, post.quotation', 0, 0, 75);
      ** ********************************************************************** **/
 
     /* If the Type filter is Empty, Add Social Posts (post.note) */
@@ -49,9 +49,12 @@ BEGIN
                         INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                         INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
+                        INNER JOIN `PostMention` pm ON po.`id` = pm.`post_id`
+                        INNER JOIN `Persona` pmp ON pm.`persona_id` = pmp.`id`
                         INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
      WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
+       and pm.`is_deleted` = 'N' and pmp.`account_id` = `in_account_id`
        and pa.`is_deleted` = 'N' and po.`publish_at` <= Now() and po.`id` >= IFNULL(`min_id`, 0);
 
     /* If there aren't enough posts, reach back farther to look for some */
@@ -69,9 +72,12 @@ BEGIN
                             INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                             INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                             INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
+                            INNER JOIN `PostMention` pm ON po.`id` = pm.`post_id`
+                            INNER JOIN `Persona` pmp ON pm.`persona_id` = pmp.`id`
                             INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
          WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
            and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
+           and pm.`is_deleted` = 'N' and pmp.`account_id` = `in_account_id`
            and pa.`is_deleted` = 'N' and po.`publish_at` <= Now() and po.`id` < IFNULL(`min_id`, 4294967295);
     END IF;
 

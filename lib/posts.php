@@ -57,12 +57,18 @@ class Posts {
         switch ( $Activity ) {
             case 'globals':
             case 'global':
-                $rVal = $this->_getTimeline('global');
+                $rVal = $this->_getTLStream('global');
                 break;
 
             case 'mentions':
             case 'mention':
-                $rVal = $this->_getTimeline('mentions');
+                $rVal = $this->_getTLStream('mentions');
+                break;
+
+            case 'interactions':
+            case 'interaction':
+            case 'actions':
+                $rVal = $this->_getTLStream('interact');
                 break;
 
             case 'list':
@@ -335,13 +341,13 @@ class Posts {
         return false;
     }
 
-    private function _parsePostMentions( $text ) {
-        if ( is_array($this->settings['pa_guids']) === false ) { return $text; };
-        $userlist = $this->settings['pa_guids'];
+    private function _parsePostMentions( $text, $mentions = false ) {
+        if ( is_array($mentions) === false ){ $mentions = $this->settings['pa_guids']; }
+        if ( is_array($mentions) === false ) { return $text; };
 
         $ReplStr = array();
-        if ( is_array($userlist) ) {
-            foreach ( $userlist as $u ) {
+        if ( is_array($mentions) ) {
+            foreach ( $mentions as $u ) {
                 $ReplStr[ $u['name'] . '</' ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span></';
                 $ReplStr[ $u['name'] . '<br' ] = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><br';
                 $ReplStr[ $u['name'] . '<hr' ] = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><hr';
@@ -359,6 +365,7 @@ class Posts {
                 $ReplStr[ $u['name'] . '"' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>"';
                 $ReplStr[ $u['name'] . "\n" ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\n";
                 $ReplStr[ $u['name'] . "\r" ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\r";
+                $ReplStr[ "/" . $u['name'] ]  = "/<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
                 $ReplStr[ "\n" . $u['name'] ]  = "\n<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
                 $ReplStr[ "\r" . $u['name'] ]  = "\r<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
             }
@@ -367,6 +374,140 @@ class Posts {
         // Parse and Return the Text
         $rVal = NoNull(str_ireplace(array_keys($ReplStr), array_values($ReplStr), " $text "));
         return NoNull($rVal, $text);
+    }
+
+    /**
+     *  Function Parses a Post Result Set (from ad hoc queries and stored procedures) into a Consistent Format
+     */
+    private function _parsePostResultSet( $rslt ) {
+        if ( is_array($rslt) && count($rslt) > 0 ) {
+            $data = array();
+            $mids = array();
+
+            // Collect the Mentions
+            foreach ( $rslt as $Row ) {
+                if ( YNBool($Row['has_mentions']) ) { $mids[] = nullInt($Row['post_id']); }
+            }
+            if ( count($mids) > 0 ) { $pms = $this->_getPostMentions($mids); }
+
+            // Now Let's Parse the Posts
+            foreach ( $rslt as $Row ) {
+                $siteURL = ((YNBool($Row['https'])) ? 'https' : 'http') . '://' . NoNull($Row['site_url']);
+                $cdnURL = $siteURL . '/images/';
+                $poMeta = false;
+                if ( YNBool($Row['has_meta']) ) { $poMeta = $this->_getPostMeta($Row['post_guid']); }
+                if ( NoNull($this->settings['nom']) != '' ) {
+                    if ( is_array($poMeta) === false ) { $poMeta = array(); }
+                    $poMeta['nom'] = NoNull($this->settings['nom']);
+                }
+                $poTags = false;
+                if ( NoNull($Row['post_tags']) != '' ) {
+                    $poTags = array();
+                    $tgs = explode(',', NoNull($Row['post_tags']));
+                    foreach ( $tgs as $tag ) {
+                        $key = $this->_getSafeTagSlug(NoNull($tag));
+
+                        $poTags[] = array( 'url'  => $siteURL . '/tag/' . $key,
+                                           'name' => NoNull($tag),
+                                          );
+                    }
+                }
+
+                // Do We Have Mentions? Grab the List
+                $mentions = false;
+                if ( YNBool($Row['has_mentions']) ) {
+                    $mentions = $this->_getPostMentions($Row['post_id']);
+                }
+
+                // Determine Which HTML Classes Can Be Applied to the Record
+                $pguid = NoNull($this->settings['PgSub1'], $this->settings['guid']);
+                if ( mb_strlen($pguid) != 36 ) { $pguid = ''; }
+                $pclass = array();
+                if ( NoNull($Row['canonical_url']) == NoNull($this->settings['ReqURI']) || NoNull($Row['post_guid']) == $pguid || count($rslt) == 1 ) { $pclass[] = 'h-entry'; }
+                if ( NoNull($Row['reply_to']) != '' ) { $pclass[] = 'p-in-reply-to'; }
+
+                $IsNote = true;
+                if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], $IsNote, true);
+                $post_text = $this->_parsePostMentions($post_text);
+
+                $data[] = array( 'guid'     => NoNull($Row['post_guid']),
+                                 'type'     => NoNull($Row['post_type']),
+                                 'thread'   => ((NoNull($Row['thread_guid']) != '') ? array( 'guid' => NoNull($Row['thread_guid']), 'count' => nullInt($Row['thread_posts']) ) : false),
+                                 'privacy'  => NoNull($Row['privacy_type']),
+                                 'persona'  => array( 'guid'    => NoNull($Row['persona_guid']),
+                                                      'as'      => '@' . NoNull($Row['persona_name']),
+                                                      'name'    => NoNull($Row['display_name']),
+                                                      'avatar'  => $siteURL . '/avatars/' . NoNull($Row['avatar_img'], 'default.png'),
+                                                      'follow'  => array( 'url' => $siteURL . '/feeds/' . NoNull($Row['persona_name']) . '.json',
+                                                                          'rss' => $siteURL . '/feeds/' . NoNull($Row['persona_name']) . '.xml',
+                                                                         ),
+                                                      'is_active'    => YNBool($Row['persona_active']),
+                                                      'is_you'       => ((nullInt($Row['created_by']) == nullInt($this->settings['_account_id'])) ? true : false),
+                                                      'profile_url'  => $siteURL . '/profile/' . NoNull($Row['persona_name']),
+
+                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['persona_created_at'])),
+                                                      'created_unix' => strtotime($Row['persona_created_at']),
+                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['persona_updated_at'])),
+                                                      'updated_unix' => strtotime($Row['persona_updated_at']),
+                                                     ),
+
+                                 'title'    => ((NoNull($Row['title']) == '') ? false : NoNull($Row['title'])),
+                                 'content'  => str_replace('[HOMEURL]', $siteURL, $post_text),
+                                 'text'     => NoNull($Row['value']),
+
+                                 'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at'])),
+                                 'publish_unix' => strtotime($Row['publish_at']),
+                                 'expires_at'   => ((NoNull($Row['expires_at']) != '') ? date("Y-m-d\TH:i:s\Z", strtotime($Row['expires_at'])) : false),
+                                 'expires_unix' => ((NoNull($Row['expires_at']) != '') ? strtotime($Row['expires_at']) : false),
+                                 'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
+                                 'updated_unix' => strtotime($Row['updated_at']),
+
+                                 'meta'     => $poMeta,
+                                 'tags'     => $poTags,
+                                 'mentions' => $mentions,
+
+                                 'canonical_url'    => $siteURL . NoNull($Row['canonical_url']),
+                                 'slug'             => NoNull($Row['slug']),
+                                 'reply_to'         => ((NoNull($Row['reply_to']) == '') ? false : NoNull($Row['reply_to'])),
+                                 'class'            => ((count($pclass) > 0) ? implode(' ', $pclass) : ''),
+                                 'attributes'       => array( 'pin'     => NoNull($Row['pin_type'], 'pin.none'),
+                                                              'starred' => YNBool($Row['is_starred']),
+                                                              'muted'   => YNBool($Row['is_muted']),
+                                                              'points'  => nullInt($Row['points']),
+                                                             ),
+
+                                 'channel'  => array( 'guid'    => NoNull($Row['channel_guid']),
+                                                      'name'    => NoNull($Row['channel_name']),
+                                                      'type'    => NoNull($Row['channel_type']),
+                                                      'privacy' => NoNull($Row['channel_privacy_type']),
+
+                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['channel_created_at'])),
+                                                      'created_unix' => strtotime($Row['channel_created_at']),
+                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['channel_updated_at'])),
+                                                      'updated_unix' => strtotime($Row['channel_updated_at']),
+                                                     ),
+                                 'site'     => array( 'guid'        => NoNull($Row['site_guid']),
+                                                      'name'        => NoNull($Row['site_name']),
+                                                      'description' => NoNull($Row['site_description']),
+                                                      'keywords'    => NoNull($Row['site_keywords']),
+                                                      'url'         => $siteURL
+                                                     ),
+                                 'client'   => array( 'guid'    => NoNull($Row['client_guid']),
+                                                      'name'    => NoNull($Row['client_name']),
+                                                      'logo'    => $cdnURL . NoNull($Row['client_logo_img']),
+                                                     ),
+
+                                 'can_edit' => ((nullInt($Row['created_by']) == nullInt($this->settings['_account_id'])) ? true : false),
+                                );
+            }
+
+            // If We Have Data, Return It
+            if ( count($data) > 0 ) { return $data; }
+        }
+
+        // If We're Here, There Are No Posts. Return an Empty Array.
+        return array();
     }
 
     /**
@@ -635,14 +776,6 @@ class Posts {
             if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
             $sqlStr .= readResource(SQL_DIR . '/posts/resetPostMentions.sql', $ReplStr);
 
-            // Record any Mentions for the Post
-            $pids = $this->_getMentionsFromPost($data['value'], nullInt($data['post_id'], $rslt));
-            if ( NoNull($pids) != '' ) {
-                $ReplStr = array( '[VALUE_LIST]' => NoNull($pids) );
-                if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-                $sqlStr .= readResource(SQL_DIR . '/posts/writePostMentions.sql', $ReplStr);
-            }
-
             // Ensure the PostMeta for the Type is Set
             $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                               '[POST_ID]'      => nullInt($data['post_id'], $rslt),
@@ -703,7 +836,7 @@ class Posts {
     }
 
     private function _setPostPin() {
-        $PersonaGUID = NoNull($this->settings['persona_guid']);
+        $PersonaGUID = NoNull($this->settings['persona_guid'], $this->settings['_persona_guid']);
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $PinValue = NoNull($this->settings['pin_value'], $this->settings['value']);
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
@@ -713,6 +846,9 @@ class Posts {
         if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
         $this->settings['guid'] = $PostGUID;
         $this->settings['ReqType'] = 'GET';
+
+        // Ensure the Pin Value is Logical
+        $PinValue = str_replace('pin.pin.', 'pin.', "pin.$PinValue");
 
         // Prep the Action Record (if applicable)
         $sOK = $this->_preparePostAction();
@@ -1402,54 +1538,53 @@ class Posts {
             return $this->_getSiteArchives( $data['site_guid'] );
         }
 
-        $sqlStr = readResource(SQL_DIR . '/posts/getPagePostIDs.sql', $ReplStr);
-        if ( $TagKey != '' ) { $sqlStr = readResource(SQL_DIR . '/posts/getTagPostIDs.sql', $ReplStr); }
+        $sqlStr = prepSQLQuery("CALL GetPagePosts([ACCOUNT_ID], '[SITE_GUID]', '[CANON_URL]', '[OBJECT]', '[TAG_KEY]', '[SITE_TOKEN]', [COUNT], [PAGE]);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
-            $ids = '';
-            foreach ( $rslt as $Row ) {
-                if ( $ids != '' ) { $ids .= ', '; }
-                $ids .= nullInt($Row['post_id']);
-            }
-        }
+            $posts = $this->_parsePostResultSet($rslt);
+            if ( is_array($posts) && count($posts) > 0 ) {
+                $html = '';
 
-        $posts = $this->_getPostsByIDs($ids);
-        if ( is_array($posts) && count($posts) > 0 ) {
-            $html = '';
+                foreach ( $posts as $post ) {
+                    $el = $this->_buildHTMLElement($data, $post);
+                    if ( $el != '' ) {
+                        $postClass = NoNull($post['class']);
+                        if ( $postClass != '' ) { $postClass .= ' '; }
 
-            foreach ( $posts as $post ) {
-                $el = $this->_buildHTMLElement($data, $post);
-                if ( $el != '' ) {
-                    $postClass = NoNull($post['class']);
-                    if ( $postClass != '' ) { $postClass .= ' '; }
+                        // Determine the Template File
+                        $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/' . $post['type'] . '.html';
 
-                    // Determine the Template File
-                    $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/' . $post['type'] . '.html';
-
-                    if ( !file_exists($flatFile) ) {
-                        $postClass .= 'post-entry post ' . str_replace('.', '-', $post['type']);
-                        $el = tabSpace(4) . '<li class="' . $postClass  . '" data-guid="' . NoNull($post['guid']) . '" data-starred="' . BoolYN($post['attributes']['starred']) . '" data-owner="' . BoolYN($post['can_edit']) . '">' . "\r\n" .
-                                            "$el\r\n" .
-                              tabSpace(4) . '</li>';
+                        if ( !file_exists($flatFile) ) {
+                            $postClass .= 'post-entry post ' . str_replace('.', '-', $post['type']);
+                            $el = tabSpace(4) . '<li class="' . $postClass  . '" data-guid="' . NoNull($post['guid']) . '" data-pin="' . NoNull($post['attributes']['pin']) . '" data-starred="' . BoolYN($post['attributes']['starred']) . '" data-owner="' . BoolYN($post['can_edit']) . '">' . "\r\n" .
+                                                "$el\r\n" .
+                                  tabSpace(4) . '</li>';
+                        }
+                        if ( $html != '' ) { $html .= "\r\n"; }
+                        $html .= $el;
                     }
-                    if ( $html != '' ) { $html .= "\r\n"; }
-                    $html .= $el;
                 }
+
+                // Add the Pagination (If Required)
+                if ( $html != '' ) { $html .= $this->_getPagePagination($data); }
+
+                // If There are No Posts, Show a Friendly Message
+                if ( NoNull($html) == '' ) { $html = "There Is No HTML Here"; }
+
+                // Return the Completed HTML
+                return $html;
             }
-
-            // Add the Pagination (If Required)
-            if ( $html != '' ) { $html .= $this->_getPagePagination($data); }
-
-            // If There are No Posts, Show a Friendly Message
-            if ( NoNull($html) == '' ) { $html = "There Is No HTML Here"; }
-
-            // Return the Completed HTML
-            return $html;
         }
 
-        // If We're Here, There's Nothing to Show
-        $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/post.welcome.html';
-        if ( !file_exists($flatFile) ) { $flatFile = FLATS_DIR .'/templates/post.welcome.html'; }
+        $ReplStr = array();
+        foreach ( $this->strings as $Key=>$Value ) {
+            $ReplStr["[$Key]"] = $Value;
+        }
+
+        // If We're Here, There's Nothing to Show (Present Welcome Page or 404)
+        $ReqPage = ($data['has_content']) ? 'page-404.html' : 'post.welcome.html';
+        $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/' . $ReqPage;
+        if ( !file_exists($flatFile) ) { $flatFile = FLATS_DIR . '/templates/' . $ReqPage; }
         return readResource($flatFile, $ReplStr);
     }
 
@@ -1553,7 +1688,7 @@ class Posts {
                             $this->geo = new Geocode($this->settings, $this->strings);
                         }
 
-                        $coords = round(nullInt($post['meta']['geo']['latitude']), 7) . ',' . round(nullInt($post['meta']['geo']['longitude']), 7);
+                        $coords = round(nullInt($post['meta']['geo']['latitude']), 5) . ',' . round(nullInt($post['meta']['geo']['longitude']), 5);
                         $label = $this->geo->getNameFromCoords($post['meta']['geo']['latitude'], $post['meta']['geo']['longitude']);
 
                         $geoLine = "\r\n" .
@@ -1697,17 +1832,6 @@ class Posts {
         if ( is_array($posts) ) {
             $default_avatar = $this->settings['HomeURL'] . '/avatars/default.png';
             $data = array();
-            $mids = array();
-
-            // Collect the Mentions
-            foreach ( $posts as $post ) {
-                if ( YNBool($post['has_mentions']) ) {
-                    $mids[] = nullInt($post['post_id']);
-                }
-            }
-            if ( count($mids) > 0 ) {
-                $pms = $this->_getPostMentions($mids);
-            }
 
             foreach ( $posts as $post ) {
                 if ( YNBool($post['is_visible']) ) {
@@ -1734,15 +1858,27 @@ class Posts {
 
                     // Do We Have Mentions? Grab the List
                     $mentions = false;
-                    if ( YNBool($post['has_mentions']) ) {
-                        $mentions = $this->_getPostMentions($post['post_id']);
+                    if ( NoNull($post['mentions']) != '' ) {
+                        $json = json_decode('[' . $post['mentions'] . ']');
+                        $jArr = objectToArray($json);
+                        if ( is_array($jArr) && count($jArr) > 0 ) {
+                            $mentions = array();
+                            foreach ( $jArr as $pa ) {
+                                $mentions[] = array( 'guid'   => NoNull($pa['guid']),
+                                                     'name'   => NoNull($pa['as']),
+                                                     'is_you' => YNBool($pa['is_you']),
+                                                    );
+                            }
+                        }
                     }
 
                     // Prep the Post-Text
                     $IsNote = true;
                     if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
                     $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], $IsNote, true);
-                    $post_text = $this->_parsePostMentions($post_text);
+                    if ( is_array($mentions) ) {
+                        $post_text = $this->_parsePostMentions($post_text, $mentions);
+                    }
 
                     $data[] = array( 'guid'     => NoNull($post['post_guid']),
                                      'type'     => NoNull($post['type']),
@@ -1769,10 +1905,10 @@ class Posts {
                                                           'profile_url' => NoNull($post['profile_url']),
                                                          ),
 
-                                     'attributes'       => array( 'pin'     => NoNull($Row['pin_type'], 'pin.none'),
-                                                                  'starred' => YNBool($Row['is_starred']),
-                                                                  'muted'   => YNBool($Row['is_muted']),
-                                                                  'points'  => nullInt($Row['points']),
+                                     'attributes'       => array( 'pin'     => NoNull($post['pin_type'], 'pin.none'),
+                                                                  'starred' => YNBool($post['is_starred']),
+                                                                  'muted'   => YNBool($post['is_muted']),
+                                                                  'points'  => nullInt($post['points']),
                                                                  ),
 
                                      'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['publish_at'])),
@@ -1804,7 +1940,7 @@ class Posts {
      */
     private function _getTLStream( $path = 'global' ) {
         $path = NoNull(strtolower($path), 'global');
-        $validTLs = array( 'global', 'mentions', 'persona' );
+        $validTLs = array( 'global', 'mentions', 'persona', 'interact' );
         if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
 
         // Get the Types Requested (Default is Social Posts Only)
@@ -1852,6 +1988,7 @@ class Posts {
                          );
         $sqlStr = prepSQLQuery("CALL Get" . ucfirst($path) . "Timeline([ACCOUNT_ID], '[PERSONA_GUID]', '[POST_TYPES]', [SINCE_UNIX], [UNTIL_UNIX], [COUNT]);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
+
         if ( is_array($rslt) ) {
             return $this->_processTimeline($rslt);
 

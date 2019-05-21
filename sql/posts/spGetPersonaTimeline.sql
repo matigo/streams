@@ -39,11 +39,11 @@ BEGIN
     CREATE TEMPORARY TABLE tmpPosts AS
     SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
            LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                      WHEN pa.`account_id` = 1 THEN 'Y'
+                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
                 CASE WHEN po.`expires_at` IS NULL THEN 'Y'
                      WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                     WHEN pa.`account_id` = 1 THEN 'Y'
+                     WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                      ELSE 'Y' END) as `is_visible`
       FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                         INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
@@ -60,11 +60,11 @@ BEGIN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
         SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
                LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                          WHEN pa.`account_id` = 1 THEN 'Y'
+                          WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
                     CASE WHEN po.`expires_at` IS NULL THEN 'Y'
                          WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                         WHEN pa.`account_id` = 1 THEN 'Y'
+                         WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                          ELSE 'Y' END) as `is_visible`
           FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                             INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
@@ -83,6 +83,9 @@ BEGIN
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, '/', pa.`guid`, '/profile') as `profile_url`,
            po.`id` as `post_id`, po.`thread_id`, po.`parent_id`, po.`title`, po.`value`,
            (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
+           (SELECT GROUP_CONCAT('{"guid": "', zpa.`guid`, '", "as": "@', zpa.`name`, '", "is_you": "', CASE WHEN zpa.`account_id` = `in_account_id` THEN 'Y' ELSE 'N' END, '"}') as `mentions`
+              FROM `Persona` zpa INNER JOIN `PostMention` zpm ON zpa.`id` = zpm.`persona_id`
+             WHERE zpa.`is_deleted` = 'N' and zpm.`is_deleted` = 'N' and zpm.`post_id` = po.`id`) as `mentions`,
            (SELECT GROUP_CONCAT(z.`value`) as `value` FROM `PostTags` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id`) as `post_tags`,
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, po.`canonical_url`) as `canonical_url`,
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `site_url`,
@@ -122,6 +125,6 @@ BEGIN
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END
      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
-     
+
 END ;;
 DELIMITER ;

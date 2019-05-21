@@ -598,6 +598,7 @@ CREATE TABLE IF NOT EXISTS `Post` (
 CREATE INDEX `idx_post_main` ON `Post` (`is_deleted`, `channel_id`, `type`, `privacy_type`, `publish_at`, `persona_id`);
 CREATE INDEX `idx_post_acct` ON `Post` (`is_deleted`, `persona_id`, `type`);
 CREATE INDEX `idx_post_thrd` ON `Post` (`is_deleted`, `thread_id` DESC, `id` DESC);
+CREATE INDEX `idx_post_curl` ON `Post` (`is_deleted`, `canonical_url`);
 CREATE INDEX `idx_post_guid` ON `Post` (`is_deleted`, `guid`);
 CREATE INDEX `idx_post_idx` ON `Post` (`is_deleted`, `id` DESC);
 

@@ -23,8 +23,8 @@
 
     "msg401Line1": "Slow Down!",
     "msg401Line2": "You&apos;re making too many requests too quickly.<br>Share the system with everyone.",
-    "msg404Line1": "No Resource!",
-    "msg404Line2": "Sorry. This resource has either already been viewed, or the link is wrong.",
+    "msg404Line1": "File Not Found",
+    "msg404Line2": "Sorry. Not quite sure what you&apos;re looking for.",
     "msg500Line1": "Oh No!",
     "msg500Line2": "Just a moment, please. Something&apos;s not quite right.",
 

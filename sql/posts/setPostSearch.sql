@@ -14,3 +14,10 @@ SELECT DISTINCT po.`id` as `post_id`, TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(txt.`
  WHERE po.`is_deleted` = 'N' and po.`id` = [POST_ID]
  ORDER BY `word`
     ON DUPLICATE KEY UPDATE `is_deleted` = 'N';
+[SQL_SPLITTER]
+INSERT INTO `PostMention` (`post_id`, `persona_id`, `created_at`)
+SELECT ps.`post_id`, pa.`id` as `persona_id`, ps.`created_at`
+  FROM `PostSearch` ps INNER JOIN `Persona` pa ON ps.`word` = CONCAT('@', pa.`name`)
+ WHERE ps.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and ps.`post_id` = [POST_ID]
+    ON DUPLICATE KEY UPDATE `is_deleted` = 'N',
+                            `updated_at` = Now();
