@@ -207,12 +207,14 @@ CREATE TRIGGER `before_account`
 BEFORE INSERT ON `Account`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
-                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+    IF new.`guid` IS NULL THEN
+        SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`hash`, 1, 8), '-',
+                                        SUBSTRING(tmp.`hash`, 9, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 13, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 17, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 21, 12)) as `guid`
+                            FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) tmp);
+    END IF;
    END
 ;;
 DROP TRIGGER IF EXISTS `after_insert_account`;;
@@ -301,12 +303,14 @@ BEFORE INSERT ON `Client`
    FOR EACH ROW
  BEGIN
     IF new.`secret` IS NULL THEN SET new.`secret` = sha2(CONCAT(Now(), ROUND(RAND() * 100), uuid()), 512); END IF;
-    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
-                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+    IF new.`guid` IS NULL THEN
+        SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`hash`, 1, 8), '-',
+                                        SUBSTRING(tmp.`hash`, 9, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 13, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 17, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 21, 12)) as `guid`
+                            FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) tmp);
+    END IF;
    END
 ;;
 
@@ -358,12 +362,51 @@ CREATE TRIGGER `before_persona`
 BEFORE INSERT ON `Persona`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
-                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+    IF new.`guid` IS NULL THEN
+        SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`hash`, 1, 8), '-',
+                                        SUBSTRING(tmp.`hash`, 9, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 13, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 17, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 21, 12)) as `guid`
+                            FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) tmp);
+    END IF;
+   END
+;;
+
+DROP TABLE IF EXISTS `PersonaRelation`;
+CREATE TABLE IF NOT EXISTS `PersonaRelation` (
+    `persona_id`    int(11)        UNSIGNED                     NOT NULL    ,
+    `related_id`    int(11)        UNSIGNED                     NOT NULL    ,
+
+    `follows`       enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `is_muted`      enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `is_blocked`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+
+    `guid`          char(36)                CHARACTER SET utf8  NOT NULL    ,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`persona_id`, `related_id`),
+    FOREIGN KEY (`persona_id`) REFERENCES `Persona` (`id`),
+    FOREIGN KEY (`related_id`) REFERENCES `Persona` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_psnarel_main` ON `PersonaRelation` (`is_deleted`, `persona_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_persona_relation`;;
+CREATE TRIGGER `before_persona_relation`
+BEFORE INSERT ON `PersonaRelation`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` IS NULL THEN
+        SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`hash`, 1, 8), '-',
+                                        SUBSTRING(tmp.`hash`, 9, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 13, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 17, 4), '-',
+                                        SUBSTRING(tmp.`hash`, 21, 12)) as `guid`
+                            FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) tmp);
+    END IF;
    END
 ;;
 
