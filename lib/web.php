@@ -886,7 +886,7 @@ class Route extends Streams {
         $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
                        '[RUNTIME]' => $this->_getRunTime('html'),
                       );
-        foreach ( $this->messages as $Key=>$Val ) {
+        foreach ( $this->strings as $Key=>$Val ) {
             $rVal["[$Key]"] = NoNull($Val);
         }
 

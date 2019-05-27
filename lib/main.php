@@ -12,14 +12,14 @@ require_once(LIB_DIR . '/cookies.php');
 
 class Streams {
     var $settings;
-    var $messages;
+    var $strings;
 
     function __construct() {
         $GLOBALS['Perf']['app_s'] = getMicroTime();
 
         $sets = new cookies;
         $this->settings = $sets->cookies;
-        $this->messages = getLangDefaults($this->settings['_language_code']);
+        $this->strings = getLangDefaults($this->settings['_language_code']);
         unset( $sets );
     }
 
@@ -47,7 +47,7 @@ class Streams {
                     break;
             }
 
-            $data = new Route($this->settings, $this->messages);
+            $data = new Route($this->settings, $this->strings);
             $rslt = $data->getResponseData();
             $type = $data->getResponseType();
             $code = $data->getResponseCode();
@@ -153,7 +153,7 @@ class Streams {
         $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
                        '[RUNTIME]' => getRunTime('html'),
                       );
-        foreach ( $this->messages as $Key=>$Val ) {
+        foreach ( $this->strings as $Key=>$Val ) {
             $rVal["[$Key]"] = NoNull($Val);
         }
 

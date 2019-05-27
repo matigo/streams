@@ -281,13 +281,13 @@ class Email {
     				   'testerEUser' => NoNull($this->settings['txtMailUser'], readSetting('core', 'EmailUser')),
     				   'testerEPass' => NoNull($this->settings['txtMailPass'], readSetting('core', 'EmailPass')),
     				   'testerESSL'  => NoNull($this->settings['cmbMailSSL'], readSetting('core', 'EmailSSL')),
-    				   'testerMSG'	 => $this->messages['lblMailTestBody'],
+    				   'testerMSG'	 => $this->strings['lblMailTestBody'],
     				   'testerEFrom' => NoNull($this->settings['txtMailReply'], "noteworthy@$EmailDomain"),
     				   'testerETo'	 => NoNull($this->settings['txtMailSendTo'], readSetting('core', 'EmailSendTo')),
     				   'testerEFNam' => "Noteworthy",
     				   );
 	    $rVal = array( 'isGood'	 => 'N',
-	    			   'Message' => $this->messages['lblUnknownErr'],
+	    			   'Message' => $this->strings['lblUnknownErr'],
 	    			  );
 
     	// Update the Class Settings with the Tester Settings

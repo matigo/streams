@@ -36,7 +36,7 @@ BEGIN
                                     THEN MAX(CASE WHEN sm.`key` = 'show_quotation' THEN 'post.quotation' ELSE '' END) ELSE '' END, ',',
                           CASE WHEN `in_object` = 'location' THEN 'post.location'
                                WHEN `in_object` = '' AND MAX(CASE WHEN sm.`key` = 'show_location' THEN sm.`value` ELSE '-' END) = 'Y'
-                                    THEN MAX(CASE WHEN sm.`key` = 'show_location' THEN 'post.location' ELSE '' END) ELSE '' END) as `show_types` 
+                                    THEN MAX(CASE WHEN sm.`key` = 'show_location' THEN 'post.location' ELSE '' END) ELSE '' END) as `show_types`
               FROM `SiteMeta` sm INNER JOIN `Site` z ON sm.`site_id` = z.`id`
              WHERE sm.`is_deleted` = 'N' and z.`is_deleted` = 'N' and z.`guid` = `in_site_guid`
              GROUP BY sm.`site_id`
@@ -61,7 +61,7 @@ BEGIN
           FROM (SELECT po.`id`, po.`publish_at`
                   FROM `Post` po INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
                                  INNER JOIN `Site` si ON ch.`site_id` = si.`id`
-                 WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' 
+                 WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N'
                    and IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) >= Now()
                    and po.`canonical_url` = `in_canon_url`
                  UNION ALL
@@ -131,7 +131,7 @@ BEGIN
               and po.`id` < `min_id`;
         END IF;
     END IF;
-    
+
     /* Are We Doing a Tag Lookup? */
     IF IFNULL(`post_id`, 0) = 0 AND IFNULL(`in_tag`, '') <> '' THEN
         CREATE TEMPORARY TABLE tmpPosts AS
@@ -143,7 +143,7 @@ BEGIN
                     WHEN po.`publish_at` > Now() AND pa.`account_id` <> `in_account_id` THEN 'N'
                     ELSE 'Y' END as `is_visible`,
                po.`id` as `post_id`, po.`publish_at`
-          FROM `PostType` pt INNER JOIN `Post` po ON pt.`post_id` = po.`id`
+          FROM `PostTags` pt INNER JOIN `Post` po ON pt.`post_id` = po.`id`
                              INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
                              INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                              INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`

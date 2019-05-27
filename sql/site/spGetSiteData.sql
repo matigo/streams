@@ -63,7 +63,7 @@ BEGIN
     /* Add the Page Title and Type if Applicable */
     IF IFNULL(`request_uri`, '') NOT IN ('', '/') THEN
         UPDATE tmp INNER JOIN `Post` po ON tmp.`channel_id` = po.`channel_id` AND po.`canonical_url` = `request_uri`
-           SET tmp.`page_title` = IFNULL(po.`title`, po.`value`),
+           SET tmp.`page_title` = LEFT(IFNULL(po.`title`, po.`value`), 512),
                tmp.`page_type` = po.`type`
          WHERE tmp.`do_redirect` = 'N' and po.`id` > 0;
     END IF;
@@ -97,7 +97,7 @@ BEGIN
         ORDER BY zz.`pass_valid` DESC
         LIMIT 1;
     END IF;
-    
+
     /* Does the Site Contain at least one Post object? */
     SELECT zz.`has_posts` INTO `has_content`
       FROM (SELECT 'Y' as `has_posts`
