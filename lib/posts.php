@@ -715,20 +715,14 @@ class Posts {
 
         // If It's Good, Record the Meta Data & Collect the Post Object to Return
         if ( nullInt($data['post_id'], $rslt) >= 1 ) {
-            $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
-                              '[CHANNEL_GUID]' => sqlScrub($data['channel_guid']),
-                              '[PERSONA_GUID]' => sqlScrub($data['persona_guid']),
-                              '[TOKEN_GUID]'   => sqlScrub($data['token_guid']),
-                              '[TOKEN_ID]'     => nullInt($data['token_id']),
-
+            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($data['channel_guid']),
                               '[POST_ID]'      => nullInt($data['post_id'], $rslt),
                              );
+            $sqlStr = prepSQLQuery("CALL SetPostWriteContext('[CHANNEL_GUID]', [POST_ID]);", $ReplStr);
+            $isOK = doSQLQuery($sqlStr);
 
-            // Update the Site Version ID (Unfortunately, This Should Not Be In a Trigger)
-            $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr) . SQL_SPLITTER;
-
-            // Clear the MetaData for the Post
-            $sqlStr .= readResource(SQL_DIR . '/posts/resetPostMeta.sql', $ReplStr);
+            // Reset the SQL String
+            $sqlStr = '';
 
             // Record the MetaData for the Post
             foreach ( $data['meta'] as $Key=>$Value ) {
@@ -741,10 +735,6 @@ class Posts {
                     $sqlStr .= readResource(SQL_DIR . '/posts/writePostMeta.sql', $ReplStr);
                 }
             }
-
-            // Clear the Tags for the Post
-            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-            $sqlStr .= readResource(SQL_DIR . '/posts/resetPostTags.sql', $ReplStr);
 
             // Record the Tags for the Post
             if ( NoNull($data['tags']) != '' ) {
@@ -771,33 +761,6 @@ class Posts {
                     $sqlStr .= readResource(SQL_DIR . '/posts/writePostTags.sql', $ReplStr);
                 }
             }
-
-            // Clear the Mentions for the Post
-            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-            $sqlStr .= readResource(SQL_DIR . '/posts/resetPostMentions.sql', $ReplStr);
-
-            // Ensure the PostMeta for the Type is Set
-            $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
-                              '[POST_ID]'      => nullInt($data['post_id'], $rslt),
-                              '[SQL_SPLITTER]' => SQL_SPLITTER,
-                             );
-            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-            $sqlStr .= readResource(SQL_DIR . '/posts/setPostTypeExists.sql', $ReplStr);
-
-            // Set the PostSearch Unique Word Values (If Applicable)
-            if ( is_array($data['words']) && count($data['words']) > 0 ) {
-                $ReplStr['[WORD_LIST]'] = sqlScrub(implode(',', $data['words']));
-                $sqlStr .= SQL_SPLITTER;
-                $sqlStr .= readResource(SQL_DIR . '/posts/setPostSearch.sql', $ReplStr);
-            }
-
-            // Record the Files Attached (If Applicable)
-            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-            $sqlStr .= readResource(SQL_DIR . '/posts/setPostFiles.sql', $ReplStr);
-
-            // Remove Any Duplicate Posts (If Applicable)
-            if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
-            $sqlStr .= readResource(SQL_DIR . '/posts/chkPostDupes.sql', $ReplStr);
 
             // Execute the Queries
             $isOK = doSQLExecute($sqlStr);
@@ -1117,9 +1080,6 @@ class Posts {
             $PostTags .= $hash_list;
         }
 
-        // Get the Unique Word List
-        $wordList = UniqueWords($Value);
-
         // Token Definition
         $TokenGUID = '';
         $TokenID = 0;
@@ -1241,7 +1201,6 @@ class Posts {
 
                       'title'         => $Title,
                       'value'         => $this->_cleanContent($Value),
-                      'words'         => $wordList,
 
                       'canonical_url' => $CanonURL,
                       'reply_to'      => $ReplyTo,

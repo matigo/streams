@@ -838,7 +838,7 @@ CREATE TRIGGER `before_update_postsrch`
  BEFORE UPDATE ON `PostSearch`
    FOR EACH ROW
  BEGIN
-    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' THEN 'N' ELSE 'Y' END;
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' AND IFNULL(new.`word`, 'N') = 'N' THEN 'N' ELSE 'Y' END;
     SET new.`updated_at` = Now();
    END
 ;;
