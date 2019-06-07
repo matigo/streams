@@ -1522,6 +1522,11 @@ class Posts {
             return '';
         }
 
+        if ( $Count > 75 ) { $Count = 75; }
+        if ( $Count <= 0 ) { $Count = 10; }
+        if ( $Page > 10000 ) { $Page = 10000; }
+        if ( $page < 0 ) { $Page = 0; }
+
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
