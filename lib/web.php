@@ -350,20 +350,33 @@ class Route extends Streams {
      *  Function Returns the Pagingation Bar if Applicable
      */
     private function _getPagination( $data ) {
+        $CanonURL = $this->_getCanonicalURL();
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        $tObj = strtolower(str_replace('/', '', $CanonURL));
+
         $posts = 0;
         $pages = 0;
 
-        $CleanReq = substr(NoNull($this->settings['ReqURI']), 0, nullInt(strpos(NoNull($this->settings['ReqURI']), '?'), strlen($this->settings['ReqURI'])));
-        $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($data['channel_guid']),
-                          '[REQURI]'       => sqlScrub($CleanReq),
-                          '[PGSUB1]'       => sqlScrub($this->settings['PgSub1']),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/system/getPagination.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
+        $rslt = getPaginationSets();
+        if ( is_array($rslt) === false ) {
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                              '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
+                              '[SITE_GUID]'  => sqlScrub($data['site_guid']),
+                              '[CANON_URL]'  => sqlScrub($CanonURL),
+                              '[PGROOT]'     => sqlScrub($PgRoot),
+                              '[OBJECT]'     => sqlScrub($tObj),
+                              '[PGSUB1]'     => sqlScrub($this->settings['PgSub1']),
+                             );
+            $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+        }
+
+        // Let's build some Pagination
         if ( is_array($rslt) ) {
+            setPaginationSets($rslt);
             foreach ( $rslt as $Row ) {
-                $posts = nullInt($Row['posts']);
-                $pages = nullInt($Row['pages']);
+                $posts = nullInt($Row['post_count']);
+                $pages = nullInt($Row['page_count']);
             }
         }
 
@@ -544,15 +557,16 @@ class Route extends Streams {
 
         } else {
             $ReplStr = array( '[SITE_ID]' => nullInt($data['site_id']) );
-            $sqlStr = readResource(SQL_DIR . '/web/getSiteNav.sql', $ReplStr);
+            $sqlStr = prepSQLQuery("CALL GetSiteNav([SITE_ID]);", $ReplStr);
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 $SiteUrl = $data['protocol'] . '://' . $data['HomeURL'];
                 foreach ( $rslt as $Row ) {
                     if ( YNBool($Row['is_visible']) ) {
                         if ( $html != '' ) { $html .= "\r\n"; }
+                        $lblName = NoNull($this->strings[$Row['label']], $Row['label']);
                         $html .= tabSpace(5) . '<li class="main-nav__item">' .
-                                    '<a href="' . $SiteUrl . NoNull($Row['url']) . '" title="">' . NoNull($this->strings[$Row['label']], $Row['label']) . '</a>' .
+                                    '<a href="' . $SiteUrl . NoNull($Row['url']) . '" title="">' . NoNull($Row['title'], $lblName) . '</a>' .
                                  '</li>';
                     }
                 }
@@ -621,7 +635,6 @@ class Route extends Streams {
                        '[BANNER_IMG]'   => $banner_img,
                        '[AUTHOR_TOOLS]' => $this->_getAuthoringTools($data),
                        '[SETTINGS]'     => $this->_getSettingsPanel($data),
-                       '[PREFERENCES]'  => $this->_getPreferencesPanel($data),
                        '[PAGINATION]'   => $this->_getPagination($data),
                        '[POST_CLASS]'   => '',
                       );
@@ -985,6 +998,25 @@ class Route extends Streams {
 
         // If We're Here, There is no Syndication Resource Request
         return false;
+    }
+
+    /**
+     *  Function Determines the Current Page URL
+     */
+    private function _getCanonicalURL() {
+        if ( NoNull($this->settings['PgRoot']) == '' ) { return ''; }
+
+        $rVal = '/' . NoNull($this->settings['PgRoot']);
+        for ( $i = 1; $i <= 9; $i++ ) {
+            if ( NoNull($this->settings['PgSub' . $i]) != '' ) {
+                $rVal .= '/' . NoNull($this->settings['PgSub' . $i]);
+            } else {
+                return $rVal;
+            }
+        }
+
+        // Return the Canonical URL
+        return $rVal;
     }
 }
 ?>

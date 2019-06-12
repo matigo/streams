@@ -598,6 +598,15 @@
         return $Protocol . '://' . $cdnURL;
     }
 
+    function getPaginationSets() {
+        if ( is_array($GLOBALS['pagination']) ) { return $GLOBALS['pagination']; }
+        return false;
+    }
+
+    function setPaginationSets( $PageSet ) {
+        if ( is_array($PageSet) ) { $GLOBALS['pagination'] = $PageSet; }
+    }
+
     /**
      * Function scrubs a string to ensure it's safe to use in a URL
      */

@@ -30,6 +30,7 @@ VALUES ('system.invalid', 'Invalid Type'), ('system.unknown', 'Unknown Type'),
        ('channel.site', 'A General Channel'), ('channel.note', 'A Notes-Only Channel'), ('channel.todo', 'A ToDo-Only Channel'),
        ('post.social', 'A Social Post'), ('post.blog', 'A Blog / Podcast Post'), ('post.locker', 'A Secured Text Item'), ('post.photo', 'A Photo Post'), ('post.invalid', 'A Broken Post'),
        ('post.bookmark', 'A Bookmark Object'), ('post.todo', 'A Standard ToDo Item'), ('post.note', 'A Standard Note Item'), ('post.quotation', 'A Quotation Post from a Bookmark'),
+       ('post.page', 'A hierarchical Page on a Site'),
        ('visibility.none', 'An Invisible Post'), ('visibility.password', 'A Password-Protected Post'), ('visibility.private', 'A Private Post'), ('visibility.public', 'A Public Post')
     ON DUPLICATE KEY UPDATE `is_deleted` = 'N'
 ;
@@ -838,7 +839,7 @@ CREATE TRIGGER `before_update_postsrch`
  BEFORE UPDATE ON `PostSearch`
    FOR EACH ROW
  BEGIN
-    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' AND IFNULL(new.`word`, 'N') = 'N' THEN 'N' ELSE 'Y' END;
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' AND IFNULL(new.`is_deleted`, 'N') = 'N' THEN 'N' ELSE 'Y' END;
     SET new.`updated_at` = Now();
    END
 ;;

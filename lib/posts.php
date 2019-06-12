@@ -1147,6 +1147,19 @@ class Posts {
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
 
+            case 'post.page':
+                if ( $PostSlug == '' ) {
+                    $PostSlug = $this->_getSafeTagSlug($Title);
+
+                    // Check if the Slug is Unique
+                    $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $PostSlug);
+
+                    // If the Slug is Not Empty, Set the Canonical URL Value
+                    if ( $PostSlug != '' ) { $CanonURL = NoNull("/$PostSlug", "/$PostGUID"); }
+                }
+                if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
+                break;
+
             case 'post.location':
                 if ( nullInt($GeoLong) == 0 && nullInt($GetLat) == 0 ) {
                     $this->_setMetaMessage("Please Provide an accurate Latitude & Longtitude.", 400); $isValid = false;
@@ -1155,7 +1168,6 @@ class Posts {
 
             case 'post.draft':
             case 'post.note':
-            case 'post.page':
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
                 break;
 
@@ -1359,22 +1371,28 @@ class Posts {
         if ( $html !== false && $html != '' ) { return $html; }
         $tObj = strtolower(str_replace('/', '', $CanonURL));
 
-        // Construct the SQL Query
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
-                          '[SITE_GUID]'  => sqlScrub($data['site_guid']),
-                          '[CANON_URL]'  => sqlScrub($CanonURL),
-                          '[PGROOT]'     => sqlScrub($PgRoot),
-                          '[OBJECT]'     => sqlScrub($tObj),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/posts/getPagePagination.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
+        $rslt = getPaginationSets();
+        if ( is_array($rslt) === false ) {
+            // Construct the SQL Query
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                              '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
+                              '[SITE_GUID]'  => sqlScrub($data['site_guid']),
+                              '[CANON_URL]'  => sqlScrub($CanonURL),
+                              '[PGROOT]'     => sqlScrub($PgRoot),
+                              '[OBJECT]'     => sqlScrub($tObj),
+                             );
+            $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '');", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+        }
+
+        // At this point, we should have data. Let's build some pagination
         if ( is_array($rslt) ) {
+            setPaginationSets($rslt);
             $max = 0;
             $cnt = 0;
 
             foreach ( $rslt as $Row ) {
-                if ( YNBool($Row['exacts']) === false ) {
+                if ( YNBool($Row['is_exact']) === false ) {
                     $cnt = nullInt($Row['post_count']);
                 }
             }
@@ -2684,7 +2702,9 @@ class Posts {
      *  Function Checks that a Post Slug is Unique and Valid
      */
     private function _checkUniqueSlug( $ChannelGUID, $PostGUID, $PostSlug ) {
-        $Excludes = array('feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'profile', 'settings', 'messages');
+        $Excludes = array( 'feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'location', 'archive',
+                           'contact', 'profile', 'settings', 'messages'
+                          );
 
         // Ensure the PostSlug is not ending in a dash
         if ( strpos($PostSlug, '-') >= 0 ) {
@@ -2699,7 +2719,7 @@ class Posts {
         }
 
         // Check the Slug against the Database (this should really be turned into a complete SQL solution)
-        for ( $i = 0; $i <= 49; $i++ ) {
+        for ( $i = 0; $i <= 149; $i++ ) {
             $TrySlug = $PostSlug;
             if ( $i > 0 ) { $TrySlug = "$PostSlug-$i"; }
 
@@ -2713,7 +2733,7 @@ class Posts {
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
-                        if ( nullInt($Row['post_count']) <= 0 ) { return $PostSlug; }
+                        if ( nullInt($Row['post_count']) <= 0 ) { return $TrySlug; }
                     }
                 }
             }
