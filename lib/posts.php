@@ -427,7 +427,7 @@ class Posts {
                 if ( NoNull($Row['reply_to']) != '' ) { $pclass[] = 'p-in-reply-to'; }
 
                 $IsNote = true;
-                if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark', 'post.location', 'post.page')) ) { $IsNote = false; }
                 $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], $IsNote, true);
                 $post_text = $this->_parsePostMentions($post_text);
 

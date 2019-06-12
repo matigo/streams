@@ -55,15 +55,15 @@ BEGIN
 
     /* If we have a specific URL, ensure every post type is acceptable */
     IF IFNULL(`in_canon_url`, '') NOT IN ('/article', '/bookmark', '/note', '/quotation', '/location', '/', '') AND IFNULL(`in_tag`, '') = '' THEN
-        SET `post_types` = 'post.article, post.bookmark, post.note, post.quotation, post.location';
+        SET `post_types` = 'post.article, post.bookmark, post.note, post.quotation, post.location, post.page';
 
         SELECT tmp.`id` INTO `post_id`
           FROM (SELECT po.`id`, po.`publish_at`
                   FROM `Post` po INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
                                  INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                  WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N'
-                   and IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) >= Now()
-                   and po.`canonical_url` = `in_canon_url`
+                   and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE))
+                   and si.`guid` = `in_site_guid` and po.`canonical_url` = `in_canon_url`
                  UNION ALL
                  SELECT -1 as `id`, FROM_UNIXTIME(0) as `publish_at`
                  ORDER BY `publish_at` DESC
