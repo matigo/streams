@@ -20,14 +20,14 @@ SELECT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_gui
                     INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
                     INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                     INNER JOIN `SiteUrl` su ON si.`id` = su.`site_id`
- WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N' 
+ WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
    and za.`is_deleted` = 'N' and pm.`is_deleted` = 'N'
-   and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and su.`is_active` = 'Y' 
-   and po.`type` IN ([POST_TYPES]) and za.`account_id` = [ACCOUNT_ID]
+   and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
+   and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none') and po.`type` IN ([POST_TYPES]) and za.`account_id` = [ACCOUNT_ID]
    and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                   WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
                   ELSE 'N' END
-   and po.`publish_at` BETWEEN FROM_UNIXTIME([SINCE_UNIX]) AND 
+   and po.`publish_at` BETWEEN FROM_UNIXTIME([SINCE_UNIX]) AND
                                CASE WHEN [UNTIL_UNIX] = 0 THEN Now() ELSE FROM_UNIXTIME([UNTIL_UNIX]) END
  ORDER BY CASE WHEN [SINCE_UNIX] = 0 THEN 1 ELSE po.`publish_at` END, po.`publish_at` DESC
  LIMIT 0, [COUNT];

@@ -119,10 +119,8 @@ BEGIN
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-       and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
-       and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                      ELSE 'N' END
+       and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
+       and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')
        and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END

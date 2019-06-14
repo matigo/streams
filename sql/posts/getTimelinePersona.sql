@@ -20,10 +20,7 @@ SELECT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_gui
                     INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
  WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
    and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
-   and po.`type` IN ([POST_TYPES]) and pa.`guid` = '[PERSONA_GUID]'
-   and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
-                  WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
-                  ELSE 'N' END
+   and po.`privacy_type` = 'visibility.public' and po.`type` IN ([POST_TYPES]) and pa.`guid` = '[PERSONA_GUID]'
    and po.`publish_at` BETWEEN CASE WHEN [SINCE_UNIX] = 0 THEN DATE_FORMAT(DATE_SUB(Now(), INTERVAL 3 MONTH), '%Y-%m-01 00:00:00')
                                     ELSE FROM_UNIXTIME([SINCE_UNIX]) END
                            AND CASE WHEN [UNTIL_UNIX] = 0 THEN Now() ELSE FROM_UNIXTIME([UNTIL_UNIX]) END

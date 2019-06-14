@@ -29,11 +29,8 @@ SELECT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_gui
                     INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                     INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
  WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-   and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
-   and po.`type` IN ([POST_TYPES])
-   and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                  WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
-                  ELSE 'N' END
+   and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
+   and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none') and po.`type` IN ([POST_TYPES])
    and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                   WHEN pa.`account_id` = [ACCOUNT_ID] THEN 'Y'
                   ELSE 'N' END
