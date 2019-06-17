@@ -209,12 +209,22 @@ class cookies {
      *  Function Returns the Type of Request and the Route Required
      */
     private function _getRouting() {
-        $paths = array('api', 'cdn', 'files');
+        $paths = array( 'api'      => 'api',
+                        'cdn'      => 'cdn',
+                        'i'        => 'cdn',
+                        'hooks'    => 'hooks',
+                        'webhook'  => 'hooks',
+                        'webhooks' => 'hooks',
+                        'file'     => 'files',
+                        'files'    => 'files'
+                       );
 
+        // Determine the Routing based on the Subdomain
         $ReqURL = strtolower( NoNull($_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']) );
         $parts = explode('.', $ReqURL);
 
-        if ( in_array($parts[0], $paths) ) { return $parts[0]; }
+        // Return the Routing or an Empty String
+        if ( array_key_exists($parts[0], $paths) ) { return NoNull($paths[$parts[0]]); }
         return '';
     }
 

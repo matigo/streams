@@ -42,6 +42,10 @@ class Streams {
                     require_once(LIB_DIR . '/api.php');
                     break;
 
+                case 'hooks':
+                    require_once(LIB_DIR . '/hooks.php');
+                    break;
+
                 default:
                     require_once(LIB_DIR . '/web.php');
                     break;

@@ -1075,6 +1075,74 @@ BEFORE UPDATE ON `SiteContact`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
+
+/** ************************************************************************* *
+ *  Create Sequence (PayPalTXN)
+ ** ************************************************************************* */
+DROP TABLE IF EXISTS `PayPalTXN`;
+CREATE TABLE IF NOT EXISTS `PayPalTXN` (
+    `id`            int(11)        UNSIGNED NOT NULL    AUTO_INCREMENT,
+    `subject`       varchar(64)             NOT NULL    DEFAULT '',
+    `received_at`   datetime                NOT NULL    ,
+    `type`          varchar(64)             NOT NULL    DEFAULT '',
+    `status`        varchar(64)             NOT NULL    DEFAULT '',
+    `ipn_track_id`  varchar(64)             NOT NULL    DEFAULT '',
+
+    `account_id`    int(11)        UNSIGNED     NULL    ,
+    `subscr_id`     varchar(64)             NOT NULL    DEFAULT '',
+    `first_name`    varchar(80)             NOT NULL    DEFAULT '',
+    `last_name`     varchar(80)             NOT NULL    DEFAULT '',
+    `payer_id`      varchar(64)             NOT NULL    DEFAULT '',
+    `payer_email`   varchar(120)            NOT NULL    DEFAULT '',
+    `payer_status`  varchar(64)             NOT NULL    DEFAULT '',
+    `res_country`   varchar(64)                 NULL    DEFAULT '',
+
+    `verify_sign`   varchar(80)             NOT NULL    DEFAULT '',
+    `txn_id`        varchar(80)             NOT NULL    DEFAULT '',
+
+    `site_id`       int(11)        UNSIGNED     NULL    ,
+    `guid`          char(36)                NOT NULL    ,
+
+    `payment_gross` decimal(12,4)           NOT NULL    DEFAULT 0,
+    `payment_fee`   decimal(12,4)           NOT NULL    DEFAULT 0,
+    `mc_fee`        decimal(12,4)           NOT NULL    DEFAULT 0,
+    `mc_gross`      decimal(12,4)           NOT NULL    DEFAULT 0,
+    `is_recurring`  enum('N','Y')           NOT NULL    DEFAULT 'N',
+
+    `is_deleted`    enum('N','Y')           NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`account_id`) REFERENCES `Account` (`id`),
+    FOREIGN KEY (`site_id`) REFERENCES `Site` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_pptxn_main` ON `PayPalTXN` (`is_deleted`, `account_id`);
+CREATE INDEX `idx_pptxn_txns` ON `PayPalTXN` (`is_deleted`, `verify_sign`, `txn_id`);
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_insert_paypaltxn`;;
+CREATE TRIGGER `before_insert_paypaltxn`
+BEFORE INSERT ON `PayPalTXN`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
+                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
+                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
+                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_paypaltxn`;;
+CREATE TRIGGER `before_update_paypaltxn`
+BEFORE UPDATE ON `PayPalTXN`
+   FOR EACH ROW
+ BEGIN
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  Create Sequence (Statistics)
