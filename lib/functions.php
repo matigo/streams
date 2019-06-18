@@ -48,12 +48,12 @@
         $rVal = array();
 
         // Replace Some Characters
-        $ReplStr = array( '’' => "'", '“' => '"', '”' => '"', '-' => ' ' );
+        $ReplStr = array( '‘' => "'", '’' => "'", '“' => '"', '”' => '"', '—' => ' ', '-' => ' ' );
         $text = str_replace(array_keys($ReplStr), array_values($ReplStr), $string);
 
         // Eliminate any Punctuation
-        $punc = array( '!', '.', ',', '&', '?', '<', '>', '_', '(', ')', '*', '/', '\\', '-', '=', ';', ':', '`', '[', ']', '{', '}', '"', "'");
-        $text = NoNull(str_replace($punc, '', html_entity_decode(strip_tags($text), ENT_COMPAT | ENT_HTML5 | ENT_QUOTES, 'UTF-8')));
+        $punc = array( '!', '.', ',', '&', '?', '<', '>', '_', '(', ')', '*', '/', '$', '#', '%', '|', '\\', '-', '=', ';', ':', '~', '^', '`', '[', ']', '{', '}', '"', "'");
+        $text = NoNull(str_replace($punc, ' ', html_entity_decode(strip_tags($text), ENT_COMPAT | ENT_HTML5 | ENT_QUOTES, 'UTF-8')));
         $uniques = array();
         $words = explode(' ', " $text ");
         foreach ( $words as $word ) {

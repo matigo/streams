@@ -361,6 +361,7 @@ class Route extends Streams {
      *  Function Returns the Pagingation Bar if Applicable
      */
     private function _getPagination( $data ) {
+        $Excludes = array( 'write', 'settings', 'account' );
         $CanonURL = $this->_getCanonicalURL();
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $tObj = strtolower(str_replace('/', '', $CanonURL));
@@ -369,7 +370,7 @@ class Route extends Streams {
         $pages = 0;
 
         $rslt = getPaginationSets();
-        if ( is_array($rslt) === false ) {
+        if ( is_array($rslt) === false && in_array($PgRoot, $Excludes) === false ) {
             $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                               '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
                               '[SITE_GUID]'  => sqlScrub($data['site_guid']),

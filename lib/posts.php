@@ -687,6 +687,7 @@ class Posts {
     private function _writePost() {
         $data = $this->_validateWritePostData();
         if ( is_array($data) === false ) { return false; }
+        $post_id = 0;
 
         // Prep the Replacement Array and Execute the INSERT or UPDATE
         $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
@@ -697,6 +698,7 @@ class Posts {
 
                           '[TITLE]'        => sqlScrub($data['title']),
                           '[VALUE]'        => sqlScrub($data['value']),
+                          '[WORDS]'        => sqlScrub($data['words']),
 
                           '[CANON_URL]'    => sqlScrub($data['canonical_url']),
                           '[REPLY_TO]'     => sqlScrub($data['reply_to']),
@@ -711,24 +713,26 @@ class Posts {
                           '[PARENT_ID]'    => nullInt($data['parent_id']),
                           '[POST_ID]'      => nullInt($data['post_id']),
                          );
-        $sqlStr = readResource(SQL_DIR . '/posts/writePost.sql', $ReplStr);
-        $rslt = doSQLExecute($sqlStr);
+        $sqlStr = prepSQLQuery("CALL WritePost([ACCOUNT_ID], '[CHANNEL_GUID]', '[PERSONA_GUID]', '[TOKEN_GUID]', [TOKEN_ID], " .
+                                             "'[TITLE]', '[VALUE]', '[WORDS]', '[CANON_URL]', '[REPLY_TO]', " .
+                                             "'[POST_SLUG]', '[POST_TYPE]', '[PRIVACY]', '[PUBLISH_AT]', '[EXPIRES_AT]', " .
+                                             " [THREAD_ID], [PARENT_ID], [POST_ID]);", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $post_id = nullInt($Row['post_id']);
+            }
+        }
 
         // If It's Good, Record the Meta Data & Collect the Post Object to Return
-        if ( nullInt($data['post_id'], $rslt) >= 1 ) {
-            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($data['channel_guid']),
-                              '[POST_ID]'      => nullInt($data['post_id'], $rslt),
-                             );
-            $sqlStr = prepSQLQuery("CALL SetPostWriteContext('[CHANNEL_GUID]', [POST_ID]);", $ReplStr);
-            $isOK = doSQLQuery($sqlStr);
-
+        if ( nullInt($data['post_id'], $post_id) >= 1 ) {
             // Reset the SQL String
             $sqlStr = '';
 
             // Record the MetaData for the Post
             foreach ( $data['meta'] as $Key=>$Value ) {
                 if ( NoNull($Value) != '' ) {
-                    $ReplStr = array( '[POST_ID]' => nullInt($data['post_id'], $rslt),
+                    $ReplStr = array( '[POST_ID]' => nullInt($data['post_id'], $post_id),
                                       '[VALUE]'   => sqlScrub($Value),
                                       '[KEY]'     => sqlScrub($Key),
                                      );
@@ -755,7 +759,7 @@ class Posts {
                 if ( $lst_hash != '' ) { $lst .= ",$lst_hash"; }
 
                 if ( NoNull($lst) != '' ) {
-                    $ReplStr = array( '[POST_ID]' => nullInt($data['post_id'], $rslt),
+                    $ReplStr = array( '[POST_ID]'    => nullInt($data['post_id'], $post_id),
                                       '[VALUE_LIST]' => NoNull($lst)
                                      );
                     if ( $sqlStr != '' ) { $sqlStr .= SQL_SPLITTER; }
@@ -767,10 +771,10 @@ class Posts {
             $isOK = doSQLExecute($sqlStr);
 
             // Send any Webmentions or Pingbacks (If Applicable)
-            $this->_setPostPublishData(nullInt($data['post_id'], $rslt));
+            $this->_setPostPublishData(nullInt($data['post_id'], $post_id));
 
             // Collect the Post Object
-            return $this->_getPostsByIDs(nullInt($data['post_id'], $rslt));
+            return $this->_getPostsByIDs(nullInt($data['post_id'], $post_id));
         }
 
         // If We're Here, There's a Problem
@@ -1043,6 +1047,13 @@ class Posts {
         // Additional Meta
         $SourceURL = NoNull($this->settings['source_url'], $this->settings['source']);
         $SourceTitle = NoNull($this->settings['source_title']);
+
+        $UniqueWords = '';
+        $uWords = UniqueWords($Value);
+        if ( is_array($uWords) && count($uWords) > 0 ) {
+            $UniqueWords = implode(',', $uWords);
+        }
+
         $GeoLong = NoNull($this->settings['geo_longitude'], $this->settings['geo_long']);
         $GeoLat = NoNull($this->settings['geo_latitude'], $this->settings['geo_lat']);
         $GeoAlt = NoNull($this->settings['geo_altitude'], $this->settings['geo_alt']);
@@ -1225,6 +1236,7 @@ class Posts {
                       'publish_at'    => $PublishAt,
                       'expires_at'    => $ExpiresAt,
 
+                      'words'         => $UniqueWords,
                       'tags'          => $PostTags,
                       'meta'          => array( 'source_url'      => $SourceURL,
                                                 'source_title'    => $SourceTitle,
@@ -1351,6 +1363,7 @@ class Posts {
      *  Function Determines the Pagination for the Page
      */
     private function _getPagePagination( $data ) {
+        $Excludes = array('write', 'settings', 'account');
         $CanonURL = $this->_getCanonicalURL();
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $Count = nullInt($this->settings['count'], 10);
@@ -1373,7 +1386,7 @@ class Posts {
         $tObj = strtolower(str_replace('/', '', $CanonURL));
 
         $rslt = getPaginationSets();
-        if ( is_array($rslt) === false ) {
+        if ( is_array($rslt) === false && in_array($PgRoot, $Excludes) === false ) {
             // Construct the SQL Query
             $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                               '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
@@ -1489,6 +1502,7 @@ class Posts {
     }
 
     private function _getPageJSON( $data ) {
+        $Excludes = array( 'account', 'settings', 'write', 'new' );
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $Count = nullInt($this->settings['count'], 10);
         $Page = $this->_getPageNumber() * $Count;
@@ -1497,9 +1511,7 @@ class Posts {
         $tObj = strtolower(str_replace('/', '', $CanonURL));
 
         // If We're Writing a New Post, Return a Different Set of Data
-        if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
-            return '';
-        }
+        if ( in_array($PgRoot, $Excludes) && NoNull($this->settings['PgSub1']) == '' ) { return ''; }
 
         if ( $Count > 75 ) { $Count = 75; }
         if ( $Count <= 0 ) { $Count = 10; }
@@ -1529,6 +1541,7 @@ class Posts {
     }
 
     private function _getPageHTML( $data ) {
+        $Excludes = array( 'account', 'settings', 'write', 'new' );
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $Count = nullInt($this->settings['count'], 10);
         $Page = $this->_getPageNumber() * $Count;
@@ -1537,9 +1550,7 @@ class Posts {
         $tObj = strtolower(str_replace('/', '', $CanonURL));
 
         // If We're Writing a New Post, Return a Different Set of Data
-        if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
-            return '';
-        }
+        if ( in_array($PgRoot, $Excludes) && NoNull($this->settings['PgSub1']) == '' ) { return ''; }
 
         if ( $Count > 75 ) { $Count = 75; }
         if ( $Count <= 0 ) { $Count = 10; }
@@ -2748,7 +2759,7 @@ class Posts {
                            'account', 'accounts', 'contact', 'profile', 'settings', 'messages'
                           );
 
-        // Ensure the PostSlug is not ending in a dash
+        // Ensure the PostSlug is not ending in a dash or contains multiple dashes in a row
         if ( strpos($PostSlug, '-') >= 0 ) {
             $blks = explode('-', $PostSlug);
             $PostSlug = '';
@@ -2760,23 +2771,17 @@ class Posts {
             }
         }
 
-        // Check the Slug against the Database (this should really be turned into a complete SQL solution)
-        for ( $i = 0; $i <= 149; $i++ ) {
-            $TrySlug = $PostSlug;
-            if ( $i > 0 ) { $TrySlug = "$PostSlug-$i"; }
-
-            // Check to See If This Slug is Valid or Not
-            if ( in_array($TrySlug, $Excludes) === false ) {
-                $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChannelGUID),
-                                  '[POST_GUID]'    => sqlScrub($PostGUID),
-                                  '[POST_SLUG]'    => sqlScrub($TrySlug),
-                                 );
-                $sqlStr = readResource(SQL_DIR . '/posts/chkUniqueSlug.sql', $ReplStr);
-                $rslt = doSQLQuery($sqlStr);
-                if ( is_array($rslt) ) {
-                    foreach ( $rslt as $Row ) {
-                        if ( nullInt($Row['post_count']) <= 0 ) { return $TrySlug; }
-                    }
+        // Check the Slug against the Database
+        if ( in_array($TrySlug, $Excludes) === false ) {
+            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChannelGUID),
+                              '[POST_GUID]'    => sqlScrub($PostGUID),
+                              '[POST_SLUG]'    => sqlScrub($PostSlug),
+                             );
+            $sqlStr = prepSQLQuery("CALL CheckUniqueSlug('[CHANNEL_GUID]', '[POST_GUID]', '[POST_SLUG]');", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    return NoNull($Row['slug']);
                 }
             }
         }
