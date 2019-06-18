@@ -2474,7 +2474,11 @@ function setPersona( el ) {
     var ds = window.personas;
 
     for ( var i = 0; i < ds.distributors.length; i++ ) {
-        if ( ds.distributors[i].guid == _persona_guid ) { _avatar_url = ds.distributors[i].avatar; }
+        ds.distributors[i].is_active = false;
+        if ( ds.distributors[i].guid == _persona_guid ) {
+            _avatar_url = ds.distributors[i].avatar;
+            ds.distributors[i].is_active = true;
+        }
     }
 
     if ( _persona_guid.length >= 20 ) {
@@ -2486,6 +2490,7 @@ function setPersona( el ) {
         for ( var i = 0; i < els.length; i++ ) { els[i].src = _avatar_url; }
         el.parentNode.classList.add('active');
         loadChannelList(_persona_guid);
+        showNewPostAs();
     }
 }
 function setVisibility(mode) {

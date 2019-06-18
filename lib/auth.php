@@ -212,28 +212,32 @@ class Auth {
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
-                    $storage = (1024 * 1024 * 1024 * 5);
+                    $rVal = array( '_account_id'         => nullInt($Row['account_id']),
+                                   '_email'              => NoNull($Row['email']),
+                                   '_display_name'       => NoNull($Row['display_name']),
+                                   '_avatar_file'        => NoNull($Row['avatar_url'], 'default.png'),
+                                   '_account_type'       => NoNull($Row['type']),
 
-                    $rVal = array( '_account_id'        => nullInt($Row['account_id']),
-                                   '_email'             => NoNull($Row['email']),
-                                   '_display_name'      => NoNull($Row['display_name']),
-                                   '_avatar_file'       => NoNull($Row['avatar_url'], 'default.png'),
-                                   '_account_type'      => NoNull($Row['type']),
-                                   '_channel_guid'      => NoNull($Row['default_channel']),
-                                   '_persona_guid'      => NoNull($Row['default_persona']),
-                                   '_access_level'      => NoNull($Row['access_level'], 'read'),
-                                   '_language_code'     => NoNull($Row['language_code']),
-                                   '_welcome_done'      => YNBool($Row['welcome_done']),
-                                   '_theme'             => NoNull($Row['theme'], 'default'),
-                                   '_timezone'          => NoNull($Row['timezone'], 'UTC'),
-                                   '_storage_total'     => nullInt($Row['storage_limit']),
-                                   '_storage_used'      => nullInt($Row['storage_used']),
-                                   '_storage_files'     => nullInt($Row['file_count']),
-                                   '_send_contact_mail' => YNBool($Row['pref_contact_mail']),
-                                   '_pass_change'       => YNBool($Row['password_change']),
-                                   '_token_id'          => alphaToInt($data[1]),
-                                   '_token_guid'        => NoNull($data[2]),
-                                   '_logged_in'         => true,
+                                   '_premium_active'     => YNBool($Row['premium_active']),
+                                   '_premium_until_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['premium_until'])),
+                                   '_premium_until_unix' => strtotime($Row['premium_until']),
+                                   '_storage_total'      => nullInt($Row['storage_limit']),
+                                   '_storage_used'       => nullInt($Row['storage_used']),
+                                   '_storage_files'      => nullInt($Row['file_count']),
+
+                                   '_channel_guid'       => NoNull($Row['default_channel']),
+                                   '_persona_guid'       => NoNull($Row['default_persona']),
+                                   '_access_level'       => NoNull($Row['access_level'], 'read'),
+                                   '_language_code'      => NoNull($Row['language_code']),
+                                   '_welcome_done'       => YNBool($Row['welcome_done']),
+                                   '_theme'              => NoNull($Row['theme'], 'default'),
+                                   '_timezone'           => NoNull($Row['timezone'], 'UTC'),
+
+                                   '_send_contact_mail'  => YNBool($Row['pref_contact_mail']),
+                                   '_pass_change'        => YNBool($Row['password_change']),
+                                   '_token_id'           => alphaToInt($data[1]),
+                                   '_token_guid'         => NoNull($data[2]),
+                                   '_logged_in'          => true,
                                   );
                 }
             }

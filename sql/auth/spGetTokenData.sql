@@ -2,7 +2,8 @@ DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetTokenData;;
 CREATE PROCEDURE GetTokenData( IN `in_token_id` int(11), IN `in_token_guid` varchar(64), IN `in_password_age` int(11), IN `in_lifespan` int(11), `in_homeurl` varchar(256) )
 BEGIN
-    DECLARE `reset_pass` enum('N','Y');
+    DECLARE `reset_pass`    enum('N','Y');
+    DECLARE `premium_until` datetime;
 
     /** ********************************************************************** **
      *  Function returns any Messages that are associated with the Account that is
@@ -15,7 +16,7 @@ BEGIN
     IF IFNULL(`in_password_age`, 10000) < 0 OR IFNULL(`in_password_age`, 10000) > 10000 THEN
         SET `in_password_age` = 10000;
     END IF;
-    
+
     IF IFNULL(`in_lifespan`, 7200) < 0 OR IFNULL(`in_lifespan`, 7200) > 7200 THEN
         SET `in_lifespan` = 7200;
     END IF;
@@ -50,6 +51,26 @@ BEGIN
                                     `updated_at` = Now();
     END IF;
 
+    /* Is the Account for a Premium Account Holder? */
+    SELECT DATE_FORMAT(GREATEST((SELECT IFNULL((SELECT DATE_ADD(txn.`received_at`, INTERVAL CASE WHEN txn.`payment_gross` IN (15, 30, 60) THEN 366
+                                                                                                 WHEN txn.`payment_gross` IN (5.75, 25) THEN 30
+                                                                                                 ELSE 0 END DAY) as `until_at`
+                                                  FROM `Tokens` tt INNER JOIN `Account` acct ON tt.`account_id` = acct.`id`
+                                                                   INNER JOIN `PayPalTXN` txn ON acct.`id` = txn.`account_id`
+                                                 WHERE txn.`is_deleted` = 'N' and txn.`type` = 'subscr_payment' and txn.`status` = 'Completed' and txn.`txn_id` <> ''
+                                                   and acct.`is_deleted` = 'N' and tt.`is_deleted` = 'N' and tt.`guid` = `in_token_guid` and tt.`id` = `in_token_id`
+                                                 ORDER BY txn.`received_at` DESC
+                                                 LIMIT 1), '2000-01-01 00:00:00')),
+                                (SELECT DATE_ADD(acct.`created_at`, INTERVAL CASE WHEN acct.`type` = 'account.admin' THEN DATEDIFF(DATE_ADD(acct.`created_at`, INTERVAL 1000 YEAR), acct.`created_at`)
+                                                                                  WHEN acct.`type` = 'account.normal' THEN 30
+                                                                                  ELSE 0 END DAY) as `until_at`
+                                  FROM `Account` acct INNER JOIN `Tokens` tt ON acct.`id` = tt.`account_id`
+                                 WHERE acct.`is_deleted` = 'N' and tt.`is_deleted` = 'N'
+                                   and tt.`guid` = `in_token_guid` and tt.`id` = `in_token_id`)), '%Y-%m-%d 23:59:59') INTO `premium_until`;
+
+    /* How much storage is available? */
+    SELECT CASE WHEN `premium_until` > Now() THEN 25 ELSE 1 END INTO `storage_gb`;
+
     /* Collect the Base Information */
     DROP TEMPORARY TABLE IF EXISTS tmp;
     CREATE TEMPORARY TABLE tmp AS
@@ -58,7 +79,7 @@ BEGIN
                     WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`
                     ORDER BY z.`is_active` DESC LIMIT 1), 'default.png') as `avatar_url`,
            CAST(0 AS UNSIGNED) as `file_count`,
-           CAST(1024 * 1024 * 1024 * 5 AS UNSIGNED) as `storage_limit`,
+           CAST(1024 * 1024 * 1024 * IFNULL(`storage_gb`, 1) AS UNSIGNED) as `storage_limit`,
            CAST(0 AS UNSIGNED) as `storage_used`,
            (SELECT z.`guid` FROM `Persona` z
              WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`
@@ -109,6 +130,7 @@ BEGIN
     /* Return the Processed Data */
     SELECT tmp.`account_id`, tmp.`email`, tmp.`type`, tmp.`display_name`, tmp.`language_code`, tmp.`timezone`, tmp.`avatar_url`,
            tmp.`file_count`, tmp.`storage_limit`, tmp.`storage_used`,
+           `premium_until` as `premium_until`, CASE WHEN `premium_until` > Now() THEN 'Y' ELSE 'N' END as `premium_active`,
            tmp.`default_persona`, tmp.`default_channel`,
            tmp.`pref_contact_mail`, IFNULL(tmp.`access_level`, 'read') as `access_level`, tmp.`password_change`, tmp.`welcome_done`
       FROM tmp
