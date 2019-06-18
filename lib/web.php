@@ -37,6 +37,7 @@ class Route extends Streams {
         $data = $this->site->getSiteData();
         if ( is_array($data) ) {
             $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
+            $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
 
             // Set some of the Globals
             $GLOBALS['site_id'] = $data['site_id'];
@@ -64,17 +65,17 @@ class Route extends Streams {
 
             // Is this a JSON Request?
             $CType = NoNull($_SERVER["CONTENT_TYPE"], 'text/html');
-            if ( strtolower($CType) == 'application/json' ) { $this->_handleJSONRequest(); }
+            if ( strtolower($CType) == 'application/json' ) { $this->_handleJSONRequest($data); }
 
             // Are We Signing In?
-            if ( NoNull($this->settings['PgRoot']) == 'validatetoken' && NoNull($this->settings['token']) != '' ) {
+            if ( $PgRoot == 'validatetoken' && NoNull($this->settings['token']) != '' ) {
                 $this->settings['remember'] = false;
                 $data['do_redirect'] = true;
             }
 
             // Are We Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] ) {
-                switch ( strtolower($this->settings['PgRoot']) ) {
+                switch ( $PgRoot ) {
                     case 'signout':
                     case 'logout':
                         $RedirectURL = NoNull($_SERVER['HTTP_REFERER'], $data['protocol'] . '://' . $data['HomeURL']);
@@ -91,6 +92,7 @@ class Route extends Streams {
 
                     case 'settings':
                     case 'messages':
+                    case 'account':
                     case 'write':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
                             redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
@@ -104,7 +106,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('write', 'settings', 'messages');
+                $checks = array('write', 'account', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
@@ -283,24 +285,33 @@ class Route extends Streams {
     /**
      *  Function Parses and Handles Requests that Come In with an Application/JSON Header
      */
-    private function _handleJSONRequest() {
+    private function _handleJSONRequest( $site ) {
         $Action = strtolower(NoNull($this->settings['PgSub1'], $this->settings['PgRoot']));
+        $format = strtolower(NoNull($_SERVER['CONTENT_TYPE'], 'text/plain'));
+        $valids = array( 'application/json' );
         $meta = array();
         $data = false;
         $code = 401;
 
-        switch ( $Action ) {
-            case 'profile':
-                require_once(LIB_DIR . '/account.php');
-                $acct = new Account( $this->settings, $this->strings );
-                $data = $acct->getPublicProfile();
-                $meta = $acct->getResponseMeta();
-                $code = $acct->getResponseCode();
-                unset($acct);
-                break;
+        if ( in_array($format, $valids) ) {
+            switch ( $Action ) {
+                case 'profile':
+                    require_once(LIB_DIR . '/account.php');
+                    $acct = new Account( $this->settings, $this->strings );
+                    $data = $acct->getPublicProfile();
+                    $meta = $acct->getResponseMeta();
+                    $code = $acct->getResponseCode();
+                    unset($acct);
+                    break;
 
-            default:
-                /* Do Nothing */
+                default:
+                    require_once(LIB_DIR . '/posts.php');
+                    $post = new Posts( $this->settings, $this->strings );
+                    $data = $post->getPageJSON( $site );
+                    $meta = $post->getResponseMeta();
+                    $code = $post->getResponseCode();
+                    unset($post);
+            }
         }
 
         // If We Have an Array of Data, Return It
@@ -579,6 +590,7 @@ class Route extends Streams {
 
     private function _getContentArray( $data ) {
         $SiteUrl = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/themes/' . $data['location']);
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $ApiUrl = getApiUrl();
         $CdnUrl = getCdnUrl();
 

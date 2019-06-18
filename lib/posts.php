@@ -181,6 +181,7 @@ class Posts {
      *  Public Functions
      ** ********************************************************************* */
     public function getPageHTML( $data ) { return $this->_getPageHTML($data); }
+    public function getPageJSON( $data ) { return $this->_getPageJSON($data); }
     public function getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL ) { return $this->_getMarkdownHTML( $text, $post_id, $isNote, $showLinkURL); }
     public function getPersonaPosts() { return $this->_getTLStream('persona'); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
@@ -1487,7 +1488,48 @@ class Posts {
         return '';
     }
 
+    private function _getPageJSON( $data ) {
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        $Count = nullInt($this->settings['count'], 10);
+        $Page = $this->_getPageNumber() * $Count;
+        $CanonURL = $this->_getCanonicalURL();
+        $TagKey = $this->_getTagKey();
+        $tObj = strtolower(str_replace('/', '', $CanonURL));
+
+        // If We're Writing a New Post, Return a Different Set of Data
+        if ( NoNull($this->settings['PgRoot']) == 'new' && NoNull($this->settings['PgSub1']) == '' ) {
+            return '';
+        }
+
+        if ( $Count > 75 ) { $Count = 75; }
+        if ( $Count <= 0 ) { $Count = 10; }
+        if ( $Page > 10000 ) { $Page = 10000; }
+        if ( $page < 0 ) { $Page = 0; }
+
+        // Construct the SQL Query
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
+                          '[SITE_GUID]'  => sqlScrub($data['site_guid']),
+                          '[CANON_URL]'  => sqlScrub($CanonURL),
+                          '[TAG_KEY]'    => sqlScrub($TagKey),
+                          '[OBJECT]'     => sqlScrub($tObj),
+                          '[COUNT]'      => nullInt($Count),
+                          '[PAGE]'       => nullInt($Page),
+                         );
+
+        $sqlStr = prepSQLQuery("CALL GetPagePosts([ACCOUNT_ID], '[SITE_GUID]', '[CANON_URL]', '[OBJECT]', '[TAG_KEY]', '[SITE_TOKEN]', [COUNT], [PAGE]);", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $posts = $this->_parsePostResultSet($rslt);
+            if ( is_array($posts) ) { return $posts; }
+        }
+
+        // If We're Here, There's Nothing
+        return array();
+    }
+
     private function _getPageHTML( $data ) {
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $Count = nullInt($this->settings['count'], 10);
         $Page = $this->_getPageNumber() * $Count;
         $CanonURL = $this->_getCanonicalURL();
@@ -2703,7 +2745,7 @@ class Posts {
      */
     private function _checkUniqueSlug( $ChannelGUID, $PostGUID, $PostSlug ) {
         $Excludes = array( 'feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'location', 'archive',
-                           'contact', 'profile', 'settings', 'messages'
+                           'account', 'accounts', 'contact', 'profile', 'settings', 'messages'
                           );
 
         // Ensure the PostSlug is not ending in a dash

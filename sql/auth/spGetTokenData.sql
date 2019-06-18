@@ -4,6 +4,7 @@ CREATE PROCEDURE GetTokenData( IN `in_token_id` int(11), IN `in_token_guid` varc
 BEGIN
     DECLARE `reset_pass`    enum('N','Y');
     DECLARE `premium_until` datetime;
+    DECLARE `storage_gb`    smallint;
 
     /** ********************************************************************** **
      *  Function returns any Messages that are associated with the Account that is

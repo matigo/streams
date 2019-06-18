@@ -1327,15 +1327,9 @@ audio {
   -moz-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
-.single-post__comments-respond input[type="submit"]:hover {
-  opacity: 0.8;
-}
-.single-post__comments-respond input[type="submit"]:focus {
-  outline: 0;
-}
-.single-post__contact p {
-  margin-bottom: 20px;
-}
+.single-post__comments-respond input[type="submit"]:hover { opacity: 0.8; }
+.single-post__comments-respond input[type="submit"]:focus { outline: 0; }
+.single-post__contact p { margin-bottom: 20px; }
 .single-post__contact label {
   display: block;
   font-size: 1em;
@@ -1359,7 +1353,7 @@ audio {
 .single-post__contact input[type="text"],
 .single-post__contact input[type="email"],
 .single-post__contact input[type="password"] {
-  width: 50%;
+  width: 49.5%;
   height: 45px;
   padding: 0 14px;
   border: 1px solid #dcdcdc;
@@ -1386,12 +1380,8 @@ audio {
   -moz-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
 }
-.single-post__contact input[type="submit"]:hover {
-  opacity: 0.8;
-}
-.single-post__contact input[type="submit"]:focus {
-  outline: 0;
-}
+.single-post__contact input[type="submit"]:hover { opacity: 0.8; }
+.single-post__contact input[type="submit"]:focus { outline: 0; }
 .single-post__contact .fullwide { width: 100% !important; }
 .single-post__contact h4 {
   border-bottom: 1px solid #ccc;
