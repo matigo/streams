@@ -53,12 +53,17 @@ class Geocode {
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
+        if ( is_numeric($Activity) ) { $Activity = strtolower(NoNull($this->settings['PgSub1'])); }
         $rVal = false;
 
         switch ( $Activity ) {
             case 'rebuild':
             case 'build':
                 $rVal = $this->_rebuildCityInformation();
+                break;
+
+            case 'staticmap':
+                $rVal = $this->_getStaticMap();
                 break;
 
             case '':
@@ -171,6 +176,84 @@ class Geocode {
 
         // If We're Here, There Is No Match. Return the Coordinates.
         return NoNull($CleanDesc, round($latitude, 4) . ', ' . round($longitude, 4));
+    }
+
+    /** ********************************************************************* *
+     *  Static Map Functions
+     ** ********************************************************************* */
+    private function _getStaticMap() {
+        $CleanLong = nullInt($this->settings['longitude'], $this->settings['PgSub3']);
+        $CleanLat = nullInt($this->settings['latitude'], $this->settings['PgSub2']);
+        if ( !defined('CDN_PATH') ) { define('CDN_PATH', BASE_DIR . '/../cache'); }
+        if ( !defined('MAPBOX_KEY') ) { define('MAPBOX_KEY', ''); }
+        if ( !defined('USE_MAPBOX') ) { define('USE_MAPBOX', 0); }
+
+        if ( $CleanLong > 180 || $CleanLong < -180 ) { $CleanLong = 0; }
+        if ( $CleanLat > 90 || $CleanLat < -90 ) { $CleanLat = 0; }
+        if ( $CleanLong == 0 && $CleanLat == 0 ) {
+            $this->_setMetaMessage( "Invalid Geo-coordinates Supplied", 400 );
+            return false;
+        }
+
+        // Collec the Other Properties
+        $width = nullInt($this->settings['width'], 600);
+        $height = nullInt($this->settings['height'], 300);
+        $zoom = nullInt($this->settings['zoom'], 6);
+
+        if ( $height > 1280 ) { $height = 1280; }
+        if ( $height < 200 ) { $height = 200; }
+        if ( $width > 1280 ) { $width = 1280; }
+        if ( $width < 200 ) { $width = 200; }
+        if ( $zoom > 20 ) { $zoom = 20; }
+        if ( $zoom < 0 ) { $zoom = 0; }
+
+        // Construct the Mapbox URL (Used also with the file)
+        $Location = $CleanLong . ',' . $CleanLat . ',' . round($zoom, 1) . ',0,0';
+        $Marker = 'geojson({"type":"Point","coordinates":[' . $CleanLong . ',' . $CleanLat . ']})';
+        $ImgProps = $width . 'x' . $height . '@2x';
+        $imgUrl = "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/$Marker/$Location/$ImgProps";
+
+        // Determine the Static Map Image
+        $FilePath = CDN_PATH . '/staticmaps/';
+        $FileName = md5($imgUrl) . '.png';
+
+        // Check if the Static Map Image needs to be generated
+        if ( file_exists($FilePath . $FileName) === false ) {
+            checkDIRExists($FilePath);
+            $Token = NoNull(MAPBOX_KEY);
+
+            if ( YNBool(USE_MAPBOX) && $Token !== '' ) {
+                file_put_contents($FilePath . $FileName, file_get_contents("$imgUrl?access_token=$Token"));
+            }
+        }
+
+        // If the file exists, return the image
+        if (file_exists($FilePath . $FileName)) {
+            $image_info = getimagesize($FilePath . $FileName);
+            switch ($image_info[2]) {
+                case IMAGETYPE_JPEG:
+                    header("Content-Type: image/jpeg");
+                    break;
+
+                case IMAGETYPE_GIF:
+                    header("Content-Type: image/gif");
+                    break;
+
+                case IMAGETYPE_PNG:
+                    header("Content-Type: image/png");
+                    break;
+
+               default:
+                    header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+                    break;
+            }
+            header('Content-Length: ' . filesize($FilePath . $FileName));
+            readfile($FilePath . $FileName);
+
+        } else {
+            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+        }
+        exit();
     }
 
     /** ********************************************************************* *

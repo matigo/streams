@@ -885,11 +885,13 @@ function showPosition( position ) {
 }
 function openGeoLocation( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
-    var _pos = NoNull(el.getAttribute('data-value'));
-    if ( _pos === undefined || _pos === false || _pos === null || _pos == '' ) { return; }
+    var _src_url = NoNull(el.getAttribute('data-value'));
+    if ( _src_url === undefined || _src_url === false || _src_url === null || _src_url == '' ) { return; }
 
-    var ntab = window.open('https://www.google.ca/maps/@' + _pos + ',17z', '_blank');
-    ntab.focus();
+    var pel = el.parentElement;
+    pel.classList.remove('text-right');
+    pel.classList.add('text-center');
+    pel.innerHTML = '<img src="' + _src_url + '?zoom=14&width=1280&height=440" class="geo-map" alt="" />';
 }
 
 /** ************************************************************************* *
@@ -2051,9 +2053,7 @@ function buildHTML( post ) {
     if ( post.meta !== false && post.meta.geo !== undefined ) {
         _geo_title = (Math.round(post.meta.geo.latitude * 100000) / 100000) + ', ' + (Math.round(post.meta.geo.longitude * 100000) / 100000);
         if ( post.meta.geo.description !== false ) { _geo_title = NoNull(post.meta.geo.description); }
-        if ( post.meta.geo.latitude !== false && post.meta.geo.longitude !== false ) {
-            _geo_url = post.meta.geo.latitude + ',' + post.meta.geo.longitude;
-        }
+        if ( post.meta.geo.staticmap !== false ) { _geo_url = post.meta.geo.staticmap; }
     }
     var _title = NoNull(post.title, _src_title);
     var _icon = getVisibilityIcon( post.privacy );

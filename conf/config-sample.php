@@ -65,6 +65,9 @@ define('CLOUDFRONT_URL', '');                               // The Amazon Cloudf
 define('USE_W3W', 0);                                       // Use What3Words with GeoTagging
 define('W3W_KEY', '');                                      // The Application Key for What3Words
 
+define('USE_MAPBOX', 0);                                    // Use Mapbox for Static Map Images
+define('MAPBOX_KEY', '');                                   // The Access Key for the Mapbox API
+
 define('B2_CDN_URL', '');                                   // The Backblaze CDN URL
 define('B2_APP_ID', '');                                    // The Backblaze CDN Application ID
 define('B2_APP_KEY', '');                                   // The Backblaze CDN Application Key

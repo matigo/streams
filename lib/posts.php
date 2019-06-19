@@ -891,6 +891,15 @@ class Posts {
                     $data[$block[0]][$block[1]] = (is_numeric($Row['value']) ? nullInt($Row['value']) : NoNull($Row['value']));
                 }
             }
+
+            // If there's a Geo Array, Check if a StaticMap can be Provided
+            if ( array_key_exists('geo', $data) ) {
+                if ( $data['geo']['longitude'] !== false && $data['geo']['latitude'] !== false ) {
+                    $data['geo']['staticmap'] = NoNull($this->settings['HomeURL']) . '/api/geocode/staticmap/' . round($data['geo']['latitude'], 5) . '/' . round($data['geo']['longitude'], 5);
+                }
+            }
+
+            // If we have data, return it.
             if ( count($data) > 0 ) { return $data; }
         }
 
@@ -905,7 +914,8 @@ class Posts {
                 return array( 'longitude'   => false,
                               'latitude'    => false,
                               'altitude'    => false,
-                              'description' => false
+                              'description' => false,
+                              'staticmap'   => false
                              );
                 break;
 

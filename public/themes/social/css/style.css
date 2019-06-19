@@ -710,6 +710,12 @@ ol { margin-top: 0.5em; }
     margin-right: 0.5em;
     min-width: 3em;
 }
+.metaline.geo img {
+    border: 1px solid #00cdcd;
+    display: block;
+    max-width: 100%;
+    padding: 0.25em;
+}
 .confirmation {
     display: inline-block;
     padding: 0.5em 0 0;
