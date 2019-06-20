@@ -1,13 +1,13 @@
 DELIMITER ;;
-DROP PROCEDURE IF EXISTS GetGlobalTimeline;;
-CREATE PROCEDURE GetGlobalTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
+DROP PROCEDURE IF EXISTS GetHomeTimeline;;
+CREATE PROCEDURE GetHomeTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
 BEGIN
     DECLARE `min_id` int(11);
 
     /** ********************************************************************** **
-     *  Function returns the Visible Timeline for the Global Timeline
+     *  Function returns the Visible Timeline for the Personal Home Timeline
      *
-     *  Usage: CALL GetGlobalTimeline(1, '', 'post.article, post.bookmark, post.note, post.quotation', 0, 0, 75);
+     *  Usage: CALL GetHomeTimeline(1, '', 'post.article, post.bookmark, post.note, post.quotation', 0, 0, 75);
      ** ********************************************************************** **/
 
     /* If the Type filter is Empty, Add Social Posts (post.note) */
@@ -21,7 +21,10 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post`;
+    IF IFNULL(`min_id`, 0) <= 0 THEN
+        SET `min_id` = 1;
+    END IF;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
@@ -51,16 +54,17 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
     SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
-           LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                      ELSE 'N' END,
-                 CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
-                      WHEN IFNULL(pr.`is_muted`, 'N') = 'Y' AND IFNULL(men.`is_mention`, 'N') = 'N' THEN 'N'
-                      ELSE 'Y' END,
-                 CASE WHEN po.`expires_at` IS NULL THEN 'Y'
-                      WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                      ELSE 'Y' END) as `is_visible`
+           LEAST(CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y' ELSE GREATEST(IFNULL(men.`is_mention`, 'N'), IFNULL(pr.`follows`, 'N')) END,
+                 LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+                            WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                            ELSE 'N' END,
+                       CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
+                            WHEN IFNULL(pr.`is_muted`, 'N') = 'Y' AND IFNULL(men.`is_mention`, 'N') = 'N' THEN 'N'
+                            ELSE 'Y' END,
+                       CASE WHEN po.`expires_at` IS NULL THEN 'Y'
+                            WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
+                            WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                            ELSE 'Y' END)) as `is_visible`
       FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                         INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                         INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
@@ -79,22 +83,27 @@ BEGIN
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
         SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
-               LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
-                          WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                          ELSE 'N' END,
-                     CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
-                          WHEN IFNULL(pr.`is_muted`, 'N') = 'Y' THEN 'N'
-                          ELSE 'Y' END,
-                     CASE WHEN po.`expires_at` IS NULL THEN 'Y'
-                          WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                          WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                          ELSE 'Y' END) as `is_visible`
+               LEAST(CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y' ELSE GREATEST(IFNULL(men.`is_mention`, 'N'), IFNULL(pr.`follows`, 'N')) END,
+                     LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+                                WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                                ELSE 'N' END,
+                           CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
+                                WHEN IFNULL(pr.`is_muted`, 'N') = 'Y' AND IFNULL(men.`is_mention`, 'N') = 'N' THEN 'N'
+                                ELSE 'Y' END,
+                           CASE WHEN po.`expires_at` IS NULL THEN 'Y'
+                                WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
+                                WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                                ELSE 'Y' END)) as `is_visible`
           FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                             INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                             INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                             INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                             INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
                        LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
+                       LEFT OUTER JOIN (SELECT pm.`post_id`, 'Y' as `is_mention`
+                                          FROM `PostMention` pm INNER JOIN `Persona` pa ON pm.`persona_id` = pa.`id`
+                                         WHERE pm.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`
+                                           and pm.`post_id` < IFNULL(`min_id`, 4294967295)) men ON po.`id` = men.`post_id`
          WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
            and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
            and pa.`is_deleted` = 'N' and po.`publish_at` <= Now() and po.`id` < IFNULL(`min_id`, 4294967295);

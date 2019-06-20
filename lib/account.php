@@ -104,7 +104,7 @@ class Account {
                 break;
 
             case 'create':
-                $rVal = $this->_createAccountLocal();
+                $rVal = $this->_createAccount();
                 break;
 
             case 'preference':
@@ -116,13 +116,29 @@ class Account {
                 $rVal = $this->_setProfile();
                 break;
 
-            case 'resetpassword':
-            case 'resetpass':
-                $rVal = $this->_resetPassword();
+            case 'relations':
+            case 'relation':
+                $rVal = $this->_setRelation();
                 break;
 
-            case 'welcome':
-                $rVal = $this->_setWelcomeDone();
+            case 'follow':
+                $this->settings['follows'] = 'Y';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'mute':
+                $this->settings['muted'] = 'Y';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'block':
+                $this->settings['blocked'] = 'Y';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'star':
+                $this->settings['starred'] = 'Y';
+                $rVal = $this->_setRelation();
                 break;
 
             default:
@@ -141,8 +157,29 @@ class Account {
         if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
 
         switch ( $Activity ) {
-            case '':
-                $rVal = array( 'activity' => "[DELETE] /account/$Activity" );
+            case 'relations':
+            case 'relation':
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'follow':
+                $this->settings['follows'] = 'N';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'mute':
+                $this->settings['muted'] = 'N';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'block':
+                $this->settings['blocked'] = 'N';
+                $rVal = $this->_setRelation();
+                break;
+
+            case 'star':
+                $this->settings['starred'] = 'N';
+                $rVal = $this->_setRelation();
                 break;
 
             default:
@@ -177,14 +214,12 @@ class Account {
     /** ********************************************************************* *
      *  Public Functions
      ** ********************************************************************* */
-    public function createAccount($data) { return $this->_createAccount($data); }
     public function getAccountInfo($AcctID) { return $this->_getAccountInfo($AcctID); }
     public function getPublicProfile() { return $this->_getPublicProfile(); }
     public function getPreference($Type) {
         $data = $this->_getPreference($Type);
         return $data['value'];
     }
-    public function setAccountLanguage( $LangCd ) { return $this->_setAccountLanguage($LangCd); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -239,321 +274,125 @@ class Account {
         }
     }
 
-    /**
-     *  Function Acts as a Quick Language Setting Option
-     */
-    private function _setAccountLanguage( $LangCd ) {
-        if ( NoNull($LangCd) == '' ) { return false; }
+    /** ********************************************************************* *
+     *  Account Creation
+     ** ********************************************************************* */
+    private function _createAccount() {
 
-        // Construct the SQL Query
-        $ReplStr = array( '[TOKEN_GUID]' => sqlScrub($this->settings['_token_guid']),
-                          '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[TOKEN_ID]'   => nullInt($this->settings['_token_id']),
-                          '[LANG_CD]'    => sqlScrub($LangCd),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/setAccountLanguage.sql', $ReplStr);
-        $rslt = doSQLExecute($sqlStr);
-        return true;
+
     }
 
     /** ********************************************************************* *
-     *  Local Account Creation
+     *  Persona Relations Management
      ** ********************************************************************* */
-    private function _createAccountLocal() {
-        $has_scope = false;
-        if ( $this->_hasScope('admin') || $this->_hasScope('level 1') || $this->_hasScope('level 2') || $this->_hasScope('manager') ) { $has_scope = true; }
-        if ( $has_scope !== true ) { return "You Do Not Have Adequate Permissions For This Function"; }
-
-        $CleanGender = strtoupper(NoNull($this->settings['gender'], 'M'));
-        $CleanFirst = NoNull($this->settings['first_ro'], $this->settings['first_name']);
-        $CleanLast = NoNull($this->settings['last_ro'], $this->settings['last_name']);
-        $CleanFirstKa = NoNull($this->settings['first_ka']);
-        $CleanLastKa = NoNull($this->settings['last_ka']);
-        $CleanPrintRo = NoNull($this->settings['print_ro'], $this->settings['print-ro']);
-        $CleanPrintKa = NoNull($this->settings['print_ka'], $this->settings['print-ka']);
-        $CleanEmpNo = strtoupper(NoNull($this->settings['cosmos_id']));
-        $CleanLC = nullInt($this->settings['base_lc'], $this->settings['school_id']);
-        $CleanLang = NoNull($this->settings['language_code'], NoNull($this->settings['language'], 'en'));
-        $CleanMail = NoNull($this->settings['email'], $this->settings['mail_addr']);
-        $CleanAcctID = nullInt($this->settings['account_id'], $this->settings['acct_id']);
-        $CleanPrsnID = nullInt($this->settings['person_id'], $this->settings['prsn_id']);
-
-        $CleanLogin = strtolower(NoNull($this->settings['account_name']));
-        $CleanPass = NoNull($this->settings['account_pass']);
-
-        // Perform Some Basic Validation
-        if ( $CleanFirst == '' ) { return "Invalid First Name Supplied"; }
-        if ( $CleanLast == '' ) { return "Invalid Family Name Supplied"; }
-        if ( $CleanLang == '' ) { return "Invalid Language Preference Supplied"; }
-        if ( $CleanLC <= 0 ) { return "Invalid School Supplied"; }
-        if ( $CleanLogin == '' ) { return "Invalid Login ID Supplied"; }
-        if ( $CleanPass == '' ) { return "Invalid Password Supplied"; }
-        if ( $CleanMail != '' ) {
-            if ( validateEmail($CleanMail) === false ) { "Invalid Email Address Supplied"; }
+    /**
+     *  Function returns a list of every Persona an Account has a Relation record with, including their own.
+     */
+    private function _getRelationsList() {
+        $CleanGUID = NoNull($this->settings['PgSub1']);
+        if ( strlen($CleanGUID) != 36 ) {
+            $CleanGUID = NoNull($this->settings['persona_guid'], $this->settings['persona-guid']);
         }
 
-        // Correct Some Values if They Are Incorrect
-        if ( !in_array($CleanGender, array('M','F')) ) { $CleanGender = 'M'; }
-
-        $ReplStr = array( '[MY_ACCOUNT]' => nullInt($this->settings['_account_id']),
-                          '[ACTION_BY]'  => nullInt($this->settings['_account_id']),
-                          '[FIRST_RO]'   => sqlScrub($CleanFirst),
-                          '[LAST_RO]'    => sqlScrub($CleanLast),
-                          '[FIRST_KA]'   => sqlScrub($CleanFirstKa),
-                          '[LAST_KA]'    => sqlScrub($CleanLastKa),
-                          '[PRINT_RO]'   => sqlScrub($CleanPrintRo),
-                          '[PRINT_KA]'   => sqlScrub($CleanPrintKa),
-                          '[GENDER]'     => sqlScrub($CleanGender),
-                          '[COSMOS_ID]'  => sqlScrub($CleanEmpNo),
-                          '[SCHOOL_ID]'  => nullInt($CleanLC),
-                          '[DISPNAME]'   => sqlScrub(NoNull($CleanFirst, $CleanFirstKa)),
-                          '[MAILADDR]'   => sqlScrub($CleanMail),
-                          '[MAIL_ADDR]'  => sqlScrub($CleanMail),
-                          '[USERNAME]'   => sqlScrub($CleanLogin),
-                          '[USERPASS]'   => sqlScrub($CleanPass),
-                          '[LANG_CODE]'  => sqlScrub($CleanLang),
-                          '[PERSON_ID]'  => nullInt($CleanPrsnID),
-                          '[PERSONID]'   => nullInt($CleanPrsnID),
-                          '[ACCOUNT_ID]' => nullInt($CleanAcctID),
-                          '[ACCT_ID]'    => nullInt($CleanAcctID),
-
-                          '[SAMLGUID]'   => '',
-                          '[SAML_CHK]'   => getRandomString(36),
-                          '[SHA_SALT]'   => sqlScrub(SHA_SALT),
-                         );
-        if ( $CleanAcctID <= 0 ) {
-            $sqlStr = readResource(SQL_DIR . '/person/createPerson.sql', $ReplStr, true);
-            $person_id = doSQLExecute($sqlStr);
-            if ( $person_id > 0 ) {
-                // Create the Account Record
-                $ReplStr['[PERSONID]'] = nullInt($person_id);
-                $sqlStr = readResource(SQL_DIR . '/account/createAccount.sql', $ReplStr);
-                $NewAcctID = doSQLExecute($sqlStr);
-
-                // Do Not Continue Without a Valid Account.ID Value
-                if ( $NewAcctID <= 0 ) { return "Could Not Create Account Record"; }
-
-                // Set the Basics
-                $this->settings['account_id'] = $NewAcctID;
-                $this->settings['acct_type'] = 'account.normal';
-
-                // Set/Reset the Account-Specific Meta-Data
-                $isOK = $this->_setAccountMetaForID($CleanAcctID, 'community.moderator', NoNull($this->settings['community-moderator'], 'N'));
-
-                // Set the Account Status, Employee Records, and Scopes
-                $isOK = $this->_setAccountPermissions();
-
-                // Set/Reset the Account for Usage
-                $ReplStr['[ACCOUNT_ID]'] = nullInt($NewAcctID);
-                $sqlStr = readResource(SQL_DIR . '/auth/resetAccount.sql', $ReplStr) . SQL_SPLITTER .
-                          readResource(SQL_DIR . '/account/setAccountPassHistory.sql', $ReplStr, true);
-                $isOK = doSQLExecute($sqlStr);
-
-                // Record the Event
-                setActivityRecord( $this->settings['_account_id'], 'account.create', 'action.complete', $NewAcctID,
-                                   "Created New Account [$NewAcctID] for Person [$person_id]" );
-
-                // Return the Account Information
-                if ( $NewAcctID > 0 ) { return $this->_getAccountInfo($NewAcctID); }
-
-            } else {
-                return "Could Not Create Person Record";
-            }
-
-        } else {
-            // Update the Person Record
-            $sqlStr = readResource(SQL_DIR . '/person/updatePerson.sql', $ReplStr);
-            $isOK = doSQLExecute($sqlStr);
-
-            // Set the Account Status, Employee Records, and Scopes
-            $isOK = $this->_setAccountPermissions();
-
-            // Set the Password if Applicable
-            if ( $CleanPass != '' && substr_count($CleanPass, '*') < 6 ) {
-                $sqlStr = readResource(SQL_DIR . '/account/setPassword.sql', $ReplStr, true) . SQL_SPLITTER .
-                          readResource(SQL_DIR . '/auth/setReqPassChg.sql', $ReplStr, true) . SQL_SPLITTER .
-                          readResource(SQL_DIR . '/account/setAccountPassHistory.sql', $ReplStr, true);
-                $isOK = doSQLExecute($sqlStr);
-            }
-
-            // Set/Reset the Account-Specific Meta-Data
-            $isOK = $this->_setAccountMetaForID($CleanAcctID, 'community.moderator', NoNull($this->settings['community-moderator'], 'N'));
-
-            // Set/Reset the Account for Usage if Admin
-            if ( $this->_hasScope('admin') ) {
-                $sqlStr = readResource(SQL_DIR . '/auth/resetAccount.sql', $ReplStr);
-                $isOK = doSQLExecute($sqlStr);
-            }
-
-            // Record the Event
-            setActivityRecord( $this->settings['_account_id'], 'account.update', 'action.complete', $CleanAcctID,
-                               "Updated Account [$CleanAcctID] for Person [$CleanPrsnID]" );
-
-            // Return the Account Information
-            return $this->_getAccountInfo($CleanAcctID);
+        // Ensure the GUIDs are valid
+        if ( strlen($CleanGUID) != 36 ) {
+            $this->_setMetaMessage( "Invalid Persona GUID Supplied", 400 );
+            return false;
         }
 
-        // If We're Here, Something's Wrong
-        return false;
-    }
-
-    /**
-     *  Function Records a Specific Meta Item Against an Account.ID
-     */
-    private function _setAccountMetaForID( $AccountID, $Type, $Value ) {
-        if ( nullInt($AccountID) <= 0 ) { return false; }
-        if ( NoNull($Type) == '' ) { return false; }
-
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID),
-                          '[META_VALUE]' => sqlScrub($Value),
-                          '[META_TYPE]'  => sqlScrub($Type),
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[PERSONA_GUID]' => sqlScrub($CleanGUID),
                          );
-        $sqlStr = readResource(SQL_DIR . '/account/setAccountMetaForID.sql', $ReplStr);
-        $isOK = doSQLExecute($sqlStr);
-
-        // If We're Here, It's Probably Good
-        return true;
-    }
-
-    /**
-     *  Function Returns a Base Summary of an Account Based on the Employee.GUID Passed
-     */
-    private function _getAccountSummary() {
-        $CleanGUID = NoNull($this->settings['guid'], $this->settings['PgSub1']);
-        if ( $CleanGUID == '' ) { return "Invalid GUID Supplied"; }
-
-        // Construct the SQL Query and Perform the Query
-        $ReplStr = array( '[EMPLOYEE_GUID]' => sqlScrub($CleanGUID),
-                          '[LOCK_AFTER]'    => nullInt(ACCOUNT_LOCK, 30),
-                          '[ACCOUNT_ID]'    => nullInt($this->settings['_account_id']),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/getAccountSummary.sql', $ReplStr, true);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            $data = false;
-
-            foreach ( $rslt as $Row ) {
-                // Construct the Print Name Defaults
-                $proDefault = CleanName(NoNull($Row['first_ro'], $Row['first_ka']));
-                $pkaDefault = CleanName(NoNull($Row['last_ka'], $Row['last_ro']));
-                if ( NoNull($proDefault) != '' && NoNull($Row['last_ro'], $Row['last_ka']) != '' ) { $proDefault .= ' '; }
-                if ( NoNull($pkaDefault) != '' && NoNull($Row['first_ka'], $Row['first_ro']) != '' ) { $pkaDefault .= ' '; }
-                $proDefault .= CleanName(NoNull($Row['last_ro'], $Row['last_ka']));
-                $pkaDefault .= CleanName(NoNull($Row['first_ka'], $Row['first_ro']));
-
-                // Mark the Account as Locked If Required
-                if ( YNBool($Row['is_locked']) && NoNull($Row['type']) != 'account.expired' ) {
-                    $sOK = $this->_setAccountExpired(nullInt($Row['account_id']));
-                    $Row['type'] = 'account.expired';
-                }
-
-                // Construct the Output
-                $lang_label = 'lbl_' . NoNull($Row['language_code']);
-                $data = array( 'account_id' => nullInt($Row['account_id']),
-                               'login'      => NoNull($Row['login']),
-                               'email'      => NoNull($Row['email']),
-                               'type'       => NoNull($Row['type']),
-                               'is_locked'  => YNBool($Row['is_locked']),
-
-                               'person'     => array( 'id'           => nullInt($Row['person_id']),
-                                                      'last_ro'      => CleanName($Row['last_ro']),
-                                                      'first_ro'     => CleanName($Row['first_ro']),
-                                                      'last_ka'      => CleanName($Row['last_ka']),
-                                                      'first_ka'     => CleanName($Row['first_ka']),
-                                                      'gender'       => NoNull($Row['gender'], 'M'),
-                                                      'display_name' => NoNull($Row['display_name']),
-                                                      'guid'         => NoNull($Row['person_guid']),
-
-                                                      'print_ro'     => NoNull($Row['print_ro'], $proDefault),
-                                                      'print_ka'     => NoNull($Row['print_ka'], $pkaDefault),
-
-                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['person_created_at'])),
-                                                      'created_unix' => strtotime($Row['person_created_at']),
-                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['person_updated_at'])),
-                                                      'updated_unix' => strtotime($Row['person_updated_at']),
-                                                     ),
-
-                               'employee'   => array( 'id'        => nullInt($Row['employee_id']),
-                                                      'guid'      => NoNull($Row['employee_guid']),
-                                                      'cosmos_id' => NoNull($Row['employee_no']),
-                                                      'is_active' => YNBool($Row['is_active']),
-
-                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['employee_created_at'])),
-                                                      'created_unix' => strtotime($Row['employee_created_at']),
-                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['employee_updated_at'])),
-                                                      'updated_unix' => strtotime($Row['employee_updated_at']),
-                                                     ),
-
-                               'scopes'     => explode(',', NoNull($Row['scopes'])),
-
-                               'meta'       => array( 'community_moderator' => YNBool($Row['community_moderator']),
-                                                     ),
-
-                               'passwords'  => $this->_getAccountPassHistory($Row['account_id']),
-
-                               'language'   => array( 'code' => NoNull($Row['language_code']),
-                                                      'name' => NoNull($this->strings[$lang_label]),
-                                                     ),
-
-                               'school'     => array( 'lc_id'       => nullInt($Row['school_id']),
-                                                      'description' => NoNull($this->strings['lblLC' . nullInt($Row['school_id'])]),
-                                                     ),
-                              );
-            }
-
-            // If We Have Data, Return It
-            if ( is_array($data) ) { return $data; }
-        }
-
-        // If We're Here, We Have a Bad GUID
-        return "Unrecognized GUID Supplied";
-    }
-
-    /**
-     *  Function Marks an Account as Expired without Validation or Verification
-     */
-    private function _setAccountExpired( $AccountID ) {
-        if ( nullInt($AccountID) <= 0 ) { return false; }
-
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[RECORD_ID]'  => nullInt($AccountID),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/setAccountExpired.sql', $ReplStr);
-        $isOK = doSQLExecute($sqlStr);
-
-        // Return a Simple Boolean
-        return true;
-    }
-
-    /**
-     *  Function Collects the Password History for a Given Account.ID if a Person's Permissions are High Enough
-     */
-    private function _getAccountPassHistory( $AccountID ) {
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[RECORD_ID]'  => nullInt($AccountID),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/getAccountPassHistory.sql', $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetRelationsList([ACCOUNT_ID], '[PERSONA_GUID]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
             foreach ( $rslt as $Row ) {
-                $data[] = array( 'is_reset'     => YNBool($Row['is_reset']),
-                                 'request_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                                 'request_unix' => strtotime($Row['created_at']),
-                                 'request_by'   => $this->_getAccountInfo($Row['created_by'])
+                $site = false;
+                if ( NoNull($Row['site_url']) != '' ) {
+                    $site = array( 'name' => NoNull($Row['site_name']),
+                                   'url'  => NoNull($Row['site_url']),
+                                  );
+                }
+
+                $data[] = array( 'guid'        => NoNull($post['persona_guid']),
+                                 'as'          => '@' . NoNull($post['name']),
+                                 'name'        => NoNull($post['display_name']),
+                                 'avatar'      => NoNull($post['avatar_url']),
+                                 'site'        => $site,
+
+                                 'pin'         => NoNull($post['pin_type'], 'pin.none'),
+                                 'you_follow'  => YNBool($post['follows']),
+                                 'is_muted'    => YNBool($post['is_muted']),
+                                 'is_starred'  => YNBool($post['is_starred']),
+                                 'is_blocked'  => YNBool($post['is_blocked']),
+                                 'is_you'      => YNBool($post['is_you']),
+
+                                 'profile_url' => NoNull($post['profile_url']),
                                 );
             }
 
-            // If We Have Data, Return It
+            /* If we have data, return it */
             if ( count($data) > 0 ) { return $data; }
         }
 
-        // If We're Here, The Person Does Not Have Permission (or there is no Password History)
+        // If We're Here, There's Nothing ... which should never happen
+        return array();
+    }
+
+    private function _setRelation() {
+        $CleanGUID = NoNull($this->settings['persona_guid'], $this->settings['persona-guid']);
+        $RelatedGUID = NoNull($this->settings['PgSub1']);
+        if ( strlen($RelatedGUID) != 36 ) {
+            $RelatedGUID = NoNull($this->settings['related_guid'], $this->settings['related-guid']);
+        }
+
+        // Ensure the GUIDs are valid
+        if ( strlen($CleanGUID) != 36 ) {
+            $this->_setMetaMessage( "Invalid Persona GUID Supplied", 400 );
+            return false;
+        }
+        if ( strlen($RelatedGUID) != 36 ) {
+            $this->_setMetaMessage( "Invalid Related GUID Supplied", 400 );
+            return false;
+        }
+
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[PERSONA_GUID]' => sqlScrub($CleanGUID),
+                          '[RELATED_GUID]' => sqlScrub($RelatedGUID),
+
+                          '[FOLLOWS]'      => sqlScrub($this->settings['follows']),
+                          '[MUTED]'        => sqlScrub($this->settings['muted']),
+                          '[BLOCKED]'      => sqlScrub($this->settings['blocked']),
+                          '[STARRED]'      => sqlScrub($this->settings['starred']),
+                          '[PINNED]'       => sqlScrub($this->settings['pin']),
+                         );
+        $sqlStr = prepSQLQuery("CALL SetPersonaRelation([ACCOUNT_ID], '[PERSONA_GUID]', '[RELATED_GUID]', '[FOLLOWS]', '[MUTED]', '[BLOCKED]', '[STARRED]', '[PINNED]');", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return array( 'guid'         => NoNull($Row['related_guid']),
+
+                              'follows'      => YNBool($Row['follows']),
+                              'is_muted'     => YNBool($Row['is_muted']),
+                              'is_blocked'   => YNBool($Row['is_blocked']),
+                              'is_starred'   => YNBool($Row['is_starred']),
+                              'pin_type'     => NoNull($Row['pin_type'], 'pin.none'),
+
+                              'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
+                              'created_unix' => strtotime($Row['created_at']),
+                              'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
+                              'updated_unix' => strtotime($Row['updated_at']),
+                             );
+            }
+        }
+
+        // If We're Here, We Couldn't Do Anything
         return false;
     }
 
     /** ********************************************************************* *
-     *  Profile
+     *  Profile Management
      ** ********************************************************************* */
     private function _setProfileLanguage() {
         $CleanLang = NoNull($this->settings['language_code'], $this->settings['language']);
@@ -696,7 +535,7 @@ class Account {
         $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGUID),
                           '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                          );
-        $sqlStr = readResource(SQL_DIR . '/account/getPublicProfile.sql', $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetPublicProfile([ACCOUNT_ID], '[PERSONA_GUID]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
@@ -717,8 +556,14 @@ class Account {
                               'bio'          => array( 'text' => NoNull($Row['persona_bio']),
                                                        'html' => $bio_html,
                                                       ),
-                              'days'         => nullInt($Row['days']),
+
+                              'pin'          => NoNull($Row['pin_type'], 'pin.none'),
+                              'you_follow'   => YNBool($Row['follows']),
+                              'is_muted'     => YNBool($Row['is_muted']),
+                              'is_starred'   => YNBool($Row['is_starred']),
+                              'is_blocked'   => YNBool($Row['is_blocked']),
                               'is_you'       => YNBool($Row['is_you']),
+                              'days'         => nullInt($Row['days']),
 
                               'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                               'created_unix' => strtotime($Row['created_at']),
@@ -740,9 +585,6 @@ class Account {
         }
 
         $this->settings['_for_guid'] = NoNull($CleanGUID);
-
-        writeNote( "Guid: $CleanGUID", true );
-        writeNote( "PgSub1: " . $this->settings['PgSub1'], true );
 
         require_once(LIB_DIR . '/posts.php');
         $posts = new Posts($this->settings);
@@ -789,54 +631,6 @@ class Account {
         }
 
         // If We're Here, There Are No Personas
-        return false;
-    }
-
-    /**
-     *  Function Will Ideally Be Called Only Once By Each Person, Setting the Welcome Message as "Done"
-     */
-    private function _setWelcomeDone() {
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[PERSON_ID]'  => nullInt($this->settings['_person_id']),
-                          '[TYPE]'       => 'system.welcome.done',
-                          '[VALUE]'      => 'Y',
-                         );
-        $sqlStr = readResource(SQL_DIR . '/account/setAccountMeta.sql', $ReplStr, true);
-        $isOK = doSQLExecute($sqlStr);
-
-        // Return an Empty Array
-        return array();
-    }
-
-    /** ********************************************************************* *
-     *  Account Security Elements (Password & Lifespans)
-     ** ********************************************************************* */
-    private function _resetPassword() {
-        $CleanGUID = NoNull($this->settings['guid'], $this->settings['PgSub1']);
-        $CleanPass = NoNull($this->settings['account_pass']);
-
-        // Verify We Have Minutes
-        if ( $CleanPass == "" ) { return "Invalid Password Supplied"; }
-        if ( mb_strlen($CleanPass) <= 5 ) { return "Password Is Too Short"; }
-        if ( $CleanPass != '' && substr_count($CleanPass, '*') < 6 ) {
-            // Create The SQL Query and Update
-            $ReplStr = array( '[ACCOUNT_ID]'    => nullInt($this->settings['_account_id']),
-                              '[EMPLOYEE_GUID]' => sqlScrub($CleanGUID),
-                              '[USERPASS]'      => sqlScrub($CleanPass),
-                              '[SHA_SALT]'      => sqlScrub(SHA_SALT),
-                              '[SQL_SPLITTER]'  => sqlScrub(SQL_SPLITTER),
-                             );
-            $sqlStr = readResource(SQL_DIR . '/account/resetPassword.sql', $ReplStr, true);
-            $isOK = doSQLExecute($sqlStr);
-
-            // Record the Event
-            setActivityRecord( $this->settings['_account_id'], 'account.update', 'action.complete', 0, "Updated Password for Employee [$CleanGUID]" );
-
-            // Return an Empty Array if Successful
-            if ( $isOK > 0 ) { return array(); }
-        }
-
-        // If We're Here, Nothing Was Done
         return false;
     }
 

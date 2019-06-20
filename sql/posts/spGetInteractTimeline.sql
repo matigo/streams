@@ -34,6 +34,19 @@ BEGIN
      WHERE t.`is_deleted` = 'N' and t.`code` LIKE 'post.%'
      ORDER BY t.`code`;
 
+    /* Collect the Persona Relationships */
+    DROP TEMPORARY TABLE IF EXISTS tmpRelations;
+    CREATE TEMPORARY TABLE tmpRelations AS
+    SELECT zz.`persona_id`, MAX(zz.`follows`) as `follows`, MAX(zz.`is_muted`) as `is_muted`, MIN(zz.`is_blocked`) as `is_blocked`, MAX(zz.`is_starred`) as `is_starred`, MAX(zz.`pin_type`) as `pin_type`
+      FROM (SELECT pr.`related_id` as `persona_id`, pr.`follows`, pr.`is_muted`, pr.`is_blocked`, pr.`is_starred`, pr.`pin_type`
+              FROM `PersonaRelation` pr INNER JOIN `Persona` pa ON pr.`persona_id` = pa.`id`
+             WHERE pr.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`
+             UNION ALL
+            SELECT pa.`id` as `persona_id`, 'Y' as `follows`, 'N' as `is_muted`, 'N' as `is_blocked`, 'N' as `is_starred`, '' as `pin_type`
+              FROM `Persona` pa
+             WHERE pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`) zz
+     GROUP BY zz.`persona_id`;
+
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
@@ -98,6 +111,10 @@ BEGIN
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, po.`canonical_url`) as `canonical_url`,
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `site_url`,
 
+           po.`reply_to`, po.`type`,
+           po.`guid` as `post_guid`, po.`privacy_type`,
+           po.`publish_at`, po.`expires_at`, po.`updated_at`,
+
            IFNULL((SELECT pp.`pin_type` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
                     WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
                     ORDER BY pp.`updated_at` DESC LIMIT 1), 'pin.none') as `pin_type`,
@@ -111,9 +128,12 @@ BEGIN
                     WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
                     ORDER BY pp.`updated_at` DESC LIMIT 1), 0) as `points`,
 
-           po.`reply_to`, po.`type`,
-           po.`guid` as `post_guid`, po.`privacy_type`,
-           po.`publish_at`, po.`expires_at`, po.`updated_at`,
+           IFNULL(pr.`follows`, 'N') as `persona_follow`,
+           IFNULL(pr.`is_muted`, 'N') as `persona_muted`,
+           IFNULL(pr.`is_blocked`, 'N') as `persona_blocked`,
+           IFNULL(pr.`is_starred`, 'N') as `persona_starred`,
+           CASE WHEN IFNULL(pr.`pin_type`, '') = '' THEN 'pin.none' ELSE pr.`pin_type` END as `persona_pin`,
+
            CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y' ELSE 'N' END as `is_you`,
            CASE WHEN po.`expires_at` IS NULL THEN 'Y'
                 WHEN po.`expires_at` < Now() THEN 'N'
@@ -128,6 +148,7 @@ BEGIN
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
+                   LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
        and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
        and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')

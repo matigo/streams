@@ -241,6 +241,10 @@ function callPuckAction( btn ) {
     closePuckObject();
 
     switch ( _action ) {
+        case 'tl-home':
+            resetTimeline('home');
+            break;
+
         case 'tl-global':
             resetTimeline('global');
             break;
@@ -475,8 +479,12 @@ function checkAuthToken() {
         for ( var i = 0; i < btns.length; i++ ) {
             btns[i].innerHTML = '<i class="fas fa-spin fa-spinner"></i>';
         }
+        /* Ensure the Puck Items are Visible */
+        showByClass('puck-siin');
+
     } else {
-        // Load the Timeline as Anonymous
+        /* Set the Puck to Guest Mode */
+        hideByClass('puck-siin');
         getTimeline('global');
     }
 }
@@ -889,8 +897,6 @@ function openGeoLocation( el ) {
     if ( _src_url === undefined || _src_url === false || _src_url === null || _src_url == '' ) { return; }
 
     var pel = el.parentElement;
-    pel.classList.remove('text-right');
-    pel.classList.add('text-center');
     pel.innerHTML = '<img src="' + _src_url + '?zoom=14&width=1280&height=440" class="geo-map" alt="" />';
 }
 
@@ -941,25 +947,45 @@ function parseProfile( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         if ( ds.days !== undefined && ds.days >= 0 ) {
+            var _relation = '&nbsp;';
             var today = moment().format('YYYY-MM-DD HH:mm:ss');
             var _ts = ds.created_unix * 1000;
+
+            var btns = document.getElementsByClassName('li-profile');
+            for ( var i = 0; i < btns.length; i++ ) {
+                btns[i].setAttribute('data-persona-guid', ds.guid);
+                btns[i].classList.add('hidden');
+            }
 
             // If this is a person's own account, show the option to edit
             var _edit = '';
             if ( ds.is_you ) {
-                var btns = document.getElementsByClassName('btn-modal-head');
-                for ( var i = 0; i < btns.length; i++ ) {
-                    btns[i].classList.add('hidden');
+                /* Ensure the Edit Button is Visible */
+                showByClass('li-persona-profile-edit');
+                _relation = 'This is you.';
 
-                    var _ip = btns[i].getAttribute('data-personal');
-                    if ( _ip === undefined || _ip === false || _ip === null || _ip != 'Y' ) { _ip = 'N'; }
-                    if ( _ip == 'Y' ) { btns[i].classList.remove('hidden'); }
-                }
-
-                // Set the Edit HTML
+                /* Set the Edit HTML */
                 _edit = '<textarea id="profile-bio" class="persona-bio-update persona-bio full-wide hidden" name="biodata" data-name="persona_bio">' + ds.bio.text + '</textarea>' +
                         '<input type="hidden" name="biodata" data-name="persona_guid" value="' + ds.guid + '" />' +
                         '<button class="btn btn-primary persona-bio hidden" onClick="setPublicProfile();">Update</button>';
+            } else {
+                // Ensure the Proper Menu Items are Visible
+                _relation = '';
+
+                if ( ds.you_follow ) { showByClass('li-persona-unfollow'); } else { showByClass('li-persona-follow'); }
+                if ( ds.is_blocked ) { showByClass('li-persona-unblock'); } else { showByClass('li-persona-block'); }
+                if ( ds.is_muted ) { showByClass('li-persona-unmute'); } else { showByClass('li-persona-mute'); }
+
+                if ( ds.you_follow ) { _relation = 'You follow @' + ds.as; }
+                if ( ds.is_muted ) {
+                    if ( _relation != '' ) {
+                        _relation = 'You have followed and muted @' + ds.as;
+                    } else {
+                        _relation = 'You have muted @' + ds.as;
+                    }
+                }
+                if ( ds.is_blocked ) { 'You have blocked @' + ds.as; }
+                if ( _relation == '' ) { _relation = '&nbsp;'; }
             }
 
             // Construct the HTML
@@ -970,6 +996,7 @@ function parseProfile( data ) {
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
                         '<strong class="sites full-wide"><a target="_blank" href="' + ds.site_url + '" title="">' + ds.site_url.replace('https://', '').replace('http://', '') + '</a></strong>' +
                         '<em class="since full-wide">Member Since ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ' (' + numberWithCommas(ds.days) + ' days)</em>' +
+                        '<em class="relation full-wide">' + _relation + '</em>' +
                         NoNull(ds.bio.html) +
                         _edit +
                     '</div>' +
@@ -984,6 +1011,33 @@ function parseProfile( data ) {
     var els = document.getElementsByClassName('profile-body');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _html;
+    }
+}
+function setPersonaRelation( el ) {
+    var _guid = el.getAttribute('data-persona-guid');
+    var _action = el.getAttribute('data-action');
+    var _dels = ['unfollow', 'unblock', 'unmute'];
+    var _req = 'POST';
+
+    if ( _action === undefined || _action === false || _action === null || NoNull(_action) == '' ) { return; }
+    if ( _guid === undefined || _guid === false || _guid === null || NoNull(_guid) == '' ) { return; }
+    if ( _dels.indexOf(_action) >= 0 ) {
+        _action = _action.replace('un', '');
+        _req = 'DELETE';
+    }
+
+    if ( _guid !== undefined && _guid !== false && _guid !== null && _guid.length == 36 ) {
+        var params = { 'persona_guid': getPersonaGUID() };
+        doJSONQuery('account/' + _guid + '/' + _action, _req, params, parsePersonaRelation);
+    }
+}
+function parsePersonaRelation( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        if ( ds.guid !== undefined && ds.guid !== false && ds.guid !== null && ds.guid.length == 36 ) {
+            doJSONQuery('account/' + ds.guid + '/profile', 'GET', {}, parseProfile);
+        }
     }
 }
 function getProfilePosts( _guid ) {

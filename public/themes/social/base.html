@@ -83,8 +83,9 @@
             <div class="navigation hidden">
                 <ul>
                     <li class="puck-item" data-action="tl-global"><i class="fas fa-globe"></i></li>
-                    <li class="puck-item" data-action="tl-mentions"><i class="far fa-comments"></i></li>
-                    <li class="puck-item" data-action="tl-actions"><i class="fas fa-highlighter"></i></li>
+                    <li class="puck-item puck-siin hidden" data-action="tl-home"><i class="fas fa-home"></i></li>
+                    <li class="puck-item puck-siin hidden" data-action="tl-mentions"><i class="far fa-comments"></i></li>
+                    <li class="puck-item puck-siin hidden" data-action="tl-actions"><i class="fas fa-highlighter"></i></li>
                     <li class="separator">&nbsp;</li>
                     <li class="puck-item" data-action="settings"><i class="fas fa-cog"></i></li>
                 </ul>
@@ -102,8 +103,21 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 class="modal-title">[lblProfile]</h4>
-                        <button class="btn btn-modal-head btn-primary hidden" data-personal="N"><i class="fas fa-user-plus"></i> [btnFollow]</button>
-                        <button class="btn btn-modal-head btn-primary hidden" data-personal="Y" onclick="togglePublicProfileEdit();"><i class="fas fa-pencil-alt"></i> [btnEditProfile]</button>
+                        <div class="btn-group btn-modal-head">
+                            <button id="persona-modes" class="btn btn-primary dropdown-toggle" style="min-width: 4em;" data-toggle="dropdown">Actions</button>
+                            <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                                <li class="li-profile li-persona-follow" onclick="setPersonaRelation(this);" data-action="follow">[btnFollow] <i class="fas fa-user-plus"></i></li>
+                                <li class="li-profile li-persona-unfollow" onclick="setPersonaRelation(this);" data-action="unfollow">[btnUnfollow] <i class="fas fa-user-minus"></i></li>
+
+                                <li class="li-profile li-persona-mute" onclick="setPersonaRelation(this);" data-action="mute">[btnMute] <i class="fas fa-volume-mute"></i></li>
+                                <li class="li-profile li-persona-unmute" onclick="setPersonaRelation(this);" data-action="unmute">[btnUnmute] <i class="fas fa-volume-up"></i></li>
+
+                                <li class="li-profile noborder li-persona-block" onclick="setPersonaRelation(this);" data-action="block">[btnBlock] <i class="fas fa-user-slash"></i></li>
+                                <li class="li-profile noborder li-persona-unblock" onclick="setPersonaRelation(this);" data-action="unblock">[btnUnblock] <i class="fas fa-user-check"></i></li>
+
+                                <li class="li-profile noborder li-persona-profile-edit" onclick="togglePublicProfileEdit();">[btnEditProfile] <i class="fas fa-pencil-alt"></i></li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="modal-body profile-body" dir="auto">
                         <p style="display: block; text-align: center; width: 100%;">Sorry. This hasn't been coded just yet.</p>
@@ -176,7 +190,7 @@
                         <hr>
                         <p>
                             <label class="lbl-pref">&nbsp;</label>
-                            <button class="btn btn-signout btn-primary">[btnSignOut]</button>
+                            <button class="btn btn-signout puck-siin btn-primary">[btnSignOut]</button>
                         </p>
                     </div>
                     <div class="modal-footer">

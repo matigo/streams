@@ -65,6 +65,10 @@ class Posts {
                 $rVal = $this->_getTLStream('mentions');
                 break;
 
+            case 'home':
+                $rVal = $this->_getTLStream('home');
+                break;
+
             case 'interactions':
             case 'interaction':
             case 'actions':
@@ -1944,7 +1948,12 @@ class Posts {
                                                           'as'          => '@' . NoNull($post['persona_name']),
                                                           'name'        => NoNull($post['display_name']),
                                                           'avatar'      => NoNull($post['avatar_url']),
-                                                          'you_follow'  => YNBool($post['is_you']),
+
+                                                          'pin'         => NoNull($post['persona_pin'], 'pin.none'),
+                                                          'you_follow'  => YNBool($post['persona_follow']),
+                                                          'is_muted'    => YNBool($post['persona_muted']),
+                                                          'is_starred'  => YNBool($post['persona_starred']),
+                                                          'is_blocked'  => YNBool($post['persona_blocked']),
                                                           'is_you'      => YNBool($post['is_you']),
 
                                                           'profile_url' => NoNull($post['profile_url']),
@@ -1985,11 +1994,11 @@ class Posts {
      */
     private function _getTLStream( $path = 'global' ) {
         $path = NoNull(strtolower($path), 'global');
-        $validTLs = array( 'global', 'mentions', 'persona', 'interact' );
+        $validTLs = array( 'global', 'mentions', 'home', 'persona', 'interact' );
         if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
 
         // Get the Types Requested (Default is Social Posts Only)
-        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark' );
+        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location' );
         $CleanTypes = '';
         $rTypes = explode(',', NoNull($this->settings['types'], $this->settings['post_types']));
         if ( is_array($rTypes) ) {

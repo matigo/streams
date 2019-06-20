@@ -373,6 +373,7 @@ BEFORE INSERT ON `Persona`
     END IF;
    END
 ;;
+DELIMITER ;
 
 DROP TABLE IF EXISTS `PersonaRelation`;
 CREATE TABLE IF NOT EXISTS `PersonaRelation` (
@@ -383,6 +384,8 @@ CREATE TABLE IF NOT EXISTS `PersonaRelation` (
     `is_muted`      enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
     `is_blocked`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
 
+    `is_starred`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `pin_type`      varchar(64)             CHARACTER SET utf8  NOT NULL    DEFAULT 'pin.none',
     `guid`          char(36)                CHARACTER SET utf8  NOT NULL    ,
 
     `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
@@ -390,7 +393,8 @@ CREATE TABLE IF NOT EXISTS `PersonaRelation` (
     `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`persona_id`, `related_id`),
     FOREIGN KEY (`persona_id`) REFERENCES `Persona` (`id`),
-    FOREIGN KEY (`related_id`) REFERENCES `Persona` (`id`)
+    FOREIGN KEY (`related_id`) REFERENCES `Persona` (`id`),
+    FOREIGN KEY (`pin_type`) REFERENCES `Type` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE INDEX `idx_psnarel_main` ON `PersonaRelation` (`is_deleted`, `persona_id`);
 
@@ -410,6 +414,25 @@ BEFORE INSERT ON `PersonaRelation`
     END IF;
    END
 ;;
+DROP TRIGGER IF EXISTS `before_update_persona_relation`;;
+CREATE TRIGGER `before_update_persona_relation`
+ BEFORE UPDATE ON `PersonaRelation`
+   FOR EACH ROW
+ BEGIN
+    IF new.`persona_id` = new.`related_id` THEN
+        SET new.`follows` = 'Y';
+        SET new.`is_muted` = 'N';
+        SET new.`is_blocked` = 'N';
+        SET new.`is_starred` = 'N';
+        SET new.`pin_type` = 'pin.none';
+    END IF;
+    IF new.`guid` <> old.`guid` THEN
+        SET new.`guid` = old.`guid`;
+    END IF;
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  Create Sequence (Sites)
@@ -844,6 +867,7 @@ CREATE TRIGGER `before_update_postsrch`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  Syndicated
