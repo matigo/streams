@@ -1846,7 +1846,7 @@ function getVisibleTypes() {
     return NoNull(_types, valids.join(','));
 }
 function validateTimeline( _tl ) {
-    var valids = ['global', 'mentions', 'actions'];
+    var valids = ['global', 'home', 'mentions', 'actions'];
     var _view = readStorage('timeline');
     if ( _view === undefined || _view === false || _view === null || valids.indexOf(_view) < 0 ) { _view = 'global'; }
     if ( _tl === undefined || _tl === false || _tl === null || valids.indexOf(_tl) < 0 ) { _tl = NoNull(_view, 'global'); }
@@ -1856,6 +1856,10 @@ function validateTimeline( _tl ) {
     for ( var i = 0; i < els.length; i++ ) {
         var _icon = 'fas fa-globe';
         switch ( _tl ) {
+            case 'home':
+                _icon = 'fas fa-home';
+                break;
+
             case 'mentions':
                 _icon = 'far fa-comments';
                 break;

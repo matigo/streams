@@ -37,7 +37,7 @@ BEGIN
                    CASE WHEN IFNULL(pr.`pin_type`, '') = '' THEN 'pin.none' ELSE pr.`pin_type` END as `pin_type`,
 
                    acct.`timezone`, pa.`created_at`, DATEDIFF(DATE_FORMAT(Now(), '%Y-%m-%d 00:00:00'), DATE_FORMAT(pa.`created_at`, '%Y-%m-%d 00:00:00')) as `days`,
-                   CASE WHEN acct.`id` = 1 THEN 'Y' ELSE 'N' END as `is_you`
+                   CASE WHEN acct.`id` = `in_account_id` THEN 'Y' ELSE 'N' END as `is_you`
               FROM `Account` acct INNER JOIN `Persona` pa ON acct.`id` = pa.`account_id`
                                   INNER JOIN `Account` zme ON zme.`is_deleted` = 'N'
                                   INNER JOIN `Persona` zpa ON zme.`id` = zpa.`account_id`
