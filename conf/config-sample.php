@@ -17,6 +17,7 @@ define('HAMMER_LIMIT', 120);                                // Maximum Number of
 define('ENFORCE_PHPVERSION', 1);                            // Enforce a Requirement that the Server Is Running at Least PHP v.X
 define('MIN_PHPVERSION', 70000);                            // The Lowest Version of PHP to Accept
 
+define('DEFAULT_DOMAIN', '');                               // The domain to use when generating new sites as a subdomain
 define('RATE_LIMIT', 5000);                                 // The Maximum Number of Hourly Calls to the API By a Given Token
 define('TOKEN_PREFIX', 'CSQAA_');                           // The Authentication Token Validation Prefix
 define('TOKEN_EXPY', 30);                                   // Number of Days Tokens Can Sit Idle
@@ -56,6 +57,9 @@ define('MAIL_RATELIMIT', 15);                               // The Maximum Numbe
 
 define('CLOUDFLARE_API_KEY', '');                           // The CloudFlare Global API Key
 define('CLOUDFLARE_API_URL', '');                           // The CloudFlare API Address
+define('CLOUDFLARE_EMAIL', '');                             // The CloudFlare Email Address
+define('CLOUDFLARE_SITEDNSTYPE', '');                       // The Type of DNS Record Created in CloudFlare (A, AAAA, CNAME, etc.)
+define('CLOUDFLARE_SITEDNSVAL', '');                        // The Value for the DNS Record creatd in CloudFlare (An IP Address or CNAME Pointer)
 
 define('USE_S3', 0);                                        // Use Amazon S3 Storage
 define('AWS_ACCESS_KEY', '');                               // The Amazon S3 Access Key

@@ -46,7 +46,6 @@ BEGIN
                            (SELECT 0 i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b) num
                            LEFT OUTER JOIN `Post` po ON po.`is_deleted` = 'N' AND po.`type` NOT IN ('post.note') AND po.`slug` = num.`slug`
                                                     AND po.`channel_id` = `x_channel_id` AND po.`guid` <> `in_post_guid`
-
              ORDER BY num.`idx`) tmp
      WHERE tmp.`pid` = 0
      ORDER BY tmp.`idx`

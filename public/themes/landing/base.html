@@ -1,81 +1,108 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <title>[PAGE_TITLE]</title>
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no">
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="cleartype" content="on" />
 
-        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/bootstrap.min.css">
-        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/bootstrap-slider.min.css">
-        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/fontawesome-all.css">
-        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/slick.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-capable" content="no" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="Robots" content="index, follow" />
+
+        <meta name="description" content="[SITEDESCR]" />
+        <meta name="keywords" content="[SITEKEYWD]" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="generator" content="[GENERATOR]" />
+        <meta charset="UTF-8">
+
+        <meta property="og:site_name" content="[SITE_NAME]" />
+        <meta property="og:type" content="[META_TYPE]" />
+        <meta property="og:title" content="[PAGE_TITLE]" />
+        <meta property="og:description" content="[SITEDESCR]" />
+        <meta property="og:url" content="[PAGE_URL]" />
+        <meta property="og:image" content="[HOMEURL]/images/locker_banner.jpg" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="[PAGE_TITLE]" />
+        <meta name="twitter:description" content="[SITEDESCR]" />
+        <meta name="twitter:domain" content="[META_DOMAIN]" />
+        <meta name="twitter:url" content="[PAGE_URL]" />
+        <meta name="twitter:image" content="[HOMEURL]/images/locker_banner.jpg" />
+
+        <meta name="authorization" content="[TOKEN]" />
+        <meta name="channel_guid" content="[CHANNEL_GUID]" />
+        <meta name="persona_guid" content="[PERSONA_GUID]" />
+        <meta name="client_guid" content="[CLIENT_GUID]" />
+        <meta name="home_url" content="[HOMEURL]" />
+        <meta name="api_url" content="[API_URL]" />
+
+        <link rel="apple-touch-icon" href="[IMG_DIR]/apple-touch-icon.png">
+        <link rel="icon" href="[IMG_DIR]/favicon.png">
+
+        <link type="text/css" rel="stylesheet" href="[CSS_DIR]/page.css">
         <link type="text/css" rel="stylesheet" href="[CSS_DIR]/style.css">
     </head>
-    <body class="fullpage">
-        <div id="form-section" class="container-fluid signin">
-            <div class="website-logo">
-                <a href="[HOMEURL]">
-                    <div class="logo" style="width:62px; height:18px"></div>
-                </a>
-            </div>
-            <div class="row">
-                <div class="info-slider-holder">
-                    <div class="info-holder">
-                        <h6>A Service you can anytime modify.</h6>
-                        <div class="bold-title">it’s not that hard to get<br>a website <span>anymore.</span></div>
-                        <div class="mini-testimonials-slider">
-                            <div>
-                                <div class="details-holder">
-                                    <img class="photo" src="images/person1.jpg" alt="">
-                                    <h4>Chris Walker</h4>
-                                    <h5>CEO & CO-Founder @HelloBrandio</h5>
-                                    <p>“In hostify we trust. I am with them for over 7 years now. It always felt like home! Loved their customer support”</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="details-holder">
-                                    <img class="photo" src="images/person2.jpg" alt="">
-                                    <h4>Chris Walker</h4>
-                                    <h5>CEO & CO-Founder @HelloBrandio</h5>
-                                    <p>“In hostify we trust. I am with them for over 7 years now. It always felt like home! Loved their customer support”</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <div class="navbar-left">
+                    <a class="navbar-brand" href="[HOMEURL]">[SITE_NAME]</a>
                 </div>
-                <div class="form-holder">
-                    <div class="menu-holder">
-                        <ul class="main-links">
-                            <li><a class="normal-link" href="[HOMEURL]/signup">Don’t have an account?</a></li>
-                            <li><a class="sign-button" href="[HOMEURL]/signup">Sign up</a></li>
-                        </ul>
-                    </div>
-                    <div class="signin-signup-form">
-                        <div class="form-items">
-                            <div class="form-title">Sign in to your account</div>
-                            <form id="signinform">
-                                <div class="form-text">
-                                    <input type="text" name="username" placeholder="E-mail Address" required>
-                                </div>
-                                <div class="form-text">
-                                    <input type="password" name="password" placeholder="Password" required>
-                                </div>
-                                <div class="form-button">
-                                    <button id="submit" type="submit" class="ybtn ybtn-accent-color">Sign In</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <section class="navbar-mobile">
+                    <nav class="nav nav-navbar nav-transform-none ml-auto">
+                        <a class="nav-link" href="[HOMEURL]/about">[lblAbout]</a>
+                        <a class="nav-link" href="https://blog.10centuries.org">[lblBlog]</a>
+                        <a class="nav-link" href="https://docs.10centuries.org">[lblDocs]</a>
+                        <a class="nav-link" href="[HOMEURL]/signin">[lblSignIn]</a>
+                        <a class="nav-link" href="[HOMEURL]/signup">[lblSignUp]</a>
+                    </nav>
+                </section>
             </div>
-        </div>
+        </nav>
 
-        <script src="[JS_DIR]/jquery.min.js"></script>
-        <script src="[JS_DIR]/bootstrap.min.js"></script>
-        <script src="[JS_DIR]/bootstrap-slider.min.js"></script>
-        <script src="[JS_DIR]/slick.min.js"></script>
-        <script src="[JS_DIR]/main.js"></script>
+[CONTENT]
+
+        <footer class="footer bg-gray py-7">
+            <div class="container">
+                <div class="row gap-y">
+                    <div class="col-md-6 col-xl-4">
+                        <p><a href="[HOMEURL]">[SITE_NAME]</a></p>
+                        <p>[landFootDescr]</p>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <h6 class="mb-4 mt-1"><strong>[landCol1Head]</strong></h6>
+                        <div class="nav flex-column">
+                            <a class="nav-link" href="[HOMEURL]/about">[lblAbout]</a>
+                            <a class="nav-link" href="[HOMEURL]/careers">[lblCareers]</a>
+                            <a class="nav-link" href="[HOMEURL]/contact">[lblContact]</a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <h6 class="mb-4 mt-1"><strong>Product</strong></h6>
+                        <div class="nav flex-column">
+                            <a class="nav-link" href="[HOMEURL]/roadmap">[lblRoadmap]</a>
+                            <a class="nav-link" href="[HOMEURL]/ideas">[lblIdeas]</a>
+                            <a class="nav-link" href="[HOMEURL]/donate">[lblDonate]</a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6 col-xl-2">
+                        <h6 class="mb-4 mt-1"><strong>[lblSupport]</strong></h6>
+                        <div class="nav flex-column">
+                            <a class="nav-link" href="[HOMEURL]/develop">[lblDevelop]</a>
+                            <a class="nav-link" href="[HOMEURL]/docs">[lblDocs]</a>
+                            <a class="nav-link" href="[HOMEURL]/contact">[lblContact]</a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6 col-xl-2 text-center">
+                        <p><a class="btn btn-block btn-round btn-primary" href="https://github.com/matigo/streams"><i class="fab fa-github"></i> [btnDownload]</a></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </body>
 [GenTime]
 </html>

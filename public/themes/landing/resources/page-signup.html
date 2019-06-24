@@ -1,0 +1,40 @@
+        <main class="main-content">
+            <div class="bg-white sign-up rounded shadow-7 w-400 mw-100 p-6">
+                <h5 class="mb-7">[supIntro]</h5>
+                <form action="[HOMEURL]/api/account/create" method="POST">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="name" placeholder="[supNamePH]" onkeyup="clearMessage(this);" onblur="validateName();" required>
+                        <label class="label-name hidden">&nbsp;</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control" name="email" placeholder="[supMailPH]" onkeyup="clearMessage(this);" onblur="validateMail();" required>
+                        <label class="label-email hidden">&nbsp;</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" name="password" placeholder="[supPassPH]" onkeyup="clearMessage(this);" required>
+                        <label class="label-password hidden">&nbsp;</label>
+                    </div>
+                    <div class="form-group py-3">
+                        <div class="custom-control custom-checkbox">
+                            <label><input type="checkbox" name="terms" onchange="validateName();" value="Y" required> [supTermsAgree]</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-block btn-signup btn-primary" type="submit" onclick="validateFormData();" data-label="[btnCreateAcct]">[btnCreateAcct]</button>
+                        <input type="hidden" name="redirect" value="web_redirect">
+                    </div>
+                </form>
+                <div class="form-group">
+                    <button class="btn btn-block btn-signup btn-primary hidden" onclick="validateFormData();" data-label="[btnCreateAcct]">[btnCreateAcct]</button>
+                    <input type="hidden" name="redirect" value="web_redirect">
+                </div>
+                <div class="divider"><em>or</em></div>
+                <div class="text-center">
+                    <button class="btn btn-apple" href="#"><i class="fab fa-apple"></i> [btnSignInApple]</button>
+                </div>
+                <hr class="w-30">
+                <p class="text-center text-muted small-2">[supLogin]</p>
+            </div>
+        </main>
+        <script src="[JS_DIR]/page.min.js"></script>
+        <script src="[JS_DIR]/precheck.js"></script>

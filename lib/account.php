@@ -53,50 +53,56 @@ class Account {
         $rVal = false;
 
         switch ( $Activity ) {
+            case 'checkname':
+            case 'chkname':
+                return $this->_checkAvailability();
+                break;
+
             case 'list':
                 if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
-                $rVal = $this->_getAccountList();
+                return $this->_getAccountList();
                 break;
 
             case 'preferences':
             case 'preference':
             case 'prefs':
-                $rVal = $this->_getPreference();
+                return $this->_getPreference();
                 break;
 
             case 'profile':
             case 'bio':
-                $rVal = $this->_getPublicProfile();
+                return $this->_getPublicProfile();
                 break;
 
             case 'posts':
-                $rVal = $this->_getProfilePosts();
+                return $this->_getProfilePosts();
                 break;
 
             case 'me':
                 if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
-                $rVal = $this->_getProfile();
+                return $this->_getProfile();
                 break;
 
             case 'summary':
                 if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
-                $rVal = $this->_getAccountSummary();
+                return $this->_getAccountSummary();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If We're Here, There Was No Matching Activity
+        return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
+        $excludes = array( 'create' );
         $rVal = false;
 
         // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+        if ( !$this->settings['_logged_in'] && in_array($Activity, $excludes) === false ) { return "You Need to Log In First"; }
 
         switch ( $Activity ) {
             case 'bio':
@@ -278,8 +284,181 @@ class Account {
      *  Account Creation
      ** ********************************************************************* */
     private function _createAccount() {
+        if ( !defined('DEFAULT_LANG') ) { define('DEFAULT_LANG', 'en-us'); }
+        if ( !defined('DEFAULT_DOMAIN') ) { define('DEFAULT_DOMAIN', ''); }
+        if ( !defined('SHA_SALT') ) { define('SHA_SALT', ''); }
+        if ( !defined('TIMEZONE') ) { define('TIMEZONE', ''); }
 
+        $CleanPass = NoNull($this->settings['pass'], $this->settings['password']);
+        $CleanName = NoNull($this->settings['name'], $this->settings['persona']);
+        $CleanMail = NoNull($this->settings['mail'], $this->settings['email']);
+        $CleanTOS = NoNull($this->settings['terms'], $this->settings['tos']);
+        $CleanDomain = NoNull($this->settings['domain'], DEFAULT_DOMAIN);
+        $CleanLang = NoNull($this->settings['lang'], DEFAULT_LANG);
+        $Redirect = NoNull($this->settings['redirect'], $this->settings['is_web']);
 
+        if ( mb_strlen($CleanPass) <= 6 ) {
+            $this->_setMetaMessage( "Password is too weak. Please choose a better one.", 400 );
+            return false;
+        }
+
+        if ( mb_strlen($CleanName) < 2 ) {
+            $this->_setMetaMessage( "Nickname is too short. Please choose a longer one.", 400 );
+            return false;
+        }
+
+        if ( mb_strlen($CleanMail) <= 5 ) {
+            $this->_setMetaMessage( "Email address is too short. Please enter a correct address.", 400 );
+            return false;
+        }
+
+        if ( validateEmail($CleanMail) === false ) {
+            $this->_setMetaMessage( "Email address does not appear correct. Please enter a correct address.", 400 );
+            return false;
+        }
+
+        if ( YNBool($CleanTOS) === false ) {
+            $this->_setMetaMessage( "Please read and accept the Terms of Service before creating an account.", 400 );
+            return false;
+        }
+
+        // Ensure the Start of the Domain has a period
+        if ( mb_substr($CleanDomain, 0, 1) != '.' ) {
+            $CleanDomain = '.' . $CleanDomain;
+        }
+
+        // If we're here, we *might* be good. Create the account.
+        $ReplStr = array( '[DOMAIN]' => sqlScrub($CleanDomain),
+                          '[NAME]'   => sqlScrub($CleanName),
+                          '[MAIL]'   => sqlScrub($CleanMail),
+                          '[PASS]'   => sqlScrub($CleanPass),
+                          '[LANG]'   => sqlScrub($CleanLang),
+                          '[SALT]'   => sqlScrub(SHA_SALT),
+                          '[ZONE]'   => sqlScrub(TIMEZONE),
+                         );
+        $sqlStr = prepSQLQuery( "CALL CreateAccount('[NAME]', '[PASS]', '[MAIL]', '[SALT]', '[DOMAIN]' );", $ReplStr );
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $ChannelId = false;
+            $SiteUrl = false;
+            $SiteId = false;
+            $PaGuid = false;
+            $AcctID = false;
+            $Token = false;
+
+            foreach ( $rslt as $Row ) {
+                $SiteUrl = NoNull($Row['site_url']);
+                $PaGuid = NoNull($Row['persona_guid']);
+                $AcctID = nullInt($Row['account_id']);
+            }
+
+            // Create the Channel and Site
+            if ( NoNull($SiteUrl) != '' && NoNull($PaGuid) != '' && nullInt($AcctID) > 0 ) {
+                $ReplStr['[PERSONA_GUID]'] = sqlScrub($PaGuid);
+                $ReplStr['[ACCOUNT_ID]'] = nullInt($AcctID);
+                $ReplStr['[SITE_URL]'] = sqlScrub($SiteUrl);
+                $ReplStr['[SITE_NAME]'] = sqlScrub( "$CleanName's Space");
+                $ReplStr['[SITE_DESCR]'] = sqlScrub( "All About $CleanName");
+
+                $sqlStr = prepSQLQuery( "CALL CreateSite([ACCOUNT_ID], '[PERSONA_GUID]', '[SITE_NAME]', '[SITE_DESCR]', '', '[SITE_URL]', 'visibility.public');", $ReplStr );
+                $tslt = doSQLQuery($sqlStr);
+                if ( is_array($tslt) ) {
+                    foreach ( $tslt as $Row ) {
+                        $ChannelId = nullInt($Row['channel_id']);
+                        $SiteId = nullInt($Row['site_id']);
+                    }
+                }
+            }
+
+            // If CloudFlare is being used, configure the CNAME Record Accordingly
+            if ( !defined('CLOUDFLARE_API_KEY') ) { define('CLOUDFLARE_API_KEY', ''); }
+            $zone = false;
+
+            if ( NoNull(CLOUDFLARE_API_KEY) != '' ) {
+                require_once(LIB_DIR . '/system.php');
+                $sys = new System( $this->settings );
+                $zone = $sys->createCloudFlareZone( $SiteUrl );
+                unset($sys);
+            }
+
+            // Collect an Authentication Token and (if needs be) Redirect
+            $sqlStr = prepSQLQuery( "CALL PerformDirectLogin([ACCOUNT_ID]);", $ReplStr );
+            $tslt = doSQLQuery($sqlStr);
+            if ( is_array($tslt) ) {
+                foreach ( $tslt as $Row ) {
+                    $Token = TOKEN_PREFIX . intToAlpha($Row['token_id']) . '_' . NoNull($Row['token_guid']);
+                }
+            }
+        }
+
+        // What sort of return are we looking for?
+        $url = NoNull($this->settings['HomeURL']) . '/welcome';
+        switch ( strtolower($Redirect) ) {
+            case 'web_redirect':
+                if ( is_string($Token) ) {
+                    $url .= '?token=' . $Token;
+                } else {
+                    $url = NoNull($this->settings['HomeURL']) . '/nodice';
+                }
+                redirectTo( $url );
+                break;
+
+            default:
+                if ( is_string($Token) ) {
+                    return array( 'token' => $Token,
+                                  'url'   => NoNull($url),
+                                 );
+                } else {
+                    $this->_setMetaMessage( "Could not create Account", 400 );
+                    return false;
+                }
+        }
+
+        // If We're Here, Something is Really Off
+        return false;
+    }
+
+    private function _checkAvailability() {
+        if ( !defined('DEFAULT_DOMAIN') ) { define('DEFAULT_DOMAIN', ''); }
+        $CleanDomain = NoNull($this->settings['domain'], DEFAULT_DOMAIN);
+        $CleanName = NoNull($this->settings['name'], $this->settings['persona']);
+
+        if ( mb_strlen($CleanName) < 2 ) {
+            $this->_setMetaMessage( "This Name is Too Short", 400 );
+            return false;
+        }
+
+        if ( mb_strlen($CleanName) > 40 ) {
+            $this->_setMetaMessage( "This Name is Too Long", 400 );
+            return false;
+        }
+
+        if ( mb_strlen($CleanDomain) <= 3 || mb_strlen($CleanDomain) > 100 ) {
+            $this->_setMetaMessage( "The Domain Name Appears Invalid", 400 );
+            return false;
+        }
+
+        // Ensure the Start of the Domain has a period
+        if ( mb_substr($CleanDomain, 0, 1) != '.' ) {
+            $CleanDomain = '.' . $CleanDomain;
+        }
+
+        // Prepare the SQL Query
+        $ReplStr = array( '[NAME]'   => sqlScrub($CleanName),
+                          '[DOMAIN]' => sqlScrub($CleanDomain),
+                         );
+        $sqlStr = prepSQLQuery( "CALL CheckPersonaAvailable('[NAME]', '[DOMAIN]');", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return array( 'name' => NoNull($Row['persona_name']),
+                              'url'  => NoNull($Row['domain_url']),
+                             );
+            }
+        }
+
+        // If We're Here, Either Something's Wrong or the Requested Name in use
+        return array();
     }
 
     /** ********************************************************************* *

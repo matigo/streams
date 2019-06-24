@@ -1,1 +1,0 @@
-SELECT CAST(DATE_FORMAT(Now(), '%H%i%s') AS SIGNED) as `id`, MD5(UNIX_TIMESTAMP(DATE_FORMAT(Now(), '%Y-%m-%d %H:%i:00'))) as `guid`

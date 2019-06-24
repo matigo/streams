@@ -9,9 +9,13 @@ require_once( LIB_DIR . '/functions.php');
 
 class System {
     var $settings;
+    var $strings;
+    var $cache;
 
-    function __construct( $Items ) {
-        $this->settings = $Items;
+    function __construct( $settings, $strings = false ) {
+        $this->settings = $settings;
+        $this->strings = ((is_array($strings)) ? $strings : getLangDefaults($this->settings['_language_code']));
+        $this->cache = array();
     }
 
     /** ********************************************************************* *
@@ -20,6 +24,8 @@ class System {
     public function performAction() {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
         $rVal = false;
+
+        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
 
         // Perform the Action
         switch ( $ReqType ) {
@@ -46,24 +52,23 @@ class System {
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'dbcheck':
             case 'dbhash':
-                $rVal = $this->_checkDBVersion();
+                return $this->_checkDBVersion();
                 break;
 
             case 'verifyips':
-                $rVal = $this->_verifyServerIPs();
+                return $this->_verifyServerIPs();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If We're Here, There's No Matching Activity
+        return false;
     }
 
     private function _performPostAction() {
@@ -124,6 +129,7 @@ class System {
     /** ********************************************************************* *
      *  Public Functions
      ** ********************************************************************* */
+    public function createCloudFlareZone( $subdomain ) { return $this->_createCloudFlareZone( $subdomain ); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -172,6 +178,7 @@ class System {
      */
     private function _verifyServerIPs() {
         if ( defined('CLOUDFLARE_API_KEY') === false ) { return false; }
+        if ( defined('CLOUDFLARE_EMAIL') === false ) { return false; }
         if ( strlen(CLOUDFLARE_API_KEY) <= 35 ) { return false; }
 
         // Collect the IP Addresses
@@ -204,7 +211,7 @@ class System {
         // If There's a Change, Record the Change and Start the DNS Update Process
         if ( $has_change ) {
             // Update the CloudFlare Data
-            $data = $this->_updateCloudFlareDNS(CLOUDFLARE_API_KEY, 'jason@j2fi.net', $ipv4, $ipv6);
+            $data = $this->_updateCloudFlareDNS(CLOUDFLARE_API_KEY, CLOUDFLARE_EMAIL, $ipv4, $ipv6);
 
             // Update the ServerIP Values
             $ReplStr = array( '[IPV4_ADDR]' => sqlScrub($ipv4),
@@ -229,6 +236,78 @@ class System {
     }
 
     /**
+     *  Function creates a "DNS Type" record in CloudFlare to point to the location specified.
+     */
+    private function _createCloudFlareZone( $NewZone ) {
+        if ( defined('CLOUDFLARE_SITEDNSTYPE') === false ) { return false; }
+        if ( defined('CLOUDFLARE_SITEDNSVAL') === false ) { return false; }
+        if ( defined('CLOUDFLARE_API_KEY') === false ) { return false; }
+        if ( defined('CLOUDFLARE_EMAIL') === false ) { return false; }
+        if ( defined('DEFAULT_DOMAIN') === false ) { return false; }
+        if ( strlen(CLOUDFLARE_API_KEY) <= 35 ) { return false; }
+
+        // Prep the Basic Variables
+        $domain = strtolower(NoNull(DEFAULT_DOMAIN));
+        if ( mb_substr($domain, 0, 1) == '.' ) { $domain = mb_substr($domain, 1); }
+
+        $cname = NoNull($NewZone);
+        for ( $i = 0; $i < 5; $i++ ) {
+            $cname = str_replace(array($domain, '.'), '', $cname);
+        }
+        $ZoneID = false;
+
+        // Query the CloudFlare API for the Zone List
+        $params = array( 'type'     => 'A,AAAA',
+                         'per_page' => 100,
+                        );
+        $data = doCloudFlareRequest('/zones', CLOUDFLARE_API_KEY, CLOUDFLARE_EMAIL, 'GET', $params);
+        if ( is_array($data) ) {
+            foreach ( $data as $Zone ) {
+                if ( NoNull($Zone['name']) == $domain ) {
+                    $ZoneID = NoNull($Zone['id']);
+                }
+            }
+        }
+
+        // Create the DNS Record
+        if ( $ZoneID !== false ) {
+            $params = array( 'type'    => NoNull(CLOUDFLARE_SITEDNSTYPE, 'CNAME'),
+                             'name'    => NoNull($cname),
+                             'content' => NoNull(CLOUDFLARE_SITEDNSVAL),
+                             'proxied' => true
+                            );
+            $endpoint = '/zones/' . NoNull($ZoneID) . '/dns_records';
+            $zone = doCloudFlareRequest($endpoint, CLOUDFLARE_API_KEY, CLOUDFLARE_EMAIL, 'POST', $params);
+
+            if ( is_array($zone) ) {
+                if ( array_key_exists('errors', $zone) ) {
+                    if ( count($zone['errors']) > 0 ) {
+                        $errMsg = '';
+                        foreach ( $zone['errors'] as $err ) {
+                            if ( $errMsg != '' ) { $errMsg .= "\r\n"; }
+                            $errMsg .= NoNull($err['code']) . ' | ' . NoNull($err['message']);
+                        }
+                    }
+                }
+
+                // If It's Good, Return a Summary of the Response
+                return array( 'id'      => NoNull($zone['id']),
+                              'name'    => NoNull($zone['name']),
+                              'points'  => NoNull($zone['content']),
+                              'proxied' => YNBool($zone['proxied']),
+                              'locked'  => YNBool($zone['locked']),
+                              'zone'    => array( 'id' => NoNull($zone['zone_id']),
+                                                  'name' => NoNull($zone['zone_name']),
+                                                 ),
+                             );
+            }
+        }
+
+        // If we're here, something didn't work
+        return false;
+    }
+
+    /**
      *  Update the CloudFlare DNS Records based on the Global Key provided
      */
     private function _updateCloudFlareDNS( $GlobalKey, $cfMail, $ipv4, $ipv6 ) {
@@ -250,7 +329,7 @@ class System {
 
         // Query the CloudFlare API for the Zone List
         $params = array( 'type'     => 'A,AAAA',
-                         'per_page' => 100,
+                         'per_page' => 100
                         );
         $data = doCloudFlareRequest('/zones', $GlobalKey, $cfMail, 'GET', $params);
         if ( is_array($data) ) {
@@ -370,11 +449,16 @@ class System {
         return '';
     }
 
+    /** ********************************************************************* *
+     *  Class Functions
+     ** ********************************************************************* */
     /**
-     *  Function Determines if the Account Has an Appropriate Scope and Returns a Boolean Response
+     *  Function Sets a Message in the Meta Field
      */
-    private function _hasScope( $Scope ) {
-        return ( mb_strpos(' ' . $this->settings['_account_scopes'], $Scope) ) ? true : false;
+    private function _setMetaMessage( $msg, $code = 0 ) {
+        if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
+        if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
+        if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
     }
 }
 ?>

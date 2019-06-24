@@ -12,7 +12,7 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
        po.`canonical_url`, po.`slug`, po.`reply_to`,
        po.`channel_id`, ch.`name` as `channel_name`, ch.`type` as `channel_type`, ch.`privacy_type` as `channel_privacy_type`, ch.`guid` as `channel_guid`,
        ch.`created_at` as `channel_created_at`, ch.`updated_at` as `channel_updated_at`,
-       ch.`site_id`, (SELECT z.`url` FROM `SiteUrl` z WHERE z.`is_deleted` = 'N' and z.`site_id` = ch.`site_id` ORDER BY z.`id` DESC LIMIT 1) as `site_url`, si.`https`,
+       ch.`site_id`, (SELECT z.`url` FROM `SiteUrl` z WHERE z.`is_deleted` = 'N' and z.`site_id` = ch.`site_id` ORDER BY z.`is_active` DESC, z.`id` DESC LIMIT 1) as `site_url`, si.`https`,
        si.`name` as `site_name`, si.`description` as `site_description`, si.`keywords` as `site_keywords`, si.`theme` as `site_theme`,
        si.`guid` as `site_guid`, si.`created_at` as `site_created_at`, si.`updated_at` as `site_updated_at`,
        po.`client_id`, cl.`name` as `client_name`, cl.`logo_img` as `client_logo_img`, cl.`guid` as `client_guid`,

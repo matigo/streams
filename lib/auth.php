@@ -160,7 +160,6 @@ class Auth {
      *  Public Properties & Functions
      ** ********************************************************************* */
     public function isLoggedIn() { return BoolYN($this->settings['is_valid']); }
-    public function getLoginToken( $AccountData ) { return $this->_getLoginToken($AccountData); }
     public function performLogout() { return $this->_performLogout(); }
     public function getTokenData( $Token ) { return $this->_getTokenData($Token); }
 
@@ -248,44 +247,6 @@ class Auth {
         return $rVal;
     }
 
-    /**
-     *  Function creates a Token Record in the Database and Returns an AlphaNumeric Key
-     */
-    private function _getLoginToken( $data ) {
-        $ClientGuid = NoNull($this->settings['client_guid']);
-
-        // If We Do Not Have a Valid Client.guid Value, Do Not Continue
-        if ( strlen($ClientGuid) != 36 ) {
-            $this->_setMetaMessage( "Invalid Client GUID Supplied", 400 );
-            return false;
-        }
-
-        // Parse the Array and get a Token
-        if ( is_array($data) ) {
-            $ReplStr = array( '[ACCOUNT_ID]'  => nullInt($data['account_id']),
-                              '[CLIENT_GUID]' => sqlScrub($ClientGuid),
-                              '[LIFESPAN]'    => nullInt(TOKEN_EXPY),
-                             );
-            $sqlStr = readResource(SQL_DIR . '/auth/getLoginToken.sql', $ReplStr);
-            $rslt = doSQLExecute($sqlStr);
-
-            // If We Have a Token.ID Value, Grab the API Token Value
-            if ( $rslt > 0 ) {
-                $ReplStr['[TOKEN_ID]'] = $rslt;
-                $sqlStr = readResource(SQL_DIR . '/auth/getTokenByID.sql', $ReplStr);
-                $tslt = doSQLQuery($sqlStr);
-                if ( is_array($tslt) ) {
-                    foreach ($tslt as $Row) {
-                        return TOKEN_PREFIX . intToAlpha($Row['token_id']) . '_' . NoNull($Row['guid']);
-                    }
-                }
-            }
-        }
-
-        // If We're Here, There Is No Valid Token
-        return false;
-    }
-
     /** ********************************************************************* *
      *  Private Functions
      ** ********************************************************************* */
@@ -294,39 +255,41 @@ class Auth {
      *      and returns a Token or Unhappy Boolean
      */
     private function _performLogin() {
-        $ChanGUID = NoNull($this->settings['channel_guid']);
+        if ( !defined('DEFAULT_LANG') ) { define('DEFAULT_LANG', 'en-us'); }
+
+        $ChannelGuid = NoNull($this->settings['channel_guid']);
+        $ClientGuid = NoNull($this->settings['client_guid']);
         $AcctName = NoNull($this->settings['account_name']);
         $AcctPass = NoNull($this->settings['account_pass']);
         $isWebReq = YNBool(NoNull($this->settings['webreq']));
-        $LangCd = DEFAULT_LANG;
+        $LangCd = NoNull(DEFAULT_LANG, 'en-us');
         $Token = false;
-        $rVal = false;
+
+        if ( mb_strlen($ChannelGuid) <> 36 ) {
+            $this->_setMetaMessage( "Invalid Channel GUID Provided", 401 );
+            return false;
+        }
+
+        if ( mb_strlen($ClientGuid) <> 36 ) {
+            $this->_setMetaMessage( "Invalid Client GUID Provided", 401 );
+            return false;
+        }
 
         // Ensure We Have the Data, and Check the Database
         if ( $AcctName != "" && $AcctPass != "" && $AcctName != $AcctPass ) {
-            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChanGUID),
+            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChannelGuid),
+                              '[CLIENT_GUID]'  => sqlScrub($ClientGuid),
                               '[USERADDR]'     => sqlScrub($AcctName),
                               '[USERPASS]'     => sqlScrub($AcctPass),
-                              '[SHA_SALT]'     => SHA_SALT,
+                              '[SHA_SALT]'     => sqlScrub(SHA_SALT),
                              );
-            $DaysInactive = 0;
-            $sqlStr = readResource(SQL_DIR . '/auth/performLogin.sql', $ReplStr);
+            $sqlStr = prepSQLQuery( "CALL PerformLogin('[USERADDR]', '[USERPASS]', '[CHANNEL_GUID]', '[CLIENT_GUID]', '[SHA_SALT]');", $ReplStr );
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
-                $data = false;
                 foreach ( $rslt as $Row ) {
-                    $LangCd = NoNull($Row['language_code'], DEFAULT_LANG);
-                    $DaysInactive = nullInt($Row['last_activity']);
-
-                    $data = array( 'account_id'    => nullInt($Row['account_id']),
-                                   'type'          => NoNull($Row['type']),
-                                  );
-
-                    // Ensure the Account.Type Value is Set If Expired
-                    if ( $DaysInactive > ACCOUNT_LOCK ) { $this->_expireAccount($Row['account_id']); }
+                    $Token = TOKEN_PREFIX . intToAlpha($Row['token_id']) . '_' . NoNull($Row['token_guid']);
+                    $LangCd = NoNull($Row['language_code']);
                 }
-
-                $Token = $this->_getLoginToken( $data );
             }
         }
 
@@ -357,17 +320,6 @@ class Auth {
     }
 
     /**
-     *  Function Marks an Account as Expired
-     */
-    private function _expireAccount($AccountID) {
-        if ( nullInt($AccountID) > 1 ) {
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID) );
-            $sqlStr = readResource(SQL_DIR . '/auth/setExpired.sql', $ReplStr, true);
-            $isOK = doSQLExecute($sqlStr);
-        }
-    }
-
-    /**
      *  Function Marks a Token Record as isDeleted = 'Y'
      */
     private function _performLogout() {
@@ -376,12 +328,22 @@ class Auth {
         if ( $Token != '' ) {
             $data = explode('_', $Token);
             if ( $data[0] == str_replace('_', '', TOKEN_PREFIX) ) {
-                $ReplStr = array( '[TOKEN_ID]'   => alphaToInt($data[1]),
+                $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                                  '[TOKEN_ID]'   => alphaToInt($data[1]),
                                   '[TOKEN_GUID]' => sqlScrub($data[2]),
                                  );
-                $sqlStr = readResource(SQL_DIR . '/auth/performLogout.sql', $ReplStr);
-                $rslt = doSQLExecute($sqlStr);
-                $rVal = $this->_checkTokenStatus();
+                $sqlStr = prepSQLQuery( "CALL PerformLogout([ACCOUNT_ID], [TOKEN_ID], '[TOKEN_GUID]');", $ReplStr );
+                $rslt = doSQLQuery($sqlStr);
+                if ( is_array($rslt) ) {
+                    foreach ( $rslt as $Row ) {
+                        return array( 'account'      => false,
+                                      'distributors' => false,
+                                      'is_active'    => false,
+                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
+                                      'updated_unix' => strtotime($Row['updated_at']),
+                                     );
+                    }
+                }
             }
         }
 
@@ -389,7 +351,7 @@ class Auth {
         if ( is_array($rVal) ) {
             return $rVal;
         } else {
-            $this->_setMetaMessage("Unrecognised Credentials", 400);
+            $this->_setMetaMessage("Unrecognised Token Reference", 400);
             return array();
         }
     }
