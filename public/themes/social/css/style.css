@@ -302,6 +302,16 @@ ol { margin-top: 0.5em; }
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
 }
+.content-posts ul ul {
+    border: none;
+    border-radius: 0;
+    display: block;
+    list-style: inside;
+    list-style-type: disc;
+    margin: 0;
+    max-height: 100em;
+    padding: 0.25em 0.5em;
+}
 .content-posts ul::-webkit-scrollbar { width: 0px; }
 .content-posts ul::-webkit-scrollbar * { background:transparent; }
 .content-posts ul::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.1) !important; }
@@ -685,6 +695,7 @@ ol { margin-top: 0.5em; }
     font-size: 0.9em;
     font-weight: normal;
     margin: 0.5em 0 0.25em;
+    padding: 0 0.5em 0 0;
 }
 .metaline time {
     color: #393836;
@@ -765,15 +776,26 @@ ol { margin-top: 0.5em; }
 .li-profile.noborder { border-bottom: 1px solid transparent; }
 
 @media (max-width: 400px) {
-    .metaline.location { padding-left: 10%; }
-    .metaline time { padding-right: 0.5em; }
-    .metaline.post-actions {
-        text-align: center;
-        padding-left: 0;
+    .content-posts ul {
+        max-width: calc(100% - 1em);
+        overflow-y: scroll;
     }
     .dropdown-menu>li>a {
         padding: 0.5em 1em;
         font-size: 1.125em;
+    }
+    .metaline.location { padding-left: 10%; }
+    .metaline time {
+        margin: 0.25em 0 0.25em;
+        padding-right: 0.5em;
+    }
+    .metaline.post-actions {
+        text-align: center;
+        padding-left: 0;
+    }
+    .metaline.geo img {
+        max-width: calc(100% - 0.333em);
+        margin: 0.25em 0.333em 0.25em 0;
     }
 }
 @media (max-width: 350px) {

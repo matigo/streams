@@ -722,7 +722,7 @@ class Account {
                 if ( $bio_html != '' ) {
                     require_once(LIB_DIR . '/posts.php');
                     $post = new Posts($this->settings);
-                    $bio_html = $post->getMarkdownHTML($bio_html, 0, false, true);
+                    $bio_html = $post->getMarkdownHTML($bio_html, 0, true, true);
                     unset($post);
                 }
 
