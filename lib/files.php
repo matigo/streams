@@ -158,6 +158,8 @@ class Files {
      *  Function Handles File Uploads for a Given Account
      */
     private function _createNewFile() {
+        if ( !defined('CDN_UPLOAD_LIMIT') ) { define('CDN_UPLOAD_LIMIT', 5); }
+        if ( !defined('USE_S3') ) { define('USE_S3', 0); }
         if ( $this->settings['bucket_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
         $list = false;
         $errs = false;
@@ -177,7 +179,11 @@ class Files {
             require_once(LIB_DIR . '/s3.php');
 
             // If We Should Use Amazon's S3, Activate the Class
-            if ( USE_S3 == 1 ) { $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY); }
+            if ( USE_S3 == 1 ) {
+                if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
+                if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+            }
 
             foreach ( $items as $FileID ) {
                 $FileName = NoNull(basename($_FILES[ $FileID ]['name']));

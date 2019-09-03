@@ -275,6 +275,10 @@ class Route extends Streams {
             }
         }
 
+        // Ensure the Contact Validation Element Is Set (if exists)
+        $ReplStr = array( '[lblContactValidate]' => $this->_getContactQuestion() );
+        $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
+
         // Get the Run-time
         $runtime = $this->_getRunTime();
 
@@ -728,6 +732,22 @@ class Route extends Streams {
 
         // If We're Here, We're Not Logged In
         return '';
+    }
+
+    /**
+     *  Function Returns Some form of Contact question used for the Validation
+     */
+    private function _getContactQuestion() {
+        $opts = array( 'Write the number forty-two',
+                       '90 + 90 + 90 - 228',
+                       '12 * 4 - 6',
+                       '64 + 128 - 150',
+                       '21 * 2 / 1',
+                       '22 + 22 - 22 + 20',
+                      );
+        $idx = array_rand($opts);
+
+        return NoNull($opts[$idx], "90 + 152 - 200");
     }
 
     private function _getChannelInteractPersonas( $ChannelGUID ) {

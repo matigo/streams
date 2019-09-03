@@ -234,6 +234,7 @@ class Contact {
         $CleanMail = NoNull($this->settings['contact-mail'], $this->settings['mail']);
         $CleanSubj = NoNull($this->settings['contact-subject'], $this->settings['subject']);
         $CleanMsg = NoNull($this->settings['contact-message'], $this->settings['message']);
+        $CleanChk = nullInt($this->settings['contact-validate'], $this->settings['validate']);
 
         // Perform Some Basic Error Checking
         if ( strlen($CleanName) < 1 ) { return "No Name Provided"; }
@@ -241,6 +242,9 @@ class Contact {
         if ( strpos($CleanMail, '@') === false ) { return "Invalid Email Address Provided"; }
         if ( strpos($CleanMail, '.') === false ) { return "Invalid Email Address Provided"; }
         if ( strlen($CleanMsg) < 3 ) { return "No Message Provided"; }
+
+        // The check value is hard-coded to be 42. There are several questions, but all are 42.
+        if ( $CleanChk != 42 ) { return "Invalid Check Value Provided"; }
 
         // Record the Data to the Database
         $ReplStr = array( '[NAME]'    => sqlScrub($CleanName),

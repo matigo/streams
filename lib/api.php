@@ -129,7 +129,7 @@ class Route extends Streams {
      */
     private function _returnData( $data ) {
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
-        $valids = array( 'account', 'auth', 'locker', 'posts', 'post', 'search', 'system' );
+        $valids = array( 'account', 'auth', 'contact', 'locker', 'posts', 'post', 'search', 'system' );
         $code = 0;
 
         // If We're Not Logged In, The Request is Invalid
