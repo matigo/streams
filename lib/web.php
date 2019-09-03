@@ -190,11 +190,12 @@ class Route extends Streams {
                     $this->_getLanguageStrings($data['location']);
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
-                    $ReplStr = array( '[lblSiteLogin]' => NoNull($SiteLogin, $this->strings['lblLogin']),
-                                      '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
-                                      '[SITE_OPSBAR]'  => $this->_getSiteOpsBar($data),
-                                      '[POPULAR_LIST]' => $this->_getPopularPosts(),
-                                      '[GenTime]'      => $this->_getRunTime(),
+                    $ReplStr = array( '[lblSiteLogin]'       => NoNull($SiteLogin, $this->strings['lblLogin']),
+                                      '[PERSONA_GUID]'       => NoNull($this->settings['_persona_guid']),
+                                      '[SITE_OPSBAR]'        => $this->_getSiteOpsBar($data),
+                                      '[POPULAR_LIST]'       => $this->_getPopularPosts(),
+                                      '[lblContactValidate]' => $this->_getContactQuestion(),
+                                      '[GenTime]'            => $this->_getRunTime(),
                                      );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
                 }
