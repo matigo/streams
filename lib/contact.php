@@ -236,11 +236,18 @@ class Contact {
         $CleanMsg = NoNull($this->settings['contact-message'], $this->settings['message']);
         $CleanChk = nullInt($this->settings['contact-validate'], $this->settings['validate']);
 
+        // Remove any HTML That Might Exist
+        $CleanName = strip_tags($CleanName);
+        $CleanMail = strip_tags($CleanMail);
+        $CleanSubj = strip_tags($CleanSubj);
+        $CleanMsg = strip_tags($CleanMsg);
+
         // Perform Some Basic Error Checking
         if ( strlen($CleanName) < 1 ) { return "No Name Provided"; }
         if ( strlen($CleanMail) < 3 ) { return "Invalid Email Address Provided"; }
         if ( strpos($CleanMail, '@') === false ) { return "Invalid Email Address Provided"; }
         if ( strpos($CleanMail, '.') === false ) { return "Invalid Email Address Provided"; }
+        if ( validateEmail($CleanMail) === false ) { return "Invalid Email Address Provided"; }
         if ( strlen($CleanMsg) < 3 ) { return "No Message Provided"; }
 
         // The check value is hard-coded to be 42. There are several questions, but all are 42.
