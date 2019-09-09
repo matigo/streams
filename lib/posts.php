@@ -2501,7 +2501,7 @@ class Posts {
                           '[SHOW_NOTE]'      => sqlScrub($ReqTypes['post.note']),
                           '[COUNT]'          => nullInt($site['RssLimit'], 100),
                          );
-        $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', [COUNT], 0);", $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', 'Y', [COUNT], 0);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             // If the request is JSON, supply it as such. Otherwise, XML as default
