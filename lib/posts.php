@@ -2551,11 +2551,9 @@ class Posts {
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
                 $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre><sup><ol><ul><li>');
 
-                $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
-
                 $item = array( 'id'     => NoNull($post['post_guid']),
                                'title'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_title'])),
-                               'content_text'   => NoNull(str_replace(array_keys($inplace), array_values($inplace), $text)),
+                               'content_text'   => NoNull($post['post_text']),
                                'content_html'   => NoNull($html),
                                'url'            => NoNull($post['post_url']),
                                'external_url'   => NoNull($post['source_url']),
