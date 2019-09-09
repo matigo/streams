@@ -54,18 +54,18 @@ function jsonToQueryString(json) {
     return (data !== undefined && data !== null && data != '' ) ? '?' + data : '';
 }
 function getAuthToken() {
-    _token = readStorage('token');
-    if ( _token === undefined || _token === null || _token === false || _token.length <= 20 ) { _token = ''; }
-    if ( _token.length > 20 ) { return _token; }
+    deleteStorage('token');
+    var _token = '';
 
     var metas = document.getElementsByTagName('meta');
     for ( var i = 0; i < metas.length; i++ ) {
         if ( metas[i].getAttribute("name") == 'authorization' ) {
-            _token = metas[i].getAttribute("content");
-            saveStorage('token', _token);
-            return _token;
+            _token = NoNull(metas[i].getAttribute("content"));
         }
     }
+
+    if ( _token === undefined || _token === null || _token === false || _token.length <= 20 ) { _token = ''; }
+    if ( _token.length > 20 ) { return _token; }
     return '';
 }
 function clearAuthToken() {

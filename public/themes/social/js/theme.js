@@ -90,10 +90,20 @@ function writeToZone( name, cdn_url ) {
         }
     }
 }
+function splitSecondCheck() {
+    var touch_ts = Math.floor(Date.now());
+    var _sok = true;
+
+    if ( (touch_ts - window.last_touch) <= 333 ) { return false; }
+    window.last_touch = touch_ts;
+    return _sok;
+}
 
 /** ************************************************************************* *
  *  Startup
  ** ************************************************************************* */
+window.last_touch = 0;
+
 jQuery(function($) {
     window.KEY_DOWNARROW = 40;
     window.KEY_ESCAPE = 27;
@@ -158,6 +168,7 @@ jQuery(function($) {
         if (e.keyCode === KEY_N ) {
             var target = ( e.target.id !== undefined ) ? e.target.id : '';
             if ( newPostAreaHidden() && target == '' ) {
+                window.last_touch = 0;
                 cancelKeyPress = true;
                 toggleNewPost(true);
             }
@@ -192,12 +203,7 @@ function showPuckActions( btn ) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
     var _state = btn.getAttribute('data-state');
     if ( _state === undefined || _state === false || _state === null ) { _state = 'closed'; }
-
-    var last_touch = parseInt(btn.getAttribute('data-lasttouch'));
-    var touch_ts = Math.floor(Date.now());
-
-    if ( (touch_ts - last_touch) <= 500 ) { return; }
-    btn.setAttribute('data-lasttouch', touch_ts);
+    if ( splitSecondCheck() === false ) { return; }
 
     switch  ( _state ) {
         case 'closed':
@@ -232,12 +238,7 @@ function callPuckAction( btn ) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
     var _action = btn.getAttribute('data-action');
     if ( _action === undefined || _action === false || _action === null ) { return; }
-
-    var last_touch = parseInt(btn.getAttribute('data-lasttouch'));
-    var touch_ts = Math.floor(Date.now());
-
-    if ( (touch_ts - last_touch) <= 500 ) { return; }
-    btn.setAttribute('data-lasttouch', touch_ts);
+    if ( splitSecondCheck() === false ) { return; }
     closePuckObject();
 
     switch ( _action ) {
@@ -616,6 +617,7 @@ function parseSignIn( data ) {
     }
 }
 function processSignOut() {
+    if ( splitSecondCheck() === false ) { return; }
     var params = {};
 
     var metas = document.getElementsByTagName('meta');
@@ -667,6 +669,7 @@ function publishPost() {
     var valids = ['public', 'private', 'none'];
     var privacy = readStorage('privacy');
     if ( valids.indexOf(privacy) < 0 ) { privacy = 'public'; }
+    if ( splitSecondCheck() === false ) { return; }
 
     // Collect the Appropriate Values and Fire Them Off
     var params = { 'channel_guid': getChannelGUID(),
@@ -685,12 +688,16 @@ function publishPost() {
     var btns = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < btns.length; i++ ) {
         btns[i].innerHTML = '<i class="fas fa-spin fa-spinner"></i>';
+        btns[i].classList.remove('btn-primary');
+        btns[i].disabled = true;
     }
 }
 function parsePublish( data ) {
     var btns = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < btns.length; i++ ) {
         btns[i].innerHTML = btns[i].getAttribute('data-label');
+        btns[i].classList.add('btn-primary');
+        btns[i].disabled = false;
     }
 
     if ( data.meta !== undefined && data.meta.code == 200 ) {
@@ -1116,6 +1123,7 @@ function togglePreferences() {
 }
 function toggleNewPost(do_show) {
     if ( do_show === undefined || do_show === null || do_show !== true ) { do_show = false; }
+    if ( splitSecondCheck() === false ) { return; }
 
     var auth_token = getAuthToken();
     if ( auth_token.length >= 20 ) {
@@ -1211,12 +1219,7 @@ function toggleActionBar( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
     if ( el.type == 'click' ) { el = el.currentTarget; }
     if ( el === undefined || el === false || el === null ) { return; }
-
-    var last_touch = parseInt(el.getAttribute('data-lasttouch'));
-    var touch_ts = Math.floor(Date.now());
-
-    if ( (touch_ts - last_touch) <= 500 ) { return; }
-    el.setAttribute('data-lasttouch', touch_ts);
+    if ( splitSecondCheck() === false ) { return; }
 
     var pel = el.parentNode;
     if ( pel === undefined || pel === false || pel === null ) { return; }
@@ -1313,6 +1316,7 @@ function performAction( btn ) {
     var _guid = btn.parentNode.getAttribute('data-guid');
     if ( _guid === undefined || _guid === false || _guid === null || _guid.length <= 30 ) { return; }
     var _action = btn.getAttribute('data-action');
+    if ( splitSecondCheck() === false ) { return; }
 
     switch ( _action ) {
         case 'edit':
@@ -1366,6 +1370,7 @@ function parseEditPost(data) {
 
         for ( var i = 0; i < ds.length; i++ ) {
             if ( ds[i].can_edit ) {
+                window.last_touch = 0;
                 toggleNewPost();
 
                 // Set the Type
@@ -1642,6 +1647,7 @@ function parseReplyBox( data ) {
                     break;
                 }
             }
+            window.last_touch = 0;
             toggleNewPost(true);
             return;
         }
@@ -2348,6 +2354,8 @@ function prepPreferencesPanel() {
 }
 function toggleView( op ) {
     if ( op === undefined || op === false || op === null || op.length < 4 ) { return; }
+    if ( splitSecondCheck() === false ) { return; }
+
     var els = document.getElementsByClassName('opview');
     for ( var i = 0; i < els.length; i++ ) {
         var _view = els[i].getAttribute('data-view');
@@ -2359,6 +2367,7 @@ function toggleView( op ) {
     resetCreate();
 }
 function toggleMeta(btn) {
+    if ( splitSecondCheck() === false ) { return; }
     var _visible = btn.getAttribute('data-value');
     if ( _visible === undefined || _visible === false || _visible === null || _visible != 'Y' ) { _visible = 'N'; }
     _visible = (_visible == 'N') ? 'Y' : 'N';
@@ -2373,6 +2382,7 @@ function toggleMeta(btn) {
 function toggleButton(btn) {
     var _class = btn.getAttribute('data-class');
     if ( _class === undefined || _class === false || _class === null ) { return; }
+    if ( splitSecondCheck() === false ) { return; }
 
     var btns = document.getElementsByClassName('btn-' + _class);
     for ( var i = 0; i < btns.length; i++ ) {
