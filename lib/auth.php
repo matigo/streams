@@ -371,6 +371,7 @@ class Auth {
                 if ( is_array($rslt) ) {
                     require_once(LIB_DIR . '/account.php');
                     $acct = new Account(array());
+
                     foreach ( $rslt as $Row ) {
                         $isActive = !YNBool($Row['is_deleted']);
                         $rVal = array( 'account'      => (($isActive) ? $acct->getAccountInfo($Row['account_id']) : false),

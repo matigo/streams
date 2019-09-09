@@ -266,7 +266,7 @@ class Account {
                         $this->cache[$AcctID] = array( 'display_name'   => NoNull($Row['display_name']),
                                                        'avatar_url'     => NoNull($Row['avatar_url'], 'default.png'),
                                                        'type'           => NoNull($Row['type']),
-                                                       'guid'           => NoNull($Row['guid']),
+                                                       'guid'           => NoNull($Row['account_guid']),
                                                        'is_you'         => YNBool(BoolYN($Row['account_id'] == $this->settings['_account_id'])),
 
                                                        'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),

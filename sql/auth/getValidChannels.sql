@@ -10,4 +10,4 @@ SELECT pa.`id` as `persona_id`, pa.`name`, pa.`last_name`, pa.`first_name`, pa.`
    and ca.`is_deleted` = 'N' and ca.`can_write` = 'Y'
    and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
    and pa.`account_id` = [ACCOUNT_ID]
- ORDER BY `persona_id`, `site_id`;
+ ORDER BY `persona_id`, `site_id`, `is_active` DESC, `is_private` DESC;
