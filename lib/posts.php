@@ -2450,6 +2450,7 @@ class Posts {
                            'post.quotation' => '-',
                            'post.note'      => '-',
                           );
+        $hasOption = false;
         $rtSuffix = '';
         if ( array_key_exists('rss_filter_on', $this->settings) ) {
             $ReqTypes['post.article'] = BoolYN(in_array('article', $this->settings['rss_filter_on']));
@@ -2459,6 +2460,7 @@ class Posts {
 
             $rtSuffix = '-';
             foreach ( $ReqTypes as $Key=>$Value ) {
+                if ( YNBool($Value) ) { $hasOption = YNBool($Value); }
                 $rtSuffix .= $Value;
             }
         }
@@ -2466,6 +2468,25 @@ class Posts {
         // Check to See If We Have a Cached Version of the Feed
         $cache_file = $site['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed');
         $rVal = '';
+
+        // If there is no option, decide what sort of feed to provide
+        if ( $hasOption === false ) {
+            $PgRoot = NoNull($this->settings['PgRoot']);
+            if ( strpos($PgRoot, '.') > 0 ) {
+                $Parts = explode('.', $PgRoot);
+                $PgRoot = '';
+
+                foreach ( $Parts as $Part ) {
+                    if ( NoNull($Part) != '' && $PgRoot == '' ) { $PgRoot = NoNull($Part); }
+                }
+            }
+
+            if ( in_array(strtolower($PgRoot), array('notes', 'social', 'socials')) ) {
+                $ReqTypes['post.note'] = 'Y';
+            } else {
+                $ReqTypes['post.article'] = 'Y';
+            }
+        }
 
         if ( nullInt(ENABLE_CACHING) == 1 ) {
             $rVal = readCache($site['site_id'], $cache_file);
@@ -2480,7 +2501,7 @@ class Posts {
                           '[SHOW_NOTE]'      => sqlScrub($ReqTypes['post.note']),
                           '[COUNT]'          => nullInt($site['RssLimit'], 100),
                          );
-        $sqlStr = readResource(SQL_DIR . '/posts/getRSSFeed.sql', $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', [COUNT], 0);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             // If the request is JSON, supply it as such. Otherwise, XML as default
@@ -2619,7 +2640,7 @@ class Posts {
 
             foreach ( $data as $post ) {
                 $post['post_text'] = NoNull(str_replace(array_keys($inplace), array_values($inplace), $post['post_text']));
-                $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, true);
+                $html = $this->_getMarkdownHTML($post['post_text'], $post['post_id'], false, false);
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
                 $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre><sup><ol><ul><li>');
 

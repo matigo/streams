@@ -964,8 +964,8 @@ class Route extends Streams {
      *  Function Determines if Request is an RSS (XML/JSON) Request, Processes the data accordingly, and returns a Boolean response
      */
     private function _isSyndicationRequest( $site ) {
-        $valids = array( 'rss', 'feed' );
-        $types = array( 'rss', 'feed', 'social', 'podcast', 'note', 'article', 'quotation', 'bookmark' );
+        $valids = array( 'rss', 'feed', 'social', 'socials' );
+        $types = array( 'rss', 'feed', 'social', 'socials', 'podcast', 'note', 'article', 'quotation', 'bookmark' );
         foreach ( $types as $type ) {
             $valids[] = "$type.json";
             $valids[] = "$type.xml";
