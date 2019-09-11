@@ -134,6 +134,7 @@ function getMetaValue( name ) {
     $('.btn-publish').click(function() { publishPost(); });
     $('.btn-delete-cancel').click(function() { cancelDelete(); });
     $('.btn-delete-post').click(function() { performDelete(); });
+    $('.btn-export').click(function() { performExport(this); });
     $('.btn-delete').click(function() { deletePost(); });
 
     $('#source-url').on('input', function() { checkSourceUrl(); });
@@ -147,6 +148,7 @@ document.onreadystatechange = function () {
         updateContentHeight();
         collectPostEditData();
         updatePostBanners();
+        checkJSEnabled();
         togglePostType();
         togglePostEdit();
         getMessageList();
@@ -161,6 +163,60 @@ document.onreadystatechange = function () {
 
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
+}
+function performExport(btn) {
+    if ( btn === undefined || btn === false || btn === null ) { return; }
+    var _type = btn.getAttribute('data-type');
+    hideByClass('export-result');
+    lockExportButtons(btn);
+
+    var params = { 'output': _type };
+    doJSONQuery('export/unlock', 'POST', params, parseExportToken);
+}
+function parseExportToken( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.unlock !== undefined && ds.unlock.length >= 30 ) {
+            var params = { 'unlock': ds.unlock };
+            doJSONQuery('export/' + ds.output, 'GET', params, parseExportResult);
+        }
+
+    } else {
+        lockExportButtons();
+    }
+}
+function parseExportResult( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        if ( ds.zip.size > 0 ) {
+            var els = document.getElementsByClassName('export-result');
+            for ( var i = 0; i < els.length; i++ ) {
+                els[i].classList.remove('hidden');
+                els[i].innerHTML = 'Done! ' + numberWithCommas(ds.records) + ' records exported.<br>' +
+                                   '<a href="' + ds.url + '" target="_blank" title="">Click here to download the ' + easyFileSize(ds.zip.size) + ' file.</a>';
+            }
+        }
+    }
+    lockExportButtons();
+}
+function lockExportButtons(btn) {
+    var doLock = false;
+    var els = document.getElementsByClassName('btn-export');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('btn-primary') ) {
+            els[i].classList.remove('btn-primary');
+            els[i].disabled = true;
+            doLock = true;
+
+        } else {
+            els[i].innerHTML = els[i].getAttribute('data-label')
+            els[i].classList.add('btn-primary');
+            els[i].disabled = false;
+        }
+    }
+    if ( btn === undefined || btn === false || btn === null ) { return; }
+    btn.innerHTML = ( doLock ) ? '<i class="fa fa-spin fa-spinner"></i>' : btn.getAttribute('data-label');
 }
 function collectPostEditData() {
     var els = document.getElementsByClassName('newpost-content');
@@ -510,6 +566,16 @@ function toggleSitePassword(el) {
             els[i].classList.remove('hidden');
         } else {
             els[i].removeAttribute('required', '');
+            els[i].classList.add('hidden');
+        }
+    }
+}
+function checkJSEnabled() {
+    var els = document.getElementsByClassName('show-js');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('hidden') ) {
+            els[i].classList.remove('hidden');
+        } else {
             els[i].classList.add('hidden');
         }
     }

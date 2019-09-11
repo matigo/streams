@@ -90,9 +90,15 @@ class Route extends Streams {
                         $data['do_redirect'] = true;
                         break;
 
+                    case 'receive':
+                    case 'collect':
+                        $this->_handleZIPRequest();
+                        break;
+
                     case 'settings':
                     case 'messages':
                     case 'account':
+                    case 'export':
                     case 'write':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
                             redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
@@ -106,7 +112,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('write', 'account', 'settings', 'messages');
+                $checks = array('write', 'export', 'account', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
@@ -285,6 +291,24 @@ class Route extends Streams {
 
         // Return HTML Page Content
         return str_replace('[GenTime]', $runtime, $html);
+    }
+
+    /**
+     *  Function parses and handles requests for ZIP Files (generally exports)
+     */
+    private function _handleZIPRequest() {
+        $ZipDIR = TMP_DIR . '/export/' . strtolower(NoNull($this->settings['PgSub1']));
+        $ZipFile = NoNull($this->settings['PgSub2']);
+
+        /* If No File is Specified, Find the first ZIP in the Directory */
+        if ( $ZipFile == '' ) {
+            foreach (glob("$ZipDIR/*.zip") as $fileName) {
+                if ( $ZipFile == '' ) { $ZipFile = NoNull($fileName); }
+            }
+        }
+
+        /* If we have a file and it appears valid, send it */
+        if ( $ZipFile != '' && file_exists($ZipFile) && filesize($ZipFile) > 0 ) { sendZipFile($ZipFile); }
     }
 
     /**

@@ -13,12 +13,6 @@ BEGIN
      *  Usage: CALL CreateSite(1, '5182dbd0-5463-11e8-99a0-54ee758049c3', 'Nozomi the Dog', 'A Happy Blog for a Happy Puppy!', 'Nozomi, Japan, Puppy, Dog', 'nozomi.10centuries.org', 'visibility.public');
      ** ********************************************************************** **/
 
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
     /* If the Persona GUID is bad, Exit */
     IF LENGTH(IFNULL(`in_persona_guid`, '')) <> 36 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Persona GUID Provided';

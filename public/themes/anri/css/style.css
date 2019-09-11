@@ -1502,12 +1502,28 @@ audio {
   padding: 0;
   margin: 0;
 }
+.single-post__contact .js-message {
+    background: #ff0;
+    border: 2px solid #000;
+    border-radius: 1em;
+    padding: 0.5em 1.5em 0.4em;
+    margin: 2em 0 0;
+}
+.single-post__content.export-result {
+    font-style: italic;
+    max-width: 100%;
+}
+
 .confirm-delete { text-align: left; }
 .btn-delete-cancel,
 .btn-delete-post,
 .btn-publish,
 .btn-delete { min-width: 8em; }
 .btn-delete-post { margin-right: 5em; }
+.btn-lg {
+    padding: 0.333em 1em 0.25em;
+    min-width: 225px;
+}
 
 @media (max-width: 1199px) {
   .single-post--fullsize .single-post__title,

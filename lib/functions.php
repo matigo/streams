@@ -497,6 +497,7 @@
         $rVal = true;
         if ( !file_exists($DIR) ) {
             $rVal = mkdir($DIR, 755, true);
+            chmod($DIR, 0755);
         }
 
         // Return the Boolean
@@ -1802,6 +1803,41 @@
         recordUsageStat( $sets, $status, ((is_array($meta) && count($meta) > 0) ? $meta[count($meta) - 1] : '') );
 
         exit( $data );
+    }
+
+    /**
+     *  Function Sends a Zip file to the browser if it exists
+     */
+    function sendZipFile( $fileName ) {
+        $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1');
+        $status = 200;
+
+        if ( file_exists($fileName) ) {
+            $name = basename($fileName);
+
+            header($protocol . ' ' . nullInt($status) . ' ' . getHTTPCode($status) );
+            header("Access-Control-Allow-Origin: $szOrigin");
+            header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+            header("Access-Control-Allow-Headers: Content-Type, Authorization");
+            header("Access-Control-Allow-Credentials: true");
+            header("P3P: CP=\"ALL IND DSP COR ADM CONo CUR CUSo IVAo IVDo PSA PSD TAI TELo OUR SAMo CNT COM INT NAV ONL PHY PRE PUR UNI\"");
+            header("Content-Type: application/zip");
+            header("Content-Disposition: attachment; filename=$name");
+            header("Content-Length: " . filesize($fileName));
+            readfile($fileName);
+
+        } else {
+            $status = 404;
+
+            header($protocol . ' ' . nullInt($status) . ' ' . getHTTPCode($status) );
+            header("Access-Control-Allow-Origin: $szOrigin");
+            header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+            header("Access-Control-Allow-Headers: Content-Type, Authorization");
+            header("Access-Control-Allow-Credentials: true");
+            header("P3P: CP=\"ALL IND DSP COR ADM CONo CUR CUSo IVAo IVDo PSA PSD TAI TELo OUR SAMo CNT COM INT NAV ONL PHY PRE PUR UNI\"");
+        }
+
+        exit();
     }
 
     /**

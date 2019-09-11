@@ -34,6 +34,12 @@
     "btnMessageUnread": "Mark Unread",
     "btnMessageDelete": "Delete",
 
+    "lblExport": "Export Your Data",
+    "lblExportDescr": "This is where you can export all of your data from the database. Please be aware that this export will be a <em>complete</em> backup, including data from all of your personas used across all of your sites.",
+    "lblExportReqJS": "JavaScript is required for this function. Please enable the feature in your browser temporarily.",
+    "lblExportS1": "Choose a Format",
+    "btnExportDayOne": "Day One (JSON Zip)",
+
     "lblLogin": "Login",
     "lblLoginRetry": "Try Again?",
     "lblLoginName": "Account ID",
@@ -102,6 +108,7 @@
     "lbl404": "404 Page Not Found",
 
     "lblHello": "Hello",
+    "navExport": "Export Your Data",
     "navNewPost": "Write New Item",
     "navProfile": "Profile",
     "navLogout": "Logout",
