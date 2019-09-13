@@ -14,6 +14,7 @@ BEGIN
 
     SET `x_limit` = 10000;
     SET `x_start` = `x_limit` * IFNULL(`in_page`, 0);
+    SET @@group_concat_max_len = 2048;
 
     IF ( IFNULL(`x_start`, 0) < 0 ) THEN
         SET `x_start` = 0;

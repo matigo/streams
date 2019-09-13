@@ -25,12 +25,6 @@ class Webmention {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
         $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) {
-            $this->_setMetaMessage("You Need to Log In First", 401);
-            return false;
-        }
-
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
@@ -55,20 +49,19 @@ class Webmention {
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'test':
                 $SourceURL = NoNull($this->settings['url']);
                 $BodyText = NoNull($this->settings['text']);
-                $rVal = $this->sendMentions($SourceURL, $BodyText);
+                return $this->sendMentions($SourceURL, $BodyText);
                 break;
 
             case '':
-                $data = serialize($this->settings);
-                writeNote( "Webmention Received!", true );
+                $data = json_encode($this->settings);
+                writeNote( "Webmention Received! [GET]", true );
                 writeNote( $data, true );
-                $rVal = array();
+                return array();
                 break;
 
             default:
@@ -76,24 +69,22 @@ class Webmention {
         }
 
         // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
-            case '':
-                $rVal = false;
-                break;
-
             default:
-                // Do Nothing
+                $data = json_encode($this->settings);
+                writeNote( "Webmention Received! [POST]", true );
+                writeNote( $data, true );
+                return array();
         }
 
         // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        return false;
     }
 
     private function _performDeleteAction() {
@@ -138,7 +129,7 @@ class Webmention {
      *  Public Functions
      ** ********************************************************************* */
     /**
-     * Function Collects an Array of URLs from an HTML body and attempts to notify those 
+     * Function Collects an Array of URLs from an HTML body and attempts to notify those
      *      sites of a Mention via Webmention or Pingback. Internal sites have records
      *      auto-recorded to the database without the unnecessary HTTP traffic.
      */
@@ -163,7 +154,7 @@ class Webmention {
 
                 // If this is going to an Internal Site, Simply Record the Data
                 if ( $isInternal ) {
-                    
+
                 } else {
                     // Notify the Externally-Hosted Site
                     $endpoints = $this->_getHeaders( $url );
@@ -216,7 +207,7 @@ class Webmention {
         // If We're Here, There Were No External Webmentions to Send
         return array();
     }
-    
+
     /**
      *  Function Sends a Post Request and Returns a Simple Array of Data
      */
@@ -257,7 +248,7 @@ class Webmention {
         // If We're Here, There Are No Links
         return false;
     }
-    
+
     /**
      *  Function Populates the Cache with a List of Local URLs and their Current Locations
      */
