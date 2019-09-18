@@ -866,6 +866,10 @@ function refreshPreferences() {
     if ( _tlsec === undefined || _tlsec === false || _tlsec === null || isNaN(_tlsec) ) { _tlsec = 30; }
     togglePrefButton('refreshTime', _tlsec);
 
+    var _poCnt = parseInt(readStorage('postCount'));
+    if ( _poCnt === undefined || _poCnt === false || _poCnt === null || isNaN(_poCnt) ) { _poCnt = 75; }
+    togglePrefButton('postCount', _poCnt);
+
     // Set the Display Types
     var valids = ['post.article', 'post.blog', 'post.bookmark', 'post.note', 'post.photo', 'post.quotation', 'post.todo'];
     for ( var i = 0; i < valids.length; i++ ) {

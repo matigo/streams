@@ -332,7 +332,7 @@ class Auth {
                                   '[TOKEN_ID]'   => alphaToInt($data[1]),
                                   '[TOKEN_GUID]' => sqlScrub($data[2]),
                                  );
-                $sqlStr = prepSQLQuery( "CALL PerformLogout([ACCOUNT_ID], [TOKEN_ID], '[TOKEN_GUID]');", $ReplStr );
+                $sqlStr = prepSQLQuery( "CALL PerformLogout([TOKEN_ID], '[TOKEN_GUID]');", $ReplStr );
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
@@ -350,6 +350,7 @@ class Auth {
         // Return the Reponse or an Unhappy Array
         if ( is_array($rVal) ) {
             return $rVal;
+
         } else {
             $this->_setMetaMessage("Unrecognised Token Reference", 400);
             return array();

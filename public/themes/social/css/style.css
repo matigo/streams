@@ -750,14 +750,14 @@ ol { margin-top: 0.5em; }
 .time-url {
     cursor: pointer;
     font-size: 1em;
-    font-weight: 100;
+    font-weight: 300;
 }
 .time-url:hover {
-    font-weight: 100;
+    font-weight: 400;
 }
 .time-url:visited {
     font-style: normal;
-    font-weight: 100;
+    font-weight: 300;
 }
 
 .dropdown-menu-right { right: 1em; }
