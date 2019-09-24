@@ -726,6 +726,11 @@ class Account {
                     unset($post);
                 }
 
+                $recent_at = false;
+                if ( strtotime($Row['recent_at']) !== false ) {
+                    $recent_at = strtotime($Row['recent_at']);
+                }
+
                 return array( 'guid'         => NoNull($Row['persona_guid']),
                               'timezone'     => Nonull($Row['timezone']),
                               'as'           => NoNull($Row['name']),
@@ -742,7 +747,18 @@ class Account {
                               'is_starred'   => YNBool($Row['is_starred']),
                               'is_blocked'   => YNBool($Row['is_blocked']),
                               'is_you'       => YNBool($Row['is_you']),
+
                               'days'         => nullInt($Row['days']),
+                              'recent_at'    => (($recent_at !== false) ? date("Y-m-d\TH:i:s\Z", $recent_at) : false),
+                              'recent_unix'  => (($recent_at !== false) ? $recent_at : false),
+
+                              'stats'        => array( 'articles'    => nullInt($Row['count_article']),
+                                                       'bookmarks'   => nullInt($Row['count_bookmark']),
+                                                       'locations'   => nullInt($Row['count_location']),
+                                                       'quotations'  => nullInt($Row['count_quotation']),
+                                                       'notes'       => nullInt($Row['count_note']),
+                                                       'photos'      => nullInt($Row['count_photo']),
+                                                      ),
 
                               'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                               'created_unix' => strtotime($Row['created_at']),
