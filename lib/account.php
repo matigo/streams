@@ -63,6 +63,10 @@ class Account {
                 return $this->_getAccountList();
                 break;
 
+            case 'histogram':
+                return $this->_getHistorgram();
+                break;
+
             case 'preferences':
             case 'preference':
             case 'prefs':
@@ -767,6 +771,53 @@ class Account {
         }
 
         // If We're Here, There Is No Persona
+        return false;
+    }
+
+    /**
+     *  Function Collects the Usage for the last 52 weeks for use in a Histogram
+     */
+    private function _getHistorgram() {
+        $CleanGUID = NoNull($this->settings['guid'], $this->settings['PgSub1']);
+        if ( $CleanGUID == 'me' && NoNull($this->settings['_persona_guid']) != '' ) {
+            $CleanGUID = $this->settings['_persona_guid'];
+        }
+
+        $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGuid) );
+        $sqlStr = prepSQLQuery( "CALL GetPublishHistogram('[PERSONA_GUID]');", $ReplStr );
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $maxScore = 0;
+            $data = array();
+
+            foreach ( $rslt as $Row ) {
+                $weekSum = nullInt($Row['articles']) + nullInt($Row['bookmarks']) +
+                           nullInt($Row['locations']) + nullInt($Row['notes']) +
+                           nullInt($Row['photos']) + nullInt($Row['quotations']);
+                if ( $weekSum > $maxScore ) { $maxScore = $weekSum; }
+                $data[] = array( 'year'       => nullInt($Row['year']),
+                                 'week_no'    => nullInt($Row['week_no']),
+
+                                 'articles'   => nullInt($Row['articles']),
+                                 'bookmarks'  => nullInt($Row['bookmarks']),
+                                 'locations'  => nullInt($Row['locations']),
+                                 'notes'      => nullInt($Row['notes']),
+                                 'photos'     => nullInt($Row['photos']),
+                                 'quotations' => nullInt($Row['quotations']),
+
+                                 'total'      => $weekSum,
+                                );
+            }
+
+            // If we have data, return it
+            if ( count($data) > 0 ) {
+                return array( 'max_score' => $maxScore,
+                              'history'   => $data,
+                             );
+            }
+        }
+
+        // If we're here, there is no data
         return false;
     }
 

@@ -46,7 +46,7 @@ BEGIN
         `recent_at`         timestamp                   NULL    ,
         `days`              int(11)        UNSIGNED NOT NULL    DEFAULT 0,
         `is_you`            enum('N','Y')           NOT NULL    DEFAULT 'N'
-    );
+    ) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     /* Collect the Public Profile */
     INSERT INTO `tmpPersona` (`name`, `last_name`, `first_name`, `display_name`, `avatar_img`, `persona_guid`, `site_url`, `persona_bio`,

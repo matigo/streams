@@ -74,7 +74,7 @@ BEGIN
 
     /* Collect the Base Information */
     DROP TEMPORARY TABLE IF EXISTS tmp;
-    CREATE TEMPORARY TABLE tmp AS
+    CREATE TEMPORARY TABLE tmp DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AS
     SELECT a.`id` as `account_id`, a.`email`, a.`type`, a.`display_name`, a.`language_code`, a.`timezone`,
            IFNULL((SELECT z.`avatar_img` FROM `Persona` z
                     WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`

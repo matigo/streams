@@ -39,25 +39,6 @@
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/style.css?ver=[CSS_VER]">
     </head>
     <body>[SITE_OPSBAR]
-        <svg style="display: none;">
-            <symbol viewBox="0 0 512 512" id="ios-search">
-                <path d="M448.3,424.7L335,311.3c20.8-26,33.3-59.1,33.3-95.1c0-84.1-68.1-152.2-152-152.2c-84,0-152,68.2-152,152.2
-                s68.1,152.2,152,152.2c36.2,0,69.4-12.7,95.5-33.8L425,448L448.3,424.7z M120.1,312.6c-25.7-25.7-39.8-59.9-39.8-96.3
-                s14.2-70.6,39.8-96.3S180,80,216.3,80c36.3,0,70.5,14.2,96.2,39.9s39.8,59.9,39.8,96.3s-14.2,70.6-39.8,96.3
-                c-25.7,25.7-59.9,39.9-96.2,39.9C180,352.5,145.8,338.3,120.1,312.6z"/>
-            </symbol>
-            <symbol viewBox="0 0 512 512" id="btn-close">
-                <polygon class="st0" points="340.2,160 255.8,244.3 171.8,160.4 160,172.2 244,256 160,339.9 171.8,351.6 255.8,267.8 340.2,352
-                352,340.3 267.6,256 352,171.8 "/>
-            </symbol>
-            <symbol viewBox="0 0 512 512" id="toggle">
-                <g>
-                    <rect x="96" y="241" width="320" height="32"/>
-                    <rect x="96" y="145" width="320" height="32"/>
-                    <rect x="96" y="337" width="320" height="32"/>
-                </g>
-            </symbol>
-        </svg>
         <header class="container page-header">
             <div class="page-header__logo">
                 <div class="logo">
@@ -70,15 +51,11 @@
 [NAVMENU]
                 </ul>
                 <div class="main-nav__search">
-                    <svg>
-                        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#ios-search"></use>
-                    </svg>
+                    <i class="fa fa-search"></i>
                 </div>
             </nav>
             <div class="nav-toggle">
-                <svg class="nav-toggle__icon">
-                    <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#toggle"></use>
-                </svg>
+                <i class="fa fa-bars nav-toggle__icon" style="font-size: 28px;"></i>
             </div>
         </header>
         <main>
@@ -104,9 +81,7 @@
             </div>
         </footer>
         <div class="search-popup">
-            <svg class="search-popup__close">
-                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#btn-close"></use>
-            </svg>
+            <i class="fa fa-times search-popup__close"></i>
             <div class="container search-popup__container">
                 <div class="search-box">
                     <input id="search-for" type="text" size="32" name="sdata" data-name="for" placeholder="[lblSearchPH]">

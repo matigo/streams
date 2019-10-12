@@ -148,6 +148,7 @@ document.onreadystatechange = function () {
         updateContentHeight();
         collectPostEditData();
         updatePostBanners();
+        checkColorScheme();
         checkJSEnabled();
         togglePostType();
         togglePostEdit();
@@ -163,6 +164,30 @@ document.onreadystatechange = function () {
 
         if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
     }
+}
+function checkColorScheme() {
+  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
+  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches;
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified;
+
+  window.matchMedia("(prefers-color-scheme: dark)").addListener(e => e.matches && setColorScheme(true));
+  window.matchMedia("(prefers-color-scheme: light)").addListener(e => e.matches && setColorScheme());
+
+  if (isDarkMode) { setColorScheme(true); }
+  if (isLightMode) { setColorScheme(); }
+  if ( isNotSpecified || hasNoSupport ) {
+    now = new Date();
+    hour = now.getHours();
+    if (hour < 4 || hour >= 16) { setColorScheme(true); }
+  }
+}
+function setColorScheme( isDark ) {
+    if ( isDark === undefined || isDark === null || isDark !== true ) { isDark = false; }
+    var body = document.body;
+    if ( body === undefined || body === false || body === null ) { return; }
+    if ( isDark === false && body.classList.contains('dark') ) { body.classList.remove('dark'); }
+    if ( isDark && body.classList.contains('dark') === false ) { body.classList.add('dark'); }
 }
 function performExport(btn) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
