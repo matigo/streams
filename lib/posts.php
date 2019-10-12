@@ -1738,7 +1738,7 @@ class Posts {
                         }
 
                         $coords = round(nullInt($post['meta']['geo']['latitude']), 5) . ',' . round(nullInt($post['meta']['geo']['longitude']), 5);
-                        $label = $this->geo->getNameFromCoords($post['meta']['geo']['latitude'], $post['meta']['geo']['longitude']);
+                        $label = $this->geo->getNameFromCoords($post['meta']['geo']['latitude'], $post['meta']['geo']['longitude'], "");
 
                         $geoLine = "\r\n" .
                                    tabSpace(6) . '<div class="metaline location pad" data-value="' . $coords . '">' . "\r\n" .

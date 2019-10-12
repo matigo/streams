@@ -136,7 +136,7 @@ class Geocode {
     /** ********************************************************************* *
      *  Public Functions
      ** ********************************************************************* */
-    public function getNameFromCoords( $latitude, $longitude, $description ) { return $this->_getNameFromCoords( $latitude, $longitude, $description); }
+    public function getNameFromCoords( $latitude, $longitude, $description = "" ) { return $this->_getNameFromCoords( $latitude, $longitude, $description); }
 
     /** ********************************************************************* *
      *  Private Functions
