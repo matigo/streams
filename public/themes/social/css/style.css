@@ -241,7 +241,9 @@ ol { margin-top: 0.5em; }
 .content-author img {
     background-image: url('../../../avatars/default.png');
     cursor: pointer;
-    max-width: 100%;
+    object-fit: cover;
+    height: 4em;
+    width: 4em;
 }
 .content-area {
     display: inline-block;
