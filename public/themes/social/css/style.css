@@ -638,8 +638,12 @@ ol { margin-top: 0.5em; }
     }
     .content-author p {
         border-radius: 0.5em;
-        width: 3.25em;
         height: 3.25em;
+        width: 3.25em;
+    }
+    .content-author img {
+        height: 3.25em;
+        width: 3.25em;
     }
     .content-area ul { padding: 0.5em 0 0.25em 1em !important; }
     .content-area {
@@ -1101,3 +1105,4 @@ body.dark .time-url { color: #cc7722; }
 body.dark .li-profile { border-bottom: 1px solid #434c73; }
 body.dark .li-profile:hover { background: #434c73; }
 body.dark .li-profile.noborder { border-bottom: 1px solid transparent; }
+body.dark .metaline.post-actions .none { color: #fff; }
