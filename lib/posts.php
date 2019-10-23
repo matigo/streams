@@ -141,6 +141,10 @@ class Posts {
                 $rVal = $this->_deletePost();
                 break;
 
+            case 'pin':
+                $rVal = $this->_setPostPin();
+                break;
+
             case 'star':
                 $rVal = $this->_setPostStar();
                 break;
