@@ -98,6 +98,15 @@ function splitSecondCheck() {
     window.last_touch = touch_ts;
     return _sok;
 }
+function getLocalAvatar( url ) {
+    if ( url === undefined || url === false || url === null || url.length <= 3 ) { url = 'default.png'; }
+    if ( url.indexOf('/') > 0 ) {
+        var ps = url.split('/');
+        if ( ps.length > 0 ) { url = ps[ps.length - 1]; }
+    }
+
+    return window.location.protocol + '//' + window.location.hostname + '/avatars/' + url;
+}
 
 /** ************************************************************************* *
  *  Startup
@@ -513,7 +522,7 @@ function parseAuthToken( data ) {
                 if ( ds.distributors[i].guid == psna_guid ) { _cls = ' active'; }
                 _list += '<li class="persona-select' + _cls + '">' +
                             '<a onclick="setPersona(this);" data-persona-guid="' + ds.distributors[i].guid + '" data-channel-guid="' + _chan + '">' +
-                            '<img src="' + ds.distributors[i].avatar + '" class="persona-avatar" alt="" />' + _name +
+                            '<img src="' + getLocalAvatar(ds.distributors[i].avatar) + '" class="persona-avatar" alt="" />' + _name +
                             '</a>' +
                          '</li>';
             }
@@ -1001,7 +1010,7 @@ function parseProfile( data ) {
 
             // Construct the HTML
             _html = '<div class="content-author">' +
-                        '<p class="avatar"><img class="logo photo avatar-img" src="' + ds.avatar_url + '" alt=""></p>' +
+                        '<p class="avatar"><img class="logo photo avatar-img" src="' + getLocalAvatar(ds.avatar_url) + '" alt=""></p>' +
                     '</div>' +
                     '<div class="content-area profile-content">' +
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
@@ -1808,7 +1817,7 @@ function parseReplyPost(data) {
                 var today = moment().format('YYYY-MM-DD HH:mm:ss');
                 var _ts = ds[i].publish_unix * 1000;
                 var _html = '<p>' +
-                                '<img src="' + ds[i].persona.avatar + '" class="avatar">' +
+                                '<img src="' + getLocalAvatar(ds[i].persona.avatar) + '" class="avatar">' +
                                 '<span><strong>' + ds[i].persona.as + '</strong> - ' + ds[i].persona.name + '</span>' +
                             '</p>' +
                             ds[i].content +
@@ -2128,7 +2137,7 @@ function buildHTML( post ) {
 
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
     if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
-    var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
+    var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + getLocalAvatar(post.persona.avatar) + '"></p></div>' +
                 '<div class="content-area toggle-action-bar" data-guid="' + post.guid + '">' +
                     '<strong class="persona full-wide">' + post.persona.as + '</strong>' +
                     _ttxt +
@@ -2548,7 +2557,7 @@ function setPersona( el ) {
     for ( var i = 0; i < ds.distributors.length; i++ ) {
         ds.distributors[i].is_active = false;
         if ( ds.distributors[i].guid == _persona_guid ) {
-            _avatar_url = ds.distributors[i].avatar;
+            _avatar_url = getLocalAvatar(ds.distributors[i].avatar);
             ds.distributors[i].is_active = true;
         }
     }
@@ -2559,7 +2568,7 @@ function setPersona( el ) {
         var els = document.getElementsByClassName('persona-select');
         for ( var i = 0; i < els.length; i++ ) { els[i].classList.remove('active'); }
         var els = document.getElementsByClassName('active-avatar');
-        for ( var i = 0; i < els.length; i++ ) { els[i].src = _avatar_url; }
+        for ( var i = 0; i < els.length; i++ ) { els[i].src = getLocalAvatar(_avatar_url); }
         el.parentNode.classList.add('active');
         loadChannelList(_persona_guid);
         showNewPostAs();
