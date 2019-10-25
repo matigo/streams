@@ -552,3 +552,107 @@ If there was a problem, the API will return an error message:
   "data": false
 }
 ```
+
+### Pinning a Post
+
+Any Post Object can be pinned by sending an Authenticated `POST` request to the website hosting the item, along with the identifier. Pin values are set by Persona by Post and can be any of the following:
+
+* `pin.none` / `none` ⇢ the default "unpinned" value
+* `pin.orange` / `orange`
+* `pin.yellow` / `yellow`
+* `pin.black` / `black`
+* `pin.green` / `green`
+* `pin.blue` / `blue`
+* `pin.red` / `red`
+
+Pin colours do not have any pre-defined meaning and are meant have meanings assigned by the Account holder. These can be viewed in a similar fashion to flags in email applications. If no pin value or if an invalid pin value is supplied, the default value of `pin.none` will be used.
+
+```
+POST https://example.web/api/posts/8b6a9883-cd09-4c03-2364-76214671427e/pin
+```
+
+Required variables when pinning:
+
+```
+value={the pin value (either as pin.{colour} or {colour})}
+```
+
+For example:
+
+```
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" \
+     -H "Authorization: {Authorization Token}" \
+     -d "value=pin.orange" \
+     "https://example.web/api/posts/8b6a9883-cd09-4c03-2364-76214671427e/pin"
+```
+
+If a Post Object is successfully pinned, the API will return the item in a JSON package:
+
+```
+{
+  "meta": {
+    "code": 200,
+    "text": false,
+    "list": false
+  },
+  "data": [
+    {the pinned Post Object}
+  ]
+}
+```
+
+If there was a problem, the API will return an error message:
+
+```
+{
+  "meta": {
+    "code": 400,
+    "text": "Could Not Pin Post Object",
+    "list": false
+  },
+  "data": false
+}
+```
+
+### Unpinning a Post
+
+Any Post Object that has been pinned by an account can also be "unpinned" by sending an Authenticated `DELETE` request to the website hosting the item, along with the identifier or a `POST` request with a value of `pin.none`.
+
+```
+DELETE https://example.web/api/posts/8b6a9883-cd09-4c03-2364-76214671427e/pin
+```
+
+For example:
+
+```
+curl -X DELETE -H "Authorization: {Authorization Token}" \
+     "https://example.web/api/posts/8b6a9883-cd09-4c03-2364-76214671427e/pin"
+```
+
+If a Post Object is successfully unpinned, the API will return the item in a JSON package:
+
+```
+{
+  "meta": {
+    "code": 200,
+    "text": false,
+    "list": false
+  },
+  "data": [
+    {the recently unpinned Post Object}
+  ]
+}
+```
+
+If there was a problem, the API will return an error message:
+
+```
+{
+  "meta": {
+    "code": 400,
+    "text": "Could Not Remove Pin from Post Object",
+    "list": false
+  },
+  "data": false
+}
+```

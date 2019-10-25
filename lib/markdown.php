@@ -58,7 +58,6 @@ class Markdown {
     public $predef_urls = array();
     public $predef_titles = array();
 
-
     ### Parser Implementation ###
 
     # Regex to match balanced [brackets].
@@ -72,7 +71,6 @@ class Markdown {
     # Table of hash values for escaped characters:
     protected $escape_chars = '\`*_{}[]()>#+-.!';
     protected $escape_chars_re;
-
 
     public function __construct() {
     #
@@ -97,7 +95,6 @@ class Markdown {
         asort($this->span_gamut);
     }
 
-
     # Internal hashes used during transformation.
     protected $urls = array();
     protected $titles = array();
@@ -105,7 +102,6 @@ class Markdown {
 
     # Status flag to avoid invalid nesting.
     protected $in_anchor = false;
-
 
     protected function setup() {
     #
@@ -129,7 +125,6 @@ class Markdown {
         $this->titles = array();
         $this->html_hashes = array();
     }
-
 
     public function transform($text, $is_blurb) {
     #
@@ -178,8 +173,7 @@ class Markdown {
         "stripLinkDefinitions" => 20,
 
         "runBasicBlockGamut"   => 30,
-        );
-
+    );
 
     protected function stripLinkDefinitions($text) {
     #
@@ -411,6 +405,7 @@ class Markdown {
 
         "doLists"           => 40,
         "doCodeBlocks"      => 50,
+        "doTables"          => 55,
         "doBlockQuotes"     => 60,
         );
 
@@ -1007,6 +1002,147 @@ class Markdown {
         return "<li>" . $item . "</li>\n";
     }
 
+    protected function doTables($text) {
+    #
+    # Form HTML tables.
+    #
+        $less_than_tab = $this->tab_width - 1;
+        #
+        # Find tables with leading pipe.
+        #
+        #   | Header 1 | Header 2
+        #   | -------- | --------
+        #   | Cell 1   | Cell 2
+        #   | Cell 3   | Cell 4
+        #
+        $text = preg_replace_callback('
+            {
+                ^                           # Start of a line
+                [ ]{0,'.$less_than_tab.'}   # Allowed whitespace.
+                [|]                         # Optional leading pipe (present)
+                (.+) \n                     # $1: Header row (at least one pipe)
+
+                [ ]{0,'.$less_than_tab.'}   # Allowed whitespace.
+                [|] ([ ]*[-:]+[-| :]*) \n   # $2: Header underline
+
+                (                           # $3: Cells
+                    (?>
+                        [ ]*                # Allowed whitespace.
+                        [|] .* \n           # Row content.
+                    )*
+                )
+                (?=\n|\Z)                   # Stop at final double newline.
+            }xm',
+            array(&$this, '_doTable_leadingPipe_callback'), $text);
+
+        #
+        # Find tables without leading pipe.
+        #
+        #   Header 1 | Header 2
+        #   -------- | --------
+        #   Cell 1   | Cell 2
+        #   Cell 3   | Cell 4
+        #
+        $text = preg_replace_callback('
+            {
+                ^                           # Start of a line
+                [ ]{0,'.$less_than_tab.'}   # Allowed whitespace.
+                (\S.*[|].*) \n              # $1: Header row (at least one pipe)
+
+                [ ]{0,'.$less_than_tab.'}   # Allowed whitespace.
+                ([-:]+[ ]*[|][-| :]*) \n    # $2: Header underline
+
+                (                           # $3: Cells
+                    (?>
+                        .* [|] .* \n        # Row content
+                    )*
+                )
+                (?=\n|\Z)                   # Stop at final double newline.
+            }xm',
+            array(&$this, '_DoTable_callback'), $text);
+
+        return $text;
+    }
+    protected function _doTable_leadingPipe_callback($matches) {
+        $head       = $matches[1];
+        $underline  = $matches[2];
+        $content    = $matches[3];
+
+        # Remove leading pipe for each row.
+        $content    = preg_replace('/^ *[|]/m', '', $content);
+
+        return $this->_doTable_callback(array($matches[0], $head, $underline, $content));
+    }
+    protected function _doTable_makeAlignAttr($alignname)
+    {
+        if (empty($this->table_align_class_tmpl))
+            return " align=\"$alignname\"";
+
+        $classname = str_replace('%%', $alignname, $this->table_align_class_tmpl);
+        return " class=\"$classname\"";
+    }
+    protected function _doTable_callback($matches) {
+        $head       = $matches[1];
+        $underline  = $matches[2];
+        $content    = $matches[3];
+
+        # Remove any tailing pipes for each line.
+        $head       = preg_replace('/[|] *$/m', '', $head);
+        $underline  = preg_replace('/[|] *$/m', '', $underline);
+        $content    = preg_replace('/[|] *$/m', '', $content);
+
+        # Reading alignement from header underline.
+        $separators = preg_split('/ *[|] */', $underline);
+        foreach ($separators as $n => $s) {
+            if (preg_match('/^ *-+: *$/', $s))
+                $attr[$n] = $this->_doTable_makeAlignAttr('right');
+            else if (preg_match('/^ *:-+: *$/', $s))
+                $attr[$n] = $this->_doTable_makeAlignAttr('center');
+            else if (preg_match('/^ *:-+ *$/', $s))
+                $attr[$n] = $this->_doTable_makeAlignAttr('left');
+            else
+                $attr[$n] = '';
+        }
+
+        # Parsing span elements, including code spans, character escapes,
+        # and inline HTML tags, so that pipes inside those gets ignored.
+        $head       = $this->parseSpan($head);
+        $headers    = preg_split('/ *[|] */', $head);
+        $col_count  = count($headers);
+        $attr       = array_pad($attr, $col_count, '');
+
+        # Write column headers.
+        $text = "<table>\n";
+        $text .= "<thead>\n";
+        $text .= "<tr>\n";
+        foreach ($headers as $n => $header)
+            $text .= "  <th$attr[$n]>".$this->runSpanGamut(trim($header))."</th>\n";
+        $text .= "</tr>\n";
+        $text .= "</thead>\n";
+
+        # Split content by row.
+        $rows = explode("\n", trim($content, "\n"));
+
+        $text .= "<tbody>\n";
+        foreach ($rows as $row) {
+            # Parsing span elements, including code spans, character escapes,
+            # and inline HTML tags, so that pipes inside those gets ignored.
+            $row = $this->parseSpan($row);
+
+            # Split row by cell.
+            $row_cells = preg_split('/ *[|] */', $row, $col_count);
+            $row_cells = array_pad($row_cells, $col_count, '');
+
+            $text .= "<tr>\n";
+            foreach ($row_cells as $n => $cell)
+                $text .= "  <td$attr[$n]>".$this->runSpanGamut(trim($cell))."</td>\n";
+            $text .= "</tr>\n";
+        }
+        $text .= "</tbody>\n";
+        $text .= "</table>";
+
+        return $this->hashBlock($text) . "\n";
+    }
 
     protected function doCodeBlocks($text) {
     #

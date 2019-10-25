@@ -2331,9 +2331,10 @@ class Posts {
                          '</p></p>'     => '</p>',          '<p><p>'             => '<p>',
                          '...'          => '…',             '--'                 => '—',
 
-                         ':???:'  => "😕",  ' :/'  => " 😕",  ' :)' => " 🙂",
+                         ':???:'  => "😕",  ' :/'  => " 😕",  ' :)' => " 🙂", ' -_-' => " 😑", ' :x' => " 🤐",
 
-                         '<p><blockquote>' => '<blockquote>'
+                         '<p><blockquote>' => '<blockquote>',
+                         '<pre><code><br>' => '<pre><code>',
                         );
         for ( $i = 0; $i < 10; $i++ ) {
             $rVal = str_replace(array_keys($forbid), array_values($forbid), $rVal);
