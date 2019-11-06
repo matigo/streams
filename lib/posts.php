@@ -1168,7 +1168,7 @@ class Posts {
                     // If the Slug is Not Empty, Set the Canonical URL Value
                     if ( $PostSlug != '' ) {
                         $SlugPrefix = '';
-                        if ( nullInt($PublishUnix) >= strtotime('2000-01-01 00:00:00') ) {
+                        if ( nullInt($PublishUnix) >= strtotime('1975-01-01 00:00:00') ) {
                             $SlugPrefix = date('Y/m/d', $PublishUnix);
                         }
                         $CanonURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$PostSlug");
