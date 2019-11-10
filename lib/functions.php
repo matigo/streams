@@ -1795,7 +1795,7 @@
         header("Access-Control-Allow-Headers: Content-Type, Authorization");
         header("Access-Control-Allow-Credentials: true");
         header("P3P: CP=\"ALL IND DSP COR ADM CONo CUR CUSo IVAo IVDo PSA PSD TAI TELo OUR SAMo CNT COM INT NAV ONL PHY PRE PUR UNI\"");
-        header("X-Perf-Stats: " . getRunTime('header') );
+        header("X-Perf-Stats: " . getRunTime('header'));
         header("X-SHA1-Hash: " . sha1( $data ));
         header("X-Content-Length: " . mb_strlen($data));
 
