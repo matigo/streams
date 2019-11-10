@@ -50,7 +50,8 @@ BEGIN
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
-    SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
+    SELECT DISTINCT po.`id` as `post_id`,
+           CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 2 HOUR) THEN GREATEST(po.`publish_at`, po.`updated_at`) ELSE po.`publish_at` END as `posted_at`,
            LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,

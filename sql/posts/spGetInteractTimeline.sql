@@ -50,7 +50,7 @@ BEGIN
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
-    SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
+    SELECT DISTINCT po.`id` as `post_id`, act.`updated_at` as `posted_at`,
            LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
@@ -73,7 +73,7 @@ BEGIN
     /* If there aren't enough posts, reach back farther to look for some */
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
-        SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
+        SELECT DISTINCT po.`id` as `post_id`, act.`updated_at` as `posted_at`,
                LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
