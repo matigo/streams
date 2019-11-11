@@ -412,22 +412,6 @@ class Site {
         $sqlStr = prepSQLQuery("CALL SetSiteData( [ACCOUNT_ID], '[CHANNEL_GUID]',
                                                  '[SITE_NAME]', '[SITE_DESCR]', '[SITE_KEYS]', '[SITE_THEME]', '[SITE_COLOR]', '[PRIVACY]', '[SITE_PASS]',
                                                  '[SHOW_GEO]', '[SHOW_NOTE]', '[SHOW_BLOG]', '[SHOW_BKMK]', '[SHOW_LOCS]', '[SHOW_QUOT]', '[SHOW_PHOT]');", $ReplStr);
-
-        /*
-        $sqlStr = readResource(SQL_DIR . '/site/setSiteData.sql', $ReplStr);
-        $isOK = doSQLExecute($sqlStr);
-
-        if ( $isOK > 0 ) {
-            $sqlStr = readResource(SQL_DIR . '/posts/updateSiteVersion.sql', $ReplStr) . SQL_SPLITTER .
-                      readResource(SQL_DIR . '/site/setSiteGeoVisibility.sql', $ReplStr) . SQL_SPLITTER .
-                      readResource(SQL_DIR . '/site/setSitePassword.sql', $ReplStr);
-            $isOK = doSQLExecute($sqlStr);
-
-        } else {
-            if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
-        }
-        */
-
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
