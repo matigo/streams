@@ -441,7 +441,7 @@ DROP TABLE IF EXISTS `Site`;
 CREATE TABLE IF NOT EXISTS `Site` (
     `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
     `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
-    `name`          varchar(80)                                 NOT NULL    ,
+    `name`          varchar(128)                                NOT NULL    ,
     `description`   varchar(255)                                NOT NULL    DEFAULT '',
     `keywords`      varchar(255)                                NOT NULL    DEFAULT '',
 

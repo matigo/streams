@@ -29,8 +29,8 @@ BEGIN
            ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
            (SELECT z.`guid` FROM `Client` z
              WHERE z.`is_deleted` = 'N' and z.`is_active` = 'Y' and z.`name` = 'Default Client') as `client_guid`,
-           'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'Y' as `show_quotation`,
-           si.`version` as `site_version`, si.`updated_at` as `site_updated_at`,
+           'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'N' as `show_photo`, 'Y' as `show_quotation`,
+           si.`version` as `site_version`, si.`updated_at` as `site_updated_at`, 'auto' as `site_color`,
            lu.`is_active` as `url_active`, UNIX_TIMESTAMP(lu.`updated_at`) as `url_ua`,
            CASE WHEN si.`account_id` = `account_id` THEN 'Y' ELSE 'N' END as `can_edit`,
            CASE WHEN ch.`privacy_type` IN ('visibility.password', 'visibility.none') THEN 'Y' ELSE 'N' END as `site_locked`,
@@ -49,8 +49,8 @@ BEGIN
            '' as `page_title`, 'website' as `page_type`,
            ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
            '' as `client_guid`,
-           'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'Y' as `show_quotation`,
-           '0' as `site_version`, Now() as `site_updated_at`,
+           'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'N' as `show_photo`, 'Y' as `show_quotation`,
+           '0' as `site_version`, Now() as `site_updated_at`, 'auto' as `site_color`,
            'Y' as `url_active`, 0 as `url_ua`,
            'N' as `can_edit`, CASE WHEN ch.`privacy_type` IN ('visibility.password', 'visibility.none') THEN 'Y' ELSE 'N' END as `site_locked`,
            'Y' as `do_redirect`, 1 as `sort_order`
@@ -119,21 +119,25 @@ BEGIN
            MAX(zz.`show_bookmark`) as `show_bookmark`,
            MAX(zz.`show_location`) as `show_location`,
            MAX(zz.`show_note`) as `show_note`,
-           MAX(zz.`show_quotation`) as `show_quotation`
+           MAX(zz.`show_photo`) as `show_photo`,
+           MAX(zz.`show_quotation`) as `show_quotation`,
+           MAX(zz.`site_color`) as `site_color`
       FROM (SELECT sm.`site_id`,
                    CASE WHEN sm.`key` = 'show_geo' THEN sm.`value` ELSE 'N' END as `show_geo`,
                    CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE 'N' END as `show_article`,
                    CASE WHEN sm.`key` = 'show_bookmark' THEN sm.`value` ELSE 'N' END as `show_bookmark`,
                    CASE WHEN sm.`key` = 'show_location' THEN sm.`value` ELSE 'N' END as `show_location`,
                    CASE WHEN sm.`key` = 'show_note' THEN sm.`value` ELSE 'N' END as `show_note`,
-                   CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE 'N' END as `show_quotation`
+                   CASE WHEN sm.`key` = 'show_photo' THEN sm.`value` ELSE 'N' END as `show_photo`,
+                   CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE 'N' END as `show_quotation`,
+                   CASE WHEN sm.`key` = 'site_color' THEN sm.`value` ELSE 'auto' END as `site_color`
               FROM `SiteMeta` sm INNER JOIN tmp ON sm.`site_id` = tmp.`site_id`
              WHERE sm.`is_deleted` = 'N') zz
      GROUP BY zz.`site_id`;
 
     /* Return the Detailed Site Information */
     SELECT tmp.`site_id`, tmp.`site_guid`, tmp.`url_id`, tmp.`https`, tmp.`site_url`, tmp.`site_name`, tmp.`description`, tmp.`keywords`,
-           tmp.`theme`, tmp.`is_default`, tmp.`client_guid`,
+           tmp.`theme`, IFNULL(meta.`site_color`, tmp.`site_color`) as `site_color`, tmp.`is_default`, tmp.`client_guid`,
            tmp.`summary`, IFNULL(tmp.`page_title`, tmp.`site_name`) as `page_title`, IFNULL(tmp.`page_type`, 'website') as `page_type`,
            tmp.`channel_name`, tmp.`channel_guid`, tmp.`channel_id`, tmp.`channel_privacy`,
            IFNULL(meta.`show_geo`, tmp.`show_geo`) as `show_geo`,
@@ -141,6 +145,7 @@ BEGIN
            IFNULL(meta.`show_article`, tmp.`show_article`) as `show_article`,
            IFNULL(meta.`show_bookmark`, tmp.`show_bookmark`) as `show_bookmark`,
            IFNULL(meta.`show_location`, tmp.`show_location`) as `show_location`,
+           IFNULL(meta.`show_photo`, tmp.`show_photo`) as `show_photo`,
            IFNULL(meta.`show_quotation`, tmp.`show_quotation`) as `show_quotation`,
            tmp.`site_version`, tmp.`site_updated_at`, `has_content` as `has_content`,
            CASE WHEN tmp.`can_edit` = 'Y' THEN 'N'

@@ -194,7 +194,8 @@ class Site {
                 $cver = NoNull($Row['site_version']) . '-' .
                         NoNull($Row['can_edit'], 'N') . NoNull($Row['site_locked'], 'N') .
                         NoNull($Row['show_geo'], 'N') . NoNull($Row['show_article'], 'N') . NoNull($Row['show_bookmark'], 'N') .
-                        NoNull($Row['show_location'], 'N') . NoNull($Row['show_note'], 'N') . NoNull($Row['show_quotation'], 'N') . '-' .
+                        NoNull($Row['show_location'], 'N') . NoNull($Row['show_note'], 'N') . NoNull($Row['show_photo'], 'N') .
+                        NoNull($Row['show_quotation'], 'N') . '-' .
                         NoNull($this->settings['_language_code'], $this->settings['DispLang']);
                 $this->cache[strtolower($SiteURL)] = array( 'HomeURL'         => NoNull($Row['site_url']),
                                                             'api_url'         => getApiUrl(),
@@ -205,6 +206,7 @@ class Site {
                                                             'keywords'        => NoNull($Row['keywords']),
                                                             'summary'         => NoNull($Row['summary']),
                                                             'location'        => NoNull($Row['theme']),
+                                                            'color'           => NoNull($Row['site_color'], 'auto'),
                                                             'license'         => 'CC-BY-4.0',
                                                             'is_default'      => YNBool($Row['is_default']),
                                                             'site_id'         => nullInt($Row['site_id']),
@@ -220,6 +222,7 @@ class Site {
                                                             'show_article'    => YNBool($Row['show_article']),
                                                             'show_bookmark'   => YNBool($Row['show_bookmark']),
                                                             'show_location'   => YNBool($Row['show_location']),
+                                                            'show_photo'      => YNBool($Row['show_photo']),
                                                             'show_quotation'  => YNBool($Row['show_quotation']),
 
                                                             'page_title'      => NoNull($Row['page_title']),
@@ -372,12 +375,29 @@ class Site {
             if ( $SitePass == str_repeat('*', 12) ) { $SitePass = ''; }
         }
 
+        // Determine if the Theme
+        $validThemes = array( 'anri', 'resume', 'default', 'gtd' );
+        $siteTheme = NoNull($this->settings['site_theme'], $this->settings['site-theme']);
+        if ( in_array($siteTheme, $validThemes) === false ) {
+            $siteTheme = 'anri';
+        }
+
+        // Determine if the Dark theme is enabled, disabled, or auto
+        $validColour = array( 'theme.auto', 'theme.dark', 'theme.light' );
+        $ColourTheme = NoNull($this->settings['site_color'], $this->settings['site-color']);
+        if ( in_array($ColourTheme, $validColour) === false ) {
+            $ColourTheme = 'theme.auto';
+        }
+        $ColourTheme = str_replace('theme.', '', $ColourTheme);
+
         // Get a Site.ID Value
         $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub(NoNull($this->settings['channel_guid'], $this->settings['channel-guid'])),
                           '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                           '[SITE_NAME]'    => sqlScrub(NoNull($this->settings['site_name'], $this->settings['site-name'])),
                           '[SITE_DESCR]'   => sqlScrub(NoNull($this->settings['site_descr'], $this->settings['site-descr'])),
                           '[SITE_KEYS]'    => sqlScrub(NoNull($this->settings['site_keys'], $this->settings['site-keys'])),
+                          '[SITE_THEME]'   => sqlScrub($siteTheme),
+                          '[SITE_COLOR]'   => sqlScrub($ColourTheme),
                           '[PRIVACY]'      => sqlScrub($Visibility),
                           '[SITE_PASS]'    => sqlScrub($SitePass),
 
@@ -387,7 +407,13 @@ class Site {
                           '[SHOW_BKMK]'    => BoolYN(YNBool(NoNull($this->settings['show_bookmark'], $this->settings['show-bookmark']))),
                           '[SHOW_LOCS]'    => BoolYN(YNBool(NoNull($this->settings['show_location'], $this->settings['show-location']))),
                           '[SHOW_QUOT]'    => BoolYN(YNBool(NoNull($this->settings['show_quotation'], $this->settings['show-quotation']))),
+                          '[SHOW_PHOT]'    => BoolYN(YNBool(NoNull($this->settings['show_photo'], $this->settings['show-photo']))),
                          );
+        $sqlStr = prepSQLQuery("CALL SetSiteData( [ACCOUNT_ID], '[CHANNEL_GUID]',
+                                                 '[SITE_NAME]', '[SITE_DESCR]', '[SITE_KEYS]', '[SITE_THEME]', '[SITE_COLOR]', '[PRIVACY]', '[SITE_PASS]',
+                                                 '[SHOW_GEO]', '[SHOW_NOTE]', '[SHOW_BLOG]', '[SHOW_BKMK]', '[SHOW_LOCS]', '[SHOW_QUOT]', '[SHOW_PHOT]');", $ReplStr);
+
+        /*
         $sqlStr = readResource(SQL_DIR . '/site/setSiteData.sql', $ReplStr);
         $isOK = doSQLExecute($sqlStr);
 
@@ -399,6 +425,16 @@ class Site {
 
         } else {
             if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
+        }
+        */
+
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                if ( nullInt($Row['version_id']) <= 0 ) {
+                    if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
+                }
+            }
         }
 
         // If This is a Web Request, Redirect the Visitor

@@ -44,6 +44,13 @@
                                     </label>
                                 </p>
                                 <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowPhotos]</strong>
+                                    <label class="switch">
+                                        <input id="show-photo" type="checkbox" name="show-photo"[SITE_PHOTOS]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__site-details">
                                     <strong class="switch-label">[lblSettingsShowLocations]</strong>
                                     <label class="switch">
                                         <input id="show-location" type="checkbox" name="show-location"[SITE_PLACES]>
@@ -59,6 +66,14 @@
                                 </p>
 
                                 <h4>[lblSettingsS3]</h4>
+                                <p class="single-post__site-details">
+                                    <label class="switch-label" for="site-color">[lblSettingsSiteTheme]</label>
+                                    <select id="site-color" class="settings-half" name="site-color" aria-required="true">
+                                        <option value="theme.auto"[THEME_AUTO]>[optThemeAuto]</option>
+                                        <option value="theme.dark"[THEME_DARK]>[optThemeDark]</option>
+                                        <option value="theme.light"[THEME_LIGHT]>[optThemeLight]</option>
+                                    </select>
+                                </p>
                                 <p class="single-post__site-details">
                                     <strong class="switch-label">[lblSettingsPrivateSite]</strong>
                                     <label class="switch">

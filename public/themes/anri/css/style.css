@@ -1502,6 +1502,19 @@ audio {
   padding: 0;
   margin: 0;
 }
+.single-post__site-details .settings-half {
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 0;
+    display: inline-block;
+    font-size: 1.1em;
+    vertical-align: top;
+    padding: 0.25em 0.25em 0.25em 0.5em;
+    margin: 0;
+    min-width: 325px;
+    max-width: 450px;
+    width: 100%;
+}
 .single-post__contact .js-message {
     background: #ff0;
     border: 2px solid #000;
@@ -1530,6 +1543,7 @@ audio {
   .single-post--fullsize .single-post__info,
   .single-post--fullsize .single-post__content,
   .single-post--fullsize .single-post__contact {
+    padding: 0.25em 0.5em 0.5em;
     max-width: 100%;
   }
 
@@ -2037,6 +2051,7 @@ body.dark .single-post__contact input[type="password"] {
     background: #4a4a4d;
     border: 1px solid #d7d7d8;
 }
+body.dark .single-post__contact h4 { color: #d7d7d8; }
 body.dark .single-post__contact textarea {
     background-color: #4a4a4d;
     background: #4a4a4d;
@@ -2049,6 +2064,9 @@ body.dark .single-post__contact input[type="submit"] {
     border: 1px solid #d7d7d8;
     color: #d7d7d8;
 }
+body.dark .single-post__contact .slider { background-color: #333; }
+body.dark .single-post__contact input:checked + .slider { background-color: #ccc; }
+
 body.dark .blog-pagination__item a { color: #59c8fd; }
 body.dark .page-footer {
     background-color: #4a4a4d;
@@ -2092,6 +2110,7 @@ body.dark fieldset[disabled] .btn {
     background: transparent;
     border: 1px solid #d7d7d8;
 }
+
 @media (max-width: 768px) {
   body.dark .main-nav__item a { color: #262626; }
 }

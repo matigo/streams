@@ -196,6 +196,7 @@ class Route extends Streams {
                     $this->_getLanguageStrings($data['location']);
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
+
                     $ReplStr = array( '[lblSiteLogin]'       => NoNull($SiteLogin, $this->strings['lblLogin']),
                                       '[PERSONA_GUID]'       => NoNull($this->settings['_persona_guid']),
                                       '[SITE_OPSBAR]'        => $this->_getSiteOpsBar($data),
@@ -233,6 +234,7 @@ class Route extends Streams {
 
                                '[SITE_URL]'     => $this->settings['HomeURL'],
                                '[SITE_NAME]'    => NoNull($data['name']),
+                               '[SITE_COLOR]'   => NoNull($data['color'], 'auto'),
                               );
             if ( is_array($this->strings) ) {
                 foreach ( $this->strings as $key=>$val ) {
@@ -658,6 +660,7 @@ class Route extends Streams {
                        '[SITE_NAME]'    => $data['name'],
                        '[SITEDESCR]'    => $data['description'],
                        '[SITEKEYWD]'    => $data['keywords'],
+                       '[SITE_COLOR]'   => NoNull($data['color'], 'auto'),
                        '[PAGE_TITLE]'   => $this->_getPageTitle($data),
                        '[META_TITLE]'   => $this->_getPageTitle($data, true),
                        '[META_DOMAIN]'  => NoNull($data['HomeURL']),
@@ -667,10 +670,14 @@ class Route extends Streams {
                        '[SITE_ARTICLE]' => $this->_checkboxValue($data, 'show_article'),
                        '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
                        '[SITE_PLACES]'  => $this->_checkboxValue($data, 'show_location'),
+                       '[SITE_PHOTOS]'  => $this->_checkboxValue($data, 'show_photo'),
                        '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
                        '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
                        '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
                        '[SITE_PASS]'    => $SitePass,
+                       '[THEME_LIGHT]'   => $this->_selectValue($data, 'color', 'light'),
+                       '[THEME_DARK]'   => $this->_selectValue($data, 'color', 'dark'),
+                       '[THEME_AUTO]'   => $this->_selectValue($data, 'color', 'auto'),
                        '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
                        '[ACCESS_LEVEL]' => NoNull($this->settings['_access_level'], 'read'),
@@ -700,6 +707,13 @@ class Route extends Streams {
         $enabled = YNBool(BoolYN($data[$item]));
 
         if ( $enabled ) { return ' checked'; }
+        return '';
+    }
+
+    private function _selectValue($data, $item, $val) {
+        $value = NoNull($data[$item]);
+
+        if ( strtolower($value) == strtolower($val) ) { return ' selected'; }
         return '';
     }
 

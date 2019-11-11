@@ -166,21 +166,30 @@ document.onreadystatechange = function () {
     }
 }
 function checkColorScheme() {
-  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
-  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches;
-  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified;
+    if ( isAutoScheme() ) {
+        var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
+        var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches;
+        var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified;
 
-  window.matchMedia("(prefers-color-scheme: dark)").addListener(e => e.matches && setColorScheme(true));
-  window.matchMedia("(prefers-color-scheme: light)").addListener(e => e.matches && setColorScheme());
+        window.matchMedia("(prefers-color-scheme: dark)").addListener(e => e.matches && setColorScheme(true));
+        window.matchMedia("(prefers-color-scheme: light)").addListener(e => e.matches && setColorScheme());
 
-  if (isDarkMode) { setColorScheme(true); }
-  if (isLightMode) { setColorScheme(); }
-  if ( isNotSpecified || hasNoSupport ) {
-    now = new Date();
-    hour = now.getHours();
-    if (hour < 4 || hour >= 16) { setColorScheme(true); }
-  }
+        if (isDarkMode) { setColorScheme(true); }
+        if (isLightMode) { setColorScheme(); }
+        if ( isNotSpecified || hasNoSupport ) {
+            now = new Date();
+            hour = now.getHours();
+            if (hour < 4 || hour >= 16) { setColorScheme(true); }
+        }
+    }
+}
+function isAutoScheme() {
+    var body = document.body;
+    if ( body === undefined || body === false || body === null ) { return ''; }
+    if ( body.classList.contains('light') ) { return false; }
+    if ( body.classList.contains('dark') ) { return false; }
+    return true;
 }
 function setColorScheme( isDark ) {
     if ( isDark === undefined || isDark === null || isDark !== true ) { isDark = false; }
