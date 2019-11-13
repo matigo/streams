@@ -25,8 +25,6 @@ class System {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
         $rVal = false;
 
-        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
-
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
@@ -75,6 +73,8 @@ class System {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $rVal = false;
 
+        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+
         switch ( $Activity ) {
             case '':
                 $rVal = array( 'activity' => "[POST] /system/$Activity" );
@@ -91,6 +91,8 @@ class System {
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $rVal = false;
+
+        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
 
         switch ( $Activity ) {
             case '':

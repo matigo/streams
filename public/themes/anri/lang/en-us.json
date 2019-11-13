@@ -92,6 +92,17 @@
     "optThemeLight": "Always Light",
     "optThemeDark": "Always Dark",
 
+    "lblAccount": "Account Settings",
+    "lblAccountDescr": "Here you can control aspects of your account on 10Centuries.",
+    "lblAccountLanguage": "Preferred Language",
+    "lblAccountSubRemind": "Subscription Reminder",
+    "lblAccountSubRemindMsg": "Would you like to receive a reminder when your subscription is about to renew? You will be given 1 month notice for an annual subscription and 7 days for a monthly subscription. You can end the reminders at any time by toggling the button below.",
+    "lblAccountTimezone": "Time Zone",
+    "lblPaypalTipJar": "Would you like to contribute to the tip jar? Click the <em>Pay Now</em> button and send any amount you'd like. Your support makes it possible for new functions and features to be added to the service sooner.",
+    "lblAccountS2": "Email Communications",
+    "lblAccountS3": "Location & Language Settings",
+    "lblAccountS9": "Tip Jar",
+
     "lblArchive": "Archives",
     "lblArchiveFilterPH": "(Quick Filter)",
 
@@ -108,6 +119,8 @@
     "optVisPrivate": "Visible to Followers",
     "optVisPassword": "Password Protected",
     "optVisNone": "Visible Only to You",
+
+    "optLangEnUS": "English (US)",
 
     "lbl403": "403 Access Denied",
     "lbl404": "404 Page Not Found",

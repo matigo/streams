@@ -1382,6 +1382,7 @@ audio {
 }
 .single-post__contact input[type="submit"]:hover { opacity: 0.8; }
 .single-post__contact input[type="submit"]:focus { outline: 0; }
+.single-post__contact input[type="image"] { border: 0 !important; }
 .single-post__contact .fullwide { width: 100% !important; }
 .single-post__contact h4 {
   border-bottom: 1px solid #ccc;
@@ -1413,6 +1414,11 @@ audio {
   opacity: 0;
   width: 0;
   height: 0;
+}
+.single-post__contact .tip-label {
+  display: block;
+  font-size: 1.1em;
+  font-weight: normal;
 }
 .single-post__contact .slider {
   position: absolute;
