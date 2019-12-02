@@ -94,6 +94,11 @@
 
     "lblAccount": "Account Settings",
     "lblAccountDescr": "Here you can control aspects of your account on 10Centuries.",
+    "lblAccountDisplayName": "Display Name",
+    "lblAccountFirstName": "First Name",
+    "lblAccountLastName": "Last Name",
+    "lblAccountEmail": "Email Address",
+    "lblAccountPassword": "Password",
     "lblAccountLanguage": "Preferred Language",
     "lblAccountSubRemind": "Subscription Reminder",
     "lblAccountSubRemindMsg": "Would you like to receive a reminder when your subscription is about to renew? You will be given 1 month notice for an annual subscription and 7 days for a monthly subscription. You can end the reminders at any time by toggling the button below.",

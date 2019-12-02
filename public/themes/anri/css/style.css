@@ -42,9 +42,18 @@ kbd,
 pre,
 samp {
     font-family: "Lucida Console", Monaco, monospace;
+    background-color: #eff0f1;
+    border-radius: 3px;
+    color: #393318;
+    display: block;
     font-size: 13px;
-    color: #333;
-    white-space: nowrap !important
+    line-height: 22px;
+    white-space: pre;
+    word-wrap: normal;
+    margin-bottom: 1em;
+    padding: 0.333em 0.5em 0.25em;
+    overflow: auto;
+    width: auto;
 }
 input { border: 1px solid #ddd; }
 audio {

@@ -626,11 +626,6 @@ class Route extends Streams {
         $ApiUrl = getApiUrl();
         $CdnUrl = getCdnUrl();
 
-        $SitePass = '';
-        if ( $data['channel_privacy'] == 'visibility.password' ) {
-            $SitePass = str_repeat('*', 12);
-        }
-
         $banner_img = NoNull($data['banner_img']);
         if ( NoNull($banner_img) == '' ) { $banner_img = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/images/default_banner.jpg'); }
 
@@ -666,18 +661,7 @@ class Route extends Streams {
                        '[META_DOMAIN]'  => NoNull($data['HomeURL']),
                        '[META_TYPE]'    => NoNull($data['page_type'], 'website'),
                        '[META_DESCR]'   => NoNull($data['description']),
-                       '[SITE_NOTE]'    => $this->_checkboxValue($data, 'show_note'),
-                       '[SITE_ARTICLE]' => $this->_checkboxValue($data, 'show_article'),
-                       '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
-                       '[SITE_PLACES]'  => $this->_checkboxValue($data, 'show_location'),
-                       '[SITE_PHOTOS]'  => $this->_checkboxValue($data, 'show_photo'),
-                       '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
-                       '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
-                       '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
-                       '[SITE_PASS]'    => $SitePass,
-                       '[THEME_LIGHT]'   => $this->_selectValue($data, 'color', 'light'),
-                       '[THEME_DARK]'   => $this->_selectValue($data, 'color', 'dark'),
-                       '[THEME_AUTO]'   => $this->_selectValue($data, 'color', 'auto'),
+
                        '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
                        '[ACCESS_LEVEL]' => NoNull($this->settings['_access_level'], 'read'),
@@ -687,6 +671,14 @@ class Route extends Streams {
                        '[PAGINATION]'   => $this->_getPagination($data),
                        '[POST_CLASS]'   => '',
                       );
+
+        // Is there anything Extra that's required?
+        $extra = $this->_getPrivateArray();
+        if ( is_array($extra) ) {
+            foreach ( $extra as $Key=>$Value ) {
+                $rVal[ strtoupper($Key) ] = $Value;
+            }
+        }
 
         // Add the Requisite Items when Caching is Not Enabled
         if ( defined('ENABLE_CACHING') ) {
@@ -698,6 +690,63 @@ class Route extends Streams {
 
         // Return the Strings
         return $rVal;
+    }
+
+    /**
+     *  Function returns an array for _getContentArray() based on the PgRoot value
+     */
+    private function _getPrivateArray() {
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        switch ( $PgRoot ) {
+            case 'account':
+                $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+                $sqlStr = readResource(SQL_DIR . '/account/getAccountDetail.sql', $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+                if ( is_array($rslt) ) {
+                    foreach ( $rslt as $Row ) {
+                        return array( '[ACCOUNT_ID]'   => nullInt($Row['account_id']),
+                                      '[FIRST_NAME]'   => NoNull($Row['first_name']),
+                                      '[LAST_NAME]'    => NoNull($Row['last_name']),
+                                      '[DISPLAY_NAME]' => NoNull($Row['display_name']),
+                                      '[LANG_CODE]'    => NoNull($Row['language_code']),
+                                      '[CREATED_AT]'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
+                                      '[CREATED_UNIX]' => strtotime($Row['created_at']),
+
+                                      '[ACCT_MAIL]'    => strtolower(NoNull($Row['email'], $this->settings['_email'])),
+                                      '[TIMEZONES]'    => $this->_getTimezoneList(),
+                                     );
+                    }
+                }
+                break;
+
+            case 'settings':
+                $SitePass = '';
+                if ( $data['channel_privacy'] == 'visibility.password' ) {
+                    $SitePass = str_repeat('*', 12);
+                }
+
+                return array( '[SITE_NOTE]'    => $this->_checkboxValue($data, 'show_note'),
+                              '[SITE_ARTICLE]' => $this->_checkboxValue($data, 'show_article'),
+                              '[SITE_BMARKS]'  => $this->_checkboxValue($data, 'show_bookmark'),
+                              '[SITE_PLACES]'  => $this->_checkboxValue($data, 'show_location'),
+                              '[SITE_PHOTOS]'  => $this->_checkboxValue($data, 'show_photo'),
+                              '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
+                              '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
+                              '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
+                              '[SITE_PASS]'    => $SitePass,
+
+                              '[THEME_LIGHT]'  => $this->_selectValue($data, 'color', 'light'),
+                              '[THEME_DARK]'   => $this->_selectValue($data, 'color', 'dark'),
+                              '[THEME_AUTO]'   => $this->_selectValue($data, 'color', 'auto'),
+                             );
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+
+        /* If there's no need for Private information ... */
+        return false;
     }
 
     /**
@@ -816,6 +865,33 @@ class Route extends Streams {
 
         // If We're Here, There are None
         return false;
+    }
+
+    /**
+     *  Construct a <select> list for timezones
+     */
+    private function _getTimezoneList() {
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        $valids = array( 'account', 'settings' );
+
+        /* If we're in a correct location, build a <select> list */
+        if ( in_array($PgRoot, $valids) ) {
+            $zones = getTimeZoneList();
+            $html = '';
+
+            if ( is_array($zones) ) {
+                foreach ( $zones as $Key=>$Value ) {
+                    $selected = '';
+                    if ( strtolower($Value) == strtolower($this->settings['_timezone']) ) { $selected = ' selected'; }
+                    $html .= tabSpace(10) . "<option value=\"$Value\"$selected>$Key</option>\n";
+                }
+            }
+
+            return NoNull($html);
+        }
+
+        /* If we're here, return an empty string */
+        return '';
     }
 
     private function _getSettingsPanel( $data ) {
