@@ -85,6 +85,7 @@ function writeToZone( name, cdn_url ) {
             if ( els[i].getAttribute('data-type') == 'mdown' ) {
                 if ( NoNull(els[i].value) != '' ) { els[i].value += "\r\n\r\n"; }
                 els[i].value += '![' + name.replace(/\.[^/.]+$/, '') + '](' + cdn_url + ')';
+                setCharCount(els[i]);
                 break;
             }
         }
