@@ -11,6 +11,7 @@
      *  Note: Non-Numeric Values will return 0
      */
     function nullInt($number, $default = 0) {
+        $number = filter_var($number, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
         $rVal = $default;
 
         if ( is_numeric($number) ) { $rVal = $number; }
