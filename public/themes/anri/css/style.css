@@ -37,7 +37,6 @@ sup a::hover {
   padding: 0 0.5em;
   text-decoration: underline !important;
 }
-code,
 kbd,
 pre,
 samp {
@@ -53,6 +52,21 @@ samp {
     margin-bottom: 1em;
     padding: 0.333em 0.5em 0.25em;
     overflow: auto;
+    width: auto;
+}
+code {
+    font-family: "Lucida Console", Monaco, monospace;
+    background-color: #eff0f1;
+    border-radius: 3px;
+    color: #393318;
+    display: inline-block;
+    font-size: 0.9em;
+    white-space: pre;
+    word-wrap: normal;
+    margin: 0 1px;
+    padding: 0 5px;
+    overflow: auto;
+    vertical-align: bottom;
     width: auto;
 }
 input { border: 1px solid #ddd; }
