@@ -673,7 +673,7 @@ class Route extends Streams {
                       );
 
         // Is there anything Extra that's required?
-        $extra = $this->_getPrivateArray();
+        $extra = $this->_getPrivateArray( $data );
         if ( is_array($extra) ) {
             foreach ( $extra as $Key=>$Value ) {
                 $rVal[ strtoupper($Key) ] = $Value;
@@ -695,7 +695,7 @@ class Route extends Streams {
     /**
      *  Function returns an array for _getContentArray() based on the PgRoot value
      */
-    private function _getPrivateArray() {
+    private function _getPrivateArray( $data ) {
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         switch ( $PgRoot ) {
             case 'account':

@@ -49,7 +49,7 @@ samp {
     line-height: 22px;
     white-space: pre;
     word-wrap: normal;
-    margin-bottom: 1em;
+    margin-bottom: 0;
     padding: 0.333em 0.5em 0.25em;
     overflow: auto;
     width: auto;
@@ -61,7 +61,7 @@ code {
     color: #393318;
     display: inline-block;
     font-size: 0.9em;
-    white-space: pre;
+    white-space: pre !important;
     word-wrap: normal;
     margin: 0 1px;
     padding: 0 5px;
@@ -733,6 +733,11 @@ audio {
     max-width: 80%;
     min-width: 80%;
     padding: 5px 1%;
+}
+.single-post__info .newpost-full.geo {
+    min-width: calc(100% - 185px);
+    max-width: calc(100% - 185px);
+    width: calc(100% - 185px);
 }
 .single-post__info .newpost-half {
     width: 33%;
@@ -1588,7 +1593,7 @@ audio {
     margin: 0 -15px;
     max-width: calc(100% + 30px);
   }
-}
+
   .single-post { padding: 0; }
   .single-post__content p { margin: 0.5em 1em 1em; text-align: -webkit-auto; }
   .single-post__title h2 { margin: 0; padding: 0 1em; }

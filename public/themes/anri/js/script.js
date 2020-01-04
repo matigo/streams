@@ -162,7 +162,13 @@ document.onreadystatechange = function () {
             }
         }
 
-        if ( location.protocol == 'https:' ) { showByClass('btn-geo'); }
+        if ( location.protocol == 'https:' || location.hostname.split('.').pop() == 'local' ) {
+            var el = document.getElementById('post-geo');
+            if ( el !== undefined && el !== false && el !== null ) {
+                el.classList.add('geo')
+            }
+            showByClass('btn-geo');
+        }
     }
 }
 function checkColorScheme() {
