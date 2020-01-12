@@ -778,8 +778,8 @@ class Posts {
             // Execute the Queries
             $isOK = doSQLExecute($sqlStr);
 
-            // Send any Webmentions or Pingbacks (If Applicable)
-            $this->_setPostPublishData(nullInt($data['post_id'], $post_id));
+            // Send any Webmentions or Pingbacks (If Applicable) [Disabled for now 2020-01-12]
+            // $this->_setPostPublishData(nullInt($data['post_id'], $post_id));
 
             // Collect the Post Object
             return $this->_getPostsByIDs(nullInt($data['post_id'], $post_id));
@@ -2248,19 +2248,21 @@ class Posts {
                 if ( $hdCount > 0 ) {
                     if ( $ValidateUrls ) {
                         if ( $hdCount > 1 ) { $headers = get_headers($url); }
-
                         if ( is_array($headers) ) {
-                            $okHead = array('HTTP/1.0 200 OK', 'HTTP/1.1 200 OK', 'HTTP/2.0 200 OK');
+                            $okHead = array('HTTPS/1.0 200 OK', 'HTTPS/1.1 200 OK', 'HTTPS/2.0 200 OK',
+                                            'HTTP/1.0 200 OK', 'HTTP/1.1 200 OK', 'HTTP/2.0 200 OK');
                             $suffix = '';
                             $rURL = $url;
 
                             // Do We Have a Redirect?
-                            foreach ($headers as $Row) {
-                                if ( mb_strpos(strtolower($Row), 'location') !== false ) {
-                                    $rURL = NoNull(str_ireplace('location:', '', strtolower($Row)));
-                                    break;
+                            if ( count($headers) > 0 ) {
+                                foreach ($headers as $Row) {
+                                    if ( mb_strpos(strtolower($Row), 'location') !== false ) {
+                                        $rURL = NoNull(str_ireplace('location:', '', strtolower($Row)));
+                                        break;
+                                    }
+                                    if ( in_array(NoNull(strtoupper($Row)), $okHead) ) { break; }
                                 }
-                                if ( in_array(NoNull(strtoupper($Row)), $okHead) ) { break; }
                             }
 
                             $host = parse_url($rURL, PHP_URL_HOST);
@@ -2331,7 +2333,7 @@ class Posts {
                          '</p></p>'     => '</p>',          '<p><p>'             => '<p>',
                          '...'          => '…',             '--'                 => '—',
 
-                         ':???:'  => "😕",  ' :/'  => " 😕",  ' :)' => " 🙂", ' -_-' => " 😑", ' :x' => " 🤐",
+                         ':???:'  => "😕",
 
                          '<p><blockquote>' => '<blockquote>',
                          '<pre><code><br>' => '<pre><code>',

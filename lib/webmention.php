@@ -148,8 +148,11 @@ class Webmention {
                          );
 
             foreach ( $links as $url ) {
+                $url = str_replace('https://', '', $url);
+                $url = str_replace('http://', '', $url);
+
                 // Is the Link Internal or External?
-                $isInternal = false;
+                $isInternal = $this->_checkIsInternalUrl($url);
                 $isSent = false;
 
                 // If this is going to an Internal Site, Simply Record the Data
@@ -267,6 +270,15 @@ class Webmention {
             // Write the Data to the Cache
             if ( count($data) > 0 ) { $this->cache['internals'] = $data; }
         }
+    }
+
+    private function _checkIsInternalUrl( $url ) {
+        if ( array_key_exists('internals', $this->cache) && is_array($this->cache['internals']) ) {
+            foreach ( $this->cache['internals'] as $Key=>$Location ) {
+                if ( strtolower($Key) == strtolower($url) ) { return true; }
+            }
+        }
+        return false;
     }
 
     /**

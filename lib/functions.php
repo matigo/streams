@@ -177,7 +177,7 @@
         $cacheAge = -1;
 
         $cacheAge = @filemtime($cacheFile);  // returns FALSE if file does not exist
-        if (!$cacheAge or (time() - $cacheAge >= $cacheLife)){
+        if (!$cacheAge or ((time() - $cacheAge) >= $cacheLife)) {
             $data = file_get_contents($masterList);
             if ( $data ) {
                 $data = str_replace("\r", "\n", $data);
