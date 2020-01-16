@@ -10,6 +10,7 @@
 # Copyright (c) 2004-2006 John Gruber
 # <http://daringfireball.net/projects/markdown/>
 #
+
 namespace Michelf;
 
 #
@@ -1006,6 +1007,7 @@ class Markdown {
     #
     # Form HTML tables.
     #
+
         $less_than_tab = $this->tab_width - 1;
         #
         # Find tables with leading pipe.
@@ -1073,10 +1075,10 @@ class Markdown {
 
         return $this->_doTable_callback(array($matches[0], $head, $underline, $content));
     }
-    protected function _doTable_makeAlignAttr($alignname)
-    {
-        if (empty($this->table_align_class_tmpl))
+    protected function _doTable_makeAlignAttr($alignname) {
+        if (empty($this->table_align_class_tmpl)) {
             return " align=\"$alignname\"";
+        }
 
         $classname = str_replace('%%', $alignname, $this->table_align_class_tmpl);
         return " class=\"$classname\"";
@@ -1705,7 +1707,6 @@ class Markdown {
             "/[\\\\x00-\\\\xBF]|[\\\\xC0-\\\\xFF][\\\\x80-\\\\xBF]*/",
             $text, $m);');
     }
-
 
     protected function unhash($text) {
     #

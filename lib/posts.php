@@ -2081,6 +2081,7 @@ class Posts {
         $text = str_replace("\r", "\n", $text);
         $lines = explode("\n", $text);
         $inCodeBlock = false;
+        $inTable = false;
         $fixed = '';
         $last = '';
 
@@ -2089,6 +2090,10 @@ class Posts {
             if ( mb_strpos($thisLine, '```') !== false ) { $inCodeBlock = !$inCodeBlock; }
             if ( $inCodeBlock ) { $thisLine = $line; }
             $doBR = ( $fixed != '' && $last != '' && $thisLine != '' ) ? true : false;
+
+            // Are we working with a table?
+            if ( mb_strpos($thisLine, '--') >= 0 && mb_strpos($thisLine, '|') >= 0 ) { $inTable = true; }
+            if ( NoNull($thisLine) == '' ) { $inTable = false; }
 
             // If We Have What Looks Like a List, Prep It Accordingly
             if ( nullInt(mb_substr($thisLine, 0, 2)) > 0 && nullInt(mb_substr($last, 0, 2)) > 0 ) { $doBR = false; }
@@ -2108,6 +2113,7 @@ class Posts {
             if ( mb_substr($thisLine, 0, 2) == '* ' && $last == '' ) { $fixed .= "\n"; }
             if ( mb_substr($thisLine, 0, 2) == '- ' && $last == '' ) { $fixed .= "\n"; }
             if ( $inCodeBlock || mb_strpos($thisLine, '```') !== false ) { $doBR = false; }
+            if ( $inTable ) { $doBR = false; }
 
             $fixed .= ( $doBR ) ? '<br>' : "\n";
             $fixed .= ( $inCodeBlock ) ? str_replace(array_keys($illegals), array_values($illegals), $line) : $thisLine;
@@ -2331,7 +2337,7 @@ class Posts {
                          '&#95;'        => '_',             '&amp;#92;'          => '&#92;',         ' </p>'        => '</p>',
                          '&lt;iframe '  => '<iframe ',      '&gt;&lt;/iframe&gt' => '></iframe>',    '&lt;/iframe>' => '</iframe>',
                          '</p></p>'     => '</p>',          '<p><p>'             => '<p>',
-                         '...'          => '…',             '--'                 => '—',
+                         '...'          => '…',
 
                          ':???:'  => "😕",
 

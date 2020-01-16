@@ -99,6 +99,21 @@ blockquote {
     color: #333;
 }
 ol { margin-top: 0.5em; }
+table {
+    margin: 0.5em 0 0.25em;
+    max-width: 100%;
+}
+table thead,
+table tbody {
+    width: 100%;
+}
+table th,
+table td {
+    border-bottom: 1px dashed #551a8b;
+    border-left: 1px dashed #551a8b;
+    padding: 0.25em 1em;
+}
+table th { word-break: normal; }
 .darkback { background: rgba(0, 0, 0, 0.75); }
 .darkback .post-list .post-entry { opacity: 0; }
 .hidden { display: none !important; }
@@ -649,6 +664,7 @@ ol { margin-top: 0.5em; }
     .content-area {
         padding: 1em 0 0 0.5em;
         width: calc(100% - 4em);
+        overflow: auto;
     }
     .compose .modal-body .lbl-pref { min-width: 155px; }
     .compose .modal-body .btn-pref { min-width: 55px; }
