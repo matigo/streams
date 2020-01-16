@@ -54,6 +54,7 @@
 
     "btnSendMention": "Send Webmention",
     "btnEditProfile": "Edit Profile",
+    "btnShowProfileStats": "Toggle Statistics",
     "btnReadMore": "Read More",
     "btnNewPost": "New Post",
     "btnFilter": "Filters",

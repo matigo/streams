@@ -1365,7 +1365,7 @@
         if(!empty($str) && is_string($str)) {
             $ReplStr = array( '\\' => '\\\\',   "\0" => '\\0',      "\n" => '\\n',
                               "\r" => '\\n',    "\t" => '\\t',      "'" => "\\'",
-                              '"' => '\\"',     "\x1a" => '\\Z',    '&nbsp;' => ' '
+                              '"' => '\\"',     "\x1a" => '\\Z',
                              );
             $rVal = str_replace(array_keys($ReplStr), array_values($ReplStr), $str);
         }

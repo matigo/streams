@@ -778,12 +778,16 @@ class Account {
      *  Function Collects the Usage for the last 52 weeks for use in a Histogram
      */
     private function _getHistorgram() {
-        $CleanGUID = NoNull($this->settings['guid'], $this->settings['PgSub1']);
+        $opts = ['PgRoot', 'PgSub1', 'persona_guid', 'guid'];
+        foreach ( $opts as $opt ) {
+            $guid = NoNull($this->settings[ $opt ]);
+            if ( $CleanGUID == '' && (strlen($guid) == 36 || NoNull($guid) == 'me') ) { $CleanGUID = $guid; }
+        }
         if ( $CleanGUID == 'me' && NoNull($this->settings['_persona_guid']) != '' ) {
             $CleanGUID = $this->settings['_persona_guid'];
         }
 
-        $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGuid) );
+        $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGUID) );
         $sqlStr = prepSQLQuery( "CALL GetPublishHistogram('[PERSONA_GUID]');", $ReplStr );
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {

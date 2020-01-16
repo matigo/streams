@@ -14,57 +14,31 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Persona GUID Provided';
     END IF;
 
-    /* Construct a Quick Temporary Table of Data */
-      DROP TEMPORARY TABLE IF EXISTS tmp;
-    CREATE TEMPORARY TABLE tmp (
-        `year`          smallint       UNSIGNED NOT NULL    ,
-        `week_no`       tinyint        UNSIGNED NOT NULL    ,
-
-        `articles`      int(11)        UNSIGNED NOT NULL    DEFAULT 0,
-        `bookmarks`     int(11)        UNSIGNED NOT NULL    DEFAULT 0,
-        `locations`     int(11)        UNSIGNED NOT NULL    DEFAULT 0,
-        `notes`         int(11)        UNSIGNED NOT NULL    DEFAULT 0,
-        `photos`        int(11)        UNSIGNED NOT NULL    DEFAULT 0,
-        `quotations`    int(11)        UNSIGNED NOT NULL    DEFAULT 0
-    ) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-    /* Populate the Preliminary Data */
-    INSERT INTO `tmp` (`year`, `week_no`)
-    SELECT DISTINCT YEAR(DATE_SUB(DATE_ADD(Now(), INTERVAL(1-DAYOFWEEK(Now())) DAY), INTERVAL (h*100+t*10+u+1) - 1 DAY)) as `year`,
-                    WEEK(DATE_SUB(DATE_ADD(Now(), INTERVAL(1-DAYOFWEEK(Now())) DAY), INTERVAL (h*100+t*10+u+1) - 1 DAY)) as `week_no`
-                              FROM (SELECT 0 h UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
-                                   (SELECT 0 t UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b,
-                                   (SELECT 0 u UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
-     ORDER BY `year` DESC, `week_no` DESC;
-
-     /* Grab the Persona-specific Information */
-     INSERT INTO `tmp` (`year`, `week_no`, `articles`, `bookmarks`, `locations`, `notes`, `photos`, `quotations`)
-    SELECT YEAR(DATE_ADD(po.`publish_at`, INTERVAL(1-DAYOFWEEK(po.`publish_at`)) DAY)) as `year`,
-           WEEK(DATE_ADD(po.`publish_at`, INTERVAL(1-DAYOFWEEK(po.`publish_at`)) DAY)) as `week_no`,
-           COUNT(CASE WHEN po.`type` = 'post.article' THEN po.`id` ELSE NULL END) as `articles`,
-           COUNT(CASE WHEN po.`type` = 'post.bookmark' THEN po.`id` ELSE NULL END) as `bookmarks`,
-           COUNT(CASE WHEN po.`type` = 'post.location' THEN po.`id` ELSE NULL END) as `locations`,
-           COUNT(CASE WHEN po.`type` = 'post.note' THEN po.`id` ELSE NULL END) as `notes`,
-           COUNT(CASE WHEN po.`type` = 'post.photo' THEN po.`id` ELSE NULL END) as `photos`,
-           COUNT(CASE WHEN po.`type` = 'post.quotation' THEN po.`id` ELSE NULL END) as `quotations`
-      FROM `Persona` pa INNER JOIN `Post` po ON pa.`id` = po.`persona_id`
-     WHERE po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-       and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE))
-       and po.`publish_at` >= DATE_FORMAT(DATE_SUB(Now(), INTERVAL 55 WEEK), '%Y-%m-%d 00:00:00')
-       and pa.`guid` = `in_persona_guid`
+    /* Collect the Publish Histogram */
+    SELECT YEAR(t.`on_date`) as `year`, WEEK(t.`on_date`) as `week_no`,
+           SUM(t.`articles`) as `articles`, SUM(t.`notes`) as `notes`, SUM(t.`quotations`) as `quotations`, SUM(t.`bookmarks`) as `bookmarks`, SUM(t.`locations`) as `locations`
+      FROM (SELECT DATE_FORMAT(po.`publish_at`, '%Y-%m-%d 00:00:00') as `on_date`,
+                   COUNT(DISTINCT CASE WHEN po.`type` = 'post.article' THEN po.`guid` ELSE NULL END) as `articles`,
+                   COUNT(DISTINCT CASE WHEN po.`type` = 'post.note' THEN po.`guid` ELSE NULL END) as `notes`,
+                   COUNT(DISTINCT CASE WHEN po.`type` = 'post.quotation' THEN po.`guid` ELSE NULL END) as `quotations`,
+                   COUNT(DISTINCT CASE WHEN po.`type` = 'post.bookmark' THEN po.`guid` ELSE NULL END) as `bookmarks`,
+                   COUNT(DISTINCT CASE WHEN po.`type` = 'post.location' THEN po.`guid` ELSE NULL END) as `locations`
+              FROM `Account` acct INNER JOIN `Persona` pa ON acct.`id` = pa.`account_id`
+                                  INNER JOIN `Post` po ON pa.`id` = po.`persona_id`
+             WHERE acct.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and po.`is_deleted` = 'N'
+              and po.`publish_at` BETWEEN DATE_FORMAT(DATE_SUB(Now(), INTERVAL 55 WEEK), '%Y-%m-%d 00:00:00') AND IFNULL(po.`expires_at`, Now())
+              and pa.`guid` = `in_persona_guid`
+             GROUP BY `on_date`
+             UNION ALL
+            SELECT DATE_FORMAT(DATE_SUB(Now(), INTERVAL (h*100+t*10+u+1) - 1 DAY), '%Y-%m-%d 00:00:00') as `on_date`,
+                   CAST(0 AS UNSIGNED) as `articles`, CAST(0 AS UNSIGNED) as `notes`, CAST(0 AS UNSIGNED) as `quotations`,
+                   CAST(0 AS UNSIGNED) as `bookmarks`, CAST(0 AS UNSIGNED) as `locations`
+              FROM (SELECT 0 h UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
+                   (SELECT 0 t UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b,
+                   (SELECT 0 u UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c) t
+     WHERE t.`on_date` BETWEEN DATE_FORMAT(DATE_SUB(Now(), INTERVAL 1 YEAR), '%Y-%m-%d') AND DATE_FORMAT(Now(), '%Y-%m-%d')
      GROUP BY `year`, `week_no`
-     ORDER BY `year` DESC, `week_no` DESC;
-
-    /* Return a Collection of Data */
-    SELECT t.`year`, t.`week_no`,
-           SUM(t.`articles`) as `articles`, SUM(t.`bookmarks`) as `bookmarks`,
-           SUM(t.`locations`) as `locations`, SUM(t.`notes`) as `notes`,
-           SUM(t.`photos`) as `photos`, SUM(t.`quotations`) as `quotations`
-      FROM `tmp` t
-     WHERE t.`week_no` > 0
-     GROUP BY t.`year`, t.`week_no`
-     ORDER BY t.`year` DESC, t.`week_no` DESC
-     LIMIT 52;
+     ORDER BY `year`, `week_no`;
 
 END;;
 DELIMITER ;

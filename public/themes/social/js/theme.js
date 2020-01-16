@@ -977,6 +977,7 @@ function parseProfile( data ) {
                 btns[i].setAttribute('data-persona-guid', ds.guid);
                 btns[i].classList.add('hidden');
             }
+            showByClass('li-persona-profile-stats');
 
             // If this is a person's own account, show the option to edit
             var _edit = '';
@@ -1016,15 +1017,31 @@ function parseProfile( data ) {
                     '<div class="content-area profile-content">' +
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
                         '<strong class="sites full-wide"><a target="_blank" href="' + ds.site_url + '" title="">' + ds.site_url.replace('https://', '').replace('http://', '') + '</a></strong>' +
-                        '<em class="since full-wide">Member Since ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ' (' + numberWithCommas(ds.days) + ' days)</em>' +
+                        '<em class="since full-wide">Joined ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ' (' + numberWithCommas(ds.days) + ' days)</em>' +
                         '<em class="relation full-wide">' + _relation + '</em>' +
                         NoNull(ds.bio.html) +
                         _edit +
                     '</div>' +
+                    '<div class="content-stats profile-stats hidden">' +
+                        '<table>' +
+                            '<tbody>' +
+                                '<tr>' +
+                                    '<td><strong>Articles</strong></td><td>' + numberWithCommas(ds.stats.articles) + '</td>' +
+                                    '<td><strong>Quotations</strong></td><td>' + numberWithCommas(ds.stats.quotations) + '</td>' +
+                                '</tr>' +
+                                '<tr>' +
+                                    '<td><strong>Notes</strong></td><td>' + numberWithCommas(ds.stats.notes) + '</td>' +
+                                    '<td><strong>Bookmarks</strong></td><td>' + numberWithCommas(ds.stats.bookmarks) + '</td>' +
+                                '</tr>' +
+                            '</tbody>' +
+                        '</table>' +
+                    '</div>' +
+                    '<div class="content-histogram profile-histogram hidden">&nbsp;</div>' +
                     '<div class="content-posts profile-posts hidden"></div>';
         }
 
-        // Get the Account Posts (If Applicable)
+        // Get More Profile Information (If Applicable)
+        setTimeout(function() { getProfileHistogram(ds.guid); }, 500);
         setTimeout(function() { getProfilePosts(ds.guid); }, 100);
     }
 
@@ -1032,6 +1049,20 @@ function parseProfile( data ) {
     var els = document.getElementsByClassName('profile-body');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _html;
+    }
+}
+function toggleProfileStatistics() {
+    var els = document.getElementsByClassName('profile-histogram');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('hidden') ) {
+            showByClass('profile-histogram');
+            showByClass('profile-stats');
+            hideByClass('profile-posts');
+        } else {
+            hideByClass('profile-histogram');
+            hideByClass('profile-stats');
+            showByClass('profile-posts');
+        }
     }
 }
 function setPersonaRelation( el ) {
@@ -1058,6 +1089,32 @@ function parsePersonaRelation( data ) {
 
         if ( ds.guid !== undefined && ds.guid !== false && ds.guid !== null && ds.guid.length == 36 ) {
             doJSONQuery('account/' + ds.guid + '/profile', 'GET', {}, parseProfile);
+        }
+    }
+}
+function getProfileHistogram( _guid ) {
+    if ( _guid === undefined || _guid === false || _guid === null ) { return ; }
+    if ( _guid.length == 36 || _guid == 'me' ) {
+        doJSONQuery('account/' + _guid + '/histogram', 'GET', {}, parseProfileHistogram);
+    }
+}
+function parseProfileHistogram( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        var _html = '';
+
+        if ( ds !== undefined && ds.history !== undefined && ds.history.length > 0 ) {
+            for ( var i = 0; i < ds.history.length; i++ ) {
+                var _px = 50 * (ds.history[i].total / ds.max_score);
+
+                _html += '<td class="bar" style="height: ' + Math.round(_px) + 'px;">&nbsp;</td>';
+            }
+        }
+        if ( _html != '' ) { _html = '<table><tbody><tr>' + _html + '</tr></tbody></table>'; }
+
+        var els = document.getElementsByClassName('profile-histogram');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].innerHTML = NoNull(_html, '<p class="text-center">There is no histogram to display.</p>');
         }
     }
 }

@@ -393,6 +393,56 @@ table th { word-break: normal; }
     display: inline-block;
     width: 100%;
 }
+.content-stats table {
+    background: transparent;
+    border: none;
+    width: 100%;
+}
+.content-stats table th,
+.content-stats table td {
+    border: none;
+    padding: 0.25em;
+    text-align: right;
+}
+
+.content-histogram {
+    padding: 0;
+    margin: 0;
+    height: 65px;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+}
+.content-histogram table {
+    background: transparent;
+    border-bottom: 1px solid #ebe5f5;
+    border-right: 1px solid #ebe5f5;
+    border-left: 1px solid #ebe5f5;
+    border-top: none;
+    width: 100%;
+}
+.content-histogram table th,
+.content-histogram table td {
+    border: none;
+}
+.content-histogram table tr {
+    bottom: auto;
+    height: 50px;
+    color: #aaa;
+}
+.content-histogram table td.bar {
+    background: #00f;
+    display: inline-table;
+    font-size: 1px;
+    opacity: 0.75;
+    padding: 0;
+    margin: 0;
+    vertical-align: text-bottom;
+    min-width: 6px;
+}
+.content-histogram table td.bar.blue { background: #00f; }
+.content-histogram table td.bar.red { background: #f00; }
+
 .threadview {
     display: block;
     min-height: 100%;
