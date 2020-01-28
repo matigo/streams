@@ -268,6 +268,11 @@ function callPuckAction( btn ) {
             resetTimeline('actions');
             break;
 
+        case 'relations':
+        case 'relation':
+            getRelations();
+            break;
+
         case 'settings':
             togglePreferences();
             break;
@@ -276,9 +281,94 @@ function callPuckAction( btn ) {
             /* There Is No Default Action */
     }
 }
+function toggleContentView( _view ) {
+    var els = document.getElementsByClassName('interact-block');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _vv = NoNull(els[i].getAttribute('data-view'));
+        if ( _view == _vv ) {
+            els[i].classList.remove('hidden');
+        } else {
+            els[i].classList.add('hidden');
+        }
+    }
+    window.scrollTo(0, 0);
+}
+function getRelations( _type ) {
+    if ( _type === undefined || _type === false || _type === null ) { _type = 'followers'; }
+    doJSONQuery('account/' + _type, 'GET', {}, parseRelations);
+    toggleContentView('relations');
+}
+function parseRelations( data ) {
+    var _html = '';
+
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var today = moment().format('YYYY-MM-DD HH:mm:ss');
+        var ds = data.data;
+
+        for ( var n = 0; n < ds.length; n++ ) {
+            var _name = ds[n].name;
+            if ( ds[n].last_name != '' || ds[n].first_name != '' ) {
+                _name += ' (' + NoNull(ds[n].first_name + ' ' + ds[n].last_name) + ')';
+            }
+
+            _html += '<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><h4>' + _name + '</h4></div>';
+            if ( ds[n].relations !== undefined && ds[n].relations !== false && ds[n].relations.length > 0 ) {
+                for ( var i = 0; i < ds[n].relations.length; i++ ) {
+                    var _name = ds[n].relations[i].name;
+                    if ( ds[n].relations[i].last_name != '' || ds[n].relations[i].first_name != '' ) {
+                        _name += ' (' + NoNull(ds[n].relations[i].first_name + ' ' + ds[n].relations[i].last_name) + ')';
+                    }
+
+                    var _recent = '(Has Never Posted)';
+                    if ( ds[n].relations[i].last_unix !== false && ds[n].relations[i].last_unix > 0 ) {
+                        var _ts = ds[n].relations[i].last_unix * 1000;
+                        _recent = 'Recent Post ' + ((moment(_ts).isSame(today, 'day') ) ? 'at ' + moment(_ts).format('h:mm a') : 'on ' + moment(_ts).format('MMMM Do YYYY'));
+                    }
+
+                    _html += '<div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 relation-block">' +
+                                '<div class="content-author">' +
+                                    '<p class="avatar account" data-guid="' + ds[n].relations[i].guid + '">' +
+                                        '<img class="logo photo avatar-img" src="' + ds[n].relations[i].avatar_url + '">' +
+                                    '</p>' +
+                                '</div>' +
+                                '<div class="author-block">' +
+                                    '<strong class="persona-name">' + _name + '</strong>' +
+                                    '<p class="last-action">' + _recent + '</p>' +
+                                '</div>' +
+                             '</div>';
+                }
+
+            } else {
+                _html += '<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><p>There is nothing to show here ...</p></div>';
+            }
+        }
+    }
+
+    // Ensure the Puck is Set Correctly
+    var els = document.getElementsByClassName('puck-open');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = '<i class="fas fa-user-friends"></i>';
+    }
+
+    // If there's no content, say so
+    if ( _html == '' || _html.length <= 10 ) {
+        _html = '<p>There Is Nothing to Show Here</p>';
+    }
+
+    var els = document.getElementsByClassName('relations');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = _html;
+
+        var ee = els[i].getElementsByClassName('account');
+        for ( var o = 0; o < ee.length; o++ ) {
+            ee[o].addEventListener('click', function(e) { toggleProfile(e); });
+        }
+    }
+}
 function resetTimeline( _tl ) {
     if ( _tl === undefined || _tl === false || _tl === null ) { _tl = ''; }
     var _view = validateTimeline(_tl);
+    toggleContentView('timeline');
 
     // Clear the Timeline
     var els = document.getElementsByClassName('post-entry');

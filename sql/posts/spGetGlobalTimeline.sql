@@ -21,16 +21,15 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post`;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
     CREATE TEMPORARY TABLE tmpTypes AS
     SELECT DISTINCT t.`code`
-      FROM `Type` t INNER JOIN (SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(txt.`types`, ',', num.`id`), ',', -1)) as `type_code`
+      FROM `Type` t INNER JOIN (SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`in_type_list`, ',', num.`id`), ',', -1)) as `type_code`
                                   FROM (SELECT (v+1) as `id`
-                                          FROM (SELECT 0 v UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) v) num
-                                         CROSS JOIN (SELECT `in_type_list` as `types`) AS txt) tmp ON t.`code` = tmp.`type_code`
+                                          FROM (SELECT 0 v UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) v) num) tmp ON t.`code` = tmp.`type_code`
      WHERE t.`is_deleted` = 'N' and t.`code` LIKE 'post.%'
      ORDER BY t.`code`;
 
@@ -160,5 +159,9 @@ BEGIN
                       ELSE 'N' END
      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
 
+     /* Drop the Temporary Tables */
+     DROP TEMPORARY TABLE IF EXISTS tmpRelations;
+     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
+     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
 END ;;
 DELIMITER ;

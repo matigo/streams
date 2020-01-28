@@ -634,8 +634,8 @@ table th { word-break: normal; }
     }
     .nav-puck ul li.puck-item {
         border-radius: 60px;
-        font-size: 42px;
-        padding: 2px 10px;
+        font-size: 36px;
+        padding: 6px 0 0;
         max-width: 60px;
         min-width: 60px;
         max-height: 60px;
@@ -937,9 +937,48 @@ a.u-bookmark-of {
         max-height: 15em;
         max-width: 100%;
         overflow-x: hidden;
-        overflow-y: auto;
         position: fixed;
     }
+}
+
+.relation-block {
+    border-bottom: 1px dashed #eee;
+    border-left: 1px dashed #eee;
+    padding: 0.5em 0.75em 0.75em 1em;
+}
+.relation-block .content-author {
+    display: inline-block;
+    padding: 0;
+    max-width: 65px;
+    width: 65px;
+}
+.relation-block .author-block {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: text-top;
+    white-space: nowrap;
+    max-width: calc(100% - 70px);
+    width: 100%;
+}
+.relation-block .persona-name {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: text-top;
+    white-space: nowrap;
+    max-width: calc(100% - 5px);
+    width: 100%;
+}
+.relation-block .last-action {
+    color: #333;
+    display: block;
+    font-size: 0.8em;
+    font-style: italic;
+    padding: 2px 2px 2px 5px;
+    text-align: right;
+    width: 100%;
+    margin: 0;
 }
 
 .interact {

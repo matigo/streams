@@ -67,6 +67,26 @@ class Account {
                 return $this->_getHistorgram();
                 break;
 
+            case 'blocked':
+                return $this->_getRelations('is_blocked');
+                break;
+
+            case 'followers':
+                return $this->_getRelations('follows_you');
+                break;
+
+            case 'following':
+                return $this->_getRelations('follows');
+                break;
+
+            case 'muted':
+                return $this->_getRelations('is_muted');
+                break;
+
+            case 'starred':
+                return $this->_getRelations('is_starred');
+                break;
+
             case 'preferences':
             case 'preference':
             case 'prefs':
@@ -823,6 +843,65 @@ class Account {
 
         // If we're here, there is no data
         return false;
+    }
+
+    /**
+     *  Function Collects a List of Personas that match the filter requirement
+     *
+     *  Note: This is returned for the current Account, not a Persona
+     */
+    private function _getRelations( $filter = 'follows' ) {
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+        $sqlStr = readResource(SQL_DIR . '/account/getRelations.sql', $ReplStr );
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $cdnUrl = NoNull($this->settings['HomeURL']);
+            $data = array();
+            $idx = array();
+
+            foreach ( $rslt as $Row ) {
+                $id = nullInt($Row['id']);
+                if ( in_array($id, $idx) === false ) {
+                    $data[] = array( 'guid'         => NoNull($Row['persona_guid']),
+                                     'name'         => '@' . NoNull($Row['name']),
+                                     'last_name'    => NoNull($Row['last_name']),
+                                     'first_name'   => NoNull($Row['first_name']),
+                                     'display_name' => NoNull($Row['display_name']),
+                                     'avatar_url'   => $cdnUrl . '/avatars/' . NoNull($Row['avatar_img']),
+                                     'relations'    => array(),
+                                    );
+                    $idx[] = $id;
+                }
+
+                /* If the Record Matches the Filter, Add it */
+                if ( YNBool($Row[ $filter ]) ) {
+                    $cdx = array_search($id, $idx);
+                    $data[$cdx]['relations'][] = array( 'guid'         => NoNull($Row['rel_guid']),
+                                                        'name'         => '@' . NoNull($Row['rel_name']),
+                                                        'last_name'    => NoNull($Row['rel_last_name']),
+                                                        'first_name'   => NoNull($Row['rel_first_name']),
+                                                        'display_name' => NoNull($Row['rel_display_name']),
+                                                        'avatar_url'   => $cdnUrl . '/avatars/' . NoNull($Row['rel_avatar_img']),
+
+                                                        'following'    => YNBool($Row['follows']),
+                                                        'follows_you'  => YNBool($Row['follows_you']),
+                                                        'is_muted'     => YNBool($Row['is_muted']),
+                                                        'is_blocked'   => YNBool($Row['is_blocked']),
+                                                        'is_starred'   => YNBool($Row['is_starred']),
+                                                        'pin'          => NoNull($Row['pin_type'], 'pin.none'),
+
+                                                        'last_at'      => ((NoNull($Row['last_at']) != '') ? date("Y-m-d\TH:i:s\Z", strtotime($Row['last_at'])) : false),
+                                                        'last_unix'    => ((NoNull($Row['last_at']) != '') ? strtotime($Row['last_at']) : false),
+                                                       );
+                }
+            }
+
+            // If we have a head record, send it back
+            if ( count($data) > 0 ) { return $data; }
+        }
+
+        // If we're here, the Account follows no accounts
+        return array();
     }
 
     /**
