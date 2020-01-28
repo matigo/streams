@@ -11,7 +11,7 @@ BEGIN
     /** ********************************************************************** **
      *  Function returns the Visible Timeline for a Given Persona GUID
      *
-     *  Usage: CALL GetPagePosts(0, 'cc5346ea-9358-df5c-90ea-e27c343e4843', '/', '', '', 10, 0);
+     *  Usage: CALL GetPagePosts(0, 'cc5346ea-9358-df5c-90ea-e27c343e4843', '/', '', '', '', 10, 0);
      ** ********************************************************************** **/
 
     /* If the Count Only value is not cromulent, make it so */
@@ -74,7 +74,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
     CREATE TEMPORARY TABLE tmpTypes AS
     SELECT DISTINCT t.`code`
-      FROM `Type` t INNER JOIN (SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`in_type_list`, ',', num.`id`), ',', -1)) as `type_code`
+      FROM `Type` t INNER JOIN (SELECT DISTINCT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`post_types`, ',', num.`id`), ',', -1)) as `type_code`
                                   FROM (SELECT (v+1) as `id`
                                           FROM (SELECT 0 v UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) v) num) tmp ON t.`code` = tmp.`type_code`
      WHERE t.`is_deleted` = 'N' and t.`code` LIKE 'post.%'
