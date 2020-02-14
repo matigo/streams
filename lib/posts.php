@@ -2092,7 +2092,7 @@ class Posts {
             $doBR = ( $fixed != '' && $last != '' && $thisLine != '' ) ? true : false;
 
             // Are we working with a table?
-            if ( mb_strpos($thisLine, '--') >= 0 && mb_strpos($thisLine, '|') >= 0 ) { $inTable = true; }
+            if ( mb_strpos($thisLine, '--') !== false && mb_strpos($thisLine, '|') !== false ) { $inTable = true; }
             if ( NoNull($thisLine) == '' ) { $inTable = false; }
 
             // If We Have What Looks Like a List, Prep It Accordingly

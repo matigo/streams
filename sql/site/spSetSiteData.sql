@@ -31,6 +31,7 @@ BEGIN
     /* Set the Channel and Site details, including the version */
     UPDATE `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
        SET ch.`name` = LEFT(`in_site_name`, 128),
+           ch.`privacy_type` = `in_privacy_type`,
            si.`name` = LEFT(`in_site_name`, 128),
            si.`description` = LEFT(`in_site_descr`, 255),
            si.`keywords` = LEFT(`in_site_keys`, 255),
