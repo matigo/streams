@@ -42,6 +42,16 @@ BEGIN
        and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and si.`is_deleted` = 'N' and si.`guid` = `in_site_guid`;
 
+    IF IFNULL(`in_account_id`, 0) > 0 AND IFNULL(`in_site_token`, '') = '' THEN
+        SET `in_site_token` = (SELECT CASE WHEN `in_account_id` IN (si.`account_id`, pa.`account_id`) THEN ha.`hash` ELSE NULL END as `hash`
+                                 FROM `Site` si INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`
+                                                INNER JOIN `ChannelAuthor` ca ON ch.`id` = ca.`channel_id`
+                                                INNER JOIN `Persona` pa ON ca.`persona_id` = pa.`id`
+                                                INNER JOIN `hashes` ha ON ha.`hash` IS NOT NULL
+                                WHERE si.`is_deleted` = 'N' and si.`guid` = `in_site_guid`
+                                LIMIT 1);
+    END IF;
+
     IF CAST(IFNULL(`in_site_token`, '') AS CHAR(512)) NOT IN (SELECT `hash` FROM hashes) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Access to this Site is Denied';
     END IF;
@@ -137,5 +147,6 @@ BEGIN
                and IFNULL(po.`expires_at`, Now()) >= Now() and si.`guid` = `in_site_guid`
              ORDER BY po.`publish_at` DESC) pg
      WHERE pg.`is_visible` = 'Y';
+      DROP TEMPORARY TABLE IF EXISTS hashes;
 END ;;
 DELIMITER ;
