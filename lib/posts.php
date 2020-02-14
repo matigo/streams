@@ -2398,7 +2398,7 @@ class Posts {
             $name = '';
 
             if ( NoNull(substr($clean_word, 0, 1)) == '@' ) {
-                $name_scrub = array('@', '#', "\r", "\t", "\n", '//', '/', '</');
+                $name_scrub = array('@', '#', "\r", "\t", "\n", '//', '/', '</', '<br>');
                 $name = NoNull($clean_word);
 
                 for ( $i = 0; $i < (count($name_scrub) - 1); $i++ ) {

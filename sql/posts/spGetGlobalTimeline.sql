@@ -114,7 +114,8 @@ BEGIN
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `site_url`,
 
            po.`reply_to`, po.`type`,
-           po.`guid` as `post_guid`, po.`privacy_type`,
+           po.`guid` as `post_guid`,
+           CASE WHEN ch.`privacy_type` IN ('visibility.private', 'visibility.password') THEN 'visibility.none' ELSE po.`privacy_type` END as `privacy_type`,
            po.`publish_at`, po.`expires_at`, po.`updated_at`,
 
            IFNULL((SELECT pp.`pin_type` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
@@ -152,7 +153,7 @@ BEGIN
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
                    LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-       and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
+       and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
        and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')
        and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
