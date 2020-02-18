@@ -67,10 +67,16 @@
             </div>
         </div>
         <div class="opview interact hidden" data-view="signin">
+            <div class="full-width text-center">
+                <p>[lblSignInIntro] <a href="https://10centuries.org" title="">[lblSignInIntroAText]</a>.</p>
+            </div>
             <input id="account_name" name="cdata" type="email" placeholder="[lblAccountNamePH]" autocomplete="on" data-error="[msgMissingValue]" />
             <input id="account_pass" name="cdata" type="password" placeholder="[lblAccountPassPH]" autocomplete="current-password" data-error="[msgMissingValue]" />
             <div class="full-width text-right">
                 <button class="btn btn-auth padd" data-label="[btnSignIn]">[btnSignIn]</button>
+            </div>
+            <div class="full-width text-center">
+                <p>[lblForgotPass] <a href="https://10centuries.org/forgot" title="">[lblForgotPassAText]</a></p>
             </div>
             <div class="full-width text-center" style="margin-top: 5em;">
                 <button class="btn btn-cancel padd">[btnCancel]</button>
@@ -252,8 +258,8 @@
                                     <li><a onclick="setVisibility('none');"><i class="fa fa-lock"></i> Visible Only to You</a></li>
                                 </ul>
                             </div>
-                            <div class="btn-group channel-group">
-                                <button id="publish-site" class="btn btn-primary publish-dropdown dropdown-toggle" style="min-width: 8em;" data-toggle="dropdown">matigo.ca</button>
+                            <div class="btn-group channel-group" style="max-width: calc(100% - 115px);">
+                                <button id="publish-site" class="btn btn-primary publish-dropdown dropdown-toggle" style="min-width: 8em; max-width: 100%; overflow: hidden; text-overflow: ellipsis;" data-toggle="dropdown">matigo.ca</button>
                                 <ul class="dropdown-menu channel-list" role="menu"></ul>
                             </div>
                         </div>

@@ -82,6 +82,16 @@ BEGIN
            CAST(0 AS UNSIGNED) as `file_count`,
            CAST(1024 * 1024 * 1024 * IFNULL(`storage_gb`, 1) AS UNSIGNED) as `storage_limit`,
            CAST(0 AS UNSIGNED) as `storage_used`,
+           (SELECT CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `base_url`
+              FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
+                                INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`
+                                INNER JOIN `ChannelAuthor` ca ON ch.`id` = ca.`channel_id`
+                                INNER JOIN `Persona` pa ON ca.`persona_id` = pa.`id`
+             WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
+               and su.`is_active` = 'Y' and ch.`type` = 'channel.site' and ca.`can_write` = 'Y'
+               and pa.`account_id` = a.`id`
+             ORDER BY CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 1 ELSE 2 END, pa.`created_at`, si.`created_at`
+             LIMIT 1) as `primary_url`,
            (SELECT z.`guid` FROM `Persona` z
              WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`
              ORDER BY z.`is_active` DESC, z.`id` LIMIT 1) as `default_persona`,
@@ -132,7 +142,7 @@ BEGIN
     SELECT tmp.`account_id`, tmp.`email`, tmp.`type`, tmp.`display_name`, tmp.`language_code`, tmp.`timezone`, tmp.`avatar_url`,
            tmp.`file_count`, tmp.`storage_limit`, tmp.`storage_used`,
            `premium_until` as `premium_until`, CASE WHEN `premium_until` > Now() THEN 'Y' ELSE 'N' END as `premium_active`,
-           tmp.`default_persona`, tmp.`default_channel`,
+           tmp.`default_persona`, tmp.`default_channel`, tmp.`primary_url`,
            tmp.`pref_contact_mail`, IFNULL(tmp.`access_level`, 'read') as `access_level`, tmp.`password_change`, tmp.`welcome_done`
       FROM tmp
      WHERE tmp.`account_id` > 0

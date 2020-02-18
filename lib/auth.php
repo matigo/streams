@@ -223,6 +223,7 @@ class Auth {
                                    '_storage_total'      => nullInt($Row['storage_limit']),
                                    '_storage_used'       => nullInt($Row['storage_used']),
                                    '_storage_files'      => nullInt($Row['file_count']),
+                                   '_primary_url'        => NoNull($Row['primary_url']),
 
                                    '_channel_guid'       => NoNull($Row['default_channel']),
                                    '_persona_guid'       => NoNull($Row['default_persona']),

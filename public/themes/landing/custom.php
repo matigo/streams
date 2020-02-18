@@ -80,7 +80,9 @@ class Landing {
 
                           '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
                           '[CLIENT_GUID]'  => NoNull($data['client_guid']),
-                          '[AUTH_TOKEN]'   => '',
+                          '[PRIMARY_URL]'  => NoNull($this->settings['_primary_url']),
+                          '[SOCIAL_URL]'   => $this->_getSocialSiteUrl(),
+                          '[AUTH_TOKEN]'   => NoNull($this->settings['token']),
 
                           '[SITE_URL]'     => $this->settings['HomeURL'],
                           '[SITE_NAME]'    => $data['name'],
@@ -98,6 +100,20 @@ class Landing {
     /** ********************************************************************* *
      *  Class Functions
      ** ********************************************************************* */
+    /**
+     *  Function Returns the URL for the primary Social Site or an empty string
+     */
+    private function _getSocialSiteUrl() {
+        $sqlStr = readResource(SQL_DIR . '/site/getSocialUrl.sql');
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return NoNull($Row['social_url']);
+            }
+        }
+        return '';
+    }
+
     /**
      *  Function Sets a Message in the Meta Field
      */

@@ -122,7 +122,7 @@ class Account {
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $excludes = array( 'create' );
+        $excludes = array( 'create', 'forgot' );
         $rVal = false;
 
         // Check the User Token is Valid
@@ -135,6 +135,10 @@ class Account {
 
             case 'create':
                 $rVal = $this->_createAccount();
+                break;
+
+            case 'forgot':
+                $rVal = $this->_forgotPassword();
                 break;
 
             case 'preference':
@@ -394,6 +398,12 @@ class Account {
                 }
             }
 
+            // Send a Welcome Message
+            if ( $AcctID > 0 ) {
+                $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome to 10Centuries, @{name}!');", $ReplStr );
+                $tslt = doSQLQuery($sqlStr);
+            }
+
             // If CloudFlare is being used, configure the CNAME Record Accordingly
             if ( !defined('CLOUDFLARE_API_KEY') ) { define('CLOUDFLARE_API_KEY', ''); }
             $zone = false;
@@ -482,6 +492,84 @@ class Account {
         }
 
         // If We're Here, Either Something's Wrong or the Requested Name in use
+        return array();
+    }
+
+    /** ********************************************************************* *
+     *  Password Management Functions
+     ** ********************************************************************* */
+    /**
+     *  Function checks an email address is valid and sends an email to that address
+     *      containing some links that allow them to sign into various 10C services.
+     */
+    private function _forgotPassword() {
+        $CleanMail = NoNull($this->settings['email'], $this->settings['mail_addr']);
+        $AccountID = 0;
+        $TokenGuid = '';
+        $TokenID = 0;
+        $SocialUrl = '';
+        $SiteUrl = '';
+        $Name = '';
+
+        $ReplStr = array( '[MAIL_ADDY]' => sqlScrub($CleanMail) );
+        $sqlStr = readResource(SQL_DIR . '/account/getForgotDetails.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $AccountID = nullInt($Row['account_id']);
+                $SiteUrl = NoNull($Row['site_url']);
+                $Name = NoNull($Row['display_name'], NoNull($Row['first_name'], $Row['name']));
+            }
+        }
+
+        // If we have a valid Account.id, Collect the Requisite Data to send a "Forgot Password" email
+        if ( $AccountID > 0 ) {
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($AccountID) );
+            $sqlStr = prepSQLQuery("CALL PerformDirectLogin([ACCOUNT_ID]);", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    $TokenGuid = NoNull($Row['token_guid']);
+                    $TokenID = nullInt($Row['token_id']);
+                }
+            }
+        }
+
+        // Get the Social Site URL if We Have Valid Data
+        $sqlStr = readResource(SQL_DIR . '/site/getSocialUrl.sql');
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $SocialUrl = NoNull($Row['social_url']);
+            }
+        }
+
+        /* If we have a valid Token, then we should have all the other data, too */
+        if ( $TokenID > 0 ) {
+            // Get the HTML & PlainText Values for the Forgot Mail
+            $ReplStr = array( '[ACCOUNT_NAME]' => NoNull($Name),
+                              '[PRIMARY_URL]'  => NoNull($SiteUrl),
+                              '[SOCIAL_URL]'   => NoNull($SocialUrl),
+                              '[AUTH_TOKEN]'   => TOKEN_PREFIX . intToAlpha($TokenID) . '_' . NoNull($TokenGuid),
+                             );
+            $HtmlMsg = readResource(FLATS_DIR . '/templates/email.forgot.html', $ReplStr);
+            $TextMsg = readResource(FLATS_DIR . '/templates/email.forgot.txt', $ReplStr);
+
+            // Construct the Message
+            $mailMsg = array( 'from_name' => '10Centuries',
+                              'send_to'   => $CleanMail,
+                              'subject'   => 'Forgot Your Password?',
+                              'html'      => NoNull($HtmlMsg),
+                              'text'      => NoNull($TextMsg),
+                             );
+
+            require_once(LIB_DIR . '/email.php');
+            $mail = new Email($this->settings);
+            $isOK = $mail->sendMail($mailMsg);
+            unset($mail);
+        }
+
+        // Return an Empty Array, Regardless of whether the data is good or not (to prevent email cycling)
         return array();
     }
 

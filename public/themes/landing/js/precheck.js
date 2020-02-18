@@ -215,22 +215,49 @@ function swapButtons() {
         }
     }
 }
+function setSignUpBtn() {
+    var _valid = true;
+    if ( _valid ) { _valid = validateName(false); }
+    if ( _valid ) { _valid = validateMail(false); }
+    if ( _valid ) { _valid = validatePass(false); }
+    if ( _valid ) { _valid = validateTerms(); }
 
-function validateName() {
+    var els = document.getElementsByClassName('btn-signup');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _valid ) {
+            if ( els[i].classList.contains('btn-primary') === false ) {
+                els[i].classList.remove('btn-danger');
+                els[i].classList.add('btn-primary');
+            }
+            els[i].disabled = false;
+
+        } else {
+            if ( els[i].classList.contains('btn-primary') ) {
+                els[i].classList.remove('btn-primary');
+                els[i].classList.add('btn-danger');
+            }
+            els[i].disabled = true;
+        }
+    }
+}
+
+function validateName( showMsg ) {
+    if ( showMsg === undefined || showMsg === null || showMsg !== false ) { showMsg = true; }
     var _invalids = /\W/; // allow letters, numbers, and underscores
     var _nick = '';
     var els = document.getElementsByName('name');
+    if ( els.length <= 0 ) { return true; }
     for ( var i = 0; i < els.length; i++ ) {
         if ( _nick == '' ) { _nick = NoNull(els[i].value); }
     }
 
     if ( _nick.length > 0 && _nick.length < 2 ) {
-        showInputMessage( 'label-name', 'This is a little too short.' );
+        if ( showMsg ) { showInputMessage( 'label-name', 'This is a little too short.' ); }
         return false;
     }
 
     if ( _invalids.test(_nick) ) {
-        showInputMessage( 'label-name', 'Your name can only have letters, numbers, and underscores.' );
+        if ( showMsg ) { showInputMessage( 'label-name', 'Your name can only have letters, numbers, and underscores.' ); }
         return false;
     }
 
@@ -253,7 +280,8 @@ function parseValidName( data ) {
         showInputMessage( 'label-name', data.meta.text );
     }
 }
-function validateMail() {
+function validateMail( showMsg ) {
+    if ( showMsg === undefined || showMsg === null || showMsg !== false ) { showMsg = true; }
     var _addy = '';
     var els = document.getElementsByName('email');
     for ( var i = 0; i < els.length; i++ ) {
@@ -263,19 +291,33 @@ function validateMail() {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     var _valid = re.test(String(_addy).toLowerCase());
 
-    if ( !_valid ) { showInputMessage( 'label-email', 'This address does not appear to be valid.' ); }
+    if ( !_valid && showMsg ) { showInputMessage( 'label-email', 'This address does not appear to be valid.' ); }
     return _valid;
 }
-function validatePass() {
+function validatePass( showMsg ) {
+    if ( showMsg === undefined || showMsg === null || showMsg !== false ) { showMsg = true; }
     var _pass = '';
     var els = document.getElementsByName('password');
+    if ( els.length <= 0 ) { return true; }
     for ( var i = 0; i < els.length; i++ ) {
         if ( _pass == '' ) { _pass = NoNull(els[i].value); }
     }
     _valid = true;
     if ( _pass.length <= 6 ) { _valid = false; }
 
-    if ( !_valid ) { showInputMessage( 'label-password', 'This password is not particularly great.' ); }
+    if ( !_valid && showMsg ) { showInputMessage( 'label-password', 'This password is not particularly great.' ); }
+    return _valid;
+}
+function validateTerms() {
+    var _terms = 'N';
+    var els = document.getElementsByName('terms');
+    if ( els.length <= 0 ) { return true; }
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].checked ) { _terms = 'Y'; }
+    }
+    _valid = false;
+    if ( _terms == 'Y' ) { _valid = true; }
+
     return _valid;
 }
 function showInputMessage( _label, _message ) {
@@ -294,12 +336,14 @@ function clearMessage(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     var _label = 'label-' + el.name;
     showInputMessage(_label, '');
+    setSignUpBtn();
 }
 
 function validateFormData() {
     if ( validateName() === false ) { return; }
     if ( validateMail() === false ) { return; }
     if ( validatePass() === false ) { return; }
+    if ( validateTerms() === false ) { return; }
     disableForm();
 
     // If We're Here, JavaScript is clearly working so run everything through Ajax
@@ -319,6 +363,35 @@ function parseAccountCreate( data ) {
         var ds = data.data;
         if ( ds.token !== undefined && ds.token !== false && ds.token !== null ) {
             window.location.href = ds.url + '?token=' + ds.token;
+        }
+
+    } else {
+        alert( data.meta.text );
+    }
+    enableForm();
+}
+function validateForgotData() {
+    if ( validateMail() === false ) { return; }
+    disableForm();
+
+    // If We're Here, JavaScript is clearly working so run everything through Ajax
+    var _valids = ['email'];
+    var params = { 'redirect': 'none' };
+    for ( var v = 0; v < _valids.length; v++ ) {
+        var els = document.getElementsByName(_valids[v]);
+        for ( var i = 0; i < els.length; i++ ) {
+            params[ _valids[v] ] = NoNull(els[i].value);
+        }
+    }
+    doJSONQuery('account/forgot', 'POST', params, parseAccountForgot);
+    return false;
+}
+function parseAccountForgot( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var els = document.getElementsByClassName('sign-up');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].innerHTML = '<h5 class="mb-3">Check Your Inbox!</h5>' +
+                               '<p class="text-justified text-muted small-2 mb-3">An email has been sent with links to let you sign into your account.</p>';
         }
 
     } else {

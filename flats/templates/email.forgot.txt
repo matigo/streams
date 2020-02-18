@@ -1,0 +1,11 @@
+Hello [ACCOUNT_NAME],
+
+Have you forgotten your account password? No problem! Here are some links that will sign you directly into your account.
+
+Sign into Nice.Social: [SOCIAL_URL]/validatetoken?token=[AUTH_TOKEN]
+
+Sign into your website: [PRIMARY_URL]/write?token=[AUTH_TOKEN]
+
+-----
+
+If you did not ask for this email, then there is nothing for you to do. Someone else would have entered your email address, but your information is safe. Your password has not been changed.

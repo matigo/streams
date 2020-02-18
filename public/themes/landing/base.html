@@ -54,10 +54,10 @@
                 </div>
                 <section class="navbar-mobile">
                     <nav class="nav nav-navbar nav-transform-none ml-auto">
-                        <a class="nav-link" href="[HOMEURL]/about">[lblAbout]</a>
+                        <a class="nav-link hidden" href="[HOMEURL]/about">[lblAbout]</a>
                         <a class="nav-link" href="https://blog.10centuries.org">[lblBlog]</a>
                         <a class="nav-link" href="https://docs.10centuries.org">[lblDocs]</a>
-                        <a class="nav-link" href="[HOMEURL]/signin">[lblSignIn]</a>
+                        <a class="nav-link hidden" href="[HOMEURL]/signin">[lblSignIn]</a>
                         <a class="nav-link" href="[HOMEURL]/signup">[lblSignUp]</a>
                     </nav>
                 </section>
@@ -69,6 +69,15 @@
         <footer class="footer bg-gray py-7">
             <div class="container">
                 <div class="row gap-y">
+                    <div class="col-md-6 col-xl-6">
+                        <p><a href="[HOMEURL]">[SITE_NAME]</a></p>
+                    </div>
+                    <div class="col-md-6 col-xl-6 text-right">
+                        <p>[YEAR] &copy; [landFootCopyright]</p>
+                    </div>
+                </div>
+
+                <div class="row gap-y hidden">
                     <div class="col-md-6 col-xl-4">
                         <p><a href="[HOMEURL]">[SITE_NAME]</a></p>
                         <p>[landFootDescr]</p>
@@ -77,28 +86,22 @@
                         <h6 class="mb-4 mt-1"><strong>[landCol1Head]</strong></h6>
                         <div class="nav flex-column">
                             <a class="nav-link" href="[HOMEURL]/about">[lblAbout]</a>
-                            <a class="nav-link" href="[HOMEURL]/careers">[lblCareers]</a>
                             <a class="nav-link" href="[HOMEURL]/contact">[lblContact]</a>
                         </div>
                     </div>
                     <div class="col-6 col-md-3 col-xl-2">
-                        <h6 class="mb-4 mt-1"><strong>Product</strong></h6>
+                        <h6 class="mb-4 mt-1"><strong>[lblProduct]</strong></h6>
                         <div class="nav flex-column">
                             <a class="nav-link" href="[HOMEURL]/roadmap">[lblRoadmap]</a>
-                            <a class="nav-link" href="[HOMEURL]/ideas">[lblIdeas]</a>
                             <a class="nav-link" href="[HOMEURL]/donate">[lblDonate]</a>
                         </div>
                     </div>
                     <div class="col-6 col-md-6 col-xl-2">
                         <h6 class="mb-4 mt-1"><strong>[lblSupport]</strong></h6>
                         <div class="nav flex-column">
-                            <a class="nav-link" href="[HOMEURL]/develop">[lblDevelop]</a>
-                            <a class="nav-link" href="[HOMEURL]/docs">[lblDocs]</a>
-                            <a class="nav-link" href="[HOMEURL]/contact">[lblContact]</a>
+                            <a class="nav-link" href="https://docs.10centuries.org">[lblDocs]</a>
+                            <a class="nav-link" href="[HOMEURL]/forgot">[lblForgot]</a>
                         </div>
-                    </div>
-                    <div class="col-6 col-md-6 col-xl-2 text-center">
-                        <p><a class="btn btn-block btn-round btn-primary" href="https://github.com/matigo/streams"><i class="fab fa-github"></i> [btnDownload]</a></p>
                     </div>
                 </div>
             </div>

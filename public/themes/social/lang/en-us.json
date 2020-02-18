@@ -52,6 +52,11 @@
 
     "lblProfile": "Profile",
 
+    "lblSignInIntro": "Sign In with your",
+    "lblSignInIntroAText": "10Centuries Account",
+    "lblForgotPass": "Forgot your password?",
+    "lblForgotPassAText": "Click here!",
+
     "btnSendMention": "Send Webmention",
     "btnEditProfile": "Edit Profile",
     "btnShowProfileStats": "Toggle Statistics",

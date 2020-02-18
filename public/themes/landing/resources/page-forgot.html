@@ -1,0 +1,23 @@
+        <main class="main-content">
+            <div class="bg-white sign-up rounded shadow-7 w-400 mw-100 p-6">
+                <h5 class="mb-3">[forgotIntro]</h5>
+                <p class="text-justified text-muted small-2 mb-3">[forgotIntroDetail]</p>
+
+                <form action="[HOMEURL]/api/account/forgot" method="POST">
+                    <div class="form-group">
+                        <input type="email" class="form-control" name="email" placeholder="[supMailPH]" onkeyup="clearMessage(this);" onblur="validateMail();" required>
+                        <label class="label-email hidden">&nbsp;</label>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-block btn-signup btn-danger" type="submit" onclick="validateForgotData();" data-label="[btnSendForgotMail]">[btnSendForgotMail]</button>
+                        <input type="hidden" name="redirect" value="web_redirect">
+                    </div>
+                </form>
+                <div class="form-group">
+                    <button class="btn btn-block btn-signup btn-danger hidden" onclick="validateForgotData();" data-label="[btnSendForgotMail]">[btnSendForgotMail]</button>
+                    <input type="hidden" name="redirect" value="web_redirect">
+                </div>
+            </div>
+        </main>
+        <script src="[JS_DIR]/page.min.js"></script>
+        <script src="[JS_DIR]/precheck.js"></script>

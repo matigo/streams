@@ -257,6 +257,7 @@ table th { word-break: normal; }
     background-image: url('../../../avatars/default.png');
     cursor: pointer;
     object-fit: cover;
+    object-position: -1px -2px;
     height: 4em;
     width: 4em;
 }
@@ -714,7 +715,8 @@ table th { word-break: normal; }
     .content-area {
         padding: 1em 0 0 0.5em;
         width: calc(100% - 4em);
-        overflow: auto;
+        overflow-x: auto;
+        overflow-y: hidden;
     }
     .compose .modal-body .lbl-pref { min-width: 155px; }
     .compose .modal-body .btn-pref { min-width: 55px; }

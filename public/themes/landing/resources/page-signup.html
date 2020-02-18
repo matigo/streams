@@ -16,24 +16,24 @@
                     </div>
                     <div class="form-group py-3">
                         <div class="custom-control custom-checkbox">
-                            <label><input type="checkbox" name="terms" onchange="validateName();" value="Y" required> [supTermsAgree]</label>
+                            <label><input type="checkbox" name="terms" onchange="setSignUpBtn();" value="Y" required> [supTermsAgree]</label>
                         </div>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-block btn-signup btn-primary" type="submit" onclick="validateFormData();" data-label="[btnCreateAcct]">[btnCreateAcct]</button>
+                        <button class="btn btn-block btn-signup btn-danger" type="submit" onclick="validateFormData();" data-label="[btnCreateAcct]" disabled>[btnCreateAcct]</button>
                         <input type="hidden" name="redirect" value="web_redirect">
                     </div>
                 </form>
                 <div class="form-group">
-                    <button class="btn btn-block btn-signup btn-primary hidden" onclick="validateFormData();" data-label="[btnCreateAcct]">[btnCreateAcct]</button>
+                    <button class="btn btn-block btn-signup btn-danger hidden" onclick="validateFormData();" data-label="[btnCreateAcct]" disabled>[btnCreateAcct]</button>
                     <input type="hidden" name="redirect" value="web_redirect">
                 </div>
-                <div class="divider"><em>or</em></div>
-                <div class="text-center">
+                <div class="divider hidden"><em>or</em></div>
+                <div class="text-center hidden">
                     <button class="btn btn-apple" href="#"><i class="fab fa-apple"></i> [btnSignInApple]</button>
                 </div>
-                <hr class="w-30">
-                <p class="text-center text-muted small-2">[supLogin]</p>
+                <hr class="w-30 hidden">
+                <p class="text-center text-muted small-2 hidden">[supLogin]</p>
             </div>
         </main>
         <script src="[JS_DIR]/page.min.js"></script>

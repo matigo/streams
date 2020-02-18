@@ -1015,6 +1015,9 @@ function openGeoLocation( el ) {
  *  Interactions
  ** ************************************************************************* */
 function toggleProfile( el ) {
+    var _token = getAuthToken();
+    if ( _token === undefined || _token === false || _token == '' ) { return; }
+
     // Hide all of the Post-Action Elements
     setTimeout(function() {
         var els = document.getElementsByClassName('post-actions');
@@ -1476,6 +1479,13 @@ function performAction( btn ) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
     var _guid = btn.parentNode.getAttribute('data-guid');
     if ( _guid === undefined || _guid === false || _guid === null || _guid.length <= 30 ) { return; }
+
+    var _token = getAuthToken();
+    if ( _token === undefined || _token === false || _token == '' ) {
+        toggleView('signin');
+        return;
+    }
+
     var _action = btn.getAttribute('data-action');
     if ( splitSecondCheck() === false ) { return; }
 
