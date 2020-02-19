@@ -790,22 +790,40 @@ class Account {
         }
         $CleanBio = NoNull($this->settings['bio_text'], $this->settings['persona_bio']);
 
+        /* Check that the Avatar Type is Valid */
+        $avatarTypes = array('gravatar', 'own');
+        $CleanAvatar = NoNull($this->settings['avatar_type'], $this->settings['avatar-type']);
+        if ( in_array($CleanAvatar, $avatarTypes) === false ) { $CleanAvatar = 'own'; }
+
+        /* Check if there is an Avatar File Reference */
+        $CleanAvatarFile = NoNull($this->settings['avatar_file'], $this->settings['avatar-file']);
+
         // Ensure We Have a GUID
-        if ( strlen($CleanGUID) != 36 ) { return "Invalid Persona GUID Supplied"; }
+        if ( strlen($CleanGUID) != 36 ) {
+            $this->_setMetaMessage("Invalid Persona GUID Supplied", 400);
+            return false;
+        }
 
         // Collect the Data
         $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGUID),
                           '[PERSONA_BIO]'  => sqlScrub($CleanBio),
                           '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[AVATAR_TYPE]'  => sqlScrub($CleanAvatar),
+                          '[AVATAR_FILE]'  => sqlScrub($CleanAvatarFile),
                          );
-        $sqlStr = readResource(SQL_DIR . '/account/setPublicProfile.sql', $ReplStr);
-        $rslt = doSQLExecute($sqlStr);
-        if ( $rslt > 0 ) {
-            return $this->_getPublicProfile();
+        $sqlStr = prepSQLQuery("CALL SetPublicProfile([ACCOUNT_ID], '[PERSONA_GUID]', '[PERSONA_BIO]', '[AVATAR_TYPE]', '[AVATAR_FILE]');", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                if ( nullInt($Row['persona_id']) > 0 ) {
+                    return $this->_getPublicProfile();
+                }
+            }
         }
 
         // If We're Here, We Couldn't Update the Public Profile
-        return "Could Not Update Public Profile";
+        $this->_setMetaMessage("Could Not Update Public Profile", 400);
+        return false;
     }
 
     /**
@@ -847,7 +865,7 @@ class Account {
                               'timezone'     => Nonull($Row['timezone']),
                               'as'           => NoNull($Row['name']),
                               'name'         => NoNull(NoNull($Row['first_name']) . ' ' . NoNull($Row['last_name']), $Row['display_name']),
-                              'avatar_url'   => NoNull($Row['site_url'] . '/avatars/' . $Row['avatar_img']),
+                              'avatar_url'   => NoNull($Row['avatar_url']),
                               'site_url'     => NoNull($Row['site_url']),
                               'bio'          => array( 'text' => NoNull($Row['persona_bio']),
                                                        'html' => $bio_html,

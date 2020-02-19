@@ -87,21 +87,16 @@
         </div>
         <div class="nav-puck">
             <div class="navigation hidden">
-                <ul>
-                    <li class="puck-item" data-action="tl-global"><i class="fas fa-globe"></i></li>
-                    <li class="puck-item puck-siin hidden" data-action="tl-home"><i class="fas fa-home"></i></li>
-                    <li class="puck-item puck-siin hidden" data-action="tl-mentions"><i class="far fa-comments"></i></li>
-                    <li class="puck-item puck-siin hidden" data-action="tl-actions"><i class="fas fa-highlighter"></i></li>
-                    <li class="puck-item puck-siin hidden" data-action="relations"><i class="fas fa-user-friends"></i></li>
-                    <li class="separator">&nbsp;</li>
-                    <li class="puck-item" data-action="settings"><i class="fas fa-cog"></i></li>
-                </ul>
+                <button class="puck-item p1" data-action="tl-global"><i class="fas fa-globe"></i></button>
+                <button class="puck-item p2 puck-siin hidden" data-action="tl-home"><i class="fas fa-home"></i></button>
+                <button class="puck-item p3 puck-siin hidden" data-action="tl-mentions"><i class="far fa-comments"></i></button>
+                <button class="puck-item p4 puck-siin hidden" data-action="tl-actions"><i class="fas fa-highlighter"></i></button>
+                <button class="puck-item p5 puck-siin hidden" data-action="relations"><i class="fas fa-user-friends"></i></button>
+                <button class="puck-item p6" data-action="settings"><i class="fas fa-cog"></i></button>
             </div>
             <div class="puck" data-state="closed">
-                <ul>
-                    <li class="puck-item puck-open"><i class="fas fa-chevron-circle-up"></i></li>
-                    <li class="puck-item puck-close hidden"><i class="fas fa-chevron-circle-down"></i></li>
-                </ul>
+                <button class="puck-item p0 puck-open"><i class="fas fa-chevron-circle-up"></i></button>
+                <button class="puck-item p0 puck-close hidden"><i class="fas fa-chevron-circle-down"></i></button>
             </div>
         </div>
         <div class="threadview content modal fade compose in hidden" data-view="consume"></div>
@@ -133,6 +128,7 @@
                     <div class="modal-footer">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 nopadding text-right">
                             <button type="button" class="btn btn-primary" data-dismiss="modal">[btnClose]</button>
+                            <button class="btn btn-primary persona-bio hidden" onClick="setPublicProfile();">[btnUpdate]</button>
                         </div>
                     </div>
                 </div>

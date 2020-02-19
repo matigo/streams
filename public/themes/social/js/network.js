@@ -1,3 +1,4 @@
+window.network_progress = false;
 window.network_active = false;
 function doJSONQuery( endpoint, type, parameters, afterwards ) {
     if ( window.navigator.onLine ) {
@@ -12,16 +13,24 @@ function doJSONQuery( endpoint, type, parameters, afterwards ) {
         xhr.onreadystatechange = function() {
             window.network_active = true;
             if ( xhr.readyState == 4 ) {
+                window.network_progress = false;
                 window.network_active = false;
-                var rsp = JSON.parse( xhr.responseText );
+                var rsp = { 'status': { 'code': xhr.status,
+                                        'text': xhr.responseText
+                                       },
+                            'data': false
+                           };
+                if ( xhr.status == 200 ) { rsp = JSON.parse( xhr.responseText ); }
                 afterwards( rsp );
             }
         };
         xhr.onerror = function() {
+            window.network_progress = false;
             window.network_active = false;
             /* Do Nothing */
         }
         xhr.ontimeout = function() {
+            window.network_progress = false;
             window.network_active = false;
             /* Do Nothing */
         }
@@ -31,6 +40,11 @@ function doJSONQuery( endpoint, type, parameters, afterwards ) {
         /* Open the XHR Connection and Send the Request */
         xhr.open(type, api_url + endpoint + suffix, true);
         xhr.timeout = (endpoint == 'auth/login') ? 5000 : 600000;
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                window.network_progress = (e.loaded / e.total) * 100;
+            }
+        };
         if ( access_token != '' ) { xhr.setRequestHeader("Authorization", access_token); }
         xhr.setRequestHeader("Content-Type", "Application/json; charset=utf-8");
         xhr.send(JSON.stringify(parameters));

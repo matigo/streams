@@ -99,15 +99,6 @@ function splitSecondCheck() {
     window.last_touch = touch_ts;
     return _sok;
 }
-function getLocalAvatar( url ) {
-    if ( url === undefined || url === false || url === null || url.length <= 3 ) { url = 'default.png'; }
-    if ( url.indexOf('/') > 0 ) {
-        var ps = url.split('/');
-        if ( ps.length > 0 ) { url = ps[ps.length - 1]; }
-    }
-
-    return window.location.protocol + '//' + window.location.hostname + '/avatars/' + url;
-}
 
 /** ************************************************************************* *
  *  Startup
@@ -588,6 +579,21 @@ function checkAuthToken() {
         hideByClass('puck-siin');
         getTimeline('global');
     }
+
+    /* Ensure the Puck Items are Correctly Aligned */
+    var _pos = 1;
+    var els = document.getElementsByClassName('puck-item');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('p0') === false ) {
+            for ( var x = 0; x < 99; x++ ) {
+                if ( els[i].classList.contains('p' + x) ) { els[i].classList.remove('p' + x); }
+            }
+            if ( els[i].classList.contains('hidden') === false ) {
+                els[i].classList.add('p' + _pos);
+                _pos++;
+            }
+        }
+    }
 }
 function parseAuthToken( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
@@ -613,7 +619,7 @@ function parseAuthToken( data ) {
                 if ( ds.distributors[i].guid == psna_guid ) { _cls = ' active'; }
                 _list += '<li class="persona-select' + _cls + '">' +
                             '<a onclick="setPersona(this);" data-persona-guid="' + ds.distributors[i].guid + '" data-channel-guid="' + _chan + '">' +
-                            '<img src="' + getLocalAvatar(ds.distributors[i].avatar) + '" class="persona-avatar" alt="" />' + _name +
+                            '<img src="' + ds.distributors[i].avatar + '" class="persona-avatar" alt="" />' + _name +
                             '</a>' +
                          '</li>';
             }
@@ -1045,6 +1051,7 @@ function toggleProfile( el ) {
         els[i].classList.add('hidden');
         els[i].innerHTML = '';
     }
+    hideByClass('persona-bio');
 
     // Collect the GUID
     var _guid = ( el.getAttribute === undefined ) ? el.currentTarget.getAttribute('data-guid') : el.getAttribute('data-guid');
@@ -1057,6 +1064,7 @@ function toggleProfile( el ) {
 }
 function parseProfile( data ) {
     var _html = '<p style="display: block; text-align: center; width: 100%;">Sorry. Something Is Not Quite Right.</p>';
+    hideByClass('persona-bio');
 
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
@@ -1082,7 +1090,10 @@ function parseProfile( data ) {
                 /* Set the Edit HTML */
                 _edit = '<textarea id="profile-bio" class="persona-bio-update persona-bio full-wide hidden" name="biodata" data-name="persona_bio">' + ds.bio.text + '</textarea>' +
                         '<input type="hidden" name="biodata" data-name="persona_guid" value="' + ds.guid + '" />' +
-                        '<button class="btn btn-primary persona-bio hidden" onClick="setPublicProfile();">Update</button>';
+                        '<h5 class="hidden">Avatar Image:</h5>' +
+                        '<button class="btn ' + ((ds.avatar_url.indexOf('gravatar') > 0) ? 'btn-primary ' : '') + 'persona-bio btn-bio-avatar hidden" onClick="setUseGravatar(this);" data-value="gravatar">Use Gravatar</button>&nbsp;' +
+                        '<label for="fileAvatar" class="btn ' + ((ds.avatar_url.indexOf('gravatar') < 0) ? 'btn-primary ' : '') + 'persona-bio btn-bio-avatar hidden" onClick="setUseGravatar(this);" data-value="own">Use Own</label>' +
+                        '<input type="file" id="fileAvatar" class="form-control hidden" onChange="handleAvatarUpload(this);" name="adata" style="display: none !important;" />';
             } else {
                 // Ensure the Proper Menu Items are Visible
                 _relation = '';
@@ -1105,7 +1116,7 @@ function parseProfile( data ) {
 
             // Construct the HTML
             _html = '<div class="content-author">' +
-                        '<p class="avatar"><img class="logo photo avatar-img" src="' + getLocalAvatar(ds.avatar_url) + '" alt=""></p>' +
+                        '<p class="avatar"><img class="logo photo avatar-img avatar-preview" src="' + ds.avatar_url + '" alt=""></p>' +
                     '</div>' +
                     '<div class="content-area profile-content">' +
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
@@ -1142,6 +1153,55 @@ function parseProfile( data ) {
     var els = document.getElementsByClassName('profile-body');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _html;
+    }
+}
+function setUseGravatar( el ) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( el.classList.contains('btn-primary') ) { return; }
+
+    var els = document.getElementsByClassName('btn-bio-avatar');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('btn-primary') ) {
+            els[i].classList.remove('btn-primary');
+        }
+    }
+    el.classList.add('btn-primary');
+}
+function handleAvatarUpload( el ) {
+    if(el.files.length === 0) { return false; }
+    var api_url = getApiURL();
+
+    var data = new FormData();
+    data.append('SelectedFile', el.files[0]);
+
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+        if(request.readyState == 4){
+            var resp = JSON.parse(request.response);
+            parseAvatarUpload(resp);
+        }
+    };
+
+    request.upload.addEventListener('progress', function(e) {
+        console.log(Math.ceil(e.loaded/e.total) * 100 + '% Complete');
+    }, false);
+
+    request.open('POST', api_url + 'files/avatar', true);
+    request.send(data);
+}
+function parseAvatarUpload( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.cdn_url !== undefined && ds.cdn_url !== false && ds.cdn_url != '' ) {
+            var els = document.getElementsByClassName('avatar-preview');
+            for ( var i = 0; i < els.length; i++ ) {
+                els[i].setAttribute('data-file', ds.file);
+                els[i].src = ds.cdn_url;
+            }
+        }
+
+    } else {
+        console.log("Error! Could not process avatar upload.");
     }
 }
 function toggleProfileStatistics() {
@@ -1255,6 +1315,22 @@ function setPublicProfile() {
         var _name = NoNull(els[i].getAttribute('data-name'));
         if ( _name != '' ) { params[_name] = els[i].value; }
     }
+    var els = document.getElementsByClassName('btn-bio-avatar');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('btn-primary') ) {
+            var _val = NoNull(els[i].getAttribute('data-value'));
+            if ( _val !== undefined && _val !== false && _val != '' ) {
+                params['avatar-type'] = _val;
+            }
+        }
+    }
+    var els = document.getElementsByClassName('avatar-preview');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _val = NoNull(els[i].getAttribute('data-file'));
+        if ( _val !== undefined && _val !== false && _val != '' ) {
+            params['avatar-file'] = _val;
+        }
+    }
     doJSONQuery('account/bio', 'POST', params, parseProfile);
 }
 function togglePublicProfileEdit() {
@@ -1274,8 +1350,10 @@ function togglePublicProfileEdit() {
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].classList.contains('hidden') ) {
             els[i].classList.remove('hidden');
+            hideByClass('profile-posts');
         } else {
             els[i].classList.add('hidden');
+            showByClass('profile-posts');
         }
     }
 }
@@ -1975,7 +2053,7 @@ function parseReplyPost(data) {
                 var today = moment().format('YYYY-MM-DD HH:mm:ss');
                 var _ts = ds[i].publish_unix * 1000;
                 var _html = '<p>' +
-                                '<img src="' + getLocalAvatar(ds[i].persona.avatar) + '" class="avatar">' +
+                                '<img src="' + ds[i].persona.avatar + '" class="avatar">' +
                                 '<span><strong>' + ds[i].persona.as + '</strong> - ' + ds[i].persona.name + '</span>' +
                             '</p>' +
                             ds[i].content +
@@ -2045,7 +2123,9 @@ function validateTimeline( _tl ) {
                 _icon = 'fas fa-highlighter';
                 break;
         }
-        els[i].innerHTML = '<i class="' + _icon + '"></i>';
+        if ( els[i].innerHTML != '<i class="' + _icon + '"></i>' ) {
+            els[i].innerHTML = '<i class="' + _icon + '"></i>';
+        }
     }
 
     // Set the New Value (if applicable)
@@ -2295,7 +2375,7 @@ function buildHTML( post ) {
 
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
     if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
-    var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + getLocalAvatar(post.persona.avatar) + '"></p></div>' +
+    var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
                 '<div class="content-area toggle-action-bar" data-guid="' + post.guid + '">' +
                     '<strong class="persona full-wide">' + post.persona.as + '</strong>' +
                     _ttxt +
@@ -2437,10 +2517,10 @@ function updatePostTimestamps() {
         if ( _cnt === undefined || _cnt === null || isNaN(_cnt) ) { _cnt = 0; }
 
         if ( isNaN(_ts) === false ) {
-            els[i].innerHTML = '<a href="' + _url + '" class="time-url" target="_blank">' +
-                                   ((_cnt >= 1 && _guid == '') ? '<i class="fas fa-comments"></i> ' : '') + _icon +
-                                   ((moment(_ts * 1000).isSame(today, 'day') ) ? moment(_ts * 1000).format('h:mm a') : moment(_ts * 1000).format('dddd MMMM Do YYYY h:mm:ss a')) +
-                               '</a>';
+            var _timeStr = '<a href="' + _url + '" class="time-url" target="_blank">' +
+                               _icon + ((moment(_ts * 1000).isSame(today, 'day') ) ? moment(_ts * 1000).format('h:mm a') : moment(_ts * 1000).format('dddd MMMM Do YYYY h:mm:ss a')) +
+                           '</a>';
+            if ( els[i].innerHTML != _timeStr ) { els[i].innerHTML = _timeStr; }
         }
     }
 }
@@ -2715,7 +2795,7 @@ function setPersona( el ) {
     for ( var i = 0; i < ds.distributors.length; i++ ) {
         ds.distributors[i].is_active = false;
         if ( ds.distributors[i].guid == _persona_guid ) {
-            _avatar_url = getLocalAvatar(ds.distributors[i].avatar);
+            _avatar_url = ds.distributors[i].avatar;
             ds.distributors[i].is_active = true;
         }
     }
@@ -2726,7 +2806,7 @@ function setPersona( el ) {
         var els = document.getElementsByClassName('persona-select');
         for ( var i = 0; i < els.length; i++ ) { els[i].classList.remove('active'); }
         var els = document.getElementsByClassName('active-avatar');
-        for ( var i = 0; i < els.length; i++ ) { els[i].src = getLocalAvatar(_avatar_url); }
+        for ( var i = 0; i < els.length; i++ ) { els[i].src = _avatar_url; }
         el.parentNode.classList.add('active');
         loadChannelList(_persona_guid);
         showNewPostAs();

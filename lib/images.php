@@ -3,7 +3,7 @@
 /**
  * @author Jason F. Irwin
  * @copyright 2016
- * 
+ *
  * Class contains the rules and methods called for Client Application Settings & Creation
  */
 require_once( LIB_DIR . '/functions.php');
@@ -14,7 +14,7 @@ class Images {
     var $is_reduced;
     var $image;
     var $exif;
-    
+
     public function load($FileName) {
         $image_info = getimagesize($FileName);
         $this->exif = exif_read_data($FileName);
@@ -54,18 +54,18 @@ class Images {
             default:
                 // Do Nothing
         }
-        
+
         // Rotate the Image if Necessary
         if (!empty($this->exif['Orientation'])) {
             switch ($this->exif['Orientation']) {
                 case 3:
                     $this->image = imagerotate($this->image, 180, 0);
                     break;
-    
+
                 case 6:
                     $this->image = imagerotate($this->image, -90, 0);
                     break;
-    
+
                 case 8:
                     $this->image = imagerotate($this->image, 90, 0);
                     break;
@@ -104,7 +104,7 @@ class Images {
         // Return the Success Boolean
         return $rVal;
     }
-    
+
     public function getGeolocation() { return $this->_getGeolocation(); }
     public function getPhotoMeta() { return $this->_getPhotoMeta(); }
 
@@ -118,26 +118,55 @@ class Images {
         $propWidth = $this->getWidth();
         if ( $height >= $propHeight ) { return true; }
         $rVal = false;
-        
+
         $ratio = $height / $propHeight;
         $width = $propWidth * $ratio;
         $rVal = $this->resize($height, $width);
         if ( $rVal ) { $this->is_reduced = true; }
-        
+
         // Return the Boolean Response
         return $rVal;
+    }
+    public function makeSquare( $sizePx = 450, $min = 250 ) {
+        $height = $this->getHeight();
+        $width = $this->getWidth();
+
+        if ( $height < $sizePx ) { $sizePx = $height; }
+        if ( $width < $sizePx ) { $sizePx = $width; }
+
+        writeNote("sizePx: $sizePx", true);
+
+        $image = imagecreatetruecolor($sizePx, $sizePx);
+        $isOK = false;
+
+        $ratio = max($sizePx / $width, $sizePx / $height);
+        writeNote("Ratio: $ratio", true);
+        $y = ($height - $sizePx / $ratio) / 2;
+        $height = $sizePx / $ratio;
+        $x = ($width - $sizePx / $ratio) / 2;
+        $width = $sizePx / $ratio;
+
+        // Perform the Transformation and re-assign the Image
+        $isOK = imagecopyresampled($image, $this->image, 0, 0, $x, $y, $sizePx, $sizePx, $width, $height);
+        if ( $isOK ) {
+            $this->image = $image;
+            $this->is_reduced = true;
+        }
+
+        // Return the Boolean Response
+        return $isOK;
     }
     public function reduceToWidth($width = 640) {
         $propHeight = $this->getHeight();
         $propWidth = $this->getWidth();
         if ( $width >= $propWidth ) { return true; }
         $rVal = false;
-        
+
         $ratio = $width / $propWidth;
         $height = $propHeight * $ratio;
         $rVal = $this->resize($height, $width);
         if ( $rVal ) { $this->is_reduced = true; }
-        
+
         // Return the Boolean Response
         return $rVal;
     }
@@ -153,7 +182,7 @@ class Images {
 
         return $isOK;
     }
-    
+
     private function _getPhotoMeta() {
         $aperture = false;
         if ( in_array('ApertureValue', $this->exif) ) {
@@ -172,7 +201,7 @@ class Images {
                       'height'   => ((nullInt($this->exif['ExifImageLength']) > 0) ? nullInt($this->exif['ExifImageLength'], imagesy($this->image)) : false),
                      );
     }
-    
+
     private function _getGeolocation() {
         if ( isset($this->exif['GPSLatitude']) && isset($this->exif['GPSLongitude']) &&
              isset($this->exif['GPSLatitudeRef']) && isset($this->exif['GPSLongitudeRef']) &&
@@ -201,7 +230,7 @@ class Images {
             $lat = (float) $lat_degrees+((($lat_minutes*60)+($lat_seconds))/3600);
             $lng = (float) $lng_degrees+((($lng_minutes*60)+($lng_seconds))/3600);
 
-            if ( $GPSLatitudeRef == 'S' ) { $lat *= -1; }           //If the latitude is South, make it negative. 
+            if ( $GPSLatitudeRef == 'S' ) { $lat *= -1; }           //If the latitude is South, make it negative.
             if ( $GPSLongitudeRef == 'W' ) { $lng *= -1; }          //If the longitude is west, make it negative
 
             return array (

@@ -52,23 +52,23 @@ class Files {
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        // Return an unhappy boolean if nothing was done
+        return false;
     }
 
     private function _performGetAction() {
@@ -79,15 +79,15 @@ class Files {
         switch ( $Activity ) {
             case 'list':
             case '':
-                $rVal = $this->_getFilesList();
+                return $this->_getFilesList();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // Return an unhappy boolean if nothing was done
+        return false;
     }
 
     private function _performPostAction() {
@@ -95,17 +95,21 @@ class Files {
         $rVal = false;
 
         switch ( $Activity ) {
+            case 'avatar':
+                return $this->_prepareAvatar();
+                break;
+
             case 'upload':
             case '':
-                $rVal = $this->_createNewFile();
+                return $this->_createNewFile();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // Return an unhappy boolean if nothing was done
+        return false;
     }
 
     private function _performDeleteAction() {
@@ -115,15 +119,15 @@ class Files {
 
         switch ( $Activity ) {
             case 'scrub':
-                $rVal = $this->_deleteFile();
+                return $this->_deleteFile();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // Return an unhappy boolean if nothing was done
+        return false;
     }
 
     /**
@@ -154,6 +158,155 @@ class Files {
     /** ********************************************************************* *
      *  File Upload Functions
      ** ********************************************************************* */
+    private function _prepareAvatar() {
+        if ( !defined('CDN_UPLOAD_LIMIT') ) { define('CDN_UPLOAD_LIMIT', 5); }
+        if ( !defined('USE_S3') ) { define('USE_S3', 0); }
+        if ( $this->settings['bucket_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
+        $list = false;
+        $errs = false;
+
+        // Collect the Name of the Files Object
+        $items = array();
+        foreach ( $_FILES as $Key=>$Value ) {
+            $items[] = $Key;
+        }
+
+        // Do Not Continue if there are No Files
+        if ( count($items) <= 0 ) {
+            $this->_setMetaMessage( "No Files Found", 400 );
+            return false;
+        }
+
+        // Check to see if there are files and, if so, process them.
+        if ( is_array($_FILES) ) {
+            require_once(LIB_DIR . '/images.php');
+            require_once(LIB_DIR . '/s3.php');
+            $LocalName = '';
+
+            // Determine the Avatar Location
+            $AvatarDIR = BASE_DIR . '/avatars';
+            checkDIRExists($AvatarDIR);
+
+            // If We Should Use Amazon's S3, Activate the Class
+            if ( USE_S3 == 1 ) {
+                if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
+                if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+            }
+
+            foreach ( $items as $FileID ) {
+                $FileName = NoNull(basename($_FILES[ $FileID ]['name']));
+                $FileSize = nullInt($_FILES[ $FileID ]['size']);
+                $FileType = NoNull($_FILES[ $FileID ]['type']);
+                if ( NoNull($FileType) == '' ) {
+                    $ext = $this->_getFileExtension($FileName, $FileType);
+                    switch ( strtolower(NoNull($ext)) ) {
+                        case 'jpeg':
+                        case 'jpg':
+                            $FileType = 'image/jpg';
+                            break;
+
+                        case 'gif':
+                            $FileType = 'image/gif';
+                            break;
+
+                        case 'png':
+                            $FileType = 'image/png';
+                            break;
+                    }
+                }
+
+                // Validate the File
+                $ValidType = $this->_isValidUploadType($FileType, $this->_getFileExtension($FileName, $FileType));
+
+                // Process the File if we have Space in the Bucket, otherwise Record a Size Error
+                if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['bucket_remain']) ) {
+                    $this->settings['bucket_remain'] -= $FileSize;
+                    $now = time();
+
+                    if ( isset($_FILES[ $FileID ]) ) {
+                        $LocalName = md5("$FileName $now") . "." . $this->_getFileExtension($FileName, $FileType);
+                        $fullPath = $AvatarDIR . '/' . strtolower($LocalName);
+
+                        $cdnPath = 'avatars/' . strtolower($LocalName);
+                        $isAnimated = false;
+                        $isReduced = false;
+                        $isGood = false;
+
+                        if ( NoNull($FileName) != "" ) {
+                            // Shrink the File If Needs Be
+                            if ( $this->_isResizableImage($FileType) ) {
+                                $isGood = move_uploaded_file($_FILES[ $FileID ]['tmp_name'], $fullPath);
+
+                                // Upload the Original Image to S3 if Appropriate
+                                if ( USE_S3 == 1 ) {
+                                    $s3->putObject($s3->inputFile($fullPath, false), CDN_URL, $cdnPath, 'public-read');
+                                }
+
+                                // Resize the Image to a Square
+                                $img = new Images();
+                                $img->load($fullPath);
+                                $img->makeSquare(450, 250);
+                                $isGood = $img->save($fullPath);
+                                unset($img);
+
+                            } else {
+                                $isGood = move_uploaded_file($_FILES[ $FileID ]['tmp_name'], $fullPath);
+                            }
+
+                            // Copy the Data to S3
+                            if ( USE_S3 == 1 ) {
+                                $s3->putObject($s3->inputFile($fullPath, false), CDN_URL, $cdnPath, 'public-read');
+                                unset($s3);
+                            }
+
+                        } else {
+                            if ( is_array($errs) === false ) { $errs = array(); }
+                            $errs[] = array( 'name'   => $FileName,
+                                             'size'   => $FileSize,
+                                             'type'   => strtolower($FileType),
+                                             'reason' => "Bad File Name",
+                                            );
+                        }
+                    }
+
+                } else {
+                    if ( is_array($errs) === false ) { $errs = array(); }
+                    $errs[] = array( 'name'   => $FileName,
+                                     'size'   => $FileSize,
+                                     'type'   => strtolower($FileType),
+                                     'reason' => (($ValidType) ? "Insufficient Storage Remaining" : "Unsupported File Type"),
+                                    );
+                }
+            }
+
+            $cdnUrl = '';
+
+            // Get the Default URL for the Platform (Used for CDN Determination)
+            $sqlStr = readResource(SQL_DIR . '/site/getDefaultUrl.sql');
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    $cdnUrl = NoNull($Row['default_url']);
+                }
+            }
+
+            // If the File Exists, Return a Happy array
+            if ( file_exists($fullPath) ) {
+                return array( 'cdn_url' => $cdnUrl . '/avatars/' . $LocalName,
+                              'file'    => $LocalName,
+                             );
+            } else {
+                $this->_setMetaMessage( "Could Not Process File", 400 );
+                return false;
+            }
+        }
+
+        // If We're Here, Nothing Was Found
+        $this->_setMetaMessage( "No Files Found", 400 );
+        return false;
+    }
+
     /**
      *  Function Handles File Uploads for a Given Account
      */
@@ -327,7 +480,8 @@ class Files {
         }
 
         // If We're Here, Nothing Was Found
-        return "No Files Found";
+        $this->_setMetaMessage( "No Files Found", 400 );
+        return false;
     }
 
     /**

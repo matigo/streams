@@ -35,7 +35,15 @@ BEGIN
 
      /* Return the Completed Persona List */
     SELECT pr.`persona_id`, pa.`guid` as `persona_guid`, pa.`name`, pa.`last_name`, pa.`first_name`, pa.`display_name`,
-           CONCAT(IFNULL(CONCAT(CASE WHEN IFNULL(si.`https`, 'N') = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`), dd.`default_url`), '/avatars/', pa.`avatar_img`) as `avatar_url`,
+           (SELECT CASE WHEN IFNULL(zpm.`value`, 'N') = 'Y'
+                        THEN CONCAT('https://www.gravatar.com/avatar/', MD5(LOWER(CASE WHEN zpa.`email` <> '' THEN zpa.`email` ELSE zacct.`email` END)), '?s=250&r=pg')
+                        ELSE (SELECT CONCAT(CASE WHEN zsi.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', zsu.`url`, '/avatars/', zpa.`avatar_img`) as `avatar_url`
+                                FROM `Site` zsi INNER JOIN `SiteUrl` zsu ON zsi.`id` = zsu.`site_id`
+                               WHERE zsi.`is_deleted` = 'N' and zsi.`is_default` = 'Y' and zsu.`is_active` = 'Y'
+                               LIMIT 1) END as `avatar_url`
+              FROM `Account` zacct INNER JOIN `Persona` zpa ON zacct.`id` = zpa.`account_id`
+                             LEFT OUTER JOIN `PersonaMeta` zpm ON zpa.`id` = zpm.`persona_id` AND zpm.`is_deleted` = 'N' and zpm.`key` = 'avatar.gravatar'
+             WHERE zacct.`is_deleted` = 'N' and zpa.`is_deleted` = 'N' and zpa.`id` = pa.`id`) as `avatar_url`,
            CASE WHEN IFNULL(su.`url`, '') <> '' THEN CONCAT(CASE WHEN IFNULL(si.`https`, 'N') = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) ELSE NULL END as `site_url`,
            si.`name` as `site_name`,
            CASE WHEN IFNULL(su.`url`, '') <> '' THEN CONCAT(CASE WHEN IFNULL(si.`https`, 'N') = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, '/', pa.`guid`, '/profile') ELSE NULL END as `profile_url`,

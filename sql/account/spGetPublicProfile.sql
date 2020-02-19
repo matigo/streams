@@ -21,7 +21,7 @@ BEGIN
         `last_name`         varchar(80)             NOT NULL    ,
         `first_name`        varchar(80)             NOT NULL    ,
         `display_name`      varchar(80)             NOT NULL    ,
-        `avatar_img`        varchar(80)             NOT NULL    ,
+        `avatar_url`        varchar(256)            NOT NULL    ,
         `persona_guid`      char(36)                NOT NULL    ,
         `site_url`          varchar(256)                NULL    ,
         `persona_bio`       varchar(2048)               NULL    ,
@@ -49,15 +49,25 @@ BEGIN
     ) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
     /* Collect the Public Profile */
-    INSERT INTO `tmpPersona` (`name`, `last_name`, `first_name`, `display_name`, `avatar_img`, `persona_guid`, `site_url`, `persona_bio`,
+    INSERT INTO `tmpPersona` (`name`, `last_name`, `first_name`, `display_name`, `persona_guid`, `avatar_url`, `site_url`, `persona_bio`,
                               `follows`, `is_muted`, `is_blocked`, `is_starred`, `pin_type`, `timezone`, `created_at`, `days`, `is_you`)
-    SELECT DISTINCT pa.`name`, pa.`last_name`, pa.`first_name`, pa.`display_name`, pa.`avatar_img`, pa.`guid` as `persona_guid`,
+    SELECT DISTINCT pa.`name`, pa.`last_name`, pa.`first_name`, pa.`display_name`, pa.`guid` as `persona_guid`,
+           (SELECT CASE WHEN IFNULL(zpm.`value`, 'N') = 'Y'
+                        THEN CONCAT('https://www.gravatar.com/avatar/', MD5(LOWER(CASE WHEN zpa.`email` <> '' THEN zpa.`email` ELSE zacct.`email` END)), '?s=250&r=pg')
+                        ELSE (SELECT CONCAT(CASE WHEN zsi.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', zsu.`url`, '/avatars/', zpa.`avatar_img`) as `avatar_url`
+                                FROM `Site` zsi INNER JOIN `SiteUrl` zsu ON zsi.`id` = zsu.`site_id`
+                               WHERE zsi.`is_deleted` = 'N' and zsi.`is_default` = 'Y' and zsu.`is_active` = 'Y'
+                               LIMIT 1) END as `avatar_url`
+              FROM `Account` zacct INNER JOIN `Persona` zpa ON zacct.`id` = zpa.`account_id`
+                             LEFT OUTER JOIN `PersonaMeta` zpm ON zpa.`id` = zpm.`persona_id` AND zpm.`is_deleted` = 'N' and zpm.`key` = 'avatar.gravatar'
+             WHERE zacct.`is_deleted` = 'N' and zpa.`is_deleted` = 'N' and zpa.`id` = pa.`id`) as `avatar_url`,
            (SELECT CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `site_url`
               FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                                 INNER JOIN `PersonaMeta` z ON si.`id` = CAST(z.`value` AS UNSIGNED)
              WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and z.`is_deleted` = 'N' and su.`is_active` = 'Y'
-               and z.`key` = 'site.default' and z.`value` NOT IN ('', '0') and z.`persona_id` = pa.`id`) as `site_url`,
-           (SELECT z.`value` FROM `PersonaMeta` z WHERE z.`is_deleted` = 'N' and z.`key` = 'persona.bio' and z.`persona_id` = pa.`id`) as `persona_bio`,
+               and z.`key` = 'site.default' and z.`value` NOT IN ('', '0') and z.`persona_id` = pa.`id`
+             LIMIT 1) as `site_url`,
+           (SELECT z.`value` FROM `PersonaMeta` z WHERE z.`is_deleted` = 'N' and z.`key` = 'persona.bio' and z.`persona_id` = pa.`id` LIMIT 1) as `persona_bio`,
 
            IFNULL(pr.`follows`, 'N') as `follows`,
            IFNULL(pr.`is_muted`, 'N') as `is_muted`,
@@ -93,7 +103,7 @@ BEGIN
            tmp.`recent_at` = cnt.`recent_at`;
 
     /* Output the Profile */
-    SELECT tmp.`name`, tmp.`last_name`, tmp.`first_name`, tmp.`display_name`, tmp.`avatar_img`, tmp.`persona_guid`, tmp.`site_url`, tmp.`persona_bio`,
+    SELECT tmp.`name`, tmp.`last_name`, tmp.`first_name`, tmp.`display_name`, tmp.`avatar_url`, tmp.`persona_guid`, tmp.`site_url`, tmp.`persona_bio`,
            MAX(tmp.`follows`) as `follows`, MAX(tmp.`is_muted`) as `is_muted`, MAX(tmp.`is_blocked`) as `is_blocked`, MAX(tmp.`is_starred`) as `is_starred`,
            CASE WHEN MAX(CASE WHEN tmp.`pin_type` <> 'pin.none' THEN tmp.`pin_type` ELSE '' END) <> ''
                 THEN MAX(CASE WHEN tmp.`pin_type` <> 'pin.none' THEN tmp.`pin_type` ELSE '' END)
@@ -102,7 +112,7 @@ BEGIN
            tmp.`count_article`, tmp.`count_bookmark`, tmp.`count_location`, tmp.`count_quotation`, tmp.`count_note`, tmp.`count_photo`,
            tmp.`recent_at`, tmp.`days`, tmp.`is_you`
       FROM `tmpPersona` tmp
-     GROUP BY tmp.`name`, tmp.`last_name`, tmp.`first_name`, tmp.`display_name`, tmp.`avatar_img`, tmp.`persona_guid`, tmp.`site_url`, tmp.`persona_bio`,
+     GROUP BY tmp.`name`, tmp.`last_name`, tmp.`first_name`, tmp.`display_name`, tmp.`avatar_url`, tmp.`persona_guid`, tmp.`site_url`, tmp.`persona_bio`,
               tmp.`timezone`, tmp.`created_at`,
               tmp.`count_article`, tmp.`count_bookmark`, tmp.`count_location`, tmp.`count_quotation`, tmp.`count_note`, tmp.`count_photo`,
               tmp.`recent_at`, tmp.`days`, tmp.`is_you`;
