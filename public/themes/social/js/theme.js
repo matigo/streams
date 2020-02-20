@@ -294,6 +294,7 @@ function parseRelations( data ) {
 
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var today = moment().format('YYYY-MM-DD HH:mm:ss');
+        var sub30 = moment().subtract(30, 'days').startOf('day');
         var ds = data.data;
 
         for ( var n = 0; n < ds.length; n++ ) {
@@ -313,8 +314,14 @@ function parseRelations( data ) {
                     var _recent = '(Has Never Posted)';
                     if ( ds[n].relations[i].last_unix !== false && ds[n].relations[i].last_unix > 0 ) {
                         var _ts = ds[n].relations[i].last_unix * 1000;
-                        _recent = 'Recent Post ' + ((moment(_ts).isSame(today, 'day') ) ? 'at ' + moment(_ts).format('h:mm a') : 'on ' + moment(_ts).format('MMMM Do YYYY'));
+                        if ( moment(_ts).isAfter(sub30) ) {
+                            _recent = 'Recent Post ' + ((moment(_ts).isSame(today, 'day') ) ? 'at ' + moment(_ts).format('h:mm a') : 'on ' + moment(_ts).format('MMMM Do YYYY'));
+                        } else {
+                            _recent = 'Recent Post was about ' + moment(_ts).fromNow();
+                        }
                     }
+
+                    var _btnData = ' onClick="togglePersonaRelation(this);" data-guid="' + ds[n].relations[i].guid + '" data-ref="' + n + '-' + i + '" data-related="' + ds[n].guid + '"';
 
                     _html += '<div class="col-lg-4 col-md-6 col-sm-6 col-xs-12 relation-block">' +
                                 '<div class="content-author">' +
@@ -322,9 +329,13 @@ function parseRelations( data ) {
                                         '<img class="logo photo avatar-img" src="' + ds[n].relations[i].avatar_url + '">' +
                                     '</p>' +
                                 '</div>' +
-                                '<div class="author-block">' +
+                                '<div class="author-block ref-' + n + '-' + i + '">' +
                                     '<strong class="persona-name">' + _name + '</strong>' +
+                                    (( ds[n].relations[i].follows_you ) ? '<p class="last-action">Follows you</p>' : '') +
                                     '<p class="last-action">' + _recent + '</p>' +
+                                    '<button class="btn btn-relation ' + (( ds[n].relations[i].following ) ? 'btn-primary' : 'btn-danger') + '"' + _btnData + ' data-action="follow" data-set="fa-user-minus" data-unset="fa-user-plus"><i class="fas ' + (( ds[n].relations[i].following ) ? 'fa-user-minus' : 'fa-user-plus') + '"></i></button>' +
+                                    '<button class="btn btn-relation ' + (( ds[n].relations[i].is_muted ) ? 'btn-primary' : 'btn-danger') + '"' + _btnData + ' data-action="mute" data-set="fa-volume-mute" data-unset="fa-volume-up"><i class="fas ' + (( ds[n].relations[i].is_muted ) ? 'fa-volume-up' : 'fa-volume-mute') + '"></i></button>' +
+                                    '<button class="btn btn-relation ' + (( ds[n].relations[i].is_blocked ) ? 'btn-primary' : 'btn-danger') + '"' + _btnData + ' data-action="block" data-set="fa-user-check" data-unset="fa-user-slash"><i class="fas ' + (( ds[n].relations[i].is_blocked ) ? 'fa-user-check' : 'fa-user-slash') + '"></i></button>' +
                                 '</div>' +
                              '</div>';
                 }
@@ -1218,6 +1229,76 @@ function toggleProfileStatistics() {
         }
     }
 }
+function togglePersonaRelation( el ) {
+    var _related = el.getAttribute('data-related');
+    var _action = el.getAttribute('data-action');
+    var _guid = el.getAttribute('data-guid');
+    var _ref = el.getAttribute('data-ref');
+    var _req = 'POST';
+
+    if ( _action === undefined || _action === false || _action === null || NoNull(_action) == '' ) { return; }
+    if ( _guid === undefined || _guid === false || _guid === null || NoNull(_guid) == '' ) { return; }
+    if ( el.classList.contains('btn-primary') || el.classList.contains('btn-success') ) { _req = 'DELETE'; }
+
+    if ( _guid !== undefined && _guid !== false && _guid !== null && _guid.length == 36 ) {
+        var params = { 'persona_guid': _related,
+                       'ref_id': _ref
+                      };
+        doJSONQuery('account/' + _guid + '/' + _action, _req, params, parseToggleRelation);
+    }
+}
+function parseToggleRelation( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.guid !== undefined && ds.guid !== false && ds.guid !== null && ds.guid.length == 36 ) {
+            if ( ds.ref_id !== undefined && ds.ref_id !== false ) {
+                var els = document.getElementsByClassName('ref-' + ds.ref_id);
+                for ( var i = 0; i < els.length; i++ ) {
+                    var btns = els[i].getElementsByClassName('btn-relation');
+                    for ( var b = 0; b < btns.length; b++ ) {
+                        var _iconN = btns[b].getAttribute('data-unset');
+                        var _iconY = btns[b].getAttribute('data-set');
+
+                        var _action = btns[b].getAttribute('data-action');
+                        if ( _action === undefined || _action === null || _action === false ) { _action = ''; }
+                        btns[b].classList.remove('btn-primary');
+                        btns[b].classList.remove('btn-success');
+                        btns[b].classList.remove('btn-danger');
+
+                        switch ( _action ) {
+                            case 'follow':
+                                if ( ds.follows ) {
+                                    btns[b].classList.add('btn-primary');
+                                } else {
+                                    btns[b].classList.add('btn-danger');
+                                }
+                                break;
+
+                            case 'mute':
+                                if ( ds.is_muted ) {
+                                    btns[b].classList.add('btn-primary');
+                                } else {
+                                    btns[b].classList.add('btn-danger');
+                                }
+                                break;
+
+                            case 'block':
+                                if ( ds.is_blocked ) {
+                                    btns[b].classList.add('btn-primary');
+                                } else {
+                                    btns[b].classList.add('btn-danger');
+                                }
+                                break;
+                        }
+
+                        btns[b].innerHTML = '<i class="fas ' + (( ds.follows || ds.is_muted || ds.is_blocked === false ) ? _iconY : _iconN) + '"></i>';
+                    }
+                }
+            }
+            console.log(ds);
+        }
+    }
+}
 function setPersonaRelation( el ) {
     var _guid = el.getAttribute('data-persona-guid');
     var _action = el.getAttribute('data-action');
@@ -1255,12 +1336,20 @@ function parseProfileHistogram( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         var _html = '';
+        var _width = 0;
+
+        var els = document.getElementsByClassName('profile-body');
+        for ( var i = 0; i < els.length; i++ ) {
+            _width = els[i].offsetWidth - 15;
+        }
 
         if ( ds !== undefined && ds.history !== undefined && ds.history.length > 0 ) {
             for ( var i = 0; i < ds.history.length; i++ ) {
                 var _px = 50 * (ds.history[i].total / ds.max_score);
+                var _w = Math.floor(_width / ds.history.length);
+                if ( _w < 1 ) { _w = 1; }
 
-                _html += '<td class="bar" style="height: ' + Math.round(_px) + 'px;">&nbsp;</td>';
+                _html += '<td class="bar" style="height: ' + Math.round(_px) + 'px; width: ' + _w + 'px;">&nbsp;</td>';
             }
         }
         if ( _html != '' ) { _html = '<table><tbody><tr>' + _html + '</tr></tbody></table>'; }
@@ -2105,24 +2194,39 @@ function validateTimeline( _tl ) {
     var _view = readStorage('timeline');
     if ( _view === undefined || _view === false || _view === null || valids.indexOf(_view) < 0 ) { _view = 'global'; }
     if ( _tl === undefined || _tl === false || _tl === null || valids.indexOf(_tl) < 0 ) { _tl = NoNull(_view, 'global'); }
+    var _icon = 'fas fa-globe';
+
+    // Is Another View Taking Precedence?
+    var els = document.getElementsByClassName('interact-block');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('hidden') === false ) {
+            var _vw = els[i].getAttribute('data-view');
+            switch ( _vw ) {
+                case 'relations':
+                    _icon = 'fas fa-user-friends';
+                    break;
+
+                default:
+                    switch ( _tl ) {
+                        case 'home':
+                            _icon = 'fas fa-home';
+                            break;
+
+                        case 'mentions':
+                            _icon = 'far fa-comments';
+                            break;
+
+                        case 'actions':
+                            _icon = 'fas fa-highlighter';
+                            break;
+                    }
+            }
+        }
+    }
 
     // Ensure the Puck is Set Correctly
     var els = document.getElementsByClassName('puck-open');
     for ( var i = 0; i < els.length; i++ ) {
-        var _icon = 'fas fa-globe';
-        switch ( _tl ) {
-            case 'home':
-                _icon = 'fas fa-home';
-                break;
-
-            case 'mentions':
-                _icon = 'far fa-comments';
-                break;
-
-            case 'actions':
-                _icon = 'fas fa-highlighter';
-                break;
-        }
         if ( els[i].innerHTML != '<i class="' + _icon + '"></i>' ) {
             els[i].innerHTML = '<i class="' + _icon + '"></i>';
         }

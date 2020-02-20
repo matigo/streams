@@ -634,6 +634,7 @@ class Account {
     private function _setRelation() {
         $CleanGUID = NoNull($this->settings['persona_guid'], $this->settings['persona-guid']);
         $RelatedGUID = NoNull($this->settings['PgSub1']);
+        $RefId = NoNull($this->settings['ref_id'], $this->settings['ref']);
         if ( strlen($RelatedGUID) != 36 ) {
             $RelatedGUID = NoNull($this->settings['related_guid'], $this->settings['related-guid']);
         }
@@ -663,6 +664,7 @@ class Account {
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
                 return array( 'guid'         => NoNull($Row['related_guid']),
+                              'ref_id'       => (($RefId != '') ? $RefId : false),
 
                               'follows'      => YNBool($Row['follows']),
                               'is_muted'     => YNBool($Row['is_muted']),
