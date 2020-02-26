@@ -1636,7 +1636,7 @@ function buildActionBar(can_edit, threaded, pin) {
     if ( _sin ) {
         var valids = ['blue', 'green', 'orange', 'red', 'yellow', 'none'];
         for ( var i in valids ) {
-            html += '<button class="btn btn-pin ' + valids[i] + ((i == valids.length - 1) ? ' hidden-xxs' : '') + ' hidden" onclick="performPin(this);"  data-value="' + valids[i] + '"><i class="fas fa-' + ((valids[i] == 'none') ? 'times-circle' : 'map-pin') + '"></i></button>';
+            html += '<button class="btn btn-pin ' + valids[i] + ' hidden" onclick="performPin(this);"  data-value="' + valids[i] + '"><i class="fas fa-' + ((valids[i] == 'none') ? 'times-circle' : 'map-pin') + '"></i></button>';
         }
     }
 
@@ -2032,7 +2032,6 @@ function performPin(btn) {
                 els[i].classList.add('hidden');
                 if ( els[i].classList.contains('btn-action') ) { els[i].classList.remove('hidden'); }
             }
-            break;
 
         default:
             actionPinPost(_guid, _value);

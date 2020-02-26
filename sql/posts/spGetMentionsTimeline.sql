@@ -21,7 +21,13 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+    SELECT po.`id` - 5000 INTO `min_id` FROM `Post` po
+     ORDER BY po.`id` DESC
+     LIMIT 1;
+
+    IF IFNULL(`min_id`, 0) <= 0 THEN
+        SET `min_id` = 1;
+    END IF;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;

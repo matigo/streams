@@ -901,6 +901,12 @@ table th { word-break: normal; }
         text-align: center;
         padding-left: 0;
     }
+    .metaline.post-actions button {
+        padding: 7px 0 5px;
+        margin-right: 5px;
+        min-width: 45px;
+        max-width: 50px;
+    }
     .metaline.geo img {
         max-width: calc(100% - 0.333em);
         margin: 0.25em 0.333em 0.25em 0;

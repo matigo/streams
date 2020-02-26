@@ -61,6 +61,9 @@ define('CLOUDFLARE_EMAIL', '');                             // The CloudFlare Em
 define('CLOUDFLARE_SITEDNSTYPE', '');                       // The Type of DNS Record Created in CloudFlare (A, AAAA, CNAME, etc.)
 define('CLOUDFLARE_SITEDNSVAL', '');                        // The Value for the DNS Record creatd in CloudFlare (An IP Address or CNAME Pointer)
 
+define('SCRIPTURE_API_KEY', '');                            // The Api.Bible Scripture API Key
+define('SCRIPTURE_API_URL', '');                            // The Api.Bible Scripture API Address
+
 define('USE_S3', 0);                                        // Use Amazon S3 Storage
 define('AWS_ACCESS_KEY', '');                               // The Amazon S3 Access Key
 define('AWS_SECRET_KEY', '');                               // The Amazon S3 Secret Key

@@ -21,7 +21,13 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+    SELECT po.`id` - 5000 INTO `min_id` FROM `Post` po
+     ORDER BY po.`id` DESC
+     LIMIT 1;
+
+    IF IFNULL(`min_id`, 0) <= 0 THEN
+        SET `min_id` = 1;
+    END IF;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
@@ -67,7 +73,10 @@ BEGIN
      WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
        and act.`is_deleted` = 'N' and pap.`is_deleted` = 'N' and pap.`account_id` = `in_account_id`
-       and pa.`is_deleted` = 'N' and po.`publish_at` <= Now() and po.`id` >= IFNULL(`min_id`, 0);
+       and pa.`is_deleted` = 'N' and po.`publish_at` <= Now()
+       and 'Y' = CASE WHEN act.`pin_type` NOT IN ('pin.none') THEN 'Y'
+                 WHEN act.`points` > 0 THEN 'Y'
+                 ELSE act.`is_starred` END;
 
     /* If there aren't enough posts, reach back farther to look for some */
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
@@ -98,7 +107,7 @@ BEGIN
     END IF;
 
     /* Build the Completed Timeline */
-    SELECT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_guid`,
+    SELECT DISTINCT pa.`name` as `persona_name`, pa.`display_name`, pa.`guid` as `persona_guid`,
            (SELECT CASE WHEN IFNULL(zpm.`value`, 'N') = 'Y'
                         THEN CONCAT('https://www.gravatar.com/avatar/', MD5(LOWER(CASE WHEN zpa.`email` <> '' THEN zpa.`email` ELSE zacct.`email` END)), '?s=250&r=pg')
                         ELSE (SELECT CONCAT(CASE WHEN zsi.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', zsu.`url`, '/avatars/', zpa.`avatar_img`) as `avatar_url`
@@ -121,6 +130,7 @@ BEGIN
            po.`reply_to`, po.`type`,
            po.`guid` as `post_guid`, po.`privacy_type`,
            po.`publish_at`, po.`expires_at`, po.`updated_at`,
+           tmp.`posted_at`,
 
            IFNULL((SELECT pp.`pin_type` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
                     WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
@@ -151,15 +161,13 @@ BEGIN
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                         INNER JOIN (SELECT `post_id`, `posted_at`, `is_visible` FROM tmpPosts
                                      WHERE `is_visible` = 'Y'
-                                       and `posted_at` BETWEEN CASE WHEN `in_since_unix` = 0 THEN DATE_SUB(Now(), INTERVAL 6 MONTH) ELSE FROM_UNIXTIME(`in_since_unix`) END AND
-                                                               CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
                    LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-       and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
+       and ch.`type` = 'channel.site' and su.`is_active` = 'Y'
        and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')
-       and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
+       and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.public' AND po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END
      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
