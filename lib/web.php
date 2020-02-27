@@ -29,6 +29,8 @@ class Route extends Streams {
     public function getResponseData() {
         $ThemeLocation = NoNull($this->settings['theme'], 'default');
         $ReplStr = $this->_getReplStrArray();
+        $this->settings['status'] = 200;
+
         $html = readResource(FLATS_DIR . '/templates/500.html', $ReplStr);
         $ThemeFile = THEME_DIR . '/error.html';
         $LoggedIn = false;
@@ -101,6 +103,7 @@ class Route extends Streams {
                     case 'export':
                     case 'write':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
+                            $this->settings['status'] = 403;
                             redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403', $this->settings );
                         }
                         break;
@@ -116,6 +119,7 @@ class Route extends Streams {
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
+                    $this->settings['status'] = 403;
                     redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403', $this->settings );
                 }
             }
@@ -148,7 +152,7 @@ class Route extends Streams {
         }
 
         // Return the HTML With the Appropriate Headers
-        $this->settings['status'] = 200;
+
         unset($this->strings);
         unset($this->site);
         return $html;
@@ -972,6 +976,9 @@ class Route extends Streams {
         $ResDIR = THEME_DIR . "/" . $data['location'] . "/resources/";
         $rVal = 'content-' . NoNull($this->settings['PgRoot'], 'main') . '.html';
         if ( file_exists($ResDIR . $rVal) === false ) { $rVal = 'content-main.html'; }
+
+        if ( $rVal == 'content-404.html' ) { $this->settings['status'] = 404; }
+        if ( $rVal == 'content-403.html' ) { $this->settings['status'] = 403; }
 
         // Return the Necessary Page
         return $ResDIR . $rVal;
