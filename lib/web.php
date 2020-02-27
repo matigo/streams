@@ -57,7 +57,7 @@ class Route extends Streams {
                 }
 
                 // Redirect to the Appropriate URL
-                redirectTo( $data['protocol'] . '://' . NoNull(str_replace('//', '/', $data['HomeURL'] . $suffix)) );
+                redirectTo( $data['protocol'] . '://' . NoNull(str_replace('//', '/', $data['HomeURL'] . $suffix), $this->settings ) );
             }
 
             // Is this a Syndication Request?
@@ -101,7 +101,7 @@ class Route extends Streams {
                     case 'export':
                     case 'write':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
-                            redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
+                            redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403', $this->settings );
                         }
                         break;
 
@@ -116,7 +116,7 @@ class Route extends Streams {
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
-                    redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403' );
+                    redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403', $this->settings );
                 }
             }
 
@@ -141,7 +141,7 @@ class Route extends Streams {
 
             // Perform the Redirect if Necessary
             $suffix = ( YNBool($this->settings['remember']) ) ? '?remember=Y' : '';
-            if ( $data['do_redirect'] ) { redirectTo( $RedirectURL . $suffix ); }
+            if ( $data['do_redirect'] ) { redirectTo( $RedirectURL . $suffix, $this->settings ); }
 
             // Load the Requested HTML Content
             $html = $this->_getPageHTML( $data );

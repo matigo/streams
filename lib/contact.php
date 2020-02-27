@@ -279,7 +279,7 @@ class Contact {
 
         // Redirect to a "Thank You" Page
         $OutUrl = $this->settings['HomeURL'] . '/thankyou';
-        redirectTo($OutUrl);
+        redirectTo($OutUrl, $this->settings);
     }
 
     private function _sendEmailNotification() {

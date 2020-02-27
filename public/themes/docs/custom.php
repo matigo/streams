@@ -135,7 +135,7 @@ class Docs {
         // If We Have Nothing, then check if this is a page. If it's not, 404.
         if ( $ReplStr['[CONTENT]'] == '' ) {
             $PageFile = THEME_DIR . '/' . NoNull($data['location']) . '/resources/page-' . strtolower($PageUrl) . '.html';
-            if ( file_exists($PageFile) === false ) { redirectTo( $this->settings['HomeURL'] . '/404' ); }
+            if ( file_exists($PageFile) === false ) { redirectTo( $this->settings['HomeURL'] . '/404', $this->settings ); }
         }
 
         // Return the Completed HTML

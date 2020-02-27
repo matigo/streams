@@ -416,13 +416,13 @@ class Site {
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
                 if ( nullInt($Row['version_id']) <= 0 ) {
-                    if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403'); }
+                    if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/403', $this->settings); }
                 }
             }
         }
 
         // If This is a Web Request, Redirect the Visitor
-        if ( $isWebReq ) { redirectTo($this->settings['HomeURL']); }
+        if ( $isWebReq ) { redirectTo($this->settings['HomeURL'], $this->settings); }
 
         // Get the Updated Information
         $rVal = $this->_getSiteData();

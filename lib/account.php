@@ -434,7 +434,7 @@ class Account {
                 } else {
                     $url = NoNull($this->settings['HomeURL']) . '/nodice';
                 }
-                redirectTo( $url );
+                redirectTo( $url, $this->settings );
                 break;
 
             default:

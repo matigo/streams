@@ -303,7 +303,7 @@ class Auth {
             } else {
                 $url .= "/nodice";
             }
-            redirectTo($url);
+            redirectTo($url, $this->settings);
             return false;
 
         } else {

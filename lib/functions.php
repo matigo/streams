@@ -922,9 +922,29 @@
     /**
      * Function redirects a visitor to the specified URL
      */
-    function redirectTo( $URL, $Referer = '' ) {
-        if ( NoNull($Referer) != '' ) { header( "Referer: $Referer" ); }
-        header( "Location: $URL" );
+    function redirectTo( $Url, $sets = false ) {
+        $RefUrl = NoNull($_SERVER['REQUEST_SCHEME'], 'http') . '://' . NoNull($_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']);
+        $ReqURI = NoNull($_SERVER['REQUEST_URI'], '/');
+        if ( in_array(strtolower($ReqURI), array('/', '')) === false ) {
+            $ps = explode('/', strtolower($ReqURI));
+            foreach ( $ps as $p ) {
+                if ( NoNull($p) != '' ) { $RefUrl .= '/' . NoNull($p); }
+            }
+        }
+
+        // Set the Redirect Status
+        $status = 302;
+        $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1');
+        header($protocol . ' ' . nullInt($status) . ' ' . getHTTPCode($status) );
+
+        // Record the Usage Statistic so that 302s are Counted
+        if ( is_array($sets) ) { recordUsageStat($sets, 302, ''); }
+
+        // If we have a Referral URL, Set It
+        if ( NoNull($RefUrl) != '' ) { header( "Referer: $RefUrl" ); }
+
+        // Set the Location header record
+        header( "Location: $Url" );
         die;
     }
 
