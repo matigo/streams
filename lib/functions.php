@@ -1940,6 +1940,9 @@
         // Record the Usage Statistic
         recordUsageStat( $sets, $status, ((is_array($meta) && count($meta) > 0) ? $meta[count($meta) - 1] : '') );
 
+        // Close the Persistent SQL Connection If Needs Be
+        closePersistentSQLConn();
+
         exit( $data );
     }
 

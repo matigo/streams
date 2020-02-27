@@ -29,14 +29,13 @@ class Streams {
      * ********************************************************************* */
     function buildResult() {
         $ReplStr = $this->_getReplStrArray();
-        $html = readResource(FLATS_DIR . '/templates/500.html', $ReplStr);
+        $rslt = readResource(FLATS_DIR . '/templates/500.html', $ReplStr);
         $type = 'text/html';
-        $rslt = false;
         $meta = false;
         $code = 500;
 
         // Check to Ensure the Visitor is not Overwhelming the Server(s) and Respond Accordingly
-        if ( $this->_checkForHammer() ) {
+        if ( $this->_checkForHammer() && $this->_isValidRequest() ) {
             switch ( strtolower($this->settings['Route']) ) {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
@@ -60,12 +59,9 @@ class Streams {
             unset($data);
 
         } else {
-            $html = readResource( FLATS_DIR . "/templates/420.html", $ReplStr);
-            $code = 420;
+            $code = $this->_isValidRequest() ? 420 : 422;
+            $rslt = readResource( FLATS_DIR . "/templates/$code.html", $ReplStr);
         }
-
-        // Close the Persistent SQL Connection If Needs Be
-        closePersistentSQLConn();
 
         // Return the Data in the Correct Format
         formatResult($rslt, $this->settings, $type, $code, $meta, $more);
@@ -122,35 +118,6 @@ class Streams {
     }
 
     /**
-     *  Function Ensures the Token Is Updated When an API Call is Made
-     */
-    private function _touchTokenRecord() {
-        $Token = NoNull($this->settings['token']);
-        $TokenID = 0;
-
-        if ( $Token != '' ) {
-            $data = explode('_', $Token);
-            if ( count($data) == 3 ) {
-                if ( $data[0] == str_replace('_', '', TOKEN_PREFIX) ) {
-                    $TokenID = alphaToInt($data[1]);
-                    $TokenGUID = NoNull($data[2]);
-                }
-            }
-
-            // No Point Continuing If We Have Nothing Here
-            if ( $TokenID <= 0 || $TokenGUID == '' ) { return false; }
-
-            // Construct the SQL Query
-            $ReplStr = array( '[TOKEN_ID]'   => nullInt($TokenID),
-                              '[TOKEN_GUID]' => sqlScrub($TokenGUID),
-                              '[LIFESPAN]'   => nullInt(COOKIE_EXPY),
-                             );
-            $sqlStr = readResource(SQL_DIR . '/auth/touchToken.sql', $ReplStr, true);
-            writeSQLCache($sqlStr);
-        }
-    }
-
-    /**
      *  Function Constructs and Returns the Language String Replacement Array
      */
     private function _getReplStrArray() {
@@ -163,6 +130,21 @@ class Streams {
 
         // Return the Array
         return $rVal;
+    }
+
+    /** ********************************************************************** *
+     *  Vulnerability-Seeking Bastard Functions
+     ** ********************************************************************** */
+    /**
+     *  Function determines if the request is looking for a WordPress, phpMyAdmin, or other
+     *      open-source package-based attack vector and returns an abrupt message if so.
+     */
+    private function _isValidRequest() {
+        $roots = array( 'phpmyadmin', 'phpmyadm1n', 'phpmy',
+                        'tools', 'typo3', 'xampp', 'www', 'web',
+                        'wp-admin', 'wp-content', 'wp-includes', 'vendor', 'wp-login.php'
+                       );
+        return !in_array(strtolower(NoNull($this->settings['PgRoot'])), $roots);
     }
 }
 

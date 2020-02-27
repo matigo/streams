@@ -21,10 +21,14 @@
     "unlockAccessCodePH": "(Your Access Code)",
     "unlockAccessBtn": "Enter Site",
 
-    "msg401Line1": "Slow Down!",
-    "msg401Line2": "You&apos;re making too many requests too quickly.<br>Share the system with everyone.",
+    "msg401Line1": "No Can Do",
+    "msg401Line2": "Sorry, but you don&apos;t appear to have the right credentials required to access this resource.",
     "msg404Line1": "File Not Found",
     "msg404Line2": "Sorry. Not quite sure what you&apos;re looking for.",
+    "msg420Line1": "Slow Down!",
+    "msg420Line2": "You&apos;ve made too many requests in too short a time.<br>Please share the service with everyone.",
+    "msg422Line1": "No Dice, Romeo!",
+    "msg422Line2": "You&apos;re not making sense. Think before you act.",
     "msg500Line1": "Oh No!",
     "msg500Line2": "Just a moment, please. Something&apos;s not quite right.",
 

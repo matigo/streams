@@ -287,7 +287,9 @@ class cookies {
         $filters = array('api', 'cdn', 'files');
 
         // Change the ReqURI if an old pattern is found
-        $oldNew = array( 'api/content/blurbs/global' => 'api/posts/global' );
+        $oldNew = array( 'api/content/blurbs/global' => 'api/posts/global',
+                         'content/blurbs/global'     => 'api/posts/global'
+                        );
         if ( in_array(strtolower($ReqURI), array_keys($oldNew)) ) {
             $ReqURI = $oldNew[$ReqURI];
         }
