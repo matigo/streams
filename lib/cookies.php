@@ -286,6 +286,13 @@ class cookies {
         if ( strpos($ReqURI, "?") ) { $ReqURI = substr($ReqURI, 0, strpos($ReqURI, "?")); }
         $filters = array('api', 'cdn', 'files');
 
+        // Change the ReqURI if an old pattern is found
+        $oldNew = array( 'api/content/blurbs/global' => 'api/posts/global' );
+        if ( in_array(strtolower($ReqURI), array_keys($oldNew)) ) {
+            $ReqURI = $oldNew[$ReqURI];
+        }
+
+        // Let's continue ...
         $BasePath = explode( '/', BASE_DIR );
         $URLPath = explode( '/', $ReqURI );
         $route = $this->_getRouting();
