@@ -125,8 +125,19 @@ class cookies {
                 case 'pgsub5':
                 case 'pgsub6':
                     $rVal[ $Key ] = $this->_stripQueries( $Val );
+                    break;
+
+                case '_device_id':
+                case '__cfduid':
+                    if ( NoNull($Val) != '' ) {
+                        $rVal['_device_id'] = NoNull($Val);
+                    }
+                    break;
             }
         }
+
+        // Ensure there is a Device ID
+        if ( NoNull($rVal['_device_id']) == '' ) { $rVal['_device_id'] = NoNull($rVal['__cfduid'], getRandomString(32)); }
 
         // Get the Appropriate Account Data
         if ( NoNull($rVal['token']) != '' ) {
@@ -372,8 +383,8 @@ class cookies {
     private function _saveCookies( $cookieVals, $fullDomain = true ) {
         if (!headers_sent()) {
             $cookieVals['remember'] = BoolYN(YNBool(NoNull($cookieVals['remember'], 'N')));
-            $valids = array( 'token', 'DispLang', 'remember', 'invite' );
-            $longer = array( 'DispLang' );
+            $valids = array( 'token', 'DispLang', 'remember', 'invite', '_device_id' );
+            $longer = array( 'DispLang', '_device_id' );
             $domain = strtolower($_SERVER['SERVER_NAME']);
 
             if ( $fullDomain !== false ) { $fullDomain = true; }
