@@ -177,10 +177,10 @@ class Site {
         if ( is_array($this->cache[strtolower($SiteURL)]) ) { return $this->cache[strtolower($SiteURL)]; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[SITE_TOKEN]' => sqlScrub($this->settings['site_token']),
-                          '[SITE_PASS]'  => sqlScrub($SitePass),
+                          '[SITE_TOKEN]' => sqlScrub(mb_substr(NoNull($this->settings['site_token']), 0, 256)),
+                          '[SITE_PASS]'  => sqlScrub(mb_substr($SitePass, 0, 512)),
                           '[SITE_URL]'   => strtolower($SiteURL),
-                          '[REQ_URI]'    => sqlScrub($this->settings['ReqURI']),
+                          '[REQ_URI]'    => sqlScrub(mb_substr(NoNull($this->settings['ReqURI'], '/'), 0, 512)),
                          );
         $sqlStr = prepSQLQuery("CALL GetSiteData([ACCOUNT_ID], '[SITE_URL]', '[REQ_URI]', '[SITE_TOKEN]', '[SITE_PASS]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);

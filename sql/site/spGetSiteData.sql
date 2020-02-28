@@ -1,6 +1,6 @@
 DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetSiteData;;
-CREATE PROCEDURE GetSiteData( IN `account_id` int(11), IN `site_url` varchar(128), IN `request_uri` varchar(256), IN `site_token` varchar(256), IN `site_pass` varchar(512) )
+CREATE PROCEDURE GetSiteData( IN `account_id` int(11), IN `site_url` varchar(128), IN `request_uri` varchar(512), IN `site_token` varchar(256), IN `site_pass` varchar(512) )
 BEGIN
     DECLARE `x_site_locked` enum('N','Y');
     DECLARE `x_pass_valid`  enum('N','Y');

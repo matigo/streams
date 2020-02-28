@@ -23,14 +23,16 @@
 
     "msg401Line1": "No Can Do",
     "msg401Line2": "Sorry, but you don&apos;t appear to have the right credentials required to access this resource.",
+    "msg403Line1": "Access Denied",
+    "msg403Line2": "You do not have permission to access this resource.",
     "msg404Line1": "Resource Not Found",
     "msg404Line2": "Sorry. Not quite sure what you&apos;re looking for.",
     "msg420Line1": "Slow Down!",
     "msg420Line2": "You&apos;ve made too many requests in too short a time.<br>Please share the service with everyone.",
     "msg422Line1": "No Dice, Romeo!",
-    "msg422Line2": "You&apos;re not making sense. Think before you act.",
+    "msg422Line2": "You&apos;re not making sense.<br>Think before you act.",
     "msg500Line1": "Oh No!",
-    "msg500Line2": "Just a moment, please. Something&apos;s not quite right.",
+    "msg500Line2": "Just a moment, please.<br>Something&apos;s not quite right.",
 
     "errCantUpload": "Could Not Upload File",
     "errNeedName": "Please Enter Your Login Name",

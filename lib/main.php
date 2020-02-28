@@ -62,7 +62,7 @@ class Streams {
             if ( $this->_isValidAgent() ) {
                 $code = $this->_isValidRequest() ? 420 : 422;
             } else {
-                $code = 404;
+                $code = 403;
             }
             $rslt = readResource( FLATS_DIR . "/templates/$code.html", $ReplStr);
         }
@@ -156,11 +156,12 @@ class Streams {
      *      unacceptable agents, as agent strings are easily spoofed.
      */
     private function _isValidAgent() {
-        $excludes = array( 'ahrefsbot', 'mj12bot', 'semrushbot', 'mmb29p', 'mbcrawler', 'blexbot', 'sogou web spider',
-                           'serpstatbot', 'semanticscholarbot', 'yandexbot', 'yandeximages', 'gwene', 'barkrowler',
-                           'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler',
+        $excludes = array( 'ahrefsbot', 'mj12bot', 'mb2345browser', 'semrushbot', 'mmb29p', 'mbcrawler', 'blexbot', 'sogou web spider',
+                           'serpstatbot', 'semanticscholarbot', 'yandexbot', 'yandeximages', 'gwene', 'barkrowler', 'yeti',
+                           'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler', 'iccrawler',
                            'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate',
-                           'thither.direct' );
+                           'thither.direct', 'liebaofast', 'micromessenger', 'youdaobot', 'theworld', 'qqbrowser',
+                           'dotbot', 'exabot', 'gigabot', 'slurp' );
         $agent = strtolower(NoNull($_SERVER['HTTP_USER_AGENT']));
         if ( $agent != '' ) {
             foreach ( $excludes as $chk ) {
