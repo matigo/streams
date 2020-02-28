@@ -35,7 +35,7 @@ class Streams {
         $code = 500;
 
         // Check to Ensure the Visitor is not Overwhelming the Server(s) and Respond Accordingly
-        if ( $this->_checkForHammer() && $this->_isValidRequest() ) {
+        if ( $this->_checkForHammer() && $this->_isValidRequest() && $this->_isValidAgent() ) {
             switch ( strtolower($this->settings['Route']) ) {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
@@ -59,7 +59,11 @@ class Streams {
             unset($data);
 
         } else {
-            $code = $this->_isValidRequest() ? 420 : 422;
+            if ( $this->_isValidAgent() ) {
+                $code = $this->_isValidRequest() ? 420 : 422;
+            } else {
+                $code = 404;
+            }
             $rslt = readResource( FLATS_DIR . "/templates/$code.html", $ReplStr);
         }
 
@@ -67,6 +71,39 @@ class Streams {
         formatResult($rslt, $this->settings, $type, $code, $meta, $more);
     }
 
+    /**
+     *  Function Checks to Ensure the Connecting Protocol is Correct. Incorrect Protocols
+     *      need to be corrected
+     */
+    private function _checkValidProtocol() {
+        $protocol = getServerProtocol();
+        $rVal = false;
+
+        if ( HTTPS_ENABLED == 1 && $protocol == 'https' ) { $rVal = true; }
+        if ( HTTPS_ENABLED == 0 && $protocol == 'http' ) { $rVal = true; }
+
+        // Return the Boolean Response
+        return $rVal;
+    }
+
+    /**
+     *  Function Constructs and Returns the Language String Replacement Array
+     */
+    private function _getReplStrArray() {
+        $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
+                       '[RUNTIME]' => getRunTime('html'),
+                      );
+        foreach ( $this->strings as $Key=>$Val ) {
+            $rVal["[$Key]"] = NoNull($Val);
+        }
+
+        // Return the Array
+        return $rVal;
+    }
+
+    /** ********************************************************************** *
+     *  Bad Behaviour Functions
+     ** ********************************************************************** */
     /**
      *  Function Checks to Ensure a Device Isn't Hammering the System Like an Idiot
      */
@@ -103,39 +140,6 @@ class Streams {
     }
 
     /**
-     *  Function Checks to Ensure the Connecting Protocol is Correct. Incorrect Protocols
-     *      need to be corrected
-     */
-    private function _checkValidProtocol() {
-        $protocol = getServerProtocol();
-        $rVal = false;
-
-        if ( HTTPS_ENABLED == 1 && $protocol == 'https' ) { $rVal = true; }
-        if ( HTTPS_ENABLED == 0 && $protocol == 'http' ) { $rVal = true; }
-
-        // Return the Boolean Response
-        return $rVal;
-    }
-
-    /**
-     *  Function Constructs and Returns the Language String Replacement Array
-     */
-    private function _getReplStrArray() {
-        $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
-                       '[RUNTIME]' => getRunTime('html'),
-                      );
-        foreach ( $this->strings as $Key=>$Val ) {
-            $rVal["[$Key]"] = NoNull($Val);
-        }
-
-        // Return the Array
-        return $rVal;
-    }
-
-    /** ********************************************************************** *
-     *  Vulnerability-Seeking Bastard Functions
-     ** ********************************************************************** */
-    /**
      *  Function determines if the request is looking for a WordPress, phpMyAdmin, or other
      *      open-source package-based attack vector and returns an abrupt message if so.
      */
@@ -145,6 +149,25 @@ class Streams {
                         'wp-admin', 'wp-content', 'wp-includes', 'vendor', 'wp-login.php'
                        );
         return !in_array(strtolower(NoNull($this->settings['PgRoot'])), $roots);
+    }
+
+    /**
+     *  Function determines if the reported agent is valid for use or not. This is not meant to be a comprehensive list of
+     *      unacceptable agents, as agent strings are easily spoofed.
+     */
+    private function _isValidAgent() {
+        $excludes = array( 'ahrefsbot', 'mj12bot', 'semrushbot', 'mmb29p', 'mbcrawler', 'blexbot', 'sogou web spider',
+                           'serpstatbot', 'semanticscholarbot', 'yandexbot', 'yandeximages', 'gwene', 'barkrowler',
+                           'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler',
+                           'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate',
+                           'thither.direct' );
+        $agent = strtolower(NoNull($_SERVER['HTTP_USER_AGENT']));
+        if ( $agent != '' ) {
+            foreach ( $excludes as $chk ) {
+                if ( mb_strpos($agent, $chk) !== false ) { return false; }
+            }
+        }
+        return true;
     }
 }
 

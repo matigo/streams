@@ -23,7 +23,7 @@
 
     "msg401Line1": "No Can Do",
     "msg401Line2": "Sorry, but you don&apos;t appear to have the right credentials required to access this resource.",
-    "msg404Line1": "File Not Found",
+    "msg404Line1": "Resource Not Found",
     "msg404Line2": "Sorry. Not quite sure what you&apos;re looking for.",
     "msg420Line1": "Slow Down!",
     "msg420Line2": "You&apos;ve made too many requests in too short a time.<br>Please share the service with everyone.",
