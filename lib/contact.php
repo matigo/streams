@@ -235,6 +235,7 @@ class Contact {
         $CleanSubj = NoNull($this->settings['contact-subject'], $this->settings['subject']);
         $CleanMsg = NoNull($this->settings['contact-message'], $this->settings['message']);
         $CleanChk = nullInt($this->settings['contact-validate'], $this->settings['validate']);
+        $CleanNonce = NoNull($this->settings['contact-nonce'], $this->settings['nonce']);
 
         // Remove any HTML That Might Exist
         $CleanName = strip_tags($CleanName);
@@ -250,15 +251,23 @@ class Contact {
         if ( validateEmail($CleanMail) === false ) { return "Invalid Email Address Provided"; }
         if ( strlen($CleanMsg) < 3 ) { return "No Message Provided"; }
 
+        // Construct the Expected Nonce Value
+        $ExpectedNonce = md5(NoNull($this->settings['HomeURL']) . NoNull($this->settings['_address']));
+
         // The check value is hard-coded to be 42. There are several questions, but all are 42.
         if ( $CleanChk != 42 ) { return "Invalid Check Value Provided"; }
 
         // Record the Data to the Database
-        $ReplStr = array( '[NAME]'    => sqlScrub($CleanName),
-                          '[MAIL]'    => sqlScrub($CleanMail),
-                          '[SUBJECT]' => sqlScrub($CleanSubj),
-                          '[MESSAGE]' => sqlScrub($CleanMsg),
-                          '[SITE_ID]' => nullInt($this->settings['site_id']),
+        $ReplStr = array( '[NAME]'        => sqlScrub($CleanName),
+                          '[MAIL]'        => sqlScrub($CleanMail),
+                          '[SUBJECT]'     => sqlScrub($CleanSubj),
+                          '[MESSAGE]'     => sqlScrub($CleanMsg),
+                          '[SITE_ID]'     => nullInt($this->settings['site_id']),
+
+                          '[NONCE_MATCH]' => BoolYN($CleanNonce == $ExpectedNonce),
+                          '[NONCE]'       => sqlScrub($CleanNonce),
+                          '[FROM_IP]'     => getVisitorIPv4(),
+                          '[AGENT]'       => sqlScrub($_SERVER['HTTP_USER_AGENT']),
                          );
         $sqlStr = readResource(SQL_DIR . '/contact/setMessage.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);

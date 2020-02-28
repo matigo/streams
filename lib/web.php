@@ -206,6 +206,7 @@ class Route extends Streams {
                                       '[SITE_OPSBAR]'        => $this->_getSiteOpsBar($data),
                                       '[POPULAR_LIST]'       => $this->_getPopularPosts(),
                                       '[lblContactValidate]' => $this->_getContactQuestion(),
+                                      '[NONCE]'              => $this->_getNonceValue(),
                                       '[GenTime]'            => $this->_getRunTime(),
                                      );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
@@ -235,6 +236,7 @@ class Route extends Streams {
                                '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
                                '[CLIENT_GUID]'  => NoNull($data['client_guid']),
                                '[TOKEN]'        => ((YNBool($this->settings['_logged_in'])) ? NoNull($this->settings['token']) : ''),
+                               '[NONCE]'        => $this->_getNonceValue(),
 
                                '[SITE_URL]'     => $this->settings['HomeURL'],
                                '[SITE_NAME]'    => NoNull($data['name']),
@@ -654,6 +656,7 @@ class Route extends Streams {
                        '[CLIENT_GUID]'  => NoNull($data['client_guid']),
                        '[PERSONA_GUID]' => NoNull($this->settings['_persona_guid']),
                        '[TOKEN]'        => ((YNBool($this->settings['_logged_in'])) ? NoNull($this->settings['token']) : ''),
+                       '[NONCE]'        => $this->_getNonceValue(),
 
                        '[SITE_URL]'     => $this->settings['HomeURL'],
                        '[SITE_NAME]'    => $data['name'],
@@ -869,6 +872,19 @@ class Route extends Streams {
 
         // If We're Here, There are None
         return false;
+    }
+
+    private function _getNonceValue() {
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        switch ( $PgRoot ) {
+            case 'contact':
+                return md5(NoNull($this->settings['HomeURL']) . NoNull($this->settings['_address']));
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+        return '';
     }
 
     /**

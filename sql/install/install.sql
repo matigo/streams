@@ -1068,6 +1068,10 @@ CREATE TABLE IF NOT EXISTS `SiteContact` (
     `guid`          char(36)                CHARACTER SET utf8  NOT NULL    ,
     `hash`          char(40)                CHARACTER SET utf8  NOT NULL    ,
 
+    `nonce_match`   enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `agent`         varchar(2048)                                   NULL    ,
+    `from_ip`       varchar(64)             CHARACTER SET utf8      NULL    ,
+
     `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
     `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
@@ -1101,6 +1105,11 @@ BEFORE UPDATE ON `SiteContact`
    END
 ;;
 DELIMITER ;
+
+ALTER TABLE `SiteContact` ADD COLUMN `nonce_match` enum('N','Y') CHARACTER SET utf8  NOT NULL DEFAULT 'N' AFTER `hash`;
+ALTER TABLE `SiteContact` ADD COLUMN `nonce` varchar(64) CHARACTER SET utf8 NULL AFTER `nonce_match`;
+ALTER TABLE `SiteContact` ADD COLUMN `agent` varchar(2048) NULL AFTER `nonce_match`;
+ALTER TABLE `SiteContact` ADD COLUMN `from_ip` varchar(64) CHARACTER SET utf8 NULL AFTER `agent`;
 
 /** ************************************************************************* *
  *  Create Sequence (PayPalTXN)
