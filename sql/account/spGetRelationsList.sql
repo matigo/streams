@@ -57,6 +57,6 @@ BEGIN
                                           WHERE zu.`is_deleted` = 'N' and zi.`is_deleted` = 'N' and zi.`is_default` = 'Y'
                                           ORDER BY zu.`is_active` DESC LIMIT 1) dd ON `default_url` <> ''
      WHERE pa.`is_deleted` = 'N' and pr.`is_visible` = 'Y'
-     ORDER BY pr.`is_starred` DESC, pr.`is_blocked`, pr.`is_muted`, pr.`is_you`, pa.`name`;
+     ORDER BY pr.`is_starred` DESC, pr.`is_blocked`, pr.`is_muted`, pr.`is_you`, pr.`follows` DESC, pa.`name`;
 END ;;
 DELIMITER ;

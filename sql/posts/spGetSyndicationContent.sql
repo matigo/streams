@@ -93,7 +93,6 @@ BEGIN
      WHERE ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and tp.`is_default` = 'Y'
        and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and po.`privacy_type` = 'visibility.public'
        and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 SECOND))
-       and po.`publish_at` >= DATE_SUB(Now(), INTERVAL 6 MONTH)
      ORDER BY po.`publish_at` DESC;
 
     /* Collect the Applicable Posts */

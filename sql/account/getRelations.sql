@@ -32,5 +32,4 @@ SELECT DISTINCT tmp.`id`,
                                                                 FROM `Post` po
                                                                WHERE po.`is_deleted` = 'N'
                                                                GROUP BY po.`persona_id`) pp ON tmp.`rel_id` = pp.`persona_id`
- ORDER BY tmp.`id`, tmp.`rel_name`;
-
+  ORDER BY tmp.`id`, tmp.`is_blocked`, tmp.`is_muted`, tmp.`follows` DESC, tmp.`follows_you` DESC, tmp.`rel_name`;
