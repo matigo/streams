@@ -45,6 +45,8 @@
     "pageContact-msgbody": "Your Message",
     "pageContact-send": "Send",
 
+    "lblSettingsSiteFontFamily": "Text Font",
+
     "pageThankYou-title": "Message Received!",
     "pageThankYou-message": "Thank you for getting in touch.",
     "pageThankYou-content": "Your message has been received and we&apos;ll be getting back to you shortly."

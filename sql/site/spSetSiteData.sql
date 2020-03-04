@@ -3,6 +3,7 @@ DROP PROCEDURE IF EXISTS SetSiteData;;
 CREATE PROCEDURE SetSiteData( IN `in_account_id` int(11), IN `in_channel_guid` char(36),
                               IN `in_site_name` varchar(80), IN `in_site_descr` varchar(255), IN `in_site_keys` varchar(255),
                               IN `in_site_theme` varchar(128), IN `in_site_colour` varchar(64),
+                              IN `in_font_family` varchar(64), IN `in_font_size` varchar(64),
                               IN `in_privacy_type` varchar(64), IN `in_site_pass` varchar(2048),
                               IN `in_show_geo` char(1), IN `in_show_note` char(1), IN `in_show_blog` char(1),
                               IN `in_show_bookmark` char(1), IN `in_show_location` char(1), IN `in_show_quote` char(1),
@@ -17,6 +18,7 @@ BEGIN
      *  Usage: CALL SetSiteData( 1, '91c46924-5461-11e8-99a0-54ee758049c3',
                                 'Matigo dot See, eh?', 'The Semi-Coherent Ramblings of a Canadian in Asia', 'matigo, 10C, v5, development, dev',
                                 'anri', 'auto',
+                                'font-family.auto', 'font-size.md',
                                 'visibility.public', '',
                                 'N', 'N', 'Y',
                                 'N', 'N', 'Y',
@@ -58,7 +60,9 @@ BEGIN
     INSERT INTO `SiteMeta` (`site_id`, `key`, `value`)
     SELECT si.`id` as `site_id`, tmp.`key`, CASE WHEN tmp.`value` <> '' THEN LEFT(tmp.`value`, 64) ELSE '' END as `value`
       FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
-                        INNER JOIN (SELECT 'site_color' as `key`, `in_site_colour` as `value`) tmp
+                        INNER JOIN (SELECT 'site_color' as `key`, `in_site_colour` as `value` UNION ALL
+                                    SELECT 'site_font-family' as `key`, `in_font_family` as `value` UNION ALL
+                                    SELECT 'site_font-size' as `key`, `in_font_size` as `value`) tmp
      WHERE ch.`guid` = `in_channel_guid` and si.`account_id` = `in_account_id`
         ON DUPLICATE KEY UPDATE `value` = CASE WHEN tmp.`value` <> '' THEN LEFT(tmp.`value`, 64) ELSE '' END,
                                 `updated_at` = Now();

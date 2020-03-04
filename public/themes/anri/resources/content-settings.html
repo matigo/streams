@@ -66,8 +66,32 @@
                                 </p>
 
                                 <h4>[lblSettingsS3]</h4>
-                                <p class="single-post__site-details">
-                                    <label class="switch-label" for="site-color">[lblSettingsSiteTheme]</label>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-font-family">[lblSettingsSiteFontFamily]</label>
+                                    <select id="site-font-family" class="settings-half" name="font-family" aria-required="true">
+                                        <option value="font-family.auto"[FAMILY_AUTO]>[optFontFamilyAuto]</option>
+                                        <option value="font-family.lato"[FAMILY_LATO]>[optFontFamilyLato]</option>
+                                        <option value="font-family.librebaskerville"[FAMILY_LIBRE]>[optFontFamilyLibreBaskerville]</option>
+                                        <option value="font-family.open-sans"[FAMILY_OPENSANS]>[optFontFamilyOpenSans]</option>
+                                        <option value="font-family.quicksand"[FAMILY_QSAND]>[optFontFamilyQuicksand]</option>
+                                        <option value="font-family.ubuntu"[FAMILY_UBUNTU]>[optFontFamilyUbuntu]</option>
+                                    </select>
+                                </p>
+
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-font-size">[lblSettingsSiteFontSize]</label>
+                                    <select id="site-font-size" class="settings-half" name="font-size" aria-required="true">
+                                        <option value="font-size.xs"[FSIZE_XS]>[optFontFontSizeXS]</option>
+                                        <option value="font-size.sm"[FSIZE_SM]>[optFontFontSizeSM]</option>
+                                        <option value="font-size.md"[FSIZE_MD]>[optFontFontSizeMD]</option>
+                                        <option value="font-size.lg"[FSIZE_LG]>[optFontFontSizeLG]</option>
+                                        <option value="font-size.xl"[FSIZE_XL]>[optFontFontSizeXL]</option>
+                                        <option value="font-size.xx"[FSIZE_XX]>[optFontFontSizeXX]</option>
+                                    </select>
+                                </p>
+
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-color">[lblSettingsSiteColor]</label>
                                     <select id="site-color" class="settings-half" name="site-color" aria-required="true">
                                         <option value="theme.auto"[THEME_AUTO]>[optThemeAuto]</option>
                                         <option value="theme.dark"[THEME_DARK]>[optThemeDark]</option>

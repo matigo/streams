@@ -192,7 +192,8 @@ class Site {
                 }
 
                 $cver = NoNull($Row['site_version']) . '-' .
-                        NoNull($Row['can_edit'], 'N') . NoNull($Row['site_locked'], 'N') .
+                        NoNull($Row['can_edit'], 'N') . NoNull($Row['site_locked'], 'N') . '-' .
+                        NoNull($Row['theme'], 'default') . NoNull($Row['font_family'], 'default') . NoNull($Row['font_size'], 'default') . '-' .
                         NoNull($Row['show_geo'], 'N') . NoNull($Row['show_article'], 'N') . NoNull($Row['show_bookmark'], 'N') .
                         NoNull($Row['show_location'], 'N') . NoNull($Row['show_note'], 'N') . NoNull($Row['show_photo'], 'N') .
                         NoNull($Row['show_quotation'], 'N') . '-' .
@@ -207,6 +208,8 @@ class Site {
                                                             'summary'         => NoNull($Row['summary']),
                                                             'location'        => NoNull($Row['theme']),
                                                             'color'           => NoNull($Row['site_color'], 'auto'),
+                                                            'font-family'     => NoNull($Row['font_family']),
+                                                            'font-size'       => NoNull($Row['font_size']),
                                                             'license'         => 'CC-BY-4.0',
                                                             'is_default'      => YNBool($Row['is_default']),
                                                             'site_id'         => nullInt($Row['site_id']),
@@ -375,16 +378,32 @@ class Site {
             if ( $SitePass == str_repeat('*', 12) ) { $SitePass = ''; }
         }
 
-        // Determine if the Theme
+        // Determine if the Theme is valid
         $validThemes = array( 'anri', 'resume', 'default', 'gtd' );
-        $siteTheme = NoNull($this->settings['site_theme'], $this->settings['site-theme']);
+        $siteTheme = strtolower(NoNull($this->settings['site_theme'], $this->settings['site-theme']));
         if ( in_array($siteTheme, $validThemes) === false ) {
             $siteTheme = 'anri';
         }
 
+        // Determine if the Font Family is valid
+        $validFontFam = array( 'font-family.auto', 'font-family.lato', 'font-family.librebaskerville', 'font-family.open-sans', 'font-family.ubuntu', 'font-family.quicksand' );
+        $fontFamily = strtolower(NoNull($this->settings['font_family'], $this->settings['font-family']));
+        if ( in_array($fontFamily, $validFontFam) === false ) {
+            $fontFamily = 'font-family.auto';
+        }
+        $fontFamily = str_replace('font-family.', '', $fontFamily);
+
+        // Determine if the Font Size is valid
+        $validFontSize = array( 'font-size.xs', 'font-size.sm', 'font-size.md', 'font-size.lg', 'font-size.xl', 'font-size.xx' );
+        $fontSize = strtolower(NoNull($this->settings['font_size'], $this->settings['font-size']));
+        if ( in_array($fontSize, $validFontSize) === false ) {
+            $fontSize = 'font-size.md';
+        }
+        $fontSize = str_replace('font-size.', '', $fontSize);
+
         // Determine if the Dark theme is enabled, disabled, or auto
         $validColour = array( 'theme.auto', 'theme.dark', 'theme.light' );
-        $ColourTheme = NoNull($this->settings['site_color'], $this->settings['site-color']);
+        $ColourTheme = strtolower(NoNull($this->settings['site_color'], $this->settings['site-color']));
         if ( in_array($ColourTheme, $validColour) === false ) {
             $ColourTheme = 'theme.auto';
         }
@@ -398,6 +417,8 @@ class Site {
                           '[SITE_KEYS]'    => sqlScrub(NoNull($this->settings['site_keys'], $this->settings['site-keys'])),
                           '[SITE_THEME]'   => sqlScrub($siteTheme),
                           '[SITE_COLOR]'   => sqlScrub($ColourTheme),
+                          '[SITE_FFAMILY]' => sqlScrub($fontFamily),
+                          '[SITE_FSIZE]'   => sqlScrub($fontSize),
                           '[PRIVACY]'      => sqlScrub($Visibility),
                           '[SITE_PASS]'    => sqlScrub($SitePass),
 
@@ -410,7 +431,8 @@ class Site {
                           '[SHOW_PHOT]'    => BoolYN(YNBool(NoNull($this->settings['show_photo'], $this->settings['show-photo']))),
                          );
         $sqlStr = prepSQLQuery("CALL SetSiteData( [ACCOUNT_ID], '[CHANNEL_GUID]',
-                                                 '[SITE_NAME]', '[SITE_DESCR]', '[SITE_KEYS]', '[SITE_THEME]', '[SITE_COLOR]', '[PRIVACY]', '[SITE_PASS]',
+                                                 '[SITE_NAME]', '[SITE_DESCR]', '[SITE_KEYS]', '[SITE_THEME]', '[SITE_COLOR]', '[SITE_FFAMILY]', '[SITE_FSIZE]',
+                                                 '[PRIVACY]', '[SITE_PASS]',
                                                  '[SHOW_GEO]', '[SHOW_NOTE]', '[SHOW_BLOG]', '[SHOW_BKMK]', '[SHOW_LOCS]', '[SHOW_QUOT]', '[SHOW_PHOT]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {

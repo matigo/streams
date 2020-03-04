@@ -104,9 +104,19 @@ table td {
     color: #000;
 }
 
-/*------------------------------------------------------------------
-[2. Operations Bar ]
-*/
+/** **************************************************** *
+    Body Font Size
+ ** **************************************************** */
+body.font-xs, body .font-xs { font-size: 11px; }
+body.font-sm, body .font-sm { font-size: 14px; }
+body.font-md, body .font-md { font-size: 16px; }
+body.font-lg, body .font-lg { font-size: 18px; }
+body.font-xl, body .font-xl { font-size: 20px; }
+body.font-xx, body .font-xx { font-size: 22px; }
+
+/** **************************************************** *
+    Operations Bar
+ ** **************************************************** */
 .navbar {
     background-color: #000;
     border-radius: 0;
@@ -164,9 +174,12 @@ table td {
 /*------------------------------------------------------------------
 [3. Logo ]
 */
-.logo h1 { margin-top: 0; }
+.logo h1 {
+    font-size: 1em;
+    margin-top: 0;
+}
 .logo__link {
-  font-size: 48px;
+  font-size: 3em;
   color: #262626;
   text-decoration: none;
   transition: all 0.2s ease-in-out;
@@ -1546,6 +1559,7 @@ table td {
   padding: 0;
   margin: 0;
 }
+.single-post__site-descr .settings-half,
 .single-post__site-details .settings-half {
     background: transparent;
     border: 1px solid #ccc;

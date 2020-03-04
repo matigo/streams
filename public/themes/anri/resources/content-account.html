@@ -1,0 +1,89 @@
+                <div class="col-lg-12 col-md-12">
+                    <div class="single-post single-post--fullsize">
+                        <div class="single-post__title  single-post__title--contact">
+                            <h2>[lblAccount]</h2>
+                        </div>
+                        <div class="single-post__content  single-post__content--contact">
+                            <p>[lblAccountDescr]</p>
+                        </div>
+                        <div class="single-post__contact">
+                            <form action="[HOMEURL]/api/account" method="POST">
+                                <p class="single-post__site-details">
+                                    <label for="display-name">[lblAccountDisplayName]</label>
+                                    <input id="display-name" type="text" class="fullwide" name="display-name" size="40" aria-required="true" value="[DISPLAY_NAME]">
+                                </p>
+                                <p class="single-post__site-details">
+                                    <label for="acct-mail">[lblAccountEmail]</label>
+                                    <input id="acct-mail" type="text" class="fullwide" name="acct-mail" size="30" aria-required="true" value="[ACCT_MAIL]" required>
+                                </p>
+
+                                <p class="single-post__site-details">
+                                    <label for="first-name">[lblAccountFirstName]</label>
+                                    <input id="first-name" type="text" class="fullwide" name="first-name" size="40" aria-required="true" value="[FIRST_NAME]">
+                                </p>
+                                <p class="single-post__site-details">
+                                    <label for="last-name">[lblAccountLastName]</label>
+                                    <input id="last-name" type="text" class="fullwide" name="last-name" size="40" aria-required="true" value="[LAST_NAME]">
+                                </p>
+
+                                <p class="single-post__site-details">
+                                    <label for="acct-pass">[lblAccountPassword]</label>
+                                    <input id="acct-pass" type="password" class="fullwide" name="site-descr" size="30" aria-required="true" value="********">
+                                </p>
+
+                                <h4>[lblAccountS2]</h4>
+                                <p class="single-post__site-details">
+                                    <p class="tip-label">[lblAccountSubRemindMsg]</p>
+                                    <strong class="switch-label">[lblAccountSubRemind]</strong>
+                                    <label class="switch">
+                                        <input id="show-note" type="checkbox" name="show-note">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+
+                                <h4>[lblAccountS3]</h4>
+                                <p class="single-post__site-details">
+                                    <label class="switch-label" for="acct-lang">[lblAccountLanguage]</label>
+                                    <select id="acct-lang" class="settings-half" name="acct-lang" aria-required="true">
+                                        <option value="lang.en-us">[optLangEnUS]</option>
+                                    </select>
+                                </p>
+                                <p class="single-post__site-details">
+                                    <label class="switch-label" for="acct-zone">[lblAccountTimezone]</label>
+                                    <select id="acct-zone" class="settings-half" name="acct-zone" aria-required="true">
+                                        [TIMEZONES]
+                                    </select>
+                                </p>
+
+                                <h4>[lblSettingsS4]</h4>
+                                <p class="single-post__site-details">
+                                    <strong class="switch-label">[lblSettingsShowGeo]</strong>
+                                    <label class="switch">
+                                        <input id="show-geo" type="checkbox" name="show-geo"[SITE_GEO]>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </p>
+                                <p class="single-post__contact-submit">
+                                    <input id="contact-submit" type="submit" name="contact-submit" size="30" value="[btnSettingsSave]">
+                                    <input type="hidden" name="channel_guid" value="[CHANNEL_GUID]">
+                                    <input type="hidden" name="token" value="[TOKEN]">
+                                    <input type="hidden" name="web-req" value="Y">
+                                </p>
+                                <p>&nbsp;</p>
+                            </form>
+
+                            <h4>[lblAccountS9]</h4>
+                            <form action="https://www.paypal.com/cgi-bin/webscr" method="POST" target="_top">
+                                <label for="submit" class="tip-label">[lblPaypalTipJar]</label>
+                                <input type="hidden" name="cmd" value="_s-xclick">
+                                <input type="hidden" name="hosted_button_id" value="N6XLLTU4BJZ2E">
+                                <input type="hidden" name="return" value="[HOMEURL]/thankyou">
+                                <input type="hidden" name="cancel_return" value="[HOMEURL]/account">
+                                <p class="text-center">
+                                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynow_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+                                </p>
+                                <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+                            </form>
+                        </div>
+                    </div>
+                </div>

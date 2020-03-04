@@ -668,6 +668,8 @@ class Route extends Streams {
                        '[META_DOMAIN]'  => NoNull($data['HomeURL']),
                        '[META_TYPE]'    => NoNull($data['page_type'], 'website'),
                        '[META_DESCR]'   => NoNull($data['description']),
+                       '[CSS_EXTEND]'   => $this->_getCustomCSS($data),
+                       '[FONT_SIZE]'    => NoNull($data['font-size'], 'md'),
 
                        '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
@@ -741,6 +743,20 @@ class Route extends Streams {
                               '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
                               '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
                               '[SITE_PASS]'    => $SitePass,
+
+                              '[FAMILY_AUTO]'     => $this->_selectValue($data, 'font-family', 'auto'),
+                              '[FAMILY_LATO]'     => $this->_selectValue($data, 'font-family', 'lato'),
+                              '[FAMILY_LIBRE]'    => $this->_selectValue($data, 'font-family', 'librebaskerville'),
+                              '[FAMILY_OPENSANS]' => $this->_selectValue($data, 'font-family', 'open-sans'),
+                              '[FAMILY_QSAND]'    => $this->_selectValue($data, 'font-family', 'quicksand'),
+                              '[FAMILY_UBUNTU]'   => $this->_selectValue($data, 'font-family', 'ubuntu'),
+
+                              '[FSIZE_XS]'     => $this->_selectValue($data, 'font-size', 'xs'),
+                              '[FSIZE_SM]'     => $this->_selectValue($data, 'font-size', 'sm'),
+                              '[FSIZE_MD]'     => $this->_selectValue($data, 'font-size', 'md'),
+                              '[FSIZE_LG]'     => $this->_selectValue($data, 'font-size', 'lg'),
+                              '[FSIZE_XL]'     => $this->_selectValue($data, 'font-size', 'xl'),
+                              '[FSIZE_XX]'     => $this->_selectValue($data, 'font-size', 'xx'),
 
                               '[THEME_LIGHT]'  => $this->_selectValue($data, 'color', 'light'),
                               '[THEME_DARK]'   => $this->_selectValue($data, 'color', 'dark'),
@@ -922,8 +938,13 @@ class Route extends Streams {
                               '[SITE_KEYS]'  => NoNull($data['keywords']),
                               '[SITE_NAME]'  => NoNull($data['name']),
 
-                              '[SHOW_GEO_N]' => (($data['show_geo']) ? '' : ' btn-active'),
-                              '[SHOW_GEO_Y]' => (($data['show_geo']) ? ' btn-active' : ''),
+                              '[SITE_COLOR]'       => NoNull($data['color']),
+                              '[SITE_THEME]'       => NoNull($data['location']),
+                              '[SITE_FONT_FAMILY]' => NoNull($data['font-family']),
+                              '[SITE_FONT_SIZE]'   => NoNull($data['font-size']),
+
+                              '[SHOW_GEO_N]'  => (($data['show_geo']) ? '' : ' btn-active'),
+                              '[SHOW_GEO_Y]'  => (($data['show_geo']) ? ' btn-active' : ''),
                               '[SHOW_NOTE_N]' => (($data['show_note']) ? '' : ' btn-active'),
                               '[SHOW_NOTE_Y]' => (($data['show_note']) ? ' btn-active' : ''),
                               '[SHOW_BLOG_N]' => (($data['show_article']) ? '' : ' btn-active'),
@@ -1001,7 +1022,24 @@ class Route extends Streams {
     }
 
     /**
-     *  Function Returns the Required JavaScript File
+     *  Function returns resource links for Custom CSS files if any have been
+     *      defined for the current site.
+     */
+    private function _getCustomCSS( $data ) {
+        if ( is_array($data) === false ) { return ''; }
+        $SiteUrl = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/themes/' . $data['location']);
+        $rVal = '';
+
+        if ( NoNull($data['font-family'], 'auto') != 'auto' ) {
+            $rVal .= tabSpace(2) . '<link rel="stylesheet" type="text/css" href="' . $SiteUrl . '/css/font-' . NoNull($data['font-family'], 'auto') . '.css?ver=' . CSS_VER . '">'  . "\r\n";
+        }
+
+        // Return the Additional CSS If Any Exists
+        return $rVal;
+    }
+
+    /**
+     *  Function Returns the Page-Specific CSS File Required
      */
     private function _getContentCSS( $data ) {
         $ResDIR = THEME_DIR . "/" . $data['location'] . "/resources/";
