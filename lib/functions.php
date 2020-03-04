@@ -1874,7 +1874,7 @@
         $Agent = parse_user_agent();
 
         // Set the Values and Run the SQL Query
-        $ReplStr = array( '[SITE_ID]'    => nullInt($GLOBALS['site_id']),
+        $ReplStr = array( '[SITE_ID]'    => nullInt($GLOBALS['site_id'], $data['site_id']),
                           '[TOKEN_ID]'   => nullInt($data['_token_id']),
                           '[HTTP_CODE]'  => nullInt($http_code),
                           '[REQ_TYPE]'   => sqlScrub($data['ReqType']),

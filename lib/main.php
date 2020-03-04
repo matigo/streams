@@ -34,6 +34,9 @@ class Streams {
         $meta = false;
         $code = 500;
 
+        // Set some of the Globals
+        $GLOBALS['site_id'] = $data['site_id'];
+
         // Check to Ensure the Visitor is not Overwhelming the Server(s) and Respond Accordingly
         if ( $this->_checkForHammer() && $this->_isValidRequest() && $this->_isValidAgent() ) {
             switch ( strtolower($this->settings['Route']) ) {
