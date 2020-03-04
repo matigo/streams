@@ -164,7 +164,7 @@ class Streams {
                            'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler', 'iccrawler',
                            'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate',
                            'thither.direct', 'liebaofast', 'micromessenger', 'youdaobot', 'theworld', 'qqbrowser',
-                           'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation',
+                           'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation', 'SearchAtlas.com',
                            'zh-cn;oppo a33 build/lmy47v', 'oppo a33 build/lmy47v;wv' );
         $agent = strtolower(NoNull($_SERVER['HTTP_USER_AGENT']));
         if ( $agent != '' ) {
