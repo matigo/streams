@@ -1636,6 +1636,7 @@ class Posts {
 
         // If We're Here, There's Nothing to Show (Present Welcome Page or 404)
         $ReqPage = ($data['has_content']) ? 'page-404.html' : 'post.welcome.html';
+        if ( $data['has_content'] ) { $this->settings['status'] = 404; }
         $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/' . $ReqPage;
         if ( !file_exists($flatFile) ) { $flatFile = FLATS_DIR . '/templates/' . $ReqPage; }
         return readResource($flatFile, $ReplStr);
