@@ -328,14 +328,18 @@ class Reader {
         return '';
     }
 
-    private function _getSyndicationFeed( $feedUrl = '' ) {
+    private function _getSyndicationFeed( $feedUrl = '', $subscribers = 0 ) {
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
         $FeedURL = strtolower(NoNull($feedUrl, NoNull($this->settings['source_url'], $this->settings['url'])));
         if ( mb_strlen($FeedURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
+        $agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36';
+        // $agent = APP_NAME . ' v' . APP_VER . '';
+        if ( nullInt($subscribers) > 0 ) { $agent .= ' (' . $subscribers . ' subscribers)'; }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_USERAGENT, $agent);
         curl_setopt($ch, CURLOPT_URL, $FeedURL);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         $data = curl_exec($ch);
@@ -516,22 +520,23 @@ class Reader {
             }
 
             // Now that we have a Completed Feed object, it's time to record the feed info to the database
+            $strips = array( "\r" => '', "\n" => '', "\t" => '' );
             $FeedID = 0;
-            $ReplStr = array( '[FEED_TITLE]'   => sqlScrub($feed['title']),
-                              '[FEED_DESCR]'   => sqlScrub($feed['description']),
-                              '[FEED_LINK]'    => sqlScrub($feed['link']),
+            $ReplStr = array( '[FEED_TITLE]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['title'])),
+                              '[FEED_DESCR]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['description'])),
+                              '[FEED_LINK]'    => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['link'])),
                               '[FEED_URL]'     => sqlScrub($FeedURL),
 
-                              '[FEED_LANG]'    => sqlScrub($feed['language']),
-                              '[FEED_ICON]'    => sqlScrub($feed['icon']),
-                              '[FEED_GEN]'     => sqlscrub($feed['generator']),
+                              '[FEED_LANG]'    => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['language'])),
+                              '[FEED_ICON]'    => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['icon'])),
+                              '[FEED_GEN]'     => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['generator'])),
 
-                              '[CAST_IMAGE]'   => sqlscrub($feed['itunes:image']),
-                              '[CAST_DESCR]'   => sqlscrub($feed['itunes:subtitle']),
-                              '[CAST_EXPLT]'   => sqlscrub($feed['itunes:explicit']),
+                              '[CAST_IMAGE]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['itunes:image'])),
+                              '[CAST_DESCR]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['itunes:subtitle'])),
+                              '[CAST_EXPLT]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['itunes:explicit'])),
 
-                              '[UPD_PERIOD]'   => sqlscrub($feed['sy:updatePeriod']),
-                              '[UPD_FREQ]'     => sqlscrub($feed['sy:updateFrequency']),
+                              '[UPD_PERIOD]'   => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['sy:updatePeriod'])),
+                              '[UPD_FREQ]'     => sqlScrub(str_replace(array_keys($strips), array_values($strips), $feed['sy:updateFrequency'])),
 
                               '[FEED_GUID]'    => sqlScrub($feed['guid']),
                               '[FEED_HASH]'    => sqlScrub($feed['hash']),
@@ -599,6 +604,8 @@ class Reader {
         $host = strtolower(NoNull($parse['host']));
 
         switch ( $host ) {
+            case 'www.fowllanguagecomics.com':
+            case 'fowllanguagecomics.com':
             case 'feed.dilbert.com':
             case 'xkcd.com':
                 /* Get the Image Text and Append It to the Body */
@@ -625,14 +632,18 @@ class Reader {
      *      URL rather than the syndication feed
      */
     private function _checkForAltText( $text, $SiteUrl ) {
+        $agent = APP_NAME . ' v' . APP_VER . '';
         $parse = parse_url($SiteUrl);
         $host = strtolower(NoNull($parse['host']));
 
         switch ( $host ) {
+            case 'www.fowllanguagecomics.com':
+            case 'fowllanguagecomics.com':
             case 'feed.dilbert.com':
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_HEADER, 0);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_USERAGENT, $agent);
                 curl_setopt($ch, CURLOPT_URL, $SiteUrl);
                 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
                 $data = curl_exec($ch);
@@ -663,6 +674,16 @@ class Reader {
                 }
                 break;
 
+            case 'fborfw.com':
+                $SiteUrl = NoNull($parse['scheme'], 'https') . '://' . $host;
+                $strips = array( '<div class="lynncomments">' => '<p>', '</div>' => '</p>',
+                                 'src="/strip_fix' => 'src="' . $SiteUrl . '/strip_fix'
+                                );
+                for ( $i = 0; $i < 5; $i++ ) {
+                    $text = str_replace(array_keys($strips), array_values($strips), $text);
+                }
+                break;
+
             default:
                 /* Do Nothing */
         }
@@ -672,6 +693,7 @@ class Reader {
     }
 
     private function _getPageSummary() {
+        $agent = APP_NAME . ' v' . APP_VER . '';
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
         $PageURL = strtolower(NoNull($this->settings['source_url'], $this->settings['url']));
         if ( mb_strlen($PageURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
@@ -679,6 +701,7 @@ class Reader {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_USERAGENT, $agent);
         curl_setopt($ch, CURLOPT_URL, $PageURL);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         $data = curl_exec($ch);
