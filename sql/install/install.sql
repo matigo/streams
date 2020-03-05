@@ -875,22 +875,24 @@ DELIMITER ;
 DROP TABLE IF EXISTS `SyndFeed`;
 CREATE TABLE IF NOT EXISTS `SyndFeed` (
     `id`            int(11)       UNSIGNED                      NOT NULL    AUTO_INCREMENT,
-    `title`         varchar(255)                                NOT NULL    ,
+    `title`         varchar(512)                                NOT NULL    ,
     `description`   varchar(2048)                                   NULL    ,
-    `url`           varchar(512)                                NOT NULL    ,
+    `site_url`      varchar(512)                                NOT NULL    ,
+    `feed_url`      varchar(512)                                NOT NULL    ,
+
+    `language_code` varchar(10)                                     NULL    ,
+    `icon`          varchar(512)                                    NULL    ,
 
     `guid`          char(36)                                    NOT NULL    ,
     `hash`          char(40)                                    NOT NULL    ,
-    `channel_id`    int(11)        UNSIGNED                         NULL    ,
     `polled_at`     timestamp                                   NOT NULL    ,
 
     `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
     `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    FOREIGN KEY (`channel_id`) REFERENCES `Channel` (`id`)
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_syndfeed_main` ON `SyndFeed` (`is_deleted`, `guid`);
+CREATE INDEX `idx_syndfeed_main` ON `SyndFeed` (`guid`, `is_deleted`);
 
 DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_update_syndfeed`;;
@@ -901,6 +903,7 @@ BEFORE UPDATE ON `SyndFeed`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
 DROP TABLE IF EXISTS `SyndFeedMeta`;
 CREATE TABLE IF NOT EXISTS `SyndFeedMeta` (
@@ -914,9 +917,18 @@ CREATE TABLE IF NOT EXISTS `SyndFeedMeta` (
     PRIMARY KEY (`feed_id`, `key`),
     FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_syndfmeta_main` ON `SyndFeedMeta` (`is_deleted`, `feed_id`);
+CREATE INDEX `idx_syndfmeta_main` ON `SyndFeedMeta` (`feed_id`, `is_deleted`);
 
 DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_insert_syndfeedmeta`;;
+CREATE TRIGGER `before_insert_syndfeedmeta`
+BEFORE INSERT ON `SyndFeedMeta`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN IFNULL(new.`value`, '') = '' THEN 'Y' ELSE 'N' END;
+   END
+;;
+
 DROP TRIGGER IF EXISTS `before_update_syndfeedmeta`;;
 CREATE TRIGGER `before_update_syndfeedmeta`
 BEFORE UPDATE ON `SyndFeedMeta`
@@ -926,12 +938,14 @@ BEFORE UPDATE ON `SyndFeedMeta`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
 DROP TABLE IF EXISTS `SyndFeedItem`;
 CREATE TABLE IF NOT EXISTS `SyndFeedItem` (
     `id`            int(11)       UNSIGNED                      NOT NULL    AUTO_INCREMENT,
     `feed_id`       int(11)       UNSIGNED                      NOT NULL    ,
-    `title`         varchar(255)                                    NULL    ,
+    `title`         varchar(512)                                    NULL    ,
+    `content`       text                                            NULL    ,
     `url`           varchar(2048)                               NOT NULL    ,
 
     `publish_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
@@ -944,8 +958,8 @@ CREATE TABLE IF NOT EXISTS `SyndFeedItem` (
     PRIMARY KEY (`id`),
     FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_syndfitem_main` ON `SyndFeedItem` (`is_deleted`, `feed_id`, `guid`);
-CREATE INDEX `idx_syndfitem_pub` ON `SyndFeedItem` (`is_deleted`, `feed_id`, `publish_at`);
+CREATE INDEX `idx_syndfitem_main` ON `SyndFeedItem` (`feed_id`, `guid`, `is_deleted`);
+CREATE INDEX `idx_syndfitem_pub` ON `SyndFeedItem` (`feed_id`, `publish_at`, `is_deleted`);
 
 DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_insert_sfitem`;;
@@ -961,6 +975,16 @@ BEFORE INSERT ON `SyndFeedItem`
                                                    FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
    END
 ;;
+DROP TRIGGER IF EXISTS `before_update_sfitem`;;
+CREATE TRIGGER `before_update_sfitem`
+BEFORE UPDATE ON `SyndFeedItem`
+   FOR EACH ROW
+ BEGIN
+    SET new.`is_deleted` = CASE WHEN new.`is_deleted` = 'N' AND IFNULL(new.`content`, '') = '' THEN 'Y' ELSE new.`is_deleted` END;
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
 
 DROP TABLE IF EXISTS `SyndFeedItemMeta`;
 CREATE TABLE IF NOT EXISTS `SyndFeedItemMeta` (
@@ -974,7 +998,7 @@ CREATE TABLE IF NOT EXISTS `SyndFeedItemMeta` (
     PRIMARY KEY (`item_id`, `key`),
     FOREIGN KEY (`item_id`) REFERENCES `SyndFeedItem` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_syndimeta_main` ON `SyndFeedItemMeta` (`is_deleted`, `item_id`);
+CREATE INDEX `idx_syndimeta_main` ON `SyndFeedItemMeta` (`item_id`, `is_deleted`);
 
 DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_update_syndfitemmeta`;;
@@ -986,12 +1010,12 @@ BEFORE UPDATE ON `SyndFeedItemMeta`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
 DROP TABLE IF EXISTS `SyndFeedItemSearch`;
 CREATE TABLE IF NOT EXISTS `SyndFeedItemSearch` (
     `item_id`       int(11)        UNSIGNED                     NOT NULL    ,
     `word`          varchar(255)                                NOT NULL    DEFAULT '',
-    `length`        smallint       UNSIGNED                     NOT NULL    DEFAULT 0,
     `hash`          char(40)                                    NOT NULL    ,
 
     `is_deleted`    enum('N','Y')                               NOT NULL    DEFAULT 'N',
@@ -1000,8 +1024,8 @@ CREATE TABLE IF NOT EXISTS `SyndFeedItemSearch` (
     PRIMARY KEY (`item_id`, `word`),
     FOREIGN KEY (`item_id`) REFERENCES `SyndFeedItem` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_sfisrch_main` ON `SyndFeedItemSearch` (`is_deleted`, `item_id`, `word`);
-CREATE INDEX `idx_sfisrch_hash` ON `SyndFeedItemSearch` (`is_deleted`, `hash`);
+CREATE INDEX `idx_sfisrch_main` ON `SyndFeedItemSearch` (`word`, `item_id`, `is_deleted`);
+CREATE INDEX `idx_sfisrch_hash` ON `SyndFeedItemSearch` (`hash`, `is_deleted`);
 
 DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_insert_sfisrch`;;
@@ -1009,12 +1033,10 @@ CREATE TRIGGER `before_insert_sfisrch`
 BEFORE INSERT ON `SyndFeedItemSearch`
    FOR EACH ROW
  BEGIN
-    SET new.`length` = LENGTH(new.`word`);
     SET new.`hash` = MD5(new.`word`);
    END
 ;;
 
-DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_update_sfisrch`;;
 CREATE TRIGGER `before_update_sfisrch`
  BEFORE UPDATE ON `SyndFeedItemSearch`
@@ -1024,9 +1046,10 @@ CREATE TRIGGER `before_update_sfisrch`
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
-DROP TABLE IF EXISTS `SyndFollow`;
-CREATE TABLE IF NOT EXISTS `SyndFollow` (
+DROP TABLE IF EXISTS `SyndSubscribe`;
+CREATE TABLE IF NOT EXISTS `SyndSubscribe` (
     `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
     `feed_id`       int(11)        UNSIGNED                     NOT NULL    ,
 
@@ -1037,18 +1060,19 @@ CREATE TABLE IF NOT EXISTS `SyndFollow` (
     FOREIGN KEY (`account_id`) REFERENCES `Account` (`id`),
     FOREIGN KEY (`feed_id`) REFERENCES `SyndFeed` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE INDEX `idx_syndfolw_main` ON `SyndFollow` (`is_deleted`, `account_id`);
-CREATE INDEX `idx_syndfolw_feed` ON `SyndFollow` (`is_deleted`, `feed_id`);
+CREATE INDEX `idx_syndfolw_main` ON `SyndSubscribe` (`account_id`, `is_deleted`);
+CREATE INDEX `idx_syndfolw_feed` ON `SyndSubscribe` (`feed_id`, `is_deleted`);
 
 DELIMITER ;;
 DROP TRIGGER IF EXISTS `before_update_syndfollow`;;
 CREATE TRIGGER `before_update_syndfollow`
-BEFORE UPDATE ON `SyndFollow`
+BEFORE UPDATE ON `SyndSubscribe`
    FOR EACH ROW
  BEGIN
     SET new.`updated_at` = Now();
    END
 ;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  Messages

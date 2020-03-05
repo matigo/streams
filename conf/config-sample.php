@@ -37,6 +37,8 @@ define('MSSQLDB_NAME', '');                                 // Write Database Na
 define('MSSQLDB_USER', '');                                 // Database Login
 define('MSSQLDB_PASS', '');                                 // Database Password
 
+define('CRON_KEY', '');                                     // A key for use with scheduled jobs
+
 define('PASSWORD_LIFE', 10000);                             // Number of Days a Password Can Be Used for Before Expiring (Default to 28 Years)
 define('PASSWORD_UNIQUES', 0);                              // Specifies Whether Passwords Must Be Unique (for an Account) | 0 = No, 1 = Yes
 
@@ -45,6 +47,9 @@ define('CDN_PATH', '/var/www/files');                       // The Path of the C
 define('CDN_POOL_SIZE', 5);                                 // The Size of the CDN's Storage Pool (in GB)
 define('CDN_DOMAIN', '');                                   // The Single Domain to Use for all CDN-based files
 define('API_DOMAIN', '');                                   // The Single Domain to Use for all API-based requests
+
+define('SYND_INTERVAL', 60);                                // How often will we check external syndication feeds for content?
+define('SYND_LIMIT', 10);                                   // How many syndication feeds should be checked at any given time?
 
 define('MAIL_SMTPAUTH', 1);                                 // Use SMTP Authentication (This Should Be 1)
 define('MAIL_SMTPSECURE', "ssl");                           // The Type of SMTP Security (SSL, TLS, etc.)

@@ -2656,7 +2656,7 @@ class Posts {
                 $html = str_replace(array_keys($fixes), array_values($fixes), $html);
                 $html = strip_tags($html, '<blockquote><p><a><strong><em><img><code><pre><sup><ol><ul><li>');
 
-                $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\n\n", $html)));
+                $text = html_entity_decode(strip_tags(str_replace('</p>', "</p>\r\n\r\n", $html)));
 
                 $encl = false;
                 if ( YNBool($post['has_audio']) ) {

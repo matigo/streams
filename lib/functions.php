@@ -103,6 +103,19 @@
         return false;
     }
 
+    function isValidCronRequest( $sets, $valids ) {
+        if ( is_array($valids) === false ) { return false; }
+        if ( is_array($sets) === false ) { return false; }
+
+        if ( array_key_exists('key', $sets) && defined('CRON_KEY') ) {
+            if ( NoNull($sets['key']) == NoNull(CRON_KEY) ) {
+                $route = NoNull($sets['PgRoot']) . '/' . NoNull($sets['PgSub1']);
+                return in_array($route, $valids);
+            }
+        }
+        return false;
+    }
+
     /**
      * Function Checks the Validity of a supplied URL and returns a cleaned string
      */
@@ -1927,9 +1940,22 @@
             switch ( $appType ) {
                 case 'application/json':
                     if ( is_bool($data) || (is_string($data) && strlen($data) <= 0) ) { $data = array(); }
+                    $metaText = ((is_array($meta) && count($meta) > 0) ? $meta[count($meta) - 1] : false);
+                    $metaList = false;
+                    if ( $metaText !== false ) {
+                        if ( is_array($meta) ) {
+                            foreach ( $meta as $msg ) {
+                                if ( $msg != $metaText && in_array($msg, $metaList) === false ) {
+                                    if ( is_array($metaList) === false ) { $metaList = array(); }
+                                    $metaList[] = $msg;
+                                }
+                            }
+                        }
+                    }
+
                     $json = array( 'meta' => array( 'code' => $status,
-                                                    'text' => ((is_array($meta) && count($meta) > 0) ? $meta[count($meta) - 1] : false),
-                                                    'list' => ((is_array($meta) && count($meta) > 1) ? $meta : false)
+                                                    'text' => $metaText,
+                                                    'list' => $metaList
                                                    ),
                                    'data' => $data
                                   );
@@ -2015,6 +2041,7 @@
             case 204: return 'No Content'; break;
             case 205: return 'Reset Content'; break;
             case 206: return 'Partial Content'; break;
+            case 218: return 'This Is Fine'; break;
             case 300: return 'Multiple Choices'; break;
             case 301: return 'Moved Permanently'; break;
             case 302: return 'Moved Temporarily'; break;

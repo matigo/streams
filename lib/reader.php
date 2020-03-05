@@ -24,9 +24,14 @@ class Reader {
         $rVal = false;
 
         // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) {
-            $this->_setMetaMessage("You Need to Log In First", 401);
-            return false;
+        if ( !$this->settings['_logged_in'] ) {
+            $isOK = isValidCronRequest($this->settings, array('reader/check') );
+            if ( $isOK ) {
+                $this->settings['_logged_in'] = true;
+            } else {
+                $this->_setMetaMessage("You Need to Log In First", 401);
+                return false;
+            }
         }
 
         // Perform the Action
@@ -56,10 +61,14 @@ class Reader {
         $rVal = false;
 
         switch ( $Activity ) {
+            case 'check':
+                return $this->_checkFeedUpdates();
+                break;
+
             case 'read':
             case 'get':
             case '':
-                $rVal = $this->_getSyndicationFeed();
+                return $this->_getSyndicationFeed();
                 break;
 
             default:
@@ -76,7 +85,7 @@ class Reader {
 
         switch ( $Activity ) {
             case '':
-                $rVal = false;
+                return false;
                 break;
 
             default:
@@ -93,7 +102,7 @@ class Reader {
 
         switch ( $Activity ) {
             case '':
-                $rVal = false;
+                return false;
                 break;
 
             default:
@@ -130,12 +139,46 @@ class Reader {
      ** ********************************************************************* */
 
     /** ********************************************************************* *
+     *  Automated Functions
+     ** ********************************************************************* */
+    private function _checkFeedUpdates() {
+        if ( !defined('SYND_INTERVAL') ) { define('SYND_INTERVAL', 60); }
+        if ( !defined('SYND_LIMIT') ) { define('SYND_LIMIT', 10); }
+
+        $ReplStr = array( '[INTERVAL]' => nullInt(SYND_INTERVAL, 60),
+                          '[LIMIT]'    => nullInt(SYND_LIMIT, 10),
+                         );
+        $sqlStr = prepSQLQuery("CALL GetSyndicationUrlsToUpdate([INTERVAL], [LIMIT]);", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = array();
+
+            foreach ( $rslt as $Row ) {
+                $url = NoNull($Row['feed_url']);
+                $isOK = $this->_getSyndicationFeed($url);
+                if ( is_array($isOK) ) { $data[] = $isOK; }
+            }
+
+            // If we have data, return it
+            if ( count($data) ) { return $data; }
+        }
+
+        // If we're here, no feeds were updated
+        $this->_setMetaMessage("No Syndication Feeds Require Updating", 204);
+        return array();
+    }
+
+    /** ********************************************************************* *
      *  Private Functions
      ** ********************************************************************* */
     private function _getNamespaceTags( $nsName ) {
         if ( NoNull($nsName) == '' ) { return false; }
 
         switch ( strtolower($nsName) ) {
+            case 'alt':
+                return array( 'id', 'content', 'title', 'link', 'updated' );
+                break;
+
             case 'atom':
                 return array( 'atom:link' );
                 break;
@@ -270,6 +313,12 @@ class Reader {
                     }
                 }
 
+                // Clean the Url
+                $ReplStr = array( '//' => '/', ':/' => '://' );
+                for ( $i = 0; $i < 5; $i++ ) {
+                    $src = str_replace(array_keys($ReplStr), array_values($ReplStr), $src);
+                }
+
                 // Return the Icon Location
                 return $src;
             }
@@ -279,9 +328,9 @@ class Reader {
         return '';
     }
 
-    private function _getSyndicationFeed() {
+    private function _getSyndicationFeed( $feedUrl = '' ) {
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
-        $FeedURL = strtolower(NoNull($this->settings['source_url'], $this->settings['url']));
+        $FeedURL = strtolower(NoNull($feedUrl, NoNull($this->settings['source_url'], $this->settings['url'])));
         if ( mb_strlen($FeedURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
 
         $ch = curl_init();
@@ -297,10 +346,92 @@ class Reader {
         $data = json_decode(json_encode($xml), true);
 
         // Parse the Feed
-        if ( array_key_exists('channel', $data) ) {
-            if ( is_array($data['channel']) ) {
-                $feed = array();
+        if ( array_key_exists('channel', $data) || array_key_exists('entry', $data) ) {
+            $feed = array();
 
+            // Construct a GUID for the Site Based on an MD5 of the "clean" URL
+            $FeedGuid = getGuidFromUrl($FeedURL);
+            if ( $FeedGuid === false || strlen($FeedGuid) != 36 ) {
+                $this->_setMetaMessage("The Feed URL is Illogical: $FeedURL", 401);
+                return false;
+            }
+            $feed['guid'] = $FeedGuid;
+
+            /* Atom-like Structure */
+            if ( is_array($data['entry']) ) {
+                $tags = $this->_getNamespaceTags('channel');
+                foreach ( $tags as $tag ) {
+                    $value = NoNull($data[$tag]);
+                    switch ( $tag ) {
+                        case 'link':
+                            if ( is_array($data[$tag]['@attributes']) ) {
+                                $value = $data[$tag]['@attributes']['href'];
+                            }
+                            break;
+
+                        default:
+                            /* Do Nothing */
+                    }
+
+                    if ( NoNull($value) != '' ) {
+                        $feed[$tag] = NoNull($value);
+                    }
+                }
+
+                // Attempt to get an Icon
+                $feed['icon'] = $this->_getFeedIcon($feed['link']);
+                $feed['hash'] = md5(json_encode($feed));
+                $feed['items'] = array();
+
+                /* Construct the Post Items */
+                foreach ( $data['entry'] as $Key=>$entry) {
+                    $item = array();
+
+                    $tags = $this->_getNamespaceTags('alt');
+                    foreach ( $tags as $tag ) {
+                        $value = NoNull($entry[$tag]);
+                        switch ( $tag ) {
+                            case 'link':
+                                if ( is_array($entry[$tag]['@attributes']) ) {
+                                    $value = NoNull($entry[$tag]['@attributes']['href']);
+                                }
+                                break;
+
+                            default:
+                                /* Do Nothing */
+                        }
+                        if ( NoNull($value) != '' ) { $item[strtolower($tag)] = $value; }
+                    }
+
+                    if ( array_key_exists('content', $item) && array_key_exists('description', $item) === false ) {
+                        $item['description'] = NoNull($item['content']);
+                        unset($item['content']);
+                    }
+
+                    // Determine the Content Hash
+                    $item['hash'] = md5(json_encode($item));
+
+                    // Determine the Publication Date's Validity (Intentionally after the Hash in the event of Blank)
+                    if ( NoNull($item['pubdate'], $item['updated']) != '' ) {
+                        $pub_unix = strtotime(NoNull($item['pubdate'], $item['updated']));
+                        if ( $pub_unix ) {
+                            $item['published_at'] = date("Y-m-d H:i:s", $pub_unix);
+                            $item['published_unix'] = $pub_unix;
+                        }
+                    }
+                    if ( array_key_exists('published_at', $item) === false ) {
+                        $pub_unix = time();
+                        $item['published_at'] = date("Y-m-d H:i:s", $pub_unix);
+                        $item['published_unix'] = $pub_unix;
+                    }
+
+                    // If We Have Data, Add It (Until a Maximum of 200 Items is hit)
+                    if ( count($item) > 0 && count($feed['items']) < 200 ) { $feed['items'][] = $item; }
+                }
+            }
+
+            /* XML-like Structure */
+            if ( is_array($data['channel']) ) {
                 $tags = $this->_getNamespaceTags('channel');
                 foreach ( $tags as $tag ) {
                     $value = NoNull($data['channel'][$tag]);
@@ -308,14 +439,6 @@ class Reader {
                         $feed[$tag] = NoNull($value);
                     }
                 }
-
-                // Construct a GUID for the Site Based on an MD5 of the "clean" URL
-                $FeedGuid = getGuidFromUrl($FeedURL);
-                if ( $FeedGuid === false || strlen($FeedGuid) != 36 ) {
-                    $this->_setMetaMessage("The Feed URL is Illogical: $FeedURL", 401);
-                    return false;
-                }
-                $feed['guid'] = $FeedGuid;
 
                 // Attempt to get an Icon
                 $feed['icon'] = $this->_getFeedIcon($feed['link']);
@@ -390,62 +513,76 @@ class Reader {
                     // If We Have Data, Add It (Until a Maximum of 200 Items is hit)
                     if ( count($item) > 0 && count($feed['items']) < 200 ) { $feed['items'][] = $item; }
                 }
+            }
 
-                // Now that we have a Completed Feed object, it's time to record the feed info to the database
-                $ReplStr = array( '[FEED_TITLE]'   => sqlScrub($feed['title']),
-                                  '[FEED_DESCR]'   => sqlScrub($feed['description']),
-                                  '[FEED_LINK]'    => sqlScrub($feed['link']),
-                                  '[FEED_HASH]'    => sqlScrub($feed['hash']),
-                                  '[FEED_GUID]'    => sqlScrub($feed['guid']),
+            // Now that we have a Completed Feed object, it's time to record the feed info to the database
+            $FeedID = 0;
+            $ReplStr = array( '[FEED_TITLE]'   => sqlScrub($feed['title']),
+                              '[FEED_DESCR]'   => sqlScrub($feed['description']),
+                              '[FEED_LINK]'    => sqlScrub($feed['link']),
+                              '[FEED_URL]'     => sqlScrub($FeedURL),
 
-                                  '[SQL_SPLITTER]' => SQL_SPLITTER,
-                                 );
-                $sqlStr = readResource(SQL_DIR . '/reader/setFeedHead.sql', $ReplStr);
-                $rslt = doSQLExecute($sqlStr);
+                              '[FEED_LANG]'    => sqlScrub($feed['language']),
+                              '[FEED_ICON]'    => sqlScrub($feed['icon']),
+                              '[FEED_GEN]'     => sqlscrub($feed['generator']),
 
-                // Parse the Items
-                if ( is_array($feed['items']) && count($feed['items']) > 0 ) {
-                    foreach ( $feed['items'] as $idx=>$item ) {
-                        $text = $this->_checkSpecialText(NoNull($item['content:encoded'], $item['description']), $item['link']);
-                        $srch = '';
-                        if ( NoNull($text) != '' ) {
-                            $uniques = UniqueWords($text);
-                            if ( is_array($uniques) ) { $srch = implode(',', $uniques); }
-                        }
+                              '[CAST_IMAGE]'   => sqlscrub($feed['itunes:image']),
+                              '[CAST_DESCR]'   => sqlscrub($feed['itunes:subtitle']),
+                              '[CAST_EXPLT]'   => sqlscrub($feed['itunes:explicit']),
 
-                        // Construct a GUID for the Site Based on an MD5 of the "clean" URL
-                        $ItemGuid = getGuidFromUrl($item['link']);
+                              '[UPD_PERIOD]'   => sqlscrub($feed['sy:updatePeriod']),
+                              '[UPD_FREQ]'     => sqlscrub($feed['sy:updateFrequency']),
 
-                        if ( $ItemGuid !== false && strlen($ItemGuid) == 36 ) {
-                            $ReplStr = array( '[ITEM_TITLE]' => sqlScrub($item['title']),
-                                              '[ITEM_DATE]'  => sqlScrub($item['published_at']),
-                                              '[ITEM_GUID]'  => sqlScrub($ItemGuid),
-                                              '[ITEM_HASH]'  => sqlScrub($item['hash']),
-                                              '[ITEM_LINK]'  => sqlScrub($item['link']),
-                                              '[ITEM_SRCH]'  => sqlScrub($srch),
-                                              '[ITEM_TYPE]'  => sqlScrub(NoNull($item['type'], 'post.article')),
-                                              '[ITEM_UNIX]'  => nullInt($item['published_unix']),
+                              '[FEED_GUID]'    => sqlScrub($feed['guid']),
+                              '[FEED_HASH]'    => sqlScrub($feed['hash']),
+                             );
+            $sqlStr = prepSQLQuery( "CALL SetSyndicationHeader('[FEED_TITLE]', '[FEED_DESCR]', '[FEED_LINK]', '[FEED_URL]', " .
+                                                              "'[FEED_LANG]', '[FEED_ICON]', '[FEED_GUID]', '[FEED_HASH]', '[FEED_GEN]', " .
+                                                              "'[UPD_PERIOD]', '[UPD_FREQ]', '[CAST_IMAGE]', '[CAST_DESCR]', '[CAST_EXPLT]' );", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            foreach ( $rslt as $Row ) {
+                $FeedID = nullInt($Row['feed_id']);
+            }
 
-                                              '[FEED_GUID]'    => sqlScrub($feed['guid']),
-                                              '[SQL_SPLITTER]' => SQL_SPLITTER,
-                                             );
-                            $sqlStr = readResource(SQL_DIR . '/reader/setFeedItem.sql', $ReplStr);
-                            $isOK = doSQLExecute($sqlStr);
-                        }
+            // Parse the Items
+            if ( is_array($feed['items']) && count($feed['items']) > 0 ) {
+                foreach ( $feed['items'] as $idx=>$item ) {
+                    $item['content:encoded'] = $this->_checkForAltText(NoNull($item['content:encoded'], $item['description']), $item['link']);
+                    $text = $this->_checkSpecialText(NoNull($item['content:encoded'], $item['description']), $item['link']);
+                    $srch = '';
+                    if ( NoNull($text) != '' ) {
+                        $uniques = UniqueWords($text);
+                        if ( is_array($uniques) ) { $srch = implode(',', $uniques); }
+                    }
+
+                    // Construct a GUID for the Site Based on an MD5 of the "clean" URL
+                    $ItemGuid = getGuidFromUrl($item['link']);
+
+                    if ( $ItemGuid !== false && strlen($ItemGuid) == 36 ) {
+                        $ReplStr = array( '[ITEM_TITLE]' => sqlScrub($item['title']),
+                                          '[ITEM_TEXT]'  => sqlScrub(NoNull($item['content:encoded'], $item['description'])),
+                                          '[ITEM_DATE]'  => sqlScrub($item['published_at']),
+                                          '[ITEM_UNIX]'  => nullInt($item['published_unix']),
+                                          '[ITEM_HASH]'  => sqlScrub($item['hash']),
+                                          '[ITEM_LINK]'  => sqlScrub($item['link']),
+                                          '[ITEM_GUID]'  => sqlScrub($ItemGuid),
+                                          '[ITEM_SRCH]'  => sqlScrub($srch),
+
+                                          '[FEED_ID]'    => nullInt($FeedID),
+                                         );
+                        $sqlStr = prepSQLQuery("CALL SetSyndicationItem( [FEED_ID], '[ITEM_TITLE]', '[ITEM_TEXT]', '[ITEM_LINK]', '[ITEM_DATE]', '[ITEM_GUID]', '[ITEM_HASH]', '[ITEM_SRCH]' );", $ReplStr);
+                        $isOK = doSQLQuery($sqlStr);
                     }
                 }
-
-                // Save the Feed Object
-                saveFeedObject($feed);
-
-                // If We're Here, Chances are Things are Good. Create a Report
-                return array( 'feed'  => array( 'title' => $feed['title'],
-                                                'guid'  => $feed['guid'],
-                                                'url'   => $feed['link'],
-                                               ),
-                              'count' => count($feed['items']),
-                             );
             }
+
+            // If We're Here, Chances are Things are Good. Create a Report
+            return array( 'feed'  => array( 'title' => $feed['title'],
+                                            'guid'  => $feed['guid'],
+                                            'url'   => $feed['link'],
+                                           ),
+                          'count' => count($feed['items']),
+                         );
         }
 
         // If We're Here, No Dice
@@ -462,6 +599,7 @@ class Reader {
         $host = strtolower(NoNull($parse['host']));
 
         switch ( $host ) {
+            case 'feed.dilbert.com':
             case 'xkcd.com':
                 /* Get the Image Text and Append It to the Body */
                 $doc = new DOMDocument();
@@ -480,6 +618,57 @@ class Reader {
 
         // Return the Text
         return NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $text));
+    }
+
+    /**
+     *  Function performs some "special" checking to see if content needs to be grabbed from the source
+     *      URL rather than the syndication feed
+     */
+    private function _checkForAltText( $text, $SiteUrl ) {
+        $parse = parse_url($SiteUrl);
+        $host = strtolower(NoNull($parse['host']));
+
+        switch ( $host ) {
+            case 'feed.dilbert.com':
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_HEADER, 0);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_URL, $SiteUrl);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                $data = curl_exec($ch);
+                curl_close($ch);
+
+                if ( mb_strlen(NoNull($data)) > 10 ) {
+                    preg_match('!<head.*?>.*</head>!ims', $data, $match);
+                    if (empty($match) || count($match) == 0) { return ''; }
+                    $head = NoNull($match[0]);
+                    $attr = array();
+
+                    $dom = new DOMDocument();
+                    if ( $dom->loadHTML($head) ) {
+                        $metas = $dom->getElementsByTagName('meta');
+                        foreach ( $metas as $meta ) {
+                            $content = NoNull($meta->getAttribute('content'));
+                            $prop = NoNull($meta->getAttribute('property'));
+                            $name = NoNull($meta->getAttribute('name'));
+
+                            $attr[NoNull($name, $prop)] = $content;
+                        }
+                    }
+
+                    // Let's Return a formatted HTML Object
+                    $title = (NoNull($attr['og:title'], $attr['twitter:title']) != '') ? ' title="' . NoNull($attr['og:title'], $attr['twitter:title']) . '"' : '';
+                    $alt = (NoNull($attr['og:description'], $attr['twitter:description']) != '') ? ' alt="' . NoNull($attr['og:description'], $attr['twitter:description']) . '"' : '';
+                    $text = '<p><img src="' . NoNull($attr['og:image'], $attr['twitter:image']) . '"' . $alt . $title . '></p>';
+                }
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+
+        // If we're here, return the Text received
+        return $text;
     }
 
     private function _getPageSummary() {
