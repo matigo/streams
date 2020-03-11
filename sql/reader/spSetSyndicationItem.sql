@@ -72,7 +72,8 @@ BEGIN
                            (SELECT 0 v UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d) num
              WHERE num.`id` >= 0) zz
      WHERE zz.`word` NOT IN ('')
-     ORDER BY zz.`word`;
+     ORDER BY zz.`word`
+        ON DUPLICATE KEY UPDATE `is_deleted` = 'N';
 
      /* Return the Feed.id and Item.id For the Record */
      SELECT `in_feed_id` as `feed_id`, `x_item_id` as `item_id`;

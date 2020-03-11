@@ -1344,10 +1344,13 @@ function parseProfileHistogram( data ) {
         }
 
         if ( ds !== undefined && ds.history !== undefined && ds.history.length > 0 ) {
+            _html += '<td class="bar" style="background: transparent; height: 50px; width: 1px;">&nbsp;</td>';
+
             for ( var i = 0; i < ds.history.length; i++ ) {
                 var _px = 50 * (ds.history[i].total / ds.max_score);
                 var _w = Math.floor(_width / ds.history.length);
                 if ( _w < 1 ) { _w = 1; }
+                if ( _px === undefined || _px === false || _px === null || isNaN(_px) ) { _px = 0;}
 
                 _html += '<td class="bar" style="height: ' + Math.round(_px) + 'px; width: ' + _w + 'px;">&nbsp;</td>';
             }

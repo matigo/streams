@@ -2708,7 +2708,7 @@ class Posts {
         $forbid = array( '<title></title>' => '', '<itunes:subtitle></itunes:subtitle>' => '', '<itunes:summary></itunes:summary>' => '',
                          '<itunes:image href=""/>' => '', '<itunes:duration>00:00</itunes:duration>' => '', '<itunes:email></itunes:email>' => '',
                          '<itunes:name></itunes:name>' => '', '<itunes:author></itunes:author>' => '',
-                         '<blockquote>  <p>' => '<blockquote><p>',
+                         '<blockquote>  <p>' => '<blockquote><p>', '<a  href=' => '<a href=',
                         );
         $xmlOut = str_replace(array_keys($forbid), array_values($forbid), $xmlOut);
 
