@@ -21,7 +21,7 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post`;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
@@ -119,7 +119,7 @@ BEGIN
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                         INNER JOIN (SELECT `post_id`, `posted_at`, `is_visible` FROM tmpPosts
                                      WHERE `is_visible` = 'Y'
-                                       and `posted_at` BETWEEN CASE WHEN `in_since_unix` = 0 THEN DATE_SUB(Now(), INTERVAL 6 MONTH) ELSE FROM_UNIXTIME(`in_since_unix`) END AND
+                                       and `posted_at` BETWEEN CASE WHEN `in_since_unix` = 0 THEN '2000-01-01 00:00:00' ELSE FROM_UNIXTIME(`in_since_unix`) END AND
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`

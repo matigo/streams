@@ -1383,7 +1383,7 @@
     /**
      *  Function Returns a Completed SQL Statement based on the SQL String and Parameter Array Provided
      */
-    function prepSQLQuery($sqlStr, $ReplStr) {
+    function prepSQLQuery($sqlStr, $ReplStr = array()) {
         return str_replace(array_keys($ReplStr), array_values($ReplStr), $sqlStr);
     }
 
