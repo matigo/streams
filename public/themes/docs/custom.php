@@ -59,10 +59,8 @@ class Docs {
      ** ********************************************************************* */
     private function _getPageHTML( $data ) {
         $SiteUrl = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/themes/' . $data['location']);
-        $PageUrl = strtolower(NoNull($this->settings['PgRoot'], 'intro'));
-        for ( $i = 1; $i <= 9; $i++ ) {
-            if ( NoNull($this->settings['PgSub' . $i]) != '' ) { $PageUrl .= '-' . strtolower(NoNull($this->settings['PgSub' . $i])); }
-        }
+        $PageUrl = strtolower(NoNull($this->settings['PgSub1'], NoNull($this->settings['PgRoot'], 'intro')));
+
         $PageFile = THEME_DIR . '/' . NoNull($data['location']) . "/resources/page-404.html";
         $mdFile = THEME_DIR . '/' . NoNull($data['location']) . "/source/$PageUrl.md";
         $this->settings['_location'] = NoNull($data['location']);

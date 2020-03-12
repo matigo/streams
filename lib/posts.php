@@ -88,10 +88,6 @@ class Posts {
                 $rVal = $this->_getThreadByGUID();
                 break;
 
-            case 'fixmeta':
-                return $this->_fixPostMeta();
-                break;
-
             default:
 
         }
@@ -2483,8 +2479,12 @@ class Posts {
             }
         }
 
+        // To ensure the cached self-reference URL is correct, grab the ReqURI suffix
+        $dotExt = getFileExtension($this->settings['ReqURI']);
+        if ( $dotExt != '' ) { $dotExt = "." . $dotExt; }
+
         // Check to See If We Have a Cached Version of the Feed
-        $cache_file = $site['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed');
+        $cache_file = $site['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed') . NoNull($dotExt);
         $rVal = '';
 
         // If there is no option, decide what sort of feed to provide
@@ -2847,55 +2847,5 @@ class Posts {
         return '';
     }
 
-    /** ********************************************************************* *
-     *  Temporary Functions
-     ** ********************************************************************* */
-    /**
-     *  Function runs through the Posts table to find records that do not have anything
-     *      in the PostSearch table. This would identify imported and very early posts
-     *      that fall outside the search and mentions results.
-     */
-    private function _fixPostMeta() {
-        $MinPostId = nullInt($this->settings['min_id'], $this->settings['post_id']);
-        $maxId = $MinPostId;
-        $cnt = 0;
-
-        $ReplStr = array( '[MIN_ID]' => nullInt($MinPostId) );
-        $sqlStr = prepSQLQuery("CALL GetNextPostIdToFix([MIN_ID]);", $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            foreach ( $rslt as $Row ) {
-                $postId = nullInt($Row['post_id']);
-                $postTxt = NoNull($Row['value']);
-
-                if ( $postTxt != '' ) {
-                    $html = $this->_getMarkdownHTML($postTxt, $postId);
-
-                    $UniqueWords = '';
-                    $uWords = UniqueWords($html);
-                    if ( is_array($uWords) && count($uWords) > 0 ) {
-                        $UniqueWords = implode(',', $uWords);
-                    }
-
-                    $ReplStr = array( '[POST_ID]' => nullInt($postId),
-                                      '[WORDS]'   => sqlScrub($UniqueWords),
-                                     );
-                    $sqlStr = prepSQLQuery("CALL FixPostMeta([POST_ID], '[WORDS]');", $ReplStr);
-                    $isOK = doSQLQuery($sqlStr);
-                    if ( is_array($isOK) ) {
-                        foreach ( $isOK as $post ) {
-                            if ( nullInt($post['post_id']) > $maxId ) { $maxId = nullInt($post['post_id']); }
-                            $cnt++;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Return some sort of output
-        return array( 'max_id' => nullInt($maxId),
-                      'posts'  => nullInt($cnt),
-                     );
-    }
 }
 ?>
