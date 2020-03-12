@@ -2483,8 +2483,11 @@ class Posts {
         $dotExt = getFileExtension($this->settings['ReqURI']);
         if ( $dotExt != '' ) { $dotExt = "." . $dotExt; }
 
+        $rssCnt = nullInt($site['rss_limit'], 15);
+        if ( $rssCnt <= 0 ) { $rssCnt = 15; }
+
         // Check to See If We Have a Cached Version of the Feed
-        $cache_file = $site['site_version'] . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed') . NoNull($dotExt);
+        $cache_file = $site['site_version'] . '-' . substr('0000' . $rssCnt, -4) . '-' . NoNull($format, 'xml') . NoNull($rtSuffix, '-feed') . NoNull($dotExt);
         $rVal = '';
 
         // If there is no option, decide what sort of feed to provide
@@ -2517,7 +2520,7 @@ class Posts {
                           '[SHOW_BOOKMARK]'  => sqlScrub($ReqTypes['post.bookmark']),
                           '[SHOW_QUOTATION]' => sqlScrub($ReqTypes['post.quotation']),
                           '[SHOW_NOTE]'      => sqlScrub($ReqTypes['post.note']),
-                          '[COUNT]'          => nullInt($site['RssLimit'], 100),
+                          '[COUNT]'          => nullInt($site['rss_limit'], 15),
                          );
         $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', 'Y', [COUNT], 0);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
