@@ -59,15 +59,19 @@ BEGIN
 
         SELECT tmp.`id` INTO `post_id`
           FROM (SELECT po.`id`, po.`publish_at`
-                  FROM `Post` po INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
-                                 INNER JOIN `Site` si ON ch.`site_id` = si.`id`
+                  FROM `Persona` pa INNER JOIN `Post` po ON pa.`id` = po.`persona_id`
+                                    INNER JOIN `Channel` ch ON po.`channel_id` = ch.`id`
+                                    INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                  WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N'
-                   and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE))
+                   and 'Y' = CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                                  WHEN Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) THEN 'Y'
+                                  ELSE 'N' END
                    and si.`guid` = `in_site_guid` and po.`canonical_url` = `in_canon_url`
                  UNION ALL
                  SELECT -1 as `id`, FROM_UNIXTIME(0) as `publish_at`
                  ORDER BY `publish_at` DESC
                  LIMIT 1) tmp;
+
     END IF;
 
     /* Separate and Validate the Post Type Filters */
@@ -83,7 +87,10 @@ BEGIN
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     IF IFNULL(`post_id`, 0) = 0 AND IFNULL(`in_tag`, '') = '' THEN
-        SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post` as `start`;
+        SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post`;
+        IF IFNULL(`in_object`, '') <> '' AND IFNULL(`in_page`, 0) > 0 THEN
+            SET `min_id` = 0;
+        END IF;
 
         CREATE TEMPORARY TABLE tmpPosts AS
         SELECT CASE WHEN IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) < Now() THEN 'N'
@@ -176,8 +183,11 @@ BEGIN
                                                         INNER JOIN `ChannelAuthor` ca ON pa.`id` = ca.`persona_id`
                                       WHERE ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
                                         and a.`id` = `in_account_id`) tmp ON po.`persona_id` = tmp.`persona_id` AND ch.`id` = tmp.`channel_id`
-        WHERE po.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and si.`is_deleted` = 'N'
-          and po.`publish_at` <= Now() and po.`id` = `post_id`;
+        WHERE po.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and si.`is_deleted` = 'N' and po.`id` = `post_id`
+          and 'Y' = CASE WHEN pa.`account_id` = 1 THEN 'Y'
+                         WHEN po.`publish_at` <= Now() THEN 'Y'
+                         ELSE 'N' END
+        LIMIT 1;
     END IF;
 
     /* Output the Completed Post Objects */

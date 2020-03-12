@@ -1562,7 +1562,7 @@ class Posts {
         $Excludes = array( 'account', 'settings', 'write', 'new' );
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $Count = nullInt($this->settings['count'], 10);
-        $Page = $this->_getPageNumber() * $Count;
+        $Page = $this->_getPageNumber();
         $CanonURL = $this->_getCanonicalURL();
         $TagKey = $this->_getTagKey();
         $tObj = strtolower(str_replace('/', '', $CanonURL));
@@ -1572,8 +1572,11 @@ class Posts {
 
         if ( $Count > 75 ) { $Count = 75; }
         if ( $Count <= 0 ) { $Count = 10; }
-        if ( $Page > 10000 ) { $Page = 10000; }
+        if ( $Page > 50000 ) { $Page = 50000; }
         if ( $page < 0 ) { $Page = 0; }
+
+        // Ensure the Page is set to MySQL's Preference
+        $Page = $Page * $Count;
 
         // Construct the SQL Query
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
