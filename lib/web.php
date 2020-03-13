@@ -724,7 +724,9 @@ class Route extends Streams {
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         switch ( $PgRoot ) {
             case 'account':
-                $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+                $ReplStr = array( '[TOKEN_GUID]' => NoNull($this->settings['_token_guid']),
+                                  '[TOKEN_ID]'   => nullInt($this->settings['_token_id']),
+                                 );
                 $sqlStr = readResource(SQL_DIR . '/account/getAccountDetail.sql', $ReplStr);
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
@@ -739,6 +741,18 @@ class Route extends Streams {
 
                                       '[ACCT_MAIL]'    => strtolower(NoNull($Row['email'], $this->settings['_email'])),
                                       '[TIMEZONES]'    => $this->_getTimezoneList(),
+
+                                      '[SITE_GEO]'     => (YNBool($Row['show_geo']) ? ' checked' : ''),
+                                      '[SHOW_NOTE]'    => (YNBool($Row['show_reminder']) ? ' checked' : ''),
+
+                                      '[SUB_ACTIVE]'   => NoNull($Row['sub_active'], 'N'),
+                                      '[SUB_UNTIL]'    => date("Y-m-d", strtotime($Row['sub_until'])),
+                                      '[SUB_UUNIX]'    => strtotime($Row['sub_until']),
+                                      '[SUB_CLASS]'    => ((NoNull($Row['sub_active'], 'N') == 'N') ? ' hidden' : ''),
+                                      '[SUB_RESUB]'    => ((NoNull($Row['sub_active'], 'N') == 'N') ? '' : ' hidden'),
+
+                                      '[ERR_CLASS]'    => ((NoNull($this->settings['err']) == '') ? ' hidden' : ''),
+                                      '[ERR_MSG]'      => $this->_getErrorMessage(),
                                      );
                     }
                 }
@@ -943,6 +957,26 @@ class Route extends Streams {
         }
 
         /* If we're here, return an empty string */
+        return '';
+    }
+
+    private function _getErrorMessage() {
+        $key = NoNull($this->settings['err']);
+        if ( $key != '' ) {
+            switch ( strtolower($key) ) {
+                case 'bad_pass':
+                    return "Error: The password you provided is not particularly good.";
+                    break;
+
+                case 'bad_guid':
+                    return "Error: An important identifier was not provided.<br>This sort of thing shouldn't happen.";
+                    break;
+
+                case 'bad_name':
+                    return "Error: Please provide at least one name. It does not need to be your real name.";
+                    break;
+            }
+        }
         return '';
     }
 

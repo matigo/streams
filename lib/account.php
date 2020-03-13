@@ -175,6 +175,12 @@ class Account {
                 $rVal = $this->_setRelation();
                 break;
 
+            case 'details':
+            case 'detail':
+            case '':
+                $this->_setAccountDetails();
+                break;
+
             default:
                 // Do Nothing
         }
@@ -682,6 +688,93 @@ class Account {
 
         // If We're Here, We Couldn't Do Anything
         return false;
+    }
+
+    /** ********************************************************************* *
+     *  Account Management
+     ** ********************************************************************* */
+    private function _setAccountDetails() {
+        if ( !defined('SHA_SALT') ) { define('SHA_SALT', ''); }
+
+        $CleanDisp = NoNull($this->settings['display-name'], $this->settings['display_name']);
+        $FirstName = NoNull($this->settings['first-name'], $this->settings['first_name']);
+        $LastName = NoNull($this->settings['last-name'], $this->settings['last_name']);
+        $MailAddy = NoNull($this->settings['acct-mail'], $this->settings['acct_mail']);
+        $AcctPass = NoNull($this->settings['acct-pass'], $this->settings['acct_pass']);
+
+        $SendRemind = BoolYN(YNBool($this->settings['show-note'], $this->settings['show_note']));
+        $ShowGeo = BoolYN(YNBool($this->settings['show-geo'], $this->settings['show_geo']));
+
+        $AcctLang = NoNull($this->settings['acct-lang'], $this->settings['acct_lang']);
+        $AcctZone = NoNull($this->settings['acct-zone'], $this->settings['acct_zone']);
+
+        $ChanGuid = NoNull($this->settings['channel-guid'], $this->settings['channel_guid']);
+        $WebReq = BoolYN(YNBool($this->settings['web-req'], $this->settings['web_req']));
+
+        // Perform Some Basic Validation
+        if ( $MailAddy != '' ) {
+            if ( validateEmail($MailAddy) === false ) { $MailAddy = ''; }
+        }
+
+        // Do not let a password full of asterisks, as this is a default "dummy" value
+        if ( $AcctPass != '' ) {
+            for ( $i = 1; $i <= 100; $i++ ) {
+                if ( $AcctPass == str_repeat('*', $i) ) { $AcctPass = ''; }
+            }
+        }
+
+        // Ensure the Language is valid
+        $valids = array('en-us', 'eo-us');
+        $AcctLang = str_replace('lang.', '', $AcctLang);
+        if ( in_array($AcctLang, $valids) === false ) { $AcctLang = DEFAULT_LANG; }
+
+        // Begin the Update Process
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[TOKEN_GUID]'   => sqlScrub($this->settings['_token_guid']),
+                          '[TOKEN_ID]'     => nullInt($this->settings['_token_id']),
+                          '[CHANNEL_GUID]' => sqlScrub($ChanGuid),
+
+                          '[ACCT_PASS]'    => sqlScrub($AcctPass),
+                          '[SHA_SALT]'     => sqlScrub(SHA_SALT),
+
+                          '[DISP_NAME]'    => sqlScrub($CleanDisp),
+                          '[FIRST_NAME]'   => sqlScrub($FirstName),
+                          '[LAST_NAME]'    => sqlScrub($LastName),
+                          '[MAIL_ADDY]'    => sqlScrub($MailAddy),
+                          '[ACCT_LANG]'    => sqlScrub($AcctLang),
+                          '[ACCT_ZONE]'    => sqlScrub($AcctZone),
+                          '[SEND_REMIND]'  => sqlScrub($SendRemind),
+                          '[SHOW_GEO]'     => sqlScrub($ShowGeo),
+
+                          '[WEB_REQ]'      => sqlScrub($WebReq),
+                         );
+        $sqlStr = prepSQLQuery("CALL AccountUpdate([ACCOUNT_ID], '[TOKEN_GUID]', [TOKEN_ID], '[CHANNEL_GUID]', " .
+                                                  "'[DISP_NAME]', '[FIRST_NAME]', '[LAST_NAME]', " .
+                                                  "'[MAIL_ADDY]', '[ACCT_LANG]', '[ACCT_ZONE]', " .
+                                                  "'[SEND_REMIND]', '[SHOW_GEO]', " .
+                                                  "'[ACCT_PASS]', '10c2015' );", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $errCode = NoNull($Row['error']);
+            }
+        }
+
+        // Prep the Response
+        if ( YNBool($WebReq) ) {
+            // Determine the Return URL Path
+            $url = $this->settings['HomeURL'] . '/account';
+            if ( $errCode != '' ) { $url .= "?err=$errCode"; }
+            redirectTo($url);
+
+        } else {
+            if ( $errCode != '' ) {
+                $this->_setMetaMessage("Error: $errCode", 401);
+                return false;
+            } else {
+                return array();
+            }
+        }
     }
 
     /** ********************************************************************* *
