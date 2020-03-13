@@ -628,13 +628,26 @@ class Route extends Streams {
 
     private function _getContentArray( $data ) {
         $SiteUrl = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/themes/' . $data['location']);
+        $HomeUrl = NoNull($data['protocol'] . '://' . $data['HomeURL']);
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $ApiUrl = getApiUrl();
         $CdnUrl = getCdnUrl();
 
+        // Get the Banner (if one exists)
         $banner_img = NoNull($data['banner_img']);
         if ( NoNull($banner_img) == '' ) { $banner_img = NoNull($data['protocol'] . '://' . $data['HomeURL'] . '/images/default_banner.jpg'); }
 
+        // Get the Shortcut Icon (if one exists)
+        $short_ico = $HomeUrl . '/avatars/' . NoNull($data['site_icon'], 'favicon.png');
+        if ( is_array($data) && is_array($data['personas']) ) {
+            foreach ( $data['personas'] as $pa ) {
+                if ( NoNull($pa['avatar_img']) != '' ) { $short_ico = NoNull($pa['avatar_img']); }
+            }
+        }
+        $ico_type = getFileExtension($short_ico);
+        $ico_mime = getMimeFromExtension($ico_type);
+
+        // Construct the Core Array
         $rVal = array( '[FONT_DIR]'     => $SiteUrl . '/fonts',
                        '[CSS_DIR]'      => $SiteUrl . '/css',
                        '[IMG_DIR]'      => $SiteUrl . '/img',
@@ -649,6 +662,9 @@ class Route extends Streams {
                        '[APP_VER]'      => APP_VER,
                        '[LANG_CD]'      => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
                        '[AVATAR_URL]'   => NoNull($this->settings['HomeURL']) . '/avatars/' . $this->settings['_avatar_file'],
+                       '[UPDATED_AT]'   => NoNull($data['updated_at']),
+                       '[SHORT_ICO]'    => NoNull($short_ico),
+                       '[MIME_ICO]'     => NoNull($ico_mime, 'image/png'),
                        '[PGSUB_1]'      => NoNull($this->settings['PgSub1']),
                        '[YEAR]'         => date('Y'),
 
