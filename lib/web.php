@@ -750,6 +750,7 @@ class Route extends Streams {
                                       '[SUB_UUNIX]'    => strtotime($Row['sub_until']),
                                       '[SUB_CLASS]'    => ((NoNull($Row['sub_active'], 'N') == 'N') ? ' hidden' : ''),
                                       '[SUB_RESUB]'    => ((NoNull($Row['sub_active'], 'N') == 'N') ? '' : ' hidden'),
+                                      '[SUB_UMSG]'     => ((NoNull($Row['sub_active'], 'N') == 'N') ? $this->strings['lblPaypalSubExpyd'] : $this->strings['lblPaypalSubUntil']),
 
                                       '[ERR_CLASS]'    => ((NoNull($this->settings['err']) == '') ? ' hidden' : ''),
                                       '[ERR_MSG]'      => $this->_getErrorMessage(),

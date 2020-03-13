@@ -17,7 +17,7 @@
                                 </p>
                                 <p class="single-post__site-details">
                                     <label for="acct-mail">[lblAccountEmail]</label>
-                                    <input id="acct-mail" type="text" class="fullwide" name="acct-mail" size="30" aria-required="true" value="[ACCT_MAIL]" required>
+                                    <input id="acct-mail" type="text" class="fullwide" name="acct-mail" size="30" aria-required="true" value="[ACCT_MAIL]" autocomplete="off" required>
                                 </p>
 
                                 <p class="single-post__site-details">
@@ -31,7 +31,7 @@
 
                                 <p class="single-post__site-details">
                                     <label for="acct-pass">[lblAccountPassword]</label>
-                                    <input id="acct-pass" type="password" class="fullwide" name="acct-pass" size="30" aria-required="true" value="********">
+                                    <input id="acct-pass" type="password" class="fullwide" name="acct-pass" size="30" aria-required="true" value="********" autocomplete="off">
                                 </p>
 
                                 <h4>[lblAccountS2]</h4>
@@ -46,13 +46,13 @@
 
                                 <h4>[lblAccountS3]</h4>
                                 <p class="single-post__site-details">
-                                    <label class="switch-label" for="acct-lang">[lblAccountLanguage]</label>
+                                    <label for="acct-lang">[lblAccountLanguage]</label>
                                     <select id="acct-lang" class="form-control settings-half" name="acct-lang" aria-required="true">
                                         <option value="lang.en-us">[optLangEnUS]</option>
                                     </select>
                                 </p>
                                 <p class="single-post__site-details">
-                                    <label class="switch-label" for="acct-zone">[lblAccountTimezone]</label>
+                                    <label for="acct-zone">[lblAccountTimezone]</label>
                                     <select id="acct-zone" class="form-control settings-half" name="acct-zone" aria-required="true">
                                         [TIMEZONES]
                                     </select>
@@ -67,7 +67,7 @@
                                     </label>
                                 </p>
                                 <p class="single-post__contact-submit text-center">
-                                    <input id="account-submit" type="submit" name="account-submit" size="30" value="[btnSettingsSave]">
+                                    <input type="submit" id="account-submit" class="btn btn-success" name="account-submit" value="[btnSettingsSave]">
                                     <input type="hidden" name="channel_guid" value="[CHANNEL_GUID]">
                                     <input type="hidden" name="token" value="[TOKEN]">
                                     <input type="hidden" name="web-req" value="Y">
@@ -99,7 +99,7 @@
                                             <button type="submit" name="submit" class="btn btn-success" style="margin-top: 10px; min-width: 150px;"><i class="fa fa-paypal"></i> [btnSubscribePP]</button>
                                         </p>
                                         <p class="text-center">
-                                            <strong>[lblPaypalSubUntil]:</strong>
+                                            <strong>[SUB_UMSG]:</strong>
                                             <span class="dt-published" data-dateunix="[SUB_UUNIX]">[SUB_UNTIL]</span>
                                         </p>
                                     </div>
