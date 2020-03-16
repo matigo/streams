@@ -191,7 +191,7 @@ class Files {
             if ( USE_S3 == 1 ) {
                 if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
                 if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
-                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, AWS_REGION_NAME);
             }
 
             foreach ( $items as $FileID ) {
@@ -240,7 +240,7 @@ class Files {
 
                                 // Upload the Original Image to S3 if Appropriate
                                 if ( USE_S3 == 1 ) {
-                                    $s3->putObject($s3->inputFile($fullPath, false), CDN_URL, $cdnPath, 'public-read');
+                                    $s3->putObject($s3->inputFile($fullPath, false), CDN_DOMAIN, $cdnPath, S3::ACL_PUBLIC_READ);
                                 }
 
                                 // Resize the Image to a Square
@@ -256,7 +256,7 @@ class Files {
 
                             // Copy the Data to S3
                             if ( USE_S3 == 1 ) {
-                                $s3->putObject($s3->inputFile($fullPath, false), CDN_URL, $cdnPath, 'public-read');
+                                $s3->putObject($s3->inputFile($fullPath, false), CDN_DOMAIN, $cdnPath, S3::ACL_PUBLIC_READ);
                                 unset($s3);
                             }
 
@@ -335,7 +335,8 @@ class Files {
             if ( USE_S3 == 1 ) {
                 if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
                 if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
-                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+                if ( !defined('CDN_DOMAIN') ) { define('CDN_DOMAIN', ''); }
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, AWS_REGION_NAME);
             }
 
             foreach ( $items as $FileID ) {
@@ -396,7 +397,7 @@ class Files {
                                 // Upload the Original Image to S3 if Appropriate
                                 if ( USE_S3 == 1 ) {
                                     $s3Path = intToAlpha($this->settings['_account_id']) . strtolower("/$origName");
-                                    $s3->putObject($s3->inputFile($origPath, false), CDN_URL, $s3Path, 'public-read');
+                                    $s3->putObject($s3->inputFile($origPath, false), CDN_DOMAIN, $s3Path, S3::ACL_PUBLIC_READ);
                                 }
 
                                 // Resize the Image
@@ -442,7 +443,7 @@ class Files {
 
                             // Copy the Data to S3
                             if ( USE_S3 == 1 ) {
-                                $s3->putObject($s3->inputFile($fullPath, false), CDN_URL, $cdnPath, 'public-read');
+                                $s3->putObject($s3->inputFile($fullPath, false), CDN_DOMAIN, $cdnPath, S3::ACL_PUBLIC_READ);
                                 unset($s3);
                             }
 
@@ -583,7 +584,7 @@ class Files {
         $sqlStr = readResource(SQL_DIR . '/files/getFilesList.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
-            $cdn_prefix = '//' . CDN_URL . '/' . intToAlpha($this->settings['_account_id']) . '/';
+            $cdn_prefix = '//' . CDN_DOMAIN . '/' . intToAlpha($this->settings['_account_id']) . '/';
             $data = array();
             foreach ( $rslt as $Row ) {
                 $is_deleted = YNBool($Row['is_deleted']);
@@ -714,11 +715,11 @@ class Files {
 
         // Remove the File from S3 If It Exists
         if ( USE_S3 == 1 ) {
-            $cdnPath = str_replace('//' . CDN_URL . '/', '', $data[0]['cdn_url']);
+            $cdnPath = str_replace('//' . CDN_DOMAIN . '/', '', $data[0]['cdn_url']);
             if ( $cdnPath != '' ) {
                 require_once(LIB_DIR . '/s3.php');
 
-                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, AWS_REGION_NAME);
                 $isGood = $s3->deleteObject(CDN_URL, $cdnPath);
                 unset($s3);
             }

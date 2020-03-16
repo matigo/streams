@@ -70,6 +70,7 @@ define('SCRIPTURE_API_KEY', '');                            // The Api.Bible Scr
 define('SCRIPTURE_API_URL', '');                            // The Api.Bible Scripture API Address
 
 define('USE_S3', 0);                                        // Use Amazon S3 Storage
+define('AWS_REGION_NAME', '');                              // The Amazon S3 Region Name
 define('AWS_ACCESS_KEY', '');                               // The Amazon S3 Access Key
 define('AWS_SECRET_KEY', '');                               // The Amazon S3 Secret Key
 define('CLOUDFRONT_URL', '');                               // The Amazon Cloudfront URL

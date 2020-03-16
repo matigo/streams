@@ -8,5 +8,6 @@
 *.tmp
 */staticmaps/*
 public/files/*
+files/*
 jason_fox_box.jpg
 config.php
