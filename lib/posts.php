@@ -1160,10 +1160,10 @@ class Posts {
 
             case 'post.article':
                 if ( $PostSlug == '' ) {
-                    $PostSlug = $this->_getSafeTagSlug($Title);
+                    $SafeSlug = $this->_getSafeTagSlug($Title);
 
                     // Check if the Slug is Unique
-                    $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $PostSlug);
+                    $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $SafeSlug);
 
                     // If the Slug is Not Empty, Set the Canonical URL Value
                     if ( $PostSlug != '' ) {
@@ -1171,7 +1171,10 @@ class Posts {
                         if ( nullInt($PublishUnix) >= strtotime('1975-01-01 00:00:00') ) {
                             $SlugPrefix = date('Y/m/d', $PublishUnix);
                         }
-                        $CanonURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$PostSlug");
+                        $SafeURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$SafeSlug");
+                        $CanonURL = $this->_checkUniqueCanonUrl($ChannelGUID, $PostGUID, $SafeURL);
+
+                        if ( $CanonURL == '' ) { $CanonURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$PostSlug"); }
                     }
                 }
                 if ( mb_strlen($Value) <= 0 ) { $this->_setMetaMessage("Please Supply Some Text", 400); $isValid = false; }
@@ -2819,7 +2822,7 @@ class Posts {
      */
     private function _checkUniqueSlug( $ChannelGUID, $PostGUID, $PostSlug ) {
         $Excludes = array( 'feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'location', 'archive',
-                           'account', 'accounts', 'contact', 'profile', 'settings', 'messages'
+                           'account', 'accounts', 'contact', 'profile', 'settings', 'messages', 'file', 'files',
                           );
 
         // Ensure the PostSlug is not ending in a dash or contains multiple dashes in a row
@@ -2845,6 +2848,45 @@ class Posts {
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
                     return NoNull($Row['slug']);
+                }
+            }
+        }
+
+        // If We're Here, Then Something's Off. Return an Empty String to Force a GUID
+        return '';
+    }
+
+    /**
+     *  Function Checks that a Canonical URL is Unique and Valid
+     */
+    private function _checkUniqueCanonUrl( $ChannelGUID, $PostGUID, $PostUrl ) {
+        $Excludes = array( 'feeds', 'images', 'api', 'cdn', 'note', 'article', 'bookmark', 'quotation', 'location', 'archive',
+                           'account', 'accounts', 'contact', 'profile', 'settings', 'messages', 'file', 'files',
+                          );
+
+        // Ensure the PostUrl is not ending in a dash or contains multiple dashes in a row
+        if ( strpos($PostUrl, '-') >= 0 ) {
+            $blks = explode('-', $PostUrl);
+            $PostUrl = '';
+            foreach ( $blks as $blk ) {
+                if ( NoNull($blk) != '' ) {
+                    if ( $PostUrl != '' ) { $PostUrl .= '-'; }
+                    $PostUrl .= NoNull($blk);
+                }
+            }
+        }
+
+        // Check the Slug against the Database
+        if ( in_array($TrySlug, $Excludes) === false ) {
+            $ReplStr = array( '[CHANNEL_GUID]' => sqlScrub($ChannelGUID),
+                              '[POST_GUID]'    => sqlScrub($PostGUID),
+                              '[POST_URL]'     => sqlScrub($PostUrl),
+                             );
+            $sqlStr = prepSQLQuery("CALL CheckUniqueCanonUrl('[CHANNEL_GUID]', '[POST_GUID]', '[POST_URL]');", $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    return NoNull($Row['url']);
                 }
             }
         }
