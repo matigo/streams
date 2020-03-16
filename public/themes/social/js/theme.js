@@ -81,13 +81,17 @@ function setHeadMeta( _name, _value ) {
 function writeToZone( name, cdn_url ) {
     if ( cdn_url !== undefined && cdn_url !== false && cdn_url !== null ) {
         var els = document.getElementsByClassName('write-area');
+        var txt = '';
         for ( var i = 0; i < els.length; i++ ) {
-            if ( els[i].getAttribute('data-type') == 'mdown' ) {
-                if ( NoNull(els[i].value) != '' ) { els[i].value += "\r\n\r\n"; }
+            if ( NoNull(els[i].value) != '' ) { els[i].value += "\r\n\r\n"; }
+            if ( window.cursor_at !== undefined && window.cursor_at !== null && window.cursor_at > 0 ) {
+                txt = els[i].value;
+                els[i].value = txt.substring(0, window.cursor_at) + '![' + name.replace(/\.[^/.]+$/, '') + '](' + cdn_url + ')' + txt.substring(window.cursor_at);
+
+            } else {
                 els[i].value += '![' + name.replace(/\.[^/.]+$/, '') + '](' + cdn_url + ')';
-                setCharCount(els[i]);
-                break;
             }
+            setCharCount(els[i]);
         }
     }
 }
@@ -104,6 +108,7 @@ function splitSecondCheck() {
  *  Startup
  ** ************************************************************************* */
 window.last_touch = 0;
+window.cursor_at = 0;
 
 jQuery(function($) {
     window.KEY_DOWNARROW = 40;
@@ -194,7 +199,20 @@ document.onreadystatechange = function () {
         $('#writePost').on('shown.bs.modal', function () {
             $('#content').trigger('focus');
         });
+
+        checkCursorPosition();
     }
+}
+function checkCursorPosition() {
+    var els = document.getElementsByClassName('write-area');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _pos = getCaretPos(els[i]);
+            if ( _pos != window.cursor_at ) { window.cursor_at = _pos; }
+        }
+    }
+
+    setTimeout(checkCursorPosition, 500);
 }
 
 /** ************************************************************************* *
@@ -1981,14 +1999,12 @@ function parseReplyBox( data ) {
 
             var els = document.getElementsByClassName('write-area');
             for ( var o = 0; o < els.length; o++ ) {
-                if ( els[o].getAttribute('data-type') == 'mdown' ) {
-                    els[o].value = txt;
-                    setCaretToPos(els[o], caret_pos);
-                    els[o].focus();
-                    break;
-                }
+                els[o].value = txt;
+                setCaretToPos(els[o], caret_pos);
+                els[o].focus();
             }
             window.last_touch = 0;
+            setVisibility('public');
             toggleNewPost(true);
             return;
         }

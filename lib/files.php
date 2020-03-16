@@ -414,11 +414,21 @@ class Files {
                                         $img->reduceToWidth(960);
                                         $isGood = $img->save($propPath);
                                         $hasProp = $img->is_reduced();
+
+                                        if ( USE_S3 == 1 ) {
+                                            $s3Path = intToAlpha($this->settings['_account_id']) . strtolower("/$propName");
+                                            $s3->putObject($s3->inputFile($propPath, false), CDN_DOMAIN, $s3Path, S3::ACL_PUBLIC_READ);
+                                        }
                                     }
                                     if ( $imgWidth > 480 ) {
                                         $img->reduceToWidth(480);
                                         $isGood = $img->save($thumbPath);
                                         $hasThumb = $img->is_reduced();
+
+                                        if ( USE_S3 == 1 ) {
+                                            $s3Path = intToAlpha($this->settings['_account_id']) . strtolower("/$thumbName");
+                                            $s3->putObject($s3->inputFile($thumbPath, false), CDN_DOMAIN, $s3Path, S3::ACL_PUBLIC_READ);
+                                        }
                                     }
                                 }
                                 unset($img);
