@@ -2037,6 +2037,37 @@ body.font-xx, body .font-xx { font-size: 22px; }
     text-align: left;
   }
 }
+
+/** ******************************************************************************************** *
+    WebMentions
+ ** ******************************************************************************************** */
+.webmention-header {
+    display: block;
+    padding: 5px 0 15px;
+    margin: 0 auto;
+    max-width: 80%;
+}
+.webmention-mention {
+    display: block;
+    padding: 5px 0 15px;
+    margin: 0 auto;
+    max-width: 80%;
+}
+.webmention-author { display: block; }
+.webmention-author img {
+    border: 1px solid #eee;
+    border-radius: 50px;
+    max-width: 65px;
+    max-height: 65px;
+    padding: 2px;
+    margin: 0 10px 0 0;
+}
+.webmention-summary { padding: 5px 10px 5px 75px; }
+.webmention-published {
+    display: block;
+    padding: 0 0 0 75px;
+}
+
 /*------------------------------------------------------------------
 [13. Content Overlay ]
 */

@@ -210,6 +210,8 @@ BEGIN
            IFNULL((SELECT pp.`points` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
                     WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`), 0) as `points`,
 
+           (SELECT COUNT(DISTINCT pwm.`url`) as `mentions` FROM `PostWebMention` pwm WHERE pwm.`is_deleted` = 'N' and pwm.`post_id` = po.`id`) as `web_mentions`,
+
            po.`canonical_url`, po.`slug`, po.`reply_to`,
            po.`channel_id`, ch.`name` as `channel_name`, ch.`type` as `channel_type`, ch.`privacy_type` as `channel_privacy_type`, ch.`guid` as `channel_guid`,
            ch.`created_at` as `channel_created_at`, ch.`updated_at` as `channel_updated_at`,

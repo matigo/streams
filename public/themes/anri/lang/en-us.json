@@ -23,6 +23,8 @@
     "lblContactMail": "Email",
     "lblContactMessage": "Message",
 
+    "lblWebMentions": "WebMentions Received",
+
     "lblMessages": "Your Messages",
     "lblMessageDescr": "&nbsp;",
     "lblMessageList": "Inbox",

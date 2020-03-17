@@ -44,5 +44,11 @@ BEGIN
                                 `comment` = `in_comment`,
                                 `updated_at` = Now();
 
+    /* Update the Site's Version to the Current Datetime */
+    UPDATE `Site`
+       SET `version` = UNIX_TIMESTAMP(Now()),
+           `updated_at` = Now()
+     WHERE `is_deleted` = 'N' and `id` = `in_site_id`;
+
  END;;
  DELIMITER ;

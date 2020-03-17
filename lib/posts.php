@@ -285,6 +285,35 @@ class Posts {
         return false;
     }
 
+    private function _getWebMentions( $post_id ) {
+        if ( nullInt($post_id) <= 0 ) { return false; }
+
+        $ReplStr = array( '[POST_ID]' => nullInt($post_id) );
+        $sqlStr = readResource(SQL_DIR . '/posts/getPostWebMentions.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = array();
+
+            foreach ( $rslt as $Row ) {
+                $data[] = array( 'url'          => NoNull($Row['url']),
+                                 'avatar_url'   => NoNull($Row['avatar_url']),
+                                 'author'       => NoNull($Row['author']),
+                                 'comment'      => NoNull($Row['comment']),
+                                 'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
+                                 'created_unix' => strtotime($Row['created_at']),
+                                 'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
+                                 'updated_unix' => strtotime($Row['updated_at']),
+                                );
+            }
+
+            // If we have data, return it
+            if ( count($data) > 0 ) { return $data; }
+        }
+
+        // If we're here, there's nothing
+        return false;
+    }
+
     private function _getPostMentions( $post_ids ) {
         $list = array();
 
@@ -440,6 +469,11 @@ class Posts {
                 $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], $IsNote, true);
                 $post_text = $this->_parsePostMentions($post_text);
 
+                $webMentions = false;
+                if ( count($rslt) == 1 && nullInt($Row['web_mentions']) > 0 ) {
+                    $webMentions = $this->_getWebMentions($Row['post_id']);
+                }
+
                 $data[] = array( 'guid'     => NoNull($Row['post_guid']),
                                  'type'     => NoNull($Row['post_type']),
                                  'thread'   => ((NoNull($Row['thread_guid']) != '') ? array( 'guid' => NoNull($Row['thread_guid']), 'count' => nullInt($Row['thread_posts']) ) : false),
@@ -475,6 +509,8 @@ class Posts {
                                  'meta'     => $poMeta,
                                  'tags'     => $poTags,
                                  'mentions' => $mentions,
+
+                                 'web_mentions'     => $webMentions,
 
                                  'canonical_url'    => $siteURL . NoNull($Row['canonical_url']),
                                  'slug'             => NoNull($Row['slug']),
@@ -1785,6 +1821,24 @@ class Posts {
                 }
             }
 
+            $WebMentions = '';
+            if ( array_key_exists('web_mentions', $post) && is_array($post['web_mentions']) ) {
+                $resFile = THEME_DIR . '/' . $data['location'] . '/flats/meta.webmention.html';
+                $WebMentions = tabSpace(6) . '<h4 class="webmention-header">' . NoNull($this->strings['lblWebMentions'], "WebMentions") . '</h4>' . "\r\n";
+                foreach ( $post['web_mentions'] as $webm ) {
+                    $dtls = array( '[SOURCE_URL]'  => NoNull($webm['url']),
+                                   '[AVATAR_URL]'  => NoNull($webm['avatar_url']),
+                                   '[COMMENT]'     => NoNull($webm['comment']),
+                                   '[AUTHOR]'      => NoNull($webm['author']),
+                                   '[CREATE_AT]'   => NoNull($webm['created_at']),
+                                   '[CREATE_UNIX]' => NoNull($webm['created_unix']),
+                                   '[UPDATE_AT]'   => NoNull($webm['updated_at']),
+                                   '[UPDATE_UNIX]' => NoNull($webm['updated_unix']),
+                                  );
+                    $WebMentions .= readResource($resFile, $dtls);
+                }
+            }
+
             $ReplStr = array( '[POST_GUID]'     => NoNull($post['guid']),
                               '[POST_TYPE]'     => NoNull($post['type']),
                               '[POST_CLASS]'    => $postClass,
@@ -1804,6 +1858,7 @@ class Posts {
                               '[THREAD]'        => $PostThread,
                               '[SOURCE_NETWORK]'=> NoNull($post['meta']['source']['network']),
                               '[SOURCE_ICON]'   => $SourceIcon,
+                              '[WEBMENTIONS]'   => $WebMentions,
                               '[PUBLISH_AT]'    => NoNull($post['publish_at']),
                               '[PUBLISH_UNIX]'  => nullInt($post['publish_unix']),
                               '[UPDATED_AT]'    => NoNull($post['updated_at']),
