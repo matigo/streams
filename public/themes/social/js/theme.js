@@ -1389,7 +1389,7 @@ function showHistoCounts( evt ) {
 
     var els = document.getElementsByClassName('histo-count');
     for ( var i = 0; i < els.length; i++ ) {
-        els[i].innerHTML = numberWithCommas(_posts) + ' posts';
+        els[i].innerHTML = numberWithCommas(_posts) + ' ' + ((_posts == 1) ? 'post' : 'posts');
     }
 }
 function getProfileHistogram( _guid ) {
