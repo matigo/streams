@@ -1169,12 +1169,14 @@ function parseProfile( data ) {
                             '</tbody>' +
                         '</table>' +
                     '</div>' +
+                    '<div class="content-histochart profile-histochart hidden">&nbsp;</div>' +
                     '<div class="content-histogram profile-histogram hidden">&nbsp;</div>' +
                     '<div class="content-posts profile-posts hidden"></div>';
         }
 
         // Get More Profile Information (If Applicable)
-        setTimeout(function() { getProfileHistogram(ds.guid); }, 500);
+        setTimeout(function() { getProfileHistoChart(ds.guid); }, 500);
+        /* setTimeout(function() { getProfileHistogram(ds.guid); }, 500); */
         setTimeout(function() { getProfilePosts(ds.guid); }, 100);
     }
 
@@ -1237,11 +1239,13 @@ function toggleProfileStatistics() {
     var els = document.getElementsByClassName('profile-histogram');
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].classList.contains('hidden') ) {
-            showByClass('profile-histogram');
+            /* showByClass('profile-histogram'); */
+            showByClass('profile-histochart');
             showByClass('profile-stats');
             hideByClass('profile-posts');
         } else {
-            hideByClass('profile-histogram');
+            /* hideByClass('profile-histogram'); */
+            hideByClass('profile-histochart');
             hideByClass('profile-stats');
             showByClass('profile-posts');
         }
@@ -1342,6 +1346,50 @@ function parsePersonaRelation( data ) {
         if ( ds.guid !== undefined && ds.guid !== false && ds.guid !== null && ds.guid.length == 36 ) {
             doJSONQuery('account/' + ds.guid + '/profile', 'GET', {}, parseProfile);
         }
+    }
+}
+function getProfileHistoChart( _guid ) {
+    if ( _guid === undefined || _guid === false || _guid === null ) { return ; }
+    if ( _guid.length == 36 || _guid == 'me' ) {
+        doJSONQuery('account/' + _guid + '/histochart', 'GET', {}, parseProfileHistoChart);
+    }
+}
+function parseProfileHistoChart( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        var _html = '';
+        var _width = 0;
+
+        var els = document.getElementsByClassName('profile-body');
+        for ( var i = 0; i < els.length; i++ ) {
+            _width = els[i].offsetWidth - 15;
+        }
+
+        if ( ds !== undefined && ds.html !== undefined && ds.html.length > 0 ) {
+            _html = '<table><tbody>' + ds.html + '</tbody></table><p class="histo-count">&nbsp;</p>';
+        }
+
+        var els = document.getElementsByClassName('profile-histochart');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].innerHTML = NoNull(_html, '<p class="text-center">There is no histochart to display.</p>');
+            var tds = els[i].getElementsByClassName('hist');
+            for ( var o = 0; o < tds.length; o++ ) {
+                tds[o].addEventListener('mouseover', function(e) { showHistoCounts(e); });
+                tds[o].addEventListener('click', function(e) { showHistoCounts(e); });
+            }
+        }
+    }
+}
+function showHistoCounts( evt ) {
+    if ( evt === undefined || evt === false || evt === null ) { return ; }
+    var el = evt.currentTarget;
+    if ( el === undefined || el === false || el === null ) { return ; }
+    var _posts = parseInt(el.getAttribute('data-posts'));
+    if ( _posts === undefined || _posts === false || _posts === null || isNaN(_posts) ) { return ; }
+
+    var els = document.getElementsByClassName('histo-count');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = numberWithCommas(_posts) + ' posts';
     }
 }
 function getProfileHistogram( _guid ) {
@@ -1749,6 +1797,12 @@ function parseEditPost(data) {
                             els[e].value = ds[i].guid;
                             break;
 
+                        case 'post-type':
+                            if ( els[e].value != ds[i].type ) {
+                                els[e].value = ds[i].type;
+                                toggleCreateView();
+                            }
+
                         case 'title':
                             if ( ds[i].title !== false && els[e].value == '' ) { els[e].value = NoNull(ds[i].title); }
                             break;
@@ -2003,8 +2057,10 @@ function parseReplyBox( data ) {
                 setCaretToPos(els[o], caret_pos);
                 els[o].focus();
             }
+            var _mode = readStorage('privacy');
+            if ( _mode == 'none' ) { setVisibility('public'); }
+
             window.last_touch = 0;
-            setVisibility('public');
             toggleNewPost(true);
             return;
         }

@@ -63,6 +63,10 @@ class Account {
                 return $this->_getAccountList();
                 break;
 
+            case 'histochart':
+                return $this->_getHistoChart();
+                break;
+
             case 'histogram':
                 return $this->_getHistorgram();
                 break;
@@ -993,6 +997,56 @@ class Account {
 
         // If We're Here, There Is No Persona
         return false;
+    }
+
+    /**
+     *  Function Collects the Usage for the last 53 weeks for use in a GitHub-like History Chart
+     */
+    private function _getHistoChart() {
+        $opts = ['PgRoot', 'PgSub1', 'persona_guid', 'guid'];
+        foreach ( $opts as $opt ) {
+            $guid = NoNull($this->settings[ $opt ]);
+            if ( $CleanGUID == '' && (strlen($guid) == 36 || NoNull($guid) == 'me') ) { $CleanGUID = $guid; }
+        }
+        if ( $CleanGUID == 'me' && NoNull($this->settings['_persona_guid']) != '' ) {
+            $CleanGUID = $this->settings['_persona_guid'];
+        }
+
+        $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGUID) );
+        $sqlStr = prepSQLQuery( "CALL GetPublishHistoChart('[PERSONA_GUID]');", $ReplStr );
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $tbls = array();
+            $data = array();
+            $html = '';
+
+            foreach ( $rslt as $Row ) {
+                if ( array_key_exists($Row['dow'], $tbls) === false ) { $tbls[$Row['dow']] = ''; }
+                $tbls[$Row['dow']] .= '<td class="hist" data-posts="' . nullInt($Row['posts']) . '" style="opacity: ' . nullInt($Row['opacity']) . '">&nbsp;</td>';
+
+                $data[] = array( 'year'         => nullInt($Row['year']),
+                                 'month'        => nullInt($Row['month']),
+                                 'dow'          => nullInt($Row['dow']),
+                                 'publish_on'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['date'])),
+                                 'publish_unix' => strtotime($Row['date']),
+                                 'posts'        => nullInt($Row['posts']),
+                                );
+            }
+
+            foreach ( $tbls as $Row ) {
+                $html .= '<tr>' . NoNull($Row) . '</tr>';
+            }
+
+            // If there is data, return it
+            if ( count($data) > 0 ) {
+                return array( 'html'   => $html,
+                              'detail' => $data
+                             );
+            }
+        }
+
+        // If we're here, there's nothing
+        return array();
     }
 
     /**
