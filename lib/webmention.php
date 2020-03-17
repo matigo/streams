@@ -58,6 +58,8 @@ class Webmention {
                 break;
 
             case '':
+                $this->_parseMentions();
+
                 $data = json_encode($this->settings);
                 writeNote( "Webmention Received! [GET]", true );
                 writeNote( $data, true );
@@ -77,6 +79,8 @@ class Webmention {
 
         switch ( $Activity ) {
             default:
+                $this->_parseMentions();
+
                 $data = json_encode($this->settings);
                 writeNote( "Webmention Received! [POST]", true );
                 writeNote( $data, true );
@@ -371,6 +375,93 @@ class Webmention {
 
                     if ( in_array($link->getAttribute('rel'), array('http://webmention.org/', 'webmention')) ) { $data['webmention'] = NoNull($link->getAttribute('href')); }
                     if ( in_array($link->getAttribute('rel'), array('pingback')) ) { $data['pingback'] = NoNull($link->getAttribute('href')); }
+                }
+
+                // Return the Data
+                return $data;
+            }
+        }
+
+        // If We're Here, Nothing is Supported
+        return false;
+    }
+
+    /**
+     *  Function Reads incoming WebMentions
+     */
+    private function _parseMentions() {
+        $TargetUrl = rtrim(str_replace($this->settings['HomeURL'], '', NoNull($this->settings['target'])), '/');
+        $SourceUrl = NoNull($this->settings['source']);
+        $SiteId = nullInt($this->settings['site_id']);
+
+        if ( $SourceUrl != '' && $TargetUrl != '' && $SiteId > 0 ) {
+            $src = $this->_getWebMentionDetails( $SourceUrl );
+            if ( is_array($src) ) {
+                $ReplStr = array( '[SITE_ID]'    => nullInt($SiteId),
+                                  '[TARGET_URL]' => sqlScrub($TargetUrl),
+                                  '[SOURCE_URL]' => sqlScrub($SourceUrl),
+                                  '[AVATAR_URL]' => sqlScrub($src['avatar_url']),
+                                  '[AUTHOR]'     => sqlScrub($src['author']),
+                                  '[COMMENT]'    => sqlScrub($src['comment']),
+                                 );
+                $sqlStr = prepSQLQuery("CALL SetPostWebMention([SITE_ID], '[TARGET_URL]', '[SOURCE_URL]', '[AVATAR_URL]', '[AUTHOR]', '[COMMENT]');", $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+            }
+
+            return array();
+        }
+
+        $this->_setMetaMessage("Incomplete Webmention Received", 400);
+        return array();
+    }
+
+    private function _getWebMentionDetails( $SourceUrl ) {
+        if ( is_string($SourceUrl) && mb_strlen($SourceUrl) > 10 ) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_URL, $SourceUrl);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+            $rslt = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ( $code >= 200 && $code <= 210 ) {
+                $doc = new DOMDocument();
+                @$doc->loadHTML($rslt);
+
+                $data = array( 'avatar_url' => '',
+                               'comment' => '',
+                               'author' => '',
+                              );
+
+                $finder = new DomXPath($doc);
+                $nodes = $finder->query("//*[contains(@class, 'e-content')]");
+                foreach ( $nodes as $node ) {
+                    if ( NoNull($data['comment']) == '' ) {
+                        $val = NoNull($node->textContent, $node->nodevalue);
+                        if ( $val != '' ) { $data['comment'] = strip_tags($val); }
+                    }
+                }
+
+                $nodes = $finder->query("//*[contains(@class, 'u-photo')]");
+                foreach ( $nodes as $node ) {
+                    if ( NoNull($data['avatar_url']) == '' ) {
+                        $src = NoNull($node->getAttribute('src'));
+                        $val = NoNull($node->textContent, $node->nodevalue);
+                        if ( NoNull($val, $src) != '' ) { $data['avatar_url'] = NoNull($val, $src); }
+                    }
+                }
+
+                $nodes = $finder->query("//*[contains(@class, 'p-name')]");
+                foreach ( $nodes as $node ) {
+                    if ( NoNull($data['author']) == '' ) {
+                        $val = NoNull($node->textContent, $node->nodevalue);
+                        if ( $val != '' ) { $data['author'] = $val; }
+                    }
                 }
 
                 // Return the Data

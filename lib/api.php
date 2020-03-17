@@ -35,7 +35,7 @@ class Route extends Streams {
 
         // Validate the Page Root
         // TODO: Make this dynamic per Site / Account for various additional functions
-        $ReplStr = array( 'accounts' => 'account', 'file' => 'files', 'generic' => 'generics', 'post' => 'posts', 'sites' => 'site' );
+        $ReplStr = array( 'accounts' => 'account', 'file' => 'files', 'generic' => 'generics', 'post' => 'posts', 'sites' => 'site', 'webmentions' => 'webmention' );
         if ( array_key_exists($PgRoot, $ReplStr) ) { $PgRoot = $ReplStr[$PgRoot]; }
 
         // If the API Endpoint Exists (and is Active), Perform the Action
@@ -102,7 +102,7 @@ class Route extends Streams {
      */
     private function _validateRequestType() {
         $readOnly = array( 'account.expired', 'account.readonly' );
-        $valids = array( 'account', 'auth', 'dummy', 'reader', 'search', 'system' );
+        $valids = array( 'account', 'auth', 'dummy', 'reader', 'search', 'system', 'webmention' );
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
 
         // If We're Checking Authentication, The Request is Valid
@@ -129,7 +129,7 @@ class Route extends Streams {
      */
     private function _returnData( $data ) {
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
-        $valids = array( 'account', 'auth', 'contact', 'locker', 'posts', 'post', 'reader', 'search', 'system' );
+        $valids = array( 'account', 'auth', 'contact', 'locker', 'posts', 'post', 'reader', 'search', 'system', 'webmention' );
         $code = 0;
 
         // If We're Not Logged In, The Request is Invalid

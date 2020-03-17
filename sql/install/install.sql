@@ -719,6 +719,23 @@ CREATE TABLE IF NOT EXISTS `PostMeta` (
 CREATE INDEX `idx_pmeta_main` ON `PostMeta` (`is_deleted`, `post_id` DESC, `key`);
 CREATE INDEX `idx_pmeta_post` ON `PostMeta` (`is_deleted`, `post_id` DESC);
 
+DROP TABLE IF EXISTS `PostWebMention`;
+CREATE TABLE IF NOT EXISTS `PostWebMention` (
+    `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `url_hash`      varchar(64)                                 NOT NULL    ,
+    `url`           varchar(1024)                               NOT NULL    ,
+    `avatar_url`    varchar(1024)                                   NULL    ,
+    `author`        varchar(80)                                     NULL    ,
+    `comment`       text                                            NULL    ,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`post_id`, `url_hash`),
+    FOREIGN KEY (`post_id`) REFERENCES `Post` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_pwebm_main` ON `PostWebMention` (`is_deleted`, `post_id` DESC);
+
 DROP TABLE IF EXISTS `PostSearch`;
 CREATE TABLE IF NOT EXISTS `PostSearch` (
     `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
@@ -864,6 +881,28 @@ CREATE TRIGGER `before_update_postsrch`
    FOR EACH ROW
  BEGIN
     SET new.`is_deleted` = CASE WHEN IFNULL(new.`word`, '') <> '' AND IFNULL(new.`is_deleted`, 'N') = 'N' THEN 'N' ELSE 'Y' END;
+    SET new.`updated_at` = Now();
+   END
+;;
+
+DROP TRIGGER IF EXISTS `before_insert_postwebmention`;;
+CREATE TRIGGER `before_insert_postwebmention`
+BEFORE INSERT ON `PostWebMention`
+   FOR EACH ROW
+ BEGIN
+    IF new.`url_hash` IS NULL THEN
+        SET new.`url_hash` = sha2(new.`url`, 256);
+    END IF;
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_postwebmention`;;
+CREATE TRIGGER `before_update_postwebmention`
+BEFORE UPDATE ON `PostWebMention`
+   FOR EACH ROW
+ BEGIN
+    IF new.`url_hash` <> old.`url_hash` THEN
+        SET new.`url_hash` = old.`url_hash`;
+    END IF;
     SET new.`updated_at` = Now();
    END
 ;;
