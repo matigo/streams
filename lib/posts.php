@@ -778,8 +778,8 @@ class Posts {
             // Execute the Queries
             $isOK = doSQLExecute($sqlStr);
 
-            // Send any Webmentions or Pingbacks (If Applicable) [Disabled for now 2020-01-12]
-            // $this->_setPostPublishData(nullInt($data['post_id'], $post_id));
+            // Send any Webmentions or Pingbacks (If Applicable)
+            $this->_setPostPublishData(nullInt($data['post_id'], $post_id));
 
             // Collect the Post Object
             return $this->_getPostsByIDs(nullInt($data['post_id'], $post_id));
@@ -1864,19 +1864,15 @@ class Posts {
         if ( $PostID <= 0 ) { return false; }
 
         $ReplStr = array( '[POST_ID]' => nullInt($PostID) );
-        $sqlStr = readResource(SQL_DIR . '/posts/getPostPublishData.sql', $ReplStr);
+        $sqlStr = readResource(SQL_DIR . '/posts/getPostWebMentionToSend.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             require_once( LIB_DIR . '/webmention.php' );
             $webm = new Webmention( $this->settings, $this->strings );
-            $data = $webm->performAction();
 
+            // Send a Mention (There is either 0 or 1)
             foreach ( $rslt as $Row ) {
-                $PostText = $this->_getMarkdownHTML($Row['post_text'], $Row['post_id'], YNBool($Row['is_note']), true);
-                $PostUrl = NoNull($Row['post_url']);
-
-                // Send the Webmentions
-                $data = $webm->sendMentions($PostUrl, $PostText);
+                $data = $webm->sendMentions(NoNull($Row['source_url']), NoNull($Row['target_url']));
             }
             unset($webm);
         }

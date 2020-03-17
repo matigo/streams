@@ -129,11 +129,70 @@ class Webmention {
      *  Public Functions
      ** ********************************************************************* */
     /**
+     *  Function is a brutally simple mechanism to determine if a Webmention needs
+     *      to be sent and, if so, sends one.
+     */
+    public function sendMentions( $SourceURL, $TargetURL ) {
+        if ( mb_strlen(NoNull($SourceBody)) <= 10 ) { return false; }
+        if ( mb_strlen(NoNull($SourceURL)) <= 10 ) { return false; }
+        $rsp = array( 'webmention'  => false,
+                      'pingback'    => false,
+                      'internal'    => false,
+                     );
+        $isSent = false;
+
+        // Collect the Operational Endpoints
+        $endpoints = $this->_getHeaders( $TargetURL );
+
+        // If Webmentions are Possible, This Is Ideal
+        if ( $isSent === false && is_string($endpoints['webmention']) && mb_strlen($endpoints['webmention']) > 10 ) {
+            $head = array( 'Content-type: application/x-www-form-urlencoded',
+                           'Accept: application/json, */*;q=0.8'
+                          );
+            $data = array( 'source' => $SourceURL,
+                           'target' => $TargetURL,
+                          );
+
+            // Send the POST Request
+            $rslt = $this->_sendPostRequest( $endpoints['webmention'], http_build_query($data), $head );
+
+            // If the Code is Successful, It's Good!
+            if ( is_array($rslt) && $rslt['code'] >= 200 && $rslt['code'] <= 210 ) {
+                writeNote( "Successfully Sent Webmention to: $TargetURL from $SourceURL", true );
+                if ( is_array($rsp['webmention']) === false ) { $rsp['webmention'] = array(); }
+                $rsp['webmention'][] = $TargetURL;
+                $isSent = true;
+            }
+        }
+
+        // If Webmentions are Not Possible but Pingbacks Are
+        if ( $isSent === false && is_string($endpoints['pingback']) && mb_strlen($endpoints['pingback']) > 10 ) {
+            $head = array( 'Content-type: application/xml' );
+            $ReplStr = array( '[SOURCE_URL]' => htmlspecialchars($SourceURL),
+                              '[TARGET_URL]' => htmlspecialchars($TargetURL)
+                             );
+            $data = readResource(FLATS_DIR . '/templates/pingback.ping.xml', $ReplStr);
+
+            // Send the POST Request
+            $rslt = $this->_sendPostRequest( $endpoints['pingback'], $data, $head );
+
+            // If the Code is Successful, It's Good!
+            if ( is_array($rslt) && $rslt['code'] >= 200 && $rslt['code'] <= 210 ) {
+                writeNote( "Successfully Sent Pingback to: $TargetURL from $SourceURL", true );
+                if ( is_array($rsp['pingback']) === false ) { $rsp['pingback'] = array(); }
+                $rsp['pingback'][] = $TargetURL;
+                $isSent = true;
+            }
+        }
+
+    }
+
+    /**
      * Function Collects an Array of URLs from an HTML body and attempts to notify those
      *      sites of a Mention via Webmention or Pingback. Internal sites have records
      *      auto-recorded to the database without the unnecessary HTTP traffic.
      */
-    public function sendMentions( $SourceURL, $SourceBody = '' ) {
+    public function sendMentionsOLD( $SourceURL, $SourceBody = '' ) {
         if ( mb_strlen(NoNull($SourceBody)) <= 10 ) { return false; }
         if ( mb_strlen(NoNull($SourceURL)) <= 10 ) { return false; }
 
@@ -160,7 +219,7 @@ class Webmention {
 
                 } else {
                     // Notify the Externally-Hosted Site
-                    $endpoints = $this->_getHeaders( $url );
+                    $endpoints = $this->_getHeaders( $SourceURL );
 
                     // If Webmentions are Possible, This Is Ideal
                     if ( $isSent === false && is_string($endpoints['webmention']) && mb_strlen($endpoints['webmention']) > 10 ) {
