@@ -1,15 +1,5 @@
                 <div class="post-entry post post-article col-lg-12 col-md-12 col-sm-12">
-                    <div class="single-post single-post--fullsize">
-                        <div class="content-author hidden">
-                            <p class="p-author author h-card vcard">
-                                <a class="icon-container" href="[AUTHOR_PROFILE]">
-                                    <img class="u-logo logo u-photo photo" src="[AUTHOR_AVATAR]"/>
-                                </a>
-                                <a class="p-persona" href="[AUTHOR_PROFILE]">[AUTHOR_PERSONA]</a>
-                                <a class="p-name fn u-url url" href="[AUTHOR_PROFILE]">[AUTHOR_NAME]</a>
-                            </p>
-                        </div>
-
+                    <div class="single-post single-post--fullsize h-entry">
                         <div class="single-post__image">
                             <img class="post-banner hidden" src="[BANNER]" alt="[TITLE]">
                         </div>
@@ -32,6 +22,11 @@
                         </div>
                         <div class="single-post__info text-right">
                             <span class="post-edit hidden" data-persona-guid="[AUTHOR_GUID]"><a href="[HOMEURL]/write/[POST_GUID]" title="">[lblEdit]</a></span>
+                        </div>
+                        <div class="u-author h-card hidden">
+                            <data class="u-url" value="[HOMEURL]"></data>
+                            <data class="p-name" value="[AUTHOR_NAME]"></data>
+                            <data class="u-photo" value ="[AUTHOR_AVATAR]"></data>
                         </div>
                     </div>
                 </div>
