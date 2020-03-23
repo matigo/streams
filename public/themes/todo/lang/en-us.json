@@ -1,0 +1,23 @@
+{
+    "ttlLogin": "Log In to ToDo",
+
+    "navUnassigned": "Unassigned",
+    "navOpen": "Open",
+    "navInProg": "In Progress",
+    "navReview": "Review",
+    "navDone": "Done",
+    "navIdeas": "Ideas",
+    "navSignout": "Sign Out",
+
+    "navAss2Others": "For Others",
+    "navAss2Me": "For Me",
+
+    "lblLogin": "Login",
+    "lblLoginPH": "(Your Login)",
+    "lblPassword": "Password",
+    "lblPasswordPH": "(Your Password)",
+    "lblForgotPass": "Forgot Your Password?",
+
+    "btnSignIn": "Sign In",
+    "btnTaskAdd": "Add Task"
+}
