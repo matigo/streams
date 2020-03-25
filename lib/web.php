@@ -41,6 +41,9 @@ class Route extends Streams {
             $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
             $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
 
+            // Is this a favicon request?
+            if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), 'favicon.png') !== false ) { $this->_handleFaviconReq($data); }
+
             // Set some of the Globals
             $GLOBALS['site_id'] = $data['site_id'];
 
@@ -317,6 +320,70 @@ class Route extends Streams {
 
         /* If we have a file and it appears valid, send it */
         if ( $ZipFile != '' && file_exists($ZipFile) && filesize($ZipFile) > 0 ) { sendZipFile($ZipFile); }
+    }
+
+    /**
+     *  Function Handles a Favicon PNG Request when one doesn't exist
+     */
+    private function _handleFaviconReq( $site ) {
+        $src = BASE_DIR . '/apple-touch-icon.png';
+        if ( array_key_exists('personas', $site) && is_array($site['personas']) ) {
+            foreach ( $site['personas'] as $persona ) {
+                $src = BASE_DIR . str_replace($this->settings['HomeURL'], '', NoNull($persona['avatar_img']));
+                break;
+            }
+        }
+
+        $cacheDIR = TMP_DIR . '/' . intToAlpha($site['site_id']);
+        checkDIRExists($cacheDIR);
+
+        $cacheFile = $cacheDIR . '/' . md5($src) . '.png';
+        if ( file_exists($cacheFile) === false ) {
+            $srcExt = strtolower(pathinfo($src, PATHINFO_EXTENSION));
+            switch ($srcExt) {
+                case 'jpeg':
+                case 'jpg':
+                    $image = imagecreatefromjpeg($src);
+                    break;
+
+                case 'gif':
+                    $image = imagecreatefromgif($src);
+                    break;
+
+                case 'png':
+                    $image = imagecreatefrompng($src);
+                    break;
+            }
+
+            /* Create the Appropriate PNG File */
+            list($width_orig, $height_orig) = getimagesize($src);
+            $image_p = imagecreatetruecolor(150, 150);
+            imagecopyresampled($image_p, $image, 0, 0, 0, 0, 150, 150, $width_orig, $height_orig);
+            imagepng($image_p, $cacheFile, 9);
+        }
+
+        /* Output the File */
+        $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1');
+        $szOrigin = NoNull($_SERVER['HTTP_ORIGIN'], '*');
+
+        header($protocol . ' 200 ' . getHTTPCode(200) );
+        header("Content-Type: image/png");
+        header("Access-Control-Allow-Origin: $szOrigin");
+        header("Access-Control-Allow-Methods: GET, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization");
+        header("Access-Control-Allow-Credentials: true");
+        header("P3P: CP=\"ALL IND DSP COR ADM CONo CUR CUSo IVAo IVDo PSA PSD TAI TELo OUR SAMo CNT COM INT NAV ONL PHY PRE PUR UNI\"");
+        header("X-Perf-Stats: " . getRunTime('header'));
+        header("X-Content-Length: " . filesize($cacheFile));
+
+        // Record the Usage Statistic
+        recordUsageStat( $this->settings, 200, '' );
+
+        // Close the Persistent SQL Connection If Needs Be
+        closePersistentSQLConn();
+
+        readfile($cacheFile);
+        exit();
     }
 
     /**

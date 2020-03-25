@@ -149,9 +149,12 @@ class Streams {
     private function _isValidRequest() {
         $roots = array( 'phpmyadmin', 'phpmyadm1n', 'phpmy',
                         'tools', 'typo3', 'xampp', 'www', 'web',
-                        'wp-admin', 'wp-content', 'wp-includes', 'vendor', 'wp-login.php'
+                        'wp-admin', 'wp-content', 'wp-includes', 'vendor',
                        );
-        return !in_array(strtolower(NoNull($this->settings['PgRoot'])), $roots);
+        if ( in_array(strtolower(NoNull($this->settings['PgSub1'], $this->settings['PgRoot'])), $roots) ) { return false; }
+        if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.php') !== false ) { return false; }
+
+        return true;
     }
 
     /**
