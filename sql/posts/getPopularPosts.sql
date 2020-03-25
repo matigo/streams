@@ -9,5 +9,5 @@ SELECT tmp.`hits`, tmp.`last_at`, IFNULL(pm.`value`, po.`title`) as `title`, po.
                               ORDER BY `hits` DESC LIMIT 250) tmp ON po.`channel_id` = tmp.`channel_id` AND po.`canonical_url` = tmp.`request_uri`
             LEFT OUTER JOIN `PostMeta` pm ON po.`id` = pm.`post_id` AND pm.`is_deleted` = 'N' AND pm.`key` = 'source_title'
  WHERE po.`is_deleted` = 'N' and po.`privacy_type` = 'visibility.public' and po.`type` IN ('post.article', 'post.bookmark', 'post.quotation')
- ORDER BY tmp.`hits` DESC, tmp.`publish_at` DESC
+ ORDER BY tmp.`hits` DESC, po.`publish_at` DESC
  LIMIT [COUNT];

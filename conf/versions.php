@@ -4,10 +4,10 @@
  * @author Jason F. Irwin
  */
 
-define('APP_VER', '20C251');                                            // The Application Version
+define('APP_VER', '20C252');                                            // The Application Version
 define('CSS_VER', '209');                                               // The CSS Update Version
 define('SQL_VER', '001');                                               // The SQL Update Version
-define('SQL_HASH', '32.325|e2c4db08-2309-0147-0032-43c086e5e7f1');      // The Hash Expected of the Database
+define('SQL_HASH', '39.385|e2c4db08-2651-0170-0045-43c08656bde2');      // The Hash Expected of the Database
 
 define('GENERATOR', 'Streams v1.0');                                    // Generator Name
 
