@@ -380,33 +380,12 @@ class cookies {
     /**
      * Function Saves the Cookies to the Browser's Cache (If Cookies Enabled)
      */
-    private function _saveCookies( $cookieVals, $fullDomain = true ) {
+    private function _saveCookies( $cookieVals ) {
         if (!headers_sent()) {
             $cookieVals['remember'] = BoolYN(YNBool(NoNull($cookieVals['remember'], 'N')));
             $valids = array( 'token', 'DispLang', 'remember', 'invite', '_device_id' );
             $longer = array( 'DispLang', '_device_id' );
             $domain = strtolower($_SERVER['SERVER_NAME']);
-
-            if ( $fullDomain !== false ) { $fullDomain = true; }
-            if ( $fullDomain ) {
-                $parts = explode('.', $domain);
-                $domain = '';
-                $limit = (count($parts) - 1);
-                if ( $limit < 2 ) { $limit = 2; }
-
-                $cnt = 1;
-                for ( $i = count($parts) - 1; $i >= 0; $i-- ) {
-                    $domain = '.' . $parts[$i] . $domain;
-                    if ( $cnt >= $limit ) {
-                        if ( isValidTLD($parts[$i]) ) {
-                            $limit++;
-                        } else {
-                            break;
-                        }
-                    }
-                    $cnt++;
-                }
-            }
 
             $isHTTPS = false;
             $protocol = getServerProtocol();
@@ -420,21 +399,13 @@ class cookies {
                     $Expires = time() + COOKIE_EXPY;
                     $LifeTime = COOKIE_EXPY;
                     if ( $RememberMe ) { $LifeTime = 3600 * 24 * 30; }
-                    if ( array_key_exists('remember', $_COOKIE) && $RememberMe !== true ) { $LifeTime = 1800; }
+                    if ( array_key_exists('remember', $_COOKIE) && $RememberMe !== true ) { $LifeTime = COOKIE_EXPY; }
                     if ( in_array($key, $longer) ) { $LifeTime = 3600 * 24 * 365; }
                     if ( $key == 'remember' && $RememberMe !== true ) { $LifeTime = -3600; }
                     $Expires = time() + $LifeTime;
 
                     // Set the Cookie
-                    $attribs = array( 'SameSite' => (($isHTTPS) ? 'None' : 'Strict'),
-                                      'Domain'   => NoNull($domain, strtolower($_SERVER['SERVER_NAME'])),
-                                      'Expires'  => $Expires,
-                                      'Max-Age'  => $LifeTime,
-                                      'Path'     => '/',
-                                      'Secure'   => $isHTTPS,
-                                      'HttpOnly' => true,
-                                     );
-                    setcookie( $key, $val, $attribs );
+                    setcookie($key, $val, $Expires, '/', strtolower($_SERVER['SERVER_NAME']), $isHTTPS, true);
                 }
             }
         }
