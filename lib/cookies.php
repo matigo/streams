@@ -408,17 +408,33 @@ class cookies {
                 }
             }
 
+            $isHTTPS = false;
+            $protocol = getServerProtocol();
+            if ( $protocol == 'https' ) { $isHTTPS = true; }
+
             $RememberMe = YNBool(NoNull($cookieVals['remember'], 'N'));
             if ( $RememberMe !== true ) { unset($cookieVals['remember']); }
 
             foreach( $cookieVals as $key=>$val ) {
                 if( in_array($key, $valids) ) {
-                    $LifeSpan = time() + COOKIE_EXPY;
-                    if( $RememberMe ) { $LifeSpan = time() + 3600 * 24 * 30; }
-                    if ( in_array($item, $longer) ) { $LifeSpan = time() + 3600 * 24 * 365; }
-                    if ( array_key_exists('remember', $_COOKIE) && $RememberMe !== true ) { $LifeSpan = time() - 3600; }
+                    $Expires = time() + COOKIE_EXPY;
+                    $LifeTime = COOKIE_EXPY;
+                    if ( $RememberMe ) { $LifeTime = 3600 * 24 * 30; }
+                    if ( array_key_exists('remember', $_COOKIE) && $RememberMe !== true ) { $LifeTime = 1800; }
+                    if ( in_array($key, $longer) ) { $LifeTime = 3600 * 24 * 365; }
+                    if ( $key == 'remember' && $RememberMe !== true ) { $LifeTime = -3600; }
+                    $Expires = time() + $LifeTime;
 
-                    setcookie( $key, "$val", $LifeSpan, "/", NoNull($domain, strtolower($_SERVER['SERVER_NAME'])) );
+                    // Set the Cookie
+                    $attribs = array( 'SameSite' => (($isHTTPS) ? 'None' : 'Strict'),
+                                      'Domain'   => NoNull($domain, strtolower($_SERVER['SERVER_NAME'])),
+                                      'Expires'  => $Expires,
+                                      'Max-Age'  => $LifeTime,
+                                      'Path'     => '/',
+                                      'Secure'   => $isHTTPS,
+                                      'HttpOnly' => true,
+                                     );
+                    setcookie( $key, $val, $attribs );
                 }
             }
         }

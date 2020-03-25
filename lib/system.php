@@ -313,21 +313,28 @@ class System {
      *  Update the CloudFlare DNS Records based on the Global Key provided
      */
     private function _updateCloudFlareDNS( $GlobalKey, $cfMail, $ipv4, $ipv6 ) {
+        if ( defined('CLOUDFLARE_SITEDNSVAL') === false ) { define('CLOUDFLARE_SITEDNSVAL', ''); }
         if ( strlen(NoNull($GlobalKey)) <= 35 ) { return false; }
         if ( strlen(NoNull($cfMail)) <= 5 ) { return false; }
         $result = array();
         $names = array();
         $ips = array();
+        $hub = false;
 
-        // Collect the Entire IP History List
-        $sqlStr = readResource(SQL_DIR . '/system/getCompleteServerIPs.sql');
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            foreach ( $rslt as $Row ) {
-                if ( NoNull($Row['ipv4']) != '' ) { $ips[] = NoNull($Row['ipv4']); }
-                if ( NoNull($Row['ipv6']) != '' ) { $ips[] = NoNull($Row['ipv6']); }
+        // Get the Base Domain for the Hub
+        if ( NoNull(CLOUDFLARE_SITEDNSVAL) != '' ) {
+            $coms = array_reverse(explode('.', CLOUDFLARE_SITEDNSVAL));
+            if ( is_array($coms) ) {
+                foreach ( $coms as $com ) {
+                    if ( $hub === false ) { $hub = ''; }
+                    if ( $hub != '' ) { $hub = '.' . $hub; }
+                    $hub = $com . $hub;
+
+                    if ( isValidTLD($com) === false ) { break; }
+                }
             }
         }
+        if ( $hub === false || strlen($hub) <= 5 ) { return false; }
 
         // Query the CloudFlare API for the Zone List
         $params = array( 'type'     => 'A,AAAA',
@@ -336,80 +343,59 @@ class System {
         $data = doCloudFlareRequest('/zones', $GlobalKey, $cfMail, 'GET', $params);
         if ( is_array($data) ) {
             foreach ( $data as $Row ) {
-                if ( NoNull($Row['status']) == 'active' ) {
+                if ( NoNull($Row['name']) == $hub && NoNull($Row['status']) == 'active' ) {
                     // Collect the DNS Records for the Zone
                     $endpoint = '/zones/' . NoNull($Row['id']) . '/dns_records';
                     $zone = doCloudFlareRequest($endpoint, $GlobalKey, $cfMail, 'GET', $params);
                     if ( is_array($zone) ) {
-                        // First collect a list of domain names where a match is found
                         foreach ( $zone as $zRow ) {
+                            $type = NoNull($zRow['type']);
+                            $name = NoNull($zRow['name']);
                             $ip = NoNull($zRow['content']);
-                            if ( in_array($ip, $ips) ) {
-                                if ( in_array(NoNull($zRow['name']), $names) === false ) { $names[] = NoNull($zRow['name']); }
-                            }
-                        }
 
-                        // Run through the Names and update the DNS records
-                        foreach ( $names as $name ) {
-                            // Set the IPv4 Record If One Exists
-                            if ( NoNull($ipv4) != '' ) {
-                                foreach ( $zone as $zRow ) {
-                                    if ( NoNull($zRow['name']) == $name && NoNull($zRow['type']) == 'A' && $zRow['locked'] === false ) {
-                                        $ip = NoNull($zRow['content']);
-                                        if ( $ip != $ipv4 ) {
-                                            $putat = $endpoint . '/' . NoNull($zRow['id']);
-                                            $pobj = array( 'type'    => NoNull($zRow['type']),
-                                                           'name'    => NoNull($zRow['name']),
-                                                           'content' => NoNull($ipv4),
-                                                           'ttl'     => nullInt($zRow['ttl']),
-                                                           'proxied' => YNBool(BoolYN($zRow['proxied'])),
-                                                          );
-                                            $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
-                                            if ( is_array($pOK) ) {
-                                                $result[] = array( 'name'    => NoNull($pOK['name']),
-                                                                   'type'    => NoNull($pOK['type']),
-                                                                   'value'   => NoNull($pOK['content']),
-                                                                   'success' => true
-                                                                  );
-                                            } else {
-                                                $result[] = array( 'name'    => NoNull($zRow['name']),
-                                                                   'type'    => NoNull($zRow['type']),
-                                                                   'success' => false
-                                                                  );
-                                            }
-                                        }
-                                    }
+                            if ( $name == CLOUDFLARE_SITEDNSVAL && $type == 'A' && $ip != $ipv4 ) {
+                                $putat = $endpoint . '/' . NoNull($zRow['id']);
+                                $pobj = array( 'type'    => NoNull($zRow['type']),
+                                               'name'    => NoNull($zRow['name']),
+                                               'content' => NoNull($ipv4),
+                                               'ttl'     => nullInt($zRow['ttl']),
+                                               'proxied' => YNBool(BoolYN($zRow['proxied'])),
+                                              );
+                                $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
+                                if ( is_array($pOK) ) {
+                                    $result[] = array( 'name'    => NoNull($pOK['name']),
+                                                       'type'    => NoNull($pOK['type']),
+                                                       'value'   => NoNull($pOK['content']),
+                                                       'success' => true
+                                                      );
+                                } else {
+                                    $result[] = array( 'name'    => NoNull($zRow['name']),
+                                                       'type'    => NoNull($zRow['type']),
+                                                       'success' => false
+                                                      );
                                 }
                             }
 
-                            // Set the IPv6 Record If One Exists
-                            if ( NoNull($ipv6) != '' ) {
-                                foreach ( $zone as $zRow ) {
-                                    if ( NoNull($zRow['name']) == $name && NoNull($zRow['type']) == 'AAAA' && $zRow['locked'] === false ) {
-                                        $ip = NoNull($zRow['content']);
-                                        if ( $ip != $ipv6 ) {
-                                            $putat = $endpoint . '/' . NoNull($zRow['id']);
-                                            $pobj = array( 'type'    => NoNull($zRow['type']),
-                                                           'name'    => NoNull($zRow['name']),
-                                                           'content' => NoNull($ipv6),
-                                                           'ttl'     => nullInt($zRow['ttl']),
-                                                           'proxied' => YNBool(BoolYN($zRow['proxied'])),
-                                                          );
-                                            $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
-                                            if ( is_array($pOK) ) {
-                                                $result[] = array( 'name'    => NoNull($pOK['name']),
-                                                                   'type'    => NoNull($pOK['type']),
-                                                                   'value'   => NoNull($pOK['content']),
-                                                                   'success' => true
-                                                                  );
-                                            } else {
-                                                $result[] = array( 'name'    => NoNull($zRow['name']),
-                                                                   'type'    => NoNull($zRow['type']),
-                                                                   'success' => false
-                                                                  );
-                                            }
-                                        }
-                                    }
+                            if ( $name == CLOUDFLARE_SITEDNSVAL && $type == 'AAAA' && $ip != $ipv6 ) {
+                                $putat = $endpoint . '/' . NoNull($zRow['id']);
+                                $pobj = array( 'type'    => NoNull($zRow['type']),
+                                               'name'    => NoNull($zRow['name']),
+                                               'content' => NoNull($ipv6),
+                                               'ttl'     => nullInt($zRow['ttl']),
+                                               'proxied' => YNBool(BoolYN($zRow['proxied'])),
+                                              );
+                                $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
+                                if ( is_array($pOK) ) {
+                                    $result[] = array( 'name'    => NoNull($pOK['name']),
+                                                       'type'    => NoNull($pOK['type']),
+                                                       'value'   => NoNull($pOK['content']),
+                                                       'success' => true
+                                                      );
+                                } else {
+                                    $result[] = array( 'name'    => NoNull($zRow['name']),
+                                                       'type'    => NoNull($zRow['type']),
+                                                       'success' => false
+                                                      );
                                 }
                             }
                         }
