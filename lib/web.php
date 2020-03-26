@@ -753,6 +753,7 @@ class Route extends Streams {
                        '[META_DESCR]'   => NoNull($data['description']),
                        '[CSS_EXTEND]'   => $this->_getCustomCSS($data),
                        '[FONT_SIZE]'    => NoNull($data['font-size'], 'md'),
+                       '[CC-LICENSE]'   => $this->_getCCLicense(NoNull($data['license'], 'CC BY-NC-ND')),
 
                        '[PREF_CONMAIL]' => (($this->settings['_send_contact_mail']) ? ' checked' : ''),
                        '[PAGE_URL]'     => $this->_getPageURL($data),
@@ -782,6 +783,39 @@ class Route extends Streams {
 
         // Return the Strings
         return $rVal;
+    }
+
+    /**
+     *  Function returns a constructed Creative Commons license statement for the footer of a page
+     */
+    private function _getCCLicense( $license ) {
+        $idx = array( '0'     => array( 'icon' => 'zero',  'text' => 'No Rights Reserved' ),
+                      'by'    => array( 'icon' => 'by',    'text' => 'Attribution' ),
+                      'nc'    => array( 'icon' => 'nc',    'text' => 'NonCommercial' ),
+                      'nd'    => array( 'icon' => 'nd',    'text' => 'NoDerivatives' ),
+                      'pd'    => array( 'icon' => 'pd',    'text' => 'PublicDomain' ),
+                      'sa'    => array( 'icon' => 'sa',    'text' => 'ShareAlike' ),
+                      'remix' => array( 'icon' => 'remix', 'text' => 'Remix' ),
+                      'share' => array( 'icon' => 'share', 'text' => 'Share' ),
+                     );
+        $valids = array('CC0', 'CC BY', 'CC BY-SA', 'CC BY-ND', 'CC BY-NC', 'CC BY-NC-SA', 'CC BY-NC-ND');
+        if ( in_array(strtoupper($license), $valids) === false ) {
+            $license = 'CC BY-NC-ND';
+        }
+
+        $type = strtolower(NoNull(str_replace(array('CC', '4.0'), '', $license)));
+        $icon = '<i class="fab fa-creative-commons"></i> ';
+        $desc = '';
+
+        $els = explode('-', $type);
+        foreach ( $els as $el ) {
+            $icon .= '<i class="fab fa-creative-commons-' . $idx[strtolower($el)]['icon'] . '"></i> ';
+            if ( $desc != '' ) { $desc .= '-'; }
+            $desc .= NoNull($idx[strtolower($el)]['text']);
+        }
+
+        // Return the License String
+        return $icon . 'This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/' . $type . '/4.0/">Creative Commons ' . NoNull($desc) . ' 4.0 International License</a>.';
     }
 
     /**

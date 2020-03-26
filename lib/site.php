@@ -210,7 +210,7 @@ class Site {
                                                             'color'           => NoNull($Row['site_color'], 'auto'),
                                                             'font-family'     => NoNull($Row['font_family']),
                                                             'font-size'       => NoNull($Row['font_size']),
-                                                            'license'         => NoNull($Row['license'], 'CC-BY-4.0'),
+                                                            'license'         => NoNull($Row['license'], 'CC BY-NC-ND 4.0'),
                                                             'is_default'      => YNBool($Row['is_default']),
                                                             'site_id'         => nullInt($Row['site_id']),
                                                             'site_guid'       => NoNull($Row['site_guid']),

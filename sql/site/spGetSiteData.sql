@@ -123,7 +123,8 @@ BEGIN
            MAX(zz.`show_quotation`) as `show_quotation`,
            MAX(zz.`site_color`) as `site_color`,
            MAX(zz.`font_family`) as `font_family`,
-           MAX(zz.`font_size`) as `font_size`
+           MAX(zz.`font_size`) as `font_size`,
+           MAX(zz.`site_license`) as `license`
       FROM (SELECT sm.`site_id`,
                    CASE WHEN sm.`key` = 'show_geo' THEN sm.`value` ELSE 'N' END as `show_geo`,
                    CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE 'N' END as `show_article`,
@@ -134,14 +135,15 @@ BEGIN
                    CASE WHEN sm.`key` = 'show_quotation' THEN sm.`value` ELSE 'N' END as `show_quotation`,
                    CASE WHEN sm.`key` = 'site_color' THEN sm.`value` ELSE 'auto' END as `site_color`,
                    CASE WHEN sm.`key` = 'site_font-family' THEN sm.`value` ELSE '' END as `font_family`,
-                   CASE WHEN sm.`key` = 'site_font-size' THEN sm.`value` ELSE '' END as `font_size`
+                   CASE WHEN sm.`key` = 'site_font-size' THEN sm.`value` ELSE '' END as `font_size`,
+                   CASE WHEN sm.`key` = 'site.license' THEN sm.`value` ELSE '' END as `site_license`
               FROM `SiteMeta` sm INNER JOIN tmp ON sm.`site_id` = tmp.`site_id`
              WHERE sm.`is_deleted` = 'N') zz
      GROUP BY zz.`site_id`;
 
     /* Return the Detailed Site Information */
     SELECT tmp.`site_id`, tmp.`site_guid`, tmp.`url_id`, tmp.`https`, tmp.`site_url`, tmp.`site_name`, tmp.`description`, tmp.`keywords`,
-           tmp.`theme`, IFNULL(meta.`site_color`, tmp.`site_color`) as `site_color`, meta.`font_family`, meta.`font_size`,
+           tmp.`theme`, IFNULL(meta.`site_color`, tmp.`site_color`) as `site_color`, meta.`font_family`, meta.`font_size`, meta.`license`,
            tmp.`is_default`, tmp.`client_guid`,
            tmp.`summary`, IFNULL(tmp.`page_title`, tmp.`site_name`) as `page_title`, IFNULL(tmp.`page_type`, 'website') as `page_type`,
            tmp.`channel_name`, tmp.`channel_guid`, tmp.`channel_id`, tmp.`channel_privacy`,
