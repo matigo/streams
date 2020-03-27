@@ -406,9 +406,9 @@ class cookies {
 
                     // Set the Cookie
                     if ( $isHTTPS ) {
-                        setcookie($key, $val, $Expires, '/', strtolower($_SERVER['SERVER_NAME']), $isHTTPS, true);
+                        setcookie($key, "$val", $Expires, '/', strtolower($_SERVER['SERVER_NAME']), $isHTTPS, true);
                     } else {
-                        setcookie($key, $val, $Expires);
+                        setcookie($key, "$val", $Expires, '/', strtolower($_SERVER['SERVER_NAME']));
                     }
                 }
             }
