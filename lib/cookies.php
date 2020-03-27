@@ -405,7 +405,11 @@ class cookies {
                     $Expires = time() + $LifeTime;
 
                     // Set the Cookie
-                    setcookie($key, $val, $Expires, '/', strtolower($_SERVER['SERVER_NAME']), $isHTTPS, true);
+                    if ( $isHTTPS ) {
+                        setcookie($key, $val, $Expires, '/', strtolower($_SERVER['SERVER_NAME']), $isHTTPS, true);
+                    } else {
+                        setcookie($key, $val, $Expires);
+                    }
                 }
             }
         }

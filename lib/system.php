@@ -212,6 +212,8 @@ class System {
 
         // If There's a Change, Record the Change and Start the DNS Update Process
         if ( $has_change ) {
+            writeNote("_verifyServerIPs :: Found Change", true);
+
             // Update the CloudFlare Data
             $data = $this->_updateCloudFlareDNS(CLOUDFLARE_API_KEY, CLOUDFLARE_EMAIL, $ipv4, $ipv6);
 
@@ -344,6 +346,8 @@ class System {
         if ( is_array($data) ) {
             foreach ( $data as $Row ) {
                 if ( NoNull($Row['name']) == $hub && NoNull($Row['status']) == 'active' ) {
+                    writeNote("_updateCloudFlareDNS :: $hub", true);
+
                     // Collect the DNS Records for the Zone
                     $endpoint = '/zones/' . NoNull($Row['id']) . '/dns_records';
                     $zone = doCloudFlareRequest($endpoint, $GlobalKey, $cfMail, 'GET', $params);
@@ -354,6 +358,8 @@ class System {
                             $ip = NoNull($zRow['content']);
 
                             if ( $name == CLOUDFLARE_SITEDNSVAL && $type == 'A' && $ip != $ipv4 ) {
+                                writeNote("_updateCloudFlareDNS :: Update $type Record for $name :: $ip -> $ipv4", true);
+
                                 $putat = $endpoint . '/' . NoNull($zRow['id']);
                                 $pobj = array( 'type'    => NoNull($zRow['type']),
                                                'name'    => NoNull($zRow['name']),
@@ -363,12 +369,14 @@ class System {
                                               );
                                 $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
                                 if ( is_array($pOK) ) {
+                                    writeNote("PUT $putat :: Success", true);
                                     $result[] = array( 'name'    => NoNull($pOK['name']),
                                                        'type'    => NoNull($pOK['type']),
                                                        'value'   => NoNull($pOK['content']),
                                                        'success' => true
                                                       );
                                 } else {
+                                    writeNote("PUT $putat :: Failed", true);
                                     $result[] = array( 'name'    => NoNull($zRow['name']),
                                                        'type'    => NoNull($zRow['type']),
                                                        'success' => false
@@ -377,6 +385,8 @@ class System {
                             }
 
                             if ( $name == CLOUDFLARE_SITEDNSVAL && $type == 'AAAA' && $ip != $ipv6 ) {
+                                writeNote("_updateCloudFlareDNS :: Update $type Record for $name :: $ip -> $ipv6", true);
+
                                 $putat = $endpoint . '/' . NoNull($zRow['id']);
                                 $pobj = array( 'type'    => NoNull($zRow['type']),
                                                'name'    => NoNull($zRow['name']),
@@ -386,12 +396,14 @@ class System {
                                               );
                                 $pOK = doCloudFlareRequest($putat, $GlobalKey, $cfMail, 'PUT', $pobj);
                                 if ( is_array($pOK) ) {
+                                    writeNote("PUT $putat :: Success", true);
                                     $result[] = array( 'name'    => NoNull($pOK['name']),
                                                        'type'    => NoNull($pOK['type']),
                                                        'value'   => NoNull($pOK['content']),
                                                        'success' => true
                                                       );
                                 } else {
+                                    writeNote("PUT $putat :: Failed", true);
                                     $result[] = array( 'name'    => NoNull($zRow['name']),
                                                        'type'    => NoNull($zRow['type']),
                                                        'success' => false
