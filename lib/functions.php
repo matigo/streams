@@ -1080,6 +1080,43 @@
     }
 
     /***********************************************************************
+     *  Cache Functions
+     ***********************************************************************/
+    /**
+     *  Function Records an array of information to a cache location
+     */
+    function saveCacheObject( $fileName, $data ) {
+        if ( strlen(NoNull($fileName)) < 3 ) { return false; }
+        if ( is_array($data) ) {
+            $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
+            if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
+                $fh = fopen($cacheFile, 'w');
+                fwrite($fh, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                fclose($fh);
+            }
+        }
+    }
+
+    /**
+     *  Function Reads a Cached JSON file based on the name passed.
+     *      If the data does not exist, an unhappy boolean is returned.
+     */
+    function readCacheObject( $fileName ) {
+        if ( strlen(NoNull($fileName)) < 3 ) { return false; }
+        if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
+            $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
+            if ( file_exists( $cacheFile ) ) {
+                $age = filemtime($cacheFile);
+                if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
+
+                $json = file_get_contents( $cacheFile );
+                return json_decode($json);
+            }
+        }
+        return false;
+    }
+
+    /***********************************************************************
      *  Resource Functions
      ***********************************************************************/
     /**

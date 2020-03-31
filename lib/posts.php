@@ -943,6 +943,18 @@ class Posts {
                 }
             }
 
+            // If there's an Episode Array, Ensure the File value is prefixed with the CDN
+            if ( array_key_exists('episode', $data) ) {
+                $file = NoNull($data['episode']['file']);
+                if ( $file != '' && strpos($file, '//') === false ) {
+                    $cdnUrl = getCdnUrl();
+                    $ext = getFileExtension($file);
+
+                    $data['episode']['file'] = $cdnUrl . $file;
+                    $data['episode']['mime'] = getMimeFromExtension($ext);
+                }
+            }
+
             // If we have data, return it.
             if ( count($data) > 0 ) { return $data; }
         }
@@ -1795,6 +1807,24 @@ class Posts {
                 }
             }
 
+            // Do we have an Audio Element?
+            $audio = '';
+            if ( is_array($post['meta']) ) {
+                if ( is_array($post['meta']['episode']) ) {
+                    $fileUrl = NoNull($post['meta']['episode']['file']);
+                    if ( $fileUrl != '' ) {
+                        $audio = "\r\n" .
+                                 tabSpace(7) . '<div class="metaline audio pad" data-file="' . $fileUrl . '">' . "\r\n" .
+                                 tabSpace(8) . '<audio class="audioplayer" preload="auto" controlslist="nodownload">' . "\r\n" .
+                                 tabSpace(9) . '<source type="' . NoNull($post['meta']['episode']['mime'], 'audio/mp3') . '" src="' . $fileUrl . '">' . "\r\n" .
+                                 tabSpace(9) . 'Your browser does not support HTML5 audio, but you can still <a target="_blank" href="' . $fileUrl . '" title="">download the file</a>.' . "\r\n" .
+                                 tabSpace(8) . '</audio>' . "\r\n" .
+                                 tabSpace(7) . '</div>';
+
+                    }
+                }
+            }
+
             $ReplyHTML = '';
             $postClass = NoNull($post['class']);
             if ( $postClass != '' ) { $postClass .= ' '; }
@@ -1855,6 +1885,7 @@ class Posts {
                               '[TAGLINE]'       => NoNull($tagLine, $this->strings['lblNoTags']),
                               '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
                               '[GEOTAG]'        => $geoLine,
+                              '[AUDIO]'         => $audio,
                               '[THREAD]'        => $PostThread,
                               '[SOURCE_NETWORK]'=> NoNull($post['meta']['source']['network']),
                               '[SOURCE_ICON]'   => $SourceIcon,

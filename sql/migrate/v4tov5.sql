@@ -60,6 +60,28 @@ SELECT pt.`key`, COUNT(pt.`post_id`) as `instances`
  ORDER BY `instances` DESC
 LIMIT 250;
 
+INSERT INTO `PostMeta` (`post_id`, `key`, `value`)
+SELECT DISTINCT sp.`id` as `post_id`,
+       CASE WHEN pm.`key` = 'audio.description' THEN 'episode_summary'
+            WHEN pm.`key` = 'audio.episodeno' THEN 'episode_number'
+            WHEN pm.`key` = 'audio.time' THEN 'episode_time'
+            WHEN pm.`key` = 'audio.explicit' THEN 'episode_explicit'
+            WHEN pm.`key` = 'audio.filename' THEN 'episode_file'
+            WHEN pm.`key` = 'post.banner' THEN 'episode_banner'
+            ELSE pm.`key` END as `key`,
+       CONCAT(CASE WHEN pm.`key` = 'audio.filename' THEN '/NtyZNP/' ELSE '' END, pm.`value`) as `value`
+  FROM `century`.`User` u INNER JOIN `century`.`Site` s ON u.`id` = s.`user_id`
+                          INNER JOIN `century`.`Channel` c ON s.`id` = c.`site_id`
+                          INNER JOIN `century`.`Post` p ON c.`id` = p.`channel_id`
+                          INNER JOIN `century`.`PostContent` pc ON p.`id` = pc.`post_id`
+                          INNER JOIN `century`.`PostMeta` pm ON p.`id` = pm.`post_id`
+                          INNER JOIN `streams`.`Post` sp ON p.`canonical_url` = sp.`canonical_url`
+ WHERE p.`is_deleted` = 'N' and p.`type` IN ('post.blog', 'post.podcast')
+   and u.`id` = 1 and 'discoveradn.10centuries.org' IN (s.`url`, s.`custom_url`)
+   and pm.`key` NOT IN ('post.parent_id', 'post.source')
+   and sp.`is_deleted` = 'N' and sp.`id` >= 347886
+ ORDER BY sp.`id`, `key`;
+
 INSERT INTO `PostTags` (`post_id`, `key`, `value`, `created_at`);
 SELECT DISTINCT sp.`id` as `post_id`, REPLACE(LOWER(pt.`name`), ' ', '-') as `key`, pt.`name` as `value`, p.`created_at`
   FROM `century`.`User` u INNER JOIN `century`.`Site` s ON u.`id` = s.`user_id`

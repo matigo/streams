@@ -1279,3 +1279,41 @@ CREATE TABLE IF NOT EXISTS `UsageStats` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE INDEX `idx_stats_main` ON `UsageStats` (`event_on`, `site_id`);
 CREATE INDEX `idx_stats_aux` ON `UsageStats` (`event_on`, `token_id`);
+
+DROP TABLE IF EXISTS `UsageSummary`;
+CREATE TABLE IF NOT EXISTS `UsageSummary` (
+    `event_on`      varchar(10)             CHARACTER SET utf8  NOT NULL    ,
+    `site_id`       int(11)        UNSIGNED                     NOT NULL    ,
+
+    `requests`      int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `accounts`      int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `api_calls`     int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `web_calls`     int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+
+    `gets`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `posts`         int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `other`         int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+
+    `200s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `302s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `400s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `401s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `403s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `404s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+    `422s`          int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+
+    `min_seconds`   decimal(16,8)                               NOT NULL    DEFAULT 0,
+    `avg_seconds`   decimal(16,8)                               NOT NULL    DEFAULT 0,
+    `max_seconds`   decimal(16,8)                               NOT NULL    DEFAULT 0,
+
+    `sqlops`        int(11)        UNSIGNED                     NOT NULL    DEFAULT 0,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`event_on`, `site_id`),
+    FOREIGN KEY (`site_id`) REFERENCES `Site` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_stats_main` ON `UsageSummary` (`event_on`);
+CREATE INDEX `idx_stats_aux` ON `UsageSummary` (`site_id`);
+
