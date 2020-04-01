@@ -1,14 +1,14 @@
 DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetSyndicationContent;;
 CREATE PROCEDURE GetSyndicationContent( IN `in_site_url` varchar(256), IN `in_show_article` char(1), IN `in_show_bookmark` char(1), IN `in_show_quotation` char(1), IN `in_show_note` char(1),
-                                        IN `in_hide_mentions` char(1), IN `in_count` int(11), IN `in_beforeunix` int(11) )
+                                        IN `in_hide_mentions` char(1), IN `in_audio_only` char(1), IN `in_count` int(11), IN `in_beforeunix` int(11) )
 BEGIN
     DECLARE `min_id` int(11);
 
     /** ********************************************************************** **
      *  Function returns the Visible items for the Syndication feeds
      *
-     *  Usage: CALL GetSyndicationContent('matigo.ca', 'N', 'N', 'N', 'Y', 'Y', 75, 0);
+     *  Usage: CALL GetSyndicationContent('enough.10centuries.local', 'Y', 'N', 'N', 'N', 'Y', 'N', 75, 0);
      ** ********************************************************************** **/
 
     /* If the Count Only value is not cromulent, make it so */
@@ -37,6 +37,9 @@ BEGIN
     IF IFNULL(`in_hide_mentions`, '-') NOT IN ('N', 'Y') THEN
         SET `in_hide_mentions` = 'Y';
     END IF;
+    IF IFNULL(`in_audio_only`, '-') NOT IN ('N', 'Y') THEN
+        SET `in_audio_only` = 'N';
+    END IF;
 
     IF CONCAT(`in_show_article`, `in_show_bookmark`, `in_show_quotation`, `in_show_note`) = 'NNNN' THEN
         SET `in_show_article` = 'Y';
@@ -61,6 +64,7 @@ BEGIN
     CREATE TEMPORARY TABLE tmpPosts (
         `post_id`       int(11)        UNSIGNED NOT NULL    ,
         `has_mentions`  enum('N','Y')           NOT NULL    DEFAULT 'N',
+        `has_audio`     enum('N','Y')           NOT NULL    DEFAULT 'N',
         `publish_at`    timestamp               NOT NULL    ,
         PRIMARY KEY (`post_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -85,11 +89,15 @@ BEGIN
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`url` = `in_site_url`;
 
     /* Collect the applicable Posts from the last six months only */
-    INSERT INTO tmpPosts (`post_id`, `has_mentions`, `publish_at`)
-    SELECT po.`id` as `post_id`, IFNULL((SELECT 'Y' FROM `PostMention` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1), 'N') as `has_mentions`, po.`publish_at`
+    INSERT INTO tmpPosts (`post_id`, `has_mentions`, `has_audio`, `publish_at`)
+    SELECT po.`id` as `post_id`,
+           IFNULL((SELECT 'Y' FROM `PostMention` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1), 'N') as `has_mentions`,
+           CASE WHEN LENGTH(IFNULL(pm.`value`, '')) >= 10 THEN 'Y' ELSE 'N' END as `has_audio`,
+           po.`publish_at`
       FROM tmpTypes tp INNER JOIN `Channel` ch ON tp.`site_id` = ch.`site_id`
                        INNER JOIN `Post` po ON ch.`id` = po.`channel_id` AND tp.`type` = po.`type`
                        INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
+                  LEFT OUTER JOIN `PostMeta` pm ON po.`id` = pm.`post_id` AND pm.`key` = 'episode_file' AND pm.`is_deleted` = 'N'
      WHERE ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and tp.`is_default` = 'Y'
        and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and po.`privacy_type` = 'visibility.public'
        and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 SECOND))
@@ -102,11 +110,7 @@ BEGIN
            IFNULL(po.`title`, (SELECT z.`value` FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`is_private` = 'N' and z.`key` = 'source_title' and z.`post_id` = po.`id` LIMIT 1)) as `post_title`,
            CONCAT(CASE WHEN tp.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', tp.`site_url`, po.`canonical_url`) as `post_url`,
            (SELECT z.`value` FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`is_private` = 'N' and z.`key` = 'source_url' and z.`post_id` = po.`id` LIMIT 1) as `source_url`,
-           po.`type` as `post_type`, po.`guid` as `post_guid`, po.`hash`, po.`value` as `post_text`,
-           IFNULL((SELECT MAX(CASE WHEN fi.`type` LIKE 'audio%' THEN 'Y' ELSE 'N' END) as `has_audio`
-                     FROM `PostFile` pf INNER JOIN `File` fi ON pf.`file_id` = fi.`id`
-                    WHERE fi.`is_deleted` = 'N' and IFNULL(fi.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) > Now()
-                      and pf.`is_deleted` = 'N' and pf.`post_id` = po.`id`), 'N') as `has_audio`,
+           po.`type` as `post_type`, po.`guid` as `post_guid`, po.`hash`, po.`value` as `post_text`, pp.`has_audio`,
            DATE_FORMAT(po.`publish_at`, '%Y-%m-%dT%H:%i:%sZ') as `publish_at`,
            DATE_FORMAT(po.`updated_at`, '%Y-%m-%dT%H:%i:%sZ') as `updated_at`
       FROM `tmpTypes` tp INNER JOIN `Channel` ch ON tp.`site_id` = ch.`site_id`
@@ -116,6 +120,9 @@ BEGIN
      WHERE ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and tp.`is_default` = 'Y'
        and ch.`privacy_type` = 'visibility.public' and ch.`type` = 'channel.site' and po.`privacy_type` = 'visibility.public'
        and Now() BETWEEN po.`publish_at` AND IFNULL(po.`expires_at`, DATE_ADD(Now(), INTERVAL 1 SECOND))
+       and 'Y' = CASE WHEN `in_audio_only` = 'Y' AND pp.`has_audio` = 'Y' THEN 'Y'
+                      WHEN `in_audio_only` = 'N' THEN 'Y'
+                      ELSE 'N' END
      ORDER BY po.`publish_at` DESC
      LIMIT `in_count`;
 

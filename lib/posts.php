@@ -2602,15 +2602,18 @@ class Posts {
             if ( $rVal !== false ) { return $rVal; }
         }
 
+        $AudioOnly = in_array($this->settings['PgRoot'], array('podcast.xml', 'podcast.json', 'podcast.rss', 'podcast'));
+
         // If We're Here, Build the Feed
         $ReplStr = array( '[SITE_URL]'       => sqlScrub($site['HomeURL']),
                           '[SHOW_ARTICLE]'   => sqlScrub($ReqTypes['post.article']),
                           '[SHOW_BOOKMARK]'  => sqlScrub($ReqTypes['post.bookmark']),
                           '[SHOW_QUOTATION]' => sqlScrub($ReqTypes['post.quotation']),
                           '[SHOW_NOTE]'      => sqlScrub($ReqTypes['post.note']),
+                          '[AUDIO_ONLY]'     => BoolYN($AudioOnly),
                           '[COUNT]'          => nullInt($site['rss_limit'], 15),
                          );
-        $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', 'Y', [COUNT], 0);", $ReplStr);
+        $sqlStr = prepSQLQuery("CALL GetSyndicationContent('[SITE_URL]', '[SHOW_ARTICLE]', '[SHOW_BOOKMARK]', '[SHOW_QUOTATION]', '[SHOW_NOTE]', 'Y', '[AUDIO_ONLY]', [COUNT], 0);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             // If the request is JSON, supply it as such. Otherwise, XML as default
@@ -2633,6 +2636,8 @@ class Posts {
      */
     private function _buildJSONFeed( $site, $data ) {
         $SiteURL = NoNull($site['protocol'], 'http') . '://' . NoNull($site['HomeURL']);
+        $cdnUrl = getCdnUrl();
+
         $json = array( 'version'        =>  "https://jsonfeed.org/version/1",
                        'title'          => NoNull($site['name']),
                        'home_page_url'  => $SiteUrl,
@@ -2681,12 +2686,10 @@ class Posts {
                 if ( YNBool($post['has_audio']) ) {
                     $encl = $this->_getPostEnclosure($post['post_id'], 100);
                     if ( is_array($encl) ) {
-                        foreach ( $encl as $att ) {
-                            $item['attachments'][] = array( 'url'           => $SiteURL . NoNull($att['url']),
-                                                            'mime_type'     => NoNull($att['type']),
-                                                            'size_in_bytes' => nullInt($att['size']),
-                                                           );
-                        }
+                        $item['attachments'][] = array( 'url'           => $cdnUrl . NoNull($encl['url']),
+                                                        'mime_type'     => NoNull($encl['type']),
+                                                        'size_in_bytes' => nullInt($encl['size']),
+                                                       );
                     }
                 }
 
@@ -2716,6 +2719,8 @@ class Posts {
      */
     private function _buildXMLFeed( $site, $data ) {
         $SiteURL = NoNull($site['protocol'], 'http') . '://' . NoNull($site['HomeURL']);
+        $cdnUrl = getCdnUrl();
+
         $ReplStr = array( '[SITENAME]'  => NoNull($site['name']),
                           '[HOMEURL]'   => $SiteURL,
                           '[SUBTITLE]'  => NoNull($site['description']),
@@ -2767,17 +2772,18 @@ class Posts {
                                '[AVATAR_URL]'   => NoNull($post['avatar_url']),
                                '[EXPLICIT]'     => NoNull($post['explicit'], NoNull($site['rss_explicit'], 'Clean')),
 
-                               '[ENCL_LINK]'    => (($encl !== false) ? $SiteURL . NoNull($encl['url']) : ''),
+                               '[ENCL_LINK]'    => (($encl !== false) ? $cdnUrl . NoNull($encl['url']) : ''),
                                '[ENCL_NAME]'    => (($encl !== false) ? NoNull($encl['name']) : ''),
                                '[ENCL_SIZE]'    => (($encl !== false) ? nullInt($encl['size']) : ''),
-                               '[ENCL_TIME]'    => (($encl !== false) ? NoNull($encl['time'], '00:00') : ''),
+                               '[ENCL_TIME]'    => (($encl !== false) ? NoNull($encl['time'], '00:00:00') : ''),
                                '[ENCL_TYPE]'    => (($encl !== false) ? NoNull($encl['type']) : ''),
+                               '[ENCL_EPNO]'    => (($encl !== false) ? NoNull($encl['number']) : ''),
 
                                '[POST_BANR]'    => NoNull($post['post_banner'], $site['rss_cover']),
                                '[POST_SUBS]'    => NoNull($post['post_subtitle']),
-                               '[POST_SUMM]'    => NoNull($post['post_summary']),
+                               '[POST_SUMM]'    => NoNull($encl['summary'], $post['post_summary']),
                                '[POST_TYPE]'    => NoNull($post['post_type']),
-                               '[POST_TEXT]'    => NoNull(str_replace(array_keys($inplace), array_values($inplace), $text)),
+                               '[POST_TEXT]'    => NoNull(str_replace(array_keys($inplace), array_values($inplace), NoNull($encl['summary'], $text))),
                                '[POST_HTML]'    => NoNull($html),
                               );
 
@@ -2801,7 +2807,8 @@ class Posts {
 
         // Clean Up the Issues
         $forbid = array( '<title></title>' => '', '<itunes:subtitle></itunes:subtitle>' => '', '<itunes:summary></itunes:summary>' => '',
-                         '<itunes:image href=""/>' => '', '<itunes:duration>00:00</itunes:duration>' => '', '<itunes:email></itunes:email>' => '',
+                         '<itunes:image href=""/>' => '', '<itunes:email></itunes:email>' => '', '<itunes:order></itunes:order>' => '',
+                         '<itunes:duration>00:00:00</itunes:duration>' => '', '<itunes:duration>00:00</itunes:duration>' => '',
                          '<itunes:name></itunes:name>' => '', '<itunes:author></itunes:author>' => '',
                          '<blockquote>  <p>' => '<blockquote><p>', '<a  href=' => '<a href=',
                         );
@@ -2843,17 +2850,26 @@ class Posts {
             if ( is_array($rslt) ) {
                 $data = array();
                 foreach ( $rslt as $Row ) {
-                    $data[] = array( 'name' => NoNull($Row['public_name']),
-                                     'size' => nullInt($Row['bytes']),
-                                     'type' => NoNull($Row['type']),
-                                     'url'  => NoNull($Row['url']),
-                                    );
-                }
+                    $fileName = CDN_PATH . NoNull($Row['episode_file']);
+                    if ( file_exists($fileName) ) {
+                        $ext = getFileExtension($Row['episode_file']);
+                        $name = NoNull($Row['episode_file']);
+                        if ( strpos($name, '/') !== false ) {
+                            $nn = explode('/', $name);
+                            if ( NoNull($nn[count($nn) - 1]) != '' ) {
+                                $name = NoNull($nn[count($nn) - 1]);
+                            }
+                        }
 
-                // Return the Data
-                if ( count($data) > 0 ) {
-                    if ( $Limit == 1 ) { return $data[0]; }
-                    return $data;
+                        return array( 'name'    => NoNull($name),
+                                      'size'    => filesize($fileName),
+                                      'type'    => getMimeFromExtension($ext),
+                                      'url'     => NoNull($Row['episode_file']),
+                                      'summary' => NoNull($Row['episode_summary']),
+                                      'number'  => NoNull($Row['episode_number']),
+                                      'time'    => NoNull($Row['episode_time'])
+                                     );
+                    }
                 }
             }
         }

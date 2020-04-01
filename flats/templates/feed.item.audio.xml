@@ -13,5 +13,6 @@
             <enclosure length="[ENCL_SIZE]" type="[ENCL_TYPE]" url="[ENCL_LINK]" />
             <itunes:duration>[ENCL_TIME]</itunes:duration>
             <itunes:explicit>[EXPLICIT]</itunes:explicit>
+            <itunes:order>[ENCL_EPNO]</itunes:order>
             <itunes:block>No</itunes:block>
         </item>

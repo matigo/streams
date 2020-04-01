@@ -25,6 +25,7 @@
             <itunes:email>[MAILADDR]</itunes:email>
         </itunes:owner>
         <itunes:subtitle>[SUBTITLE]</itunes:subtitle>
+        <itunes:complete>No</itunes:complete>
         <sy:updatePeriod>hourly</sy:updatePeriod>
         <sy:updateFrequency>1</sy:updateFrequency>
         <generator>[GENERATOR]</generator>

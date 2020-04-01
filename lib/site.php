@@ -236,7 +236,7 @@ class Site {
                                                             'rss_cover'       => '',
                                                             'rss_author'      => '',
                                                             'rss_mailaddr'    => '',
-                                                            'rss_limit'       => 15,
+                                                            'rss_limit'       => nullInt($Row['rss_items']),
 
                                                             'channel_guid'    => NoNull($Row['channel_guid']),
                                                             'channel_name'    => NoNull($Row['channel_name']),
