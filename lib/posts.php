@@ -1151,6 +1151,44 @@ class Posts {
             if ( nullInt($GeoLong) != 0 && nullInt($GeoLat) != 0 ) { $GeoFull = ''; }
         }
 
+        // Is this a podcast?
+        $AudioExplicit = NoNull($this->settings['explicit'], $this->settings['audio_explicit']);
+        $AudioSummary = NoNull($this->settings['episode_summary'], $this->settings['audio_summary']);
+        $AudioEpNo = NoNull($this->settings['episode_number'], $this->settings['audiofile_epno']);
+        $AudioTime = NoNull($this->settings['episode_time'], $this->settings['audiofile_time']);
+        $AudioFile = NoNull($this->settings['episode_url'], $this->settings['audiofile_url']);
+
+        if ( $AudioFile !== '' ) {
+            if ( in_array(strtolower($AudioExplicit), array('c', 'clean', 'n', 'no', 'y', 'yes')) === false ) { $AudioExplicit = ''; }
+
+            $cdnUrl = getCdnUrl();
+            $AudioFile = str_replace($cdnUrl, '', $AudioFile);
+
+            if ( strpos($AudioTime, ':') !== false ) {
+                $timeChk = array_reverse(explode(':', '00:00:00' . $AudioTime));
+                $AudioTime = '';
+                $aCnt = 0;
+                foreach ( $timeChk as $tc ) {
+                    if ( nullInt($tc) >= 0 ) {
+                        if ( $aCnt < 3 ) {
+                            if ( $AudioTime != '' ) { $AudioTime = ':' . $AudioTime; }
+                            $AudioTime = substr('00' . nullInt($tc), -2)  . $AudioTime;
+                            $aCnt++;
+                        }
+                    }
+                }
+
+            } else {
+                $AudioTime = '';
+            }
+
+        } else {
+            $AudioExplicit = '';
+            $AudioSummary = '';
+            $AudioTime = '';
+            $AudioEpNo = '';
+        }
+
         // Check the Post Text for Additionals
         $hash_list = $this->_extractPostTags($Value);
         if ( $hash_list != '' ) {
@@ -1313,6 +1351,12 @@ class Posts {
                                                 'geo_longitude'   => $GeoLong,
                                                 'geo_altitude'    => $GeoAlt,
                                                 'geo_description' => $GeoFull,
+
+                                                'episode_explicit' => $AudioExplicit,
+                                                'episode_summary'  => $AudioSummary,
+                                                'episode_number'   => $AudioEpNo,
+                                                'episode_file'     => $AudioFile,
+                                                'episode_time'     => $AudioTime,
                                                ),
 
                       'thread_id'     => $ThreadID,
@@ -1952,7 +1996,7 @@ class Posts {
         $ReplStr = array( '[POST_ID]' => nullInt($PostID) );
         $sqlStr = readResource(SQL_DIR . '/posts/getPostWebMentionToSend.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
+        if ( is_array($rslt) && count($rslt) > 0 ) {
             require_once( LIB_DIR . '/webmention.php' );
             $webm = new Webmention( $this->settings, $this->strings );
 
@@ -2770,7 +2814,7 @@ class Posts {
                                '[POST_UTC]'     => date("c", strtotime($post['publish_at'])),
                                '[AUTHOR_NAME]'  => NoNull($post['display_name'], $post['handle']),
                                '[AVATAR_URL]'   => NoNull($post['avatar_url']),
-                               '[EXPLICIT]'     => NoNull($post['explicit'], NoNull($site['rss_explicit'], 'Clean')),
+                               '[EXPLICIT]'     => getExplicitValue(NoNull($post['explicit'], NoNull($site['rss_explicit'], 'Clean'))),
 
                                '[ENCL_LINK]'    => (($encl !== false) ? $cdnUrl . NoNull($encl['url']) : ''),
                                '[ENCL_NAME]'    => (($encl !== false) ? NoNull($encl['name']) : ''),
@@ -2810,6 +2854,7 @@ class Posts {
                          '<itunes:image href=""/>' => '', '<itunes:email></itunes:email>' => '', '<itunes:order></itunes:order>' => '',
                          '<itunes:duration>00:00:00</itunes:duration>' => '', '<itunes:duration>00:00</itunes:duration>' => '',
                          '<itunes:name></itunes:name>' => '', '<itunes:author></itunes:author>' => '',
+                         '<itunes:explicit></itunes:explicit>' => '',
                          '<blockquote>  <p>' => '<blockquote><p>', '<a  href=' => '<a href=',
                         );
         $xmlOut = str_replace(array_keys($forbid), array_values($forbid), $xmlOut);

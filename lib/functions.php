@@ -117,6 +117,17 @@
     }
 
     /**
+     *  Function returns Yes, No, or Clean based on the Key provided
+     */
+    function getExplicitValue( $value ) {
+        $ReplStr = array( 'c' => 'Clean', 'clean' => 'Clean',
+                          'y' => 'Yes', 'yes' => 'Yes',
+                          'n' => 'No', 'no' => 'No',
+                         );
+        return NoNull($ReplStr[strtolower($value)]);
+    }
+
+    /**
      * Function Checks the Validity of a supplied URL and returns a cleaned string
      */
     function cleanURL( $URL ) {
@@ -271,6 +282,57 @@
      */
     function validateEmail( $email ) {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) { return true; }
+        return false;
+    }
+
+    /**
+     *  Function returns an array of Podcast Categories as defined in Apple's directory
+     */
+    function getPodcastCategories( $strings = false, $asOptions = false ) {
+        $catFile = FLATS_DIR . '/resources/podcast_categories.json';
+        $data = false;
+
+        if ( file_exists($catFile) ) {
+            if ( is_array($strings) === false || count($strings) <= 0 ) {
+                $strings = getLangDefaults(DEFAULT_LANG);
+            }
+
+            $json = readResource($catFile, $strings);
+            if ( $json !== false && $json != '' ) {
+                $data = objectToArray(json_decode($json));
+            }
+        }
+
+        // If we're just returning the array, do so
+        if ( $asOptions === false && is_array($data) && count($data) > 0 ) { return $data; }
+
+        // If we have data, build teh Options
+        if ( is_array($data) && count($data) > 0 ) {
+            $opts = '';
+            foreach ( $data as $Key=>$cat ) {
+                if ( NoNull($cat['title'], $Key) != '' ) {
+                    if ( $opts != '' ) { $opts .= "\r\n"; }
+                    $opts .= tabSpace(10) . '<option value="' . NoNull($Key) . '">' . NoNull($cat['title'], $Key) . '</option>';
+                }
+                if ( is_array($cat['subcategories']) ) {
+                    foreach ( $cat['subcategories'] as $idx=>$sub ) {
+                        if ( is_array($sub) ) {
+                            foreach ( $sub as $kk=>$lbl ) {
+                                if ( NoNull($lbl, $kk) != '' ) {
+                                    if ( $opts != '' ) { $opts .= "\r\n"; }
+                                    $opts .= tabSpace(10) . '<option value="' . NoNull($kk) . '">&mdash; ' . NoNull($lbl, $kk) . '</option>';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If we have a series of options, then return them
+            if ( NoNull($opts) != '' ) { return $opts; }
+        }
+
+        // If we're here, there's nothing
         return false;
     }
 

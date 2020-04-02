@@ -1,0 +1,184 @@
+{
+    "Arts": {
+        "title": "categoryArts",
+        "subcategories": [
+            { "Books": "categoryBooks" },
+            { "Design": "categoryDesign" },
+            { "Fashion & Beauty": "categoryFashion" },
+            { "Food": "categoryFood" },
+            { "Performing Arts": "categoryPerfArts" },
+            { "Visual Arts": "categoryVisArts" }
+        ]
+    },
+    "Business": {
+        "title": "categoryBusiness",
+        "subcategories": [
+            { "Careers": "categoryCareers" },
+            { "Entrepreneurship": "categoryEntrepreneur" },
+            { "Investing": "categoryInvesting" },
+            { "Management": "categoryManagement" },
+            { "Marketing": "categoryMarketing" },
+            { "Non-Profit": "categoryNonProfit" }
+        ]
+    },
+    "Comedy": {
+        "title": "categoryComedy",
+        "subcategories": [
+            { "Comedy Interviews": "categoryComedyInt" },
+            { "Improv": "categoryImprov" },
+            { "Stand-Up": "categoryStandUp" }
+        ]
+    },
+    "Education": {
+        "title": "categoryEducation",
+        "subcategories": [
+            { "Courses": "categoryCourses" },
+            { "How To": "categoryHowTo" },
+            { "Language Learning": "categoryLanguages" },
+            { "Self-Improvement": "categorySelfHelp" }
+        ]
+    },
+    "Fiction": {
+        "title": "categoryFiction",
+        "subcategories": [
+            { "Comedy Fiction": "categoryFictionComedy" },
+            { "Drama": "categoryFictionDrama" },
+            { "Science Fiction": "categoryFictionScience" }
+        ]
+    },
+    "Government": {
+        "title": "categoryGovernment",
+        "subcategories": false
+    },
+    "History": {
+        "title": "categoryHistory",
+        "subcategories": false
+    },
+    "Health & Fitness": {
+        "title": "categoryHealth",
+        "subcategories": [
+            { "Alternative Health": "categoryHealthAlt" },
+            { "Fitness": "categoryFitness" },
+            { "Medicine": "categoryMedicine" },
+            { "Mental Health": "categoryPsychology" },
+            { "Nutrition": "categoryNutrition" },
+            { "Sexuality": "categorySexuality" }
+        ]
+    },
+    "Kids & Family": {
+        "title": "categoryKids",
+        "subcategories": [
+            { "Education for Kids": "categoryKidsEd" },
+            { "Parenting": "categoryParenting" },
+            { "Pets & Animals": "categoryPets" },
+            { "Stories for Kids": "categoryKidsStory" }
+        ]
+    },
+    "Leisure": {
+        "title": "categoryLeisure",
+        "subcategories": [
+            { "Animation & Manga": "categoryAnimation" },
+            { "Automotive": "categoryAuto" },
+            { "Aviation": "categoryAviation" },
+            { "Crafts": "categoryCrafts" },
+            { "Games": "categoryGames" },
+            { "Hobbies": "categoryHobbies" },
+            { "Home & Garden": "categoryGardening" },
+            { "Video Games": "categoryVideoGames" }
+        ]
+    },
+    "Music": {
+        "title": "categoryMusic",
+        "subcategories": [
+            { "Music Commentary": "categoryMusicComm" },
+            { "Music History": "categoryMusicHist" },
+            { "Music Interviews": "categoryMusicInt" }
+        ]
+    },
+    "News": {
+        "title": "categoryNews",
+        "subcategories": [
+            { "Business News": "categoryNewsBus" },
+            { "Daily News": "categoryNewsDaily" },
+            { "Entertainment News": "categoryNewsEnt" },
+            { "News Commentary": "categoryNewsComm" },
+            { "Politics": "categoryNewsPol" },
+            { "Sports News": "categoryNewsSports" },
+            { "Tech News": "categoryNewsTech" }
+        ]
+    },
+    "Religion & Spirituality": {
+        "title": "categoryReligion",
+        "subcategories": [
+            { "Buddhism": "categoryBuddhism" },
+            { "Christianity": "categoryChristianity" },
+            { "Hinduism": "categoryHinduism" },
+            { "Islam": "categoryIslam" },
+            { "Judaism": "categoryJudaism" },
+            { "Religion": "categoryReligionGen" },
+            { "Spirituality": "categorySpirit" }
+        ]
+    },
+    "Science": {
+        "title": "categoryScience",
+        "subcategories": [
+            { "Astronomy": "categoryAstronomy" },
+            { "Chemistry": "categoryChemistry" },
+            { "Earth Sciences": "categoryEarth" },
+            { "Life Sciences": "categoryLifeSci" },
+            { "Mathematics": "categoryMath" },
+            { "Natural Sciences": "categoryNatSci" },
+            { "Nature": "categoryNature" },
+            { "Physics": "categoryPhysics" },
+            { "Social Sciences": "categorySocialSci" }
+        ]
+    },
+    "Society & Culture": {
+        "title": "categorySociety",
+        "subcategories": [
+            { "Documentary": "categorySocDocu" },
+            { "Personal Journals": "categoryPersonal" },
+            { "Philosophy": "categoryPhilosophy" },
+            { "Places & Travel": "categoryTravel" },
+            { "Relationships": "categoryRelationships" }
+        ]
+    },
+    "Sports": {
+        "title": "categorySports",
+        "subcategories": [
+            { "Baseball": "categoryBaseball" },
+            { "Basketball": "categoryBasketball" },
+            { "Cricket": "categoryCricket" },
+            { "Fantasy Sports": "categorySportFantasy" },
+            { "Football": "categoryFootball" },
+            { "Golf": "categoryGolf" },
+            { "Hockey": "categoryHockey" },
+            { "Rugby": "categoryRugby" },
+            { "Running": "categoryRunning" },
+            { "Soccer": "categorySoccer" },
+            { "Swimming": "categorySwimming" },
+            { "Tennis": "categoryTennis" },
+            { "Volleyball": "categoryVolleyball" },
+            { "Wilderness": "categoryWilderness" },
+            { "Wrestling": "categoryWrestling" }
+        ]
+    },
+    "Technology": {
+        "title": "categoryTech",
+        "subcategories": false
+    },
+    "True Crime": {
+        "title": "categoryCrime",
+        "subcategories": false
+    },
+    "TV & Film": {
+        "title": "categoryTVFilm",
+        "subcategories": [
+            { "After Shows": "categoryAfterShow" },
+            { "Film History": "categoryFilmHist" },
+            { "Film Interviews": "categoryFilmInt" },
+            { "Film Reviews": "categoryFilmRev" },
+            { "TV Reviews": "categoryTVRev" }
+        ]
+    }
+}

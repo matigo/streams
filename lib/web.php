@@ -100,6 +100,7 @@ class Route extends Streams {
                         $this->_handleZIPRequest();
                         break;
 
+                    case 'syndication':
                     case 'settings':
                     case 'messages':
                     case 'account':
@@ -118,7 +119,7 @@ class Route extends Streams {
 
             // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('write', 'export', 'account', 'settings', 'messages');
+                $checks = array('write', 'export', 'account', 'syndication', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {
@@ -465,7 +466,7 @@ class Route extends Streams {
      *  Function Returns the Pagingation Bar if Applicable
      */
     private function _getPagination( $data ) {
-        $Excludes = array( 'write', 'settings', 'account' );
+        $Excludes = array( 'write', 'settings', 'syndication', 'account' );
         $CanonURL = $this->_getCanonicalURL();
         $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
         $tObj = strtolower(str_replace('/', '', $CanonURL));
@@ -605,7 +606,7 @@ class Route extends Streams {
         // Update the Language Strings for the Class
         if ( is_array($rVal) ) {
             foreach ( $rVal as $Key=>$Value ) {
-                $this->strings = $rVal;
+                $this->strings["$Key"] = NoNull($Value);
             }
         }
     }
@@ -896,11 +897,106 @@ class Route extends Streams {
                              );
                 break;
 
+            case 'syndication':
+                $rslt = $this->_getSyndicationMeta( $data );
+                if ( is_array($rslt) ) {
+                    $podCategories = getPodcastCategories( $this->strings, true );
+                    $cat1 = NoNull($rslt['category1sub'], $rslt['category1']);
+                    $cat2 = NoNull($rslt['category2sub'], $rslt['category2']);
+                    $cat3 = NoNull($rslt['category3sub'], $rslt['category3']);
+
+                    return array( '[COVER_IMG]'  => NoNull($rslt['cover_img']),
+                                  '[LICENSE]'    => NoNull($rslt['license'], 'CC BY-NC-SA'),
+                                  '[LICENSE_1]'  => $this->_selectValue($rslt, 'license', 'CC CC0'),
+                                  '[LICENSE_2]'  => $this->_selectValue($rslt, 'license', 'CC BY'),
+                                  '[LICENSE_3]'  => $this->_selectValue($rslt, 'license', 'CC BY-SA'),
+                                  '[LICENSE_4]'  => $this->_selectValue($rslt, 'license', 'CC BY-NC'),
+                                  '[LICENSE_5]'  => $this->_selectValue($rslt, 'license', 'CC BY-NC-SA'),
+                                  '[LICENSE_6]'  => $this->_selectValue($rslt, 'license', 'CC BY-ND'),
+                                  '[LICENSE_7]'  => $this->_selectValue($rslt, 'license', 'CC BY-NC-ND'),
+
+                                  '[RSS_ITEMS]'  => NoNull($rslt['rss-items'], 15),
+                                  '[RSSCOUNT001]' => $this->_selectValue($rslt, 'rss-items', '1'),
+                                  '[RSSCOUNT015]' => $this->_selectValue($rslt, 'rss-items', '15'),
+                                  '[RSSCOUNT025]' => $this->_selectValue($rslt, 'rss-items', '25'),
+                                  '[RSSCOUNT050]' => $this->_selectValue($rslt, 'rss-items', '50'),
+                                  '[RSSCOUNT100]' => $this->_selectValue($rslt, 'rss-items', '100'),
+                                  '[RSSCOUNT250]' => $this->_selectValue($rslt, 'rss-items', '250'),
+                                  '[RSSCOUNTALL]' => $this->_selectValue($rslt, 'rss-items', '99999'),
+
+                                  '[SUMMARY]'    => NoNull($rslt['summary']),
+                                  '[AUTHOR]'     => NoNull($rslt['author']),
+                                  '[EXPLICIT_C]' => $this->_selectValue($rslt, 'explicit', 'c'),
+                                  '[EXPLICIT_N]' => $this->_selectValue($rslt, 'explicit', 'n'),
+                                  '[EXPLICIT_Y]' => $this->_selectValue($rslt, 'explicit', 'y'),
+
+                                  '[CAT_LIST_1]' => (( $cat1 != '' ) ? str_replace( '"' . $cat1 . '"', '"' . $cat1 . '" selected', $podCategories) : $podCategories),
+                                  '[CAT_LIST_2]' => (( $cat2 != '' ) ? str_replace( '"' . $cat2 . '"', '"' . $cat2 . '" selected', $podCategories) : $podCategories),
+                                  '[CAT_LIST_3]' => (( $cat3 != '' ) ? str_replace( '"' . $cat3 . '"', '"' . $cat3 . '" selected', $podCategories) : $podCategories),
+
+                                  '[CATEGORY_1]' => NoNull($rslt['category1']),
+                                  '[CAT_SUB_1]'  => NoNull($rslt['category1sub']),
+                                  '[CATEGORY_2]' => NoNull($rslt['category2']),
+                                  '[CAT_SUB_2]'  => NoNull($rslt['category2sub']),
+                                  '[CATEGORY_3]' => NoNull($rslt['category3']),
+                                  '[CAT_SUB_3]'  => NoNull($rslt['category3sub']),
+                                 );
+                }
+                break;
+
             default:
                 /* Do Nothing */
         }
 
         /* If there's no need for Private information ... */
+        return false;
+    }
+
+    private function _getSyndicationMeta( $data ) {
+        if ( $this->settings['_logged_in'] !== true ) { return false; }
+
+        $ReplStr = array( '[SITE_ID]' => $this->settings['site_id'] );
+        $sqlStr = readResource(SQL_DIR . '/site/getSyndicationMeta.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $cdnUrl = getCdnUrl();
+            $cover = $this->settings['HomeURL'] . '/favicon.png';
+            $author = '';
+            if ( is_array($data['personas']) ) {
+                foreach ( $data['personas'] as $pa ) {
+                    if ( NoNull($pa['name']) != '' ) {
+                        if ( $author != '' ) { $author .= ', '; }
+                        $author .= NoNull($pa['name']);
+                    }
+                }
+            }
+
+            foreach ( $rslt as $Row ) {
+                if ( NoNull($Row['cover']) != '' ) {
+                    $coverPath = CDN_PATH . NoNull($Row['cover']);
+                    if ( file_exists($coverPath) ) {
+                        $cover = $cdnUrl . NoNull($Row['cover']);
+                    }
+                }
+
+                return array( 'site_id'      => nullInt($Row['site_id']),
+                              'cover_img'    => NoNull($cover),
+                              'explicit'     => NoNull($Row['explicit'], 'c'),
+                              'summary'      => NoNull($Row['summary']),
+                              'license'      => NoNull($Row['license'], 'CC BY-NC-SA'),
+                              'author'       => NoNull($Row['author'], $author),
+                              'category1'    => NoNull($Row['category1']),
+                              'category1sub' => NoNull($Row['category1sub']),
+                              'category2'    => NoNull($Row['category2']),
+                              'category2sub' => NoNull($Row['category2sub']),
+                              'category3'    => NoNull($Row['category3']),
+                              'category3sub' => NoNull($Row['category3sub']),
+                              'rss-items'    => nullInt($Row['rss-items'], 15),
+                             );
+            }
+        }
+
+        // If we're here, there's nothing
         return false;
     }
 

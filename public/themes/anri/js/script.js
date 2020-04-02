@@ -128,6 +128,15 @@ function getMetaValue( name ) {
         contentOverlay.removeClass('content-overlay--active');
     });
 
+    var el = document.getElementById('audiofile');
+    if ( el !== undefined && el !== false && el !== null ) {
+        el.addEventListener('change', function(e) { uploadEpisodeFile(); }, false);
+    }
+    var el = document.getElementById('coverfile');
+    if ( el !== undefined && el !== false && el !== null ) {
+        el.addEventListener('change', function(e) { uploadCoverFile(); }, false);
+    }
+
     $("#content").keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
     $("#search-for").keydown(function (e) { if ( e.keyCode === KEY_ENTER ) { performSearch(); } else { clearSearchResults(); } });
     $("#search-filter").keydown(function (e) { performFilter(); });
@@ -135,6 +144,7 @@ function getMetaValue( name ) {
     $(document).on('click', '.audio-button', function() { toggleAudioButton(this); });
     $(document).on('touchend', '.audio-button', function() { toggleAudioButton(this); });
     $(document).on('input change', '.audio-range', function () { scrubAudioSeek(this); });
+    $(document).on('input change', '.newpost-full', function () { updatePublishPostButton(); });
 
     $('.btn-publish').click(function() { publishPost(); });
     $('.btn-delete-cancel').click(function() { cancelDelete(); });
@@ -411,6 +421,7 @@ function togglePostType() {
         for  ( var idx = 0; idx < pObj.length; idx++ ) {
             var _val = NoNull(pObj[idx].value);
             if ( _val === undefined || _val === false || _val === null ) { _type = ''; }
+
             switch ( _val.toLowerCase() ) {
                 case 'post.article':
                 case 'post.page':
@@ -423,6 +434,9 @@ function togglePostType() {
                     break;
             }
         }
+
+        /* Is this a podcast? */
+        setPodcastReqFields();
 
         var els = document.getElementsByClassName('create-obj');
         for ( var i = 0; i < els.length; i++ ) {
@@ -437,6 +451,9 @@ function togglePostType() {
                 }
             }
         }
+
+        /* Check that everything is still valid */
+        updatePublishPostButton();
     }
 }
 function togglePostPass(el) {
@@ -473,34 +490,49 @@ function updateContentHeight(el) {
     updatePublishPostButton();
 }
 function updatePublishPostButton() {
+    var _isValid = true;
+
+    /*
     var els = document.getElementsByClassName('newpost-content');
-    var _isBlank = true;
     if ( els.length > 0 ) {
         for ( var i = 0; i < els.length; i++ ) {
             var _txt = NoNull(els[i].value);
             if ( _txt != '' ) { _isBlank = false; }
         }
     }
+    */
+
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _req = NoNull(els[i].getAttribute('aria-required'));
+        if ( _req != 'true' ) { _req = 'false'; }
+        if ( _req == 'true' ) {
+            var _val = NoNull(els[i].value);
+            if ( _val === null || _val == '' ) { _isValid = false; }
+        }
+    }
+
     var els = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].innerHTML != '<i class="fa fa-spin fa-spinner"></i>' ) {
-            if ( _isBlank ) {
-                if ( els[i].classList.contains('btn-primary') ) {
-                    els[i].classList.remove('btn-primary');
-                }
-            } else {
+            if ( _isValid ) {
                 if ( els[i].classList.contains('btn-primary') === false ) {
                     els[i].classList.add('btn-primary');
                 }
+
+            } else {
+                if ( els[i].classList.contains('btn-primary') ) {
+                    els[i].classList.remove('btn-primary');
+                }
             }
-            if ( els[i].disabled !== _isBlank ) { els[i].disabled = _isBlank; }
+            if ( els[i].disabled === _isValid ) { els[i].disabled = !_isValid; }
         }
     }
 
     var parts = window.location.pathname.split('/');
     var _guid = parts[(parts.length - 1)];
     if ( _guid.length < 30 ) { _guid = ''; }
-    if ( _guid.length > 30 || _isBlank === false ) {
+    if ( _guid.length > 30 || _isValid ) {
         showByClass('btn-delete');
     } else {
         hideByClass('btn-delete');
@@ -730,7 +762,16 @@ function validatePost() {
         }
     }
 
-    // Set the Publication Date Accordingly
+    /* Is this a podcast? */
+    var _pcast = isPodcastType();
+    if ( _pcast ) {
+        if ( NoNull(params['audiofile_url']) == '' ) {
+            $('.btn-publish').notify("Remember to upload a file.", { position: "bottom", autoHide: true, autoHideDelay: 5000 });
+            return false;
+        }
+    }
+
+    /* Set the Publication Date Accordingly */
     var publish_date = moment(params['publish_at'], 'MMMM Do YYYY h:mm a');
     if ( publish_date === undefined || publish_date === false || publish_date === null || publish_date == 'Invalid date' ) {
         publish_date = new Date(params['publish_at']);
@@ -1446,4 +1487,184 @@ function toggleAudioSeek(file_id, secs) {
         seekAudio(file_id, val);
         sld.value = val;
     }
+}
+
+/** ************************************************************************* *
+ *  Podcast Handling Functions
+ ** ************************************************************************* */
+function isPodcastType() {
+    var pObj = document.getElementsByClassName('post-type');
+    var _opt = '';
+
+    if ( pObj.length > 0 ) {
+        for  ( var idx = 0; idx < pObj.length; idx++ ) {
+            if ( NoNull(pObj[idx].options[pObj[idx].options.selectedIndex].dataset.option) != '' ) {
+                _opt = NoNull(pObj[idx].options[pObj[idx].options.selectedIndex].dataset.option);
+                if ( _opt === undefined || _opt === false || _opt === null ) { _opt = ''; }
+            }
+        }
+    }
+    return (_opt == 'podcaster') ? true : false;
+}
+function setPodcastReqFields() {
+    var els = document.getElementsByClassName('podcast-req');
+    var _active = isPodcastType();
+
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].setAttribute('aria-required', ((_active) ? 'true' : 'false'));
+    }
+
+    if ( _active ) {
+        showByClass('podcaster');
+    } else {
+        hideByClass('podcaster');
+        hideByClass('up-prog');
+    }
+}
+function uploadCoverFile() {
+    var el = document.getElementById('coverfile');
+    if ( el === undefined || el === false || el === null ) { return; }
+
+    var access_token = getMetaValue('authorization');
+    var api_url = getMetaValue('api_url');
+    if ( api_url == '' ) {
+        alert( "Error: API URL Not Defined!" );
+        return false;
+    }
+
+    // Write the Totals
+    var pbar = document.getElementById('coverfile-pct');
+    showByClass('up-prog');
+
+    // Upload the Specific File
+    var data = new FormData();
+    data.append('SelectedFile', el.files[0]);
+
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+        if(request.readyState == 4){
+            html = '';
+            try {
+                var resp = JSON.parse(request.response);
+                if ( resp.meta !== undefined && resp.meta.code == 200 ) {
+                    var ds = resp.data;
+                    if ( ds.files !== undefined && ds.files !== false && ds.files.length > 0 ) {
+                        var _thumb = false;
+                        var _url = false;
+
+                        /* First Let's Get the File URL */
+                        for ( var i = 0; i < ds.files.length; i++ ) {
+                            if ( _thumb === false && ds.files[i].thumb !== false ) { _thumb = NoNull(ds.files[i].thumb); }
+                            if ( _url === false && NoNull(ds.files[i].cdn_url) != '' ) { _url = NoNull(ds.files[i].cdn_url); }
+                        }
+
+                        /* Now Write it to the Proper Location */
+                        var els = document.getElementsByName('cover-img');
+                        for ( var i = 0; i < els.length; i++ ) {
+                            els[i].value = _url;
+                        }
+
+                        var els = document.getElementsByClassName('coverfile-preview');
+                        for ( var i = 0; i < els.length; i++ ) {
+                            els[i].src = ((_thumb !== false) ? _thumb : _url);
+                        }
+                    }
+
+                } else {
+                    html = '<p class="color: #f00;">' + resp.result + '</p>';
+                }
+
+            } catch (e){
+                var resp = {
+                    status: 'error',
+                    data: 'Unknown error occurred: [' + request.responseText + ']'
+                };
+                html = '<p class="color: #f00;">' + request.responseText + '</p>';
+            }
+        }
+    };
+    request.upload.addEventListener('progress', function(e) {
+        if ( e.total > 0 ) {
+            var _msg = NoNull(pbar.getAttribute('data-label'));
+            pbar.innerHTML = _msg.replace('{pct}', Math.round((e.loaded/e.total) * 100));
+        }
+    }, false);
+
+    request.open('POST', api_url + '/files', true);
+    if ( access_token != '' ) { request.setRequestHeader("Authorization", access_token); }
+    request.send(data);
+}
+function uploadEpisodeFile() {
+    var el = document.getElementById('audiofile');
+
+    var access_token = getMetaValue('authorization');
+    var api_url = getMetaValue('api_url');
+    if ( api_url == '' ) {
+        alert( "Error: API URL Not Defined!" );
+        return false;
+    }
+
+    // Write the Totals
+    var pbar = document.getElementById('pv-list-upload');
+    showByClass('up-prog');
+
+    // Upload the Specific File
+    var data = new FormData();
+    data.append('SelectedFile', el.files[0]);
+
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+        if(request.readyState == 4){
+            html = '';
+            try {
+                var resp = JSON.parse(request.response);
+                if ( resp.meta !== undefined && resp.meta.code == 200 ) {
+                    var ds = resp.data;
+                    if ( ds.files !== undefined && ds.files !== false && ds.files.length > 0 ) {
+                        var _url = false;
+
+                        /* First Let's Get the File URL */
+                        for ( var i = 0; i < ds.files.length; i++ ) {
+                            if ( _url === false && NoNull(ds.files[i].cdn_url) != '' ) { _url = NoNull(ds.files[i].cdn_url); }
+                        }
+
+                        /* Now Write it to the Proper Location */
+                        var els = document.getElementsByName('fdata');
+                        for ( var i = 0; i < els.length; i++ ) {
+                            var _name = els[i].getAttribute('data-name');
+                            if ( _name === undefined || _name === false || _name === null ) { _name = ''; }
+                            switch ( _name.toLowerCase() ) {
+                                case 'audiofile-url':
+                                case 'audiofile_url':
+                                    els[i].value = _url;
+                                    break;
+
+                                default:
+                                    /* Do Nothing */
+                            }
+                        }
+                    }
+
+                } else {
+                    html = '<p class="color: #f00;">' + resp.result + '</p>';
+                }
+
+            } catch (e){
+                var resp = {
+                    status: 'error',
+                    data: 'Unknown error occurred: [' + request.responseText + ']'
+                };
+                html = '<p class="color: #f00;">' + request.responseText + '</p>';
+            }
+        }
+    };
+    request.upload.addEventListener('progress', function(e) {
+        if ( e.total > 0 ) {
+            pbar.value = Math.round((e.loaded/e.total) * 100);
+        }
+    }, false);
+
+    request.open('POST', api_url + '/files', true);
+    if ( access_token != '' ) { request.setRequestHeader("Authorization", access_token); }
+    request.send(data);
 }

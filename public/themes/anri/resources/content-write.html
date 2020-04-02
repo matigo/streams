@@ -6,6 +6,7 @@
                                 <option value="post.quotation">[optPostQuotation]</a></option>
                                 <option value="post.bookmark">[optPostBookmark]</a></option>
                                 <option value="post.page">[optPostPage]</a></option>
+                                <option value="post.article" data-option="podcaster">[optPostPodcast]</option>
                                 <option value="post.note">[optPostNote]</a></option>
                             </select>
                             <input class="newpost-small publish-at" type="text" name="fdata" value="" data-name="publish_at" aria-required="false" placeholder="[lblPostDatePH]" autocomplete="off" />
@@ -30,6 +31,29 @@
                         </div>
                         <div class="single-post__info text-left">
                             <form id="dropzone" class="uploads dropzone"></form>
+                        </div>
+                        <div class="single-post__info text-left podcaster hidden">
+                            <label for="audiosummary">[lblAudioSummary]:</label>
+                            <textarea id="audiosummary" class="newpost-full top podcast-req" name="fdata" data-name="audio_summary" aria-required="false" placeholder="[lblAudioSummaryPH]" rows="2"></textarea>
+                            <label for="audiofile">[lblAudioFile]:</label>
+                            <input id="audiofile" class="newpost-full audiofile-url" type="file" name="udata" value="" accept="audio/*" aria-required="false" autocomplete="off" />
+                            <label for="audiofile" class="tiny up-prog hidden">&nbsp;</label>
+                            <progress id="pv-list-upload" class="progress up-prog hidden" value="0" min="0" max="100"></progress>
+
+                            <label for="audiotime">[lblAudioTime]:</label>
+                            <input id="audiotime" class="newpost-full" type="text" name="fdata" value="" data-name="audiofile_time" aria-required="false" autocomplete="off" placeholder="[lblAudioTimePH]" />
+                            <label for="audionum">[lblAudioEpNo]:</label>
+                            <input id="audionum" class="newpost-full" type="text" name="fdata" value="" data-name="audiofile_epno" aria-required="false" autocomplete="off" placeholder="[lblAudioEpNoPH]" />
+
+                            <p style="font-size: 0.5em; margin: 0; padding: 0;">&nbsp;</p>
+                            <label for="audioexp">[lblAudioExplicit]:</label>
+                            <select id="audioexp" class="newpost-half podcast-req" name="fdata" data-name="audio_explicit" aria-required="true">
+                                <option value="C" selected>[optAudioExpC]</option>
+                                <option value="N">[optAudioExpN]</option>
+                                <option value="Y">[optAudioExpY]</option>
+                            </select>
+
+                            <input class="newpost-full podcast-req" type="hidden" name="fdata" value="" data-name="audiofile_url" aria-required="false" autocomplete="off" />
                         </div>
                         <div class="single-post__info text-left">
                             <label for="ftags">[lblPostTags]:</label>

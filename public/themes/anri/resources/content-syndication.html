@@ -1,0 +1,98 @@
+                <div class="col-lg-12 col-md-12">
+                    <div class="single-post single-post--fullsize">
+                        <div class="single-post__title  single-post__title--contact">
+                            <h2>[lblSyndication]</h2>
+                        </div>
+                        <div class="single-post__content  single-post__content--contact">
+                            <p>[lblSyndicationDescr]</p>
+                        </div>
+                        <div class="single-post__contact">
+                            <form action="[HOMEURL]/api/site/syndication" method="POST">
+                                <h4>[lblSyndicationS1]</h4>
+                                <p class="single-post__site-descr">
+                                    <label for="rss-author">[lblSyndPodAuthor]</label>
+                                    <input id="rss-author" type="text" class="fullwide" name="rss-author" size="30" aria-required="false" placeholder="[lblSyndPodAuthorPH]" value="[AUTHOR]">
+                                </p>
+                                <p class="single-post__site-name">
+                                    <label for="rss-summary">[lblSyndPodSummary]</label>
+                                    <textarea id="rss-summary" class="newpost-full top podcast-req" name="rss-summary" aria-required="false" placeholder="[lblAudioSummaryPH]" rows="2">[SUMMARY]</textarea>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="explicit">[lblSyndPodExplicit]</label>
+                                    <select id="explicit" class="settings-half" name="explicit" aria-required="true" required>
+                                        <option value="c"[EXPLICIT_C]>[optSyndExplicitC]</option>
+                                        <option value="n"[EXPLICIT_N]>[optSyndExplicitN]</option>
+                                        <option value="y"[EXPLICIT_Y]>[optSyndExplicitY]</option>
+                                    </select>
+                                    <ul>
+                                        <li>[lblSyndPodExplicitC]</li>
+                                        <li>[lblSyndPodExplicitN]</li>
+                                        <li>[lblSyndPodExplicitY]</li>
+                                    </ul>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="rss-license">[lblSyndPodLicense]</label>
+                                    <select id="rss-license" class="settings-half" name="rss-license" aria-required="true" data-init="[LICENSE]" required>
+                                        <option value="CC CC0"[LICENSE_1]>[optCCLicenseCC0]</option>
+                                        <option value="CC BY"[LICENSE_2]>[optCCLicenseBY]</option>
+                                        <option value="CC BY-SA"[LICENSE_3]>[optCCLicenseBYSA]</option>
+                                        <option value="CC BY-NC"[LICENSE_4]>[optCCLicenseBYNC]</option>
+                                        <option value="CC BY-NC-SA"[LICENSE_5]>[optCCLicenseBYNCSA]</option>
+                                        <option value="CC BY-ND"[LICENSE_6]>[optCCLicenseBYND]</option>
+                                        <option value="CC BY-NC-ND"[LICENSE_7]>[optCCLicenseBYNCND]</option>
+                                    </select>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="rss-items">[lblSyndPodCount]</label>
+                                    <select id="rss-items" class="settings-half" name="rss-items" aria-required="true" required>
+                                        <option value="1"[RSSCOUNT001]>[optRssCount001]</option>
+                                        <option value="15"[RSSCOUNT015]>[optRssCount015]</option>
+                                        <option value="25"[RSSCOUNT025]>[optRssCount025]</option>
+                                        <option value="50"[RSSCOUNT050]>[optRssCount050]</option>
+                                        <option value="100"[RSSCOUNT100]>[optRssCount100]</option>
+                                        <option value="250"[RSSCOUNT250]>[optRssCount250]</option>
+                                        <option value="99999"[RSSCOUNTALL]>[optRssCountAll]</option>
+                                    </select>
+                                </p>
+
+                                <h4>[lblSyndicationS2]</h4>
+                                <img src="[COVER_IMG]" class="coverfile-preview" alt="" />
+                                <label for="coverfile" class="btn btn-success coverfile-btn">[lblCoverImage]</label>
+                                <label id="coverfile-pct" for="coverfile" class="inline up-prog hidden" data-label="{pct}% Complete">100% Complete</label>
+                                <input id="coverfile" class="newpost-half hidden" type="file" name="udata" value="" accept="image/*" aria-required="false" autocomplete="off" />
+                                <input id="cover-img" type="hidden" name="cover-img" value="[COVER_IMG]">
+
+                                <h4>[lblSyndicationS3]</h4>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-category-1">[lblSyndPodCategory1]</label>
+                                    <select id="site-category-1" class="settings-half" name="category_1" aria-required="false" data-category="[CATEGORY_1]" data-sub="[CAT_SUB_1]">
+                                        <option value="">[optSyndChooseOne]</option>
+[CAT_LIST_1]
+                                    </select>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-category-2">[lblSyndPodCategory2]</label>
+                                    <select id="site-category-2" class="settings-half" name="category_2" aria-required="false" data-category="[CATEGORY_2]" data-sub="[CAT_SUB_2]">
+                                        <option value="">[optSyndChooseOne]</option>
+[CAT_LIST_2]
+                                    </select>
+                                </p>
+                                <p class="single-post__site-descr">
+                                    <label class="switch-label" for="site-category-3">[lblSyndPodCategory3]</label>
+                                    <select id="site-category-3" class="settings-half" name="category_3" aria-required="false" data-category="[CATEGORY_3]" data-sub="[CAT_SUB_3]">
+                                        <option value="">[optSyndChooseOne]</option>
+[CAT_LIST_3]
+                                    </select>
+                                </p>
+
+                                <p class="single-post__contact-submit">
+                                    <input id="contact-submit" type="submit" name="contact-submit" size="30" value="[btnSettingsSave]">
+                                    <input type="hidden" name="channel_guid" value="[CHANNEL_GUID]">
+                                    <input type="hidden" name="token" value="[TOKEN]">
+                                    <input type="hidden" name="web-req" value="Y">
+                                </p>
+                                <p>&nbsp;</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>

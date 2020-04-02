@@ -73,12 +73,17 @@ class Site {
 
         switch ( $Activity ) {
             case 'create':
-                $rVal = $this->_createSite();
+                return $this->_createSite();
+                break;
+
+            case 'syndication':
+            case 'rss':
+                return $this->_setSyndicationData();
                 break;
 
             case 'set':
             case '':
-                $rVal = $this->_setSiteData();
+                return $this->_setSiteData();
                 break;
 
             default:
@@ -174,6 +179,7 @@ class Site {
     private function _getSiteData() {
         $SitePass = NoNull($this->settings['site_pass'], $this->settings['site-pass']);
         $SiteURL = sqlScrub( NoNull($this->settings['site_url'],$_SERVER['SERVER_NAME']) );
+        $cdnUrl = getCdnUrl();
         if ( is_array($this->cache[strtolower($SiteURL)]) ) { return $this->cache[strtolower($SiteURL)]; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
@@ -198,6 +204,12 @@ class Site {
                         NoNull($Row['show_location'], 'N') . NoNull($Row['show_note'], 'N') . NoNull($Row['show_photo'], 'N') .
                         NoNull($Row['show_quotation'], 'N') . '-' .
                         NoNull($this->settings['_language_code'], $this->settings['DispLang']);
+
+                $coverUrl = '';
+                if ( NoNull($Row['cover_img']) != '' ) {
+                    $coverUrl = $cdnUrl . NoNull($Row['cover_img']);
+                }
+
                 $this->cache[strtolower($SiteURL)] = array( 'HomeURL'         => NoNull($Row['site_url']),
                                                             'api_url'         => getApiUrl(),
                                                             'cdn_url'         => getCdnUrl(),
@@ -210,7 +222,7 @@ class Site {
                                                             'color'           => NoNull($Row['site_color'], 'auto'),
                                                             'font-family'     => NoNull($Row['font_family']),
                                                             'font-size'       => NoNull($Row['font_size']),
-                                                            'license'         => NoNull($Row['license'], 'CC BY-NC-ND 4.0'),
+                                                            'license'         => NoNull($Row['license'], 'CC BY-NC-ND'),
                                                             'is_default'      => YNBool($Row['is_default']),
                                                             'site_id'         => nullInt($Row['site_id']),
                                                             'site_guid'       => NoNull($Row['site_guid']),
@@ -232,11 +244,18 @@ class Site {
                                                             'page_title'      => NoNull($Row['page_title']),
                                                             'page_type'       => str_replace('post.', '', NoNull($Row['page_type'], 'website')),
 
-                                                            'rss_explicit'    => 'Clean',
-                                                            'rss_cover'       => '',
-                                                            'rss_author'      => '',
+                                                            'rss_explicit'    => getExplicitValue($Row['explicit']),
+                                                            'rss_cover'       => $coverUrl,
+                                                            'rss_author'      => NoNull($Row['rss_author']),
                                                             'rss_mailaddr'    => '',
                                                             'rss_limit'       => nullInt($Row['rss_items']),
+
+                                                            'category_1'      => NoNull($Row['rss_cat_1']),
+                                                            'category_1sub'   => NoNull($Row['rss_sub_1']),
+                                                            'category_2'      => NoNull($Row['rss_cat_2']),
+                                                            'category_2sub'   => NoNull($Row['rss_sub_2']),
+                                                            'category_3'      => NoNull($Row['rss_cat_3']),
+                                                            'category_3sub'   => NoNull($Row['rss_sub_3']),
 
                                                             'channel_guid'    => NoNull($Row['channel_guid']),
                                                             'channel_name'    => NoNull($Row['channel_name']),
@@ -453,6 +472,113 @@ class Site {
 
         // Return the Information
         return $rVal;
+    }
+
+    /**
+     *  Function Records the Syndication-specific Information for a Channel
+     */
+    private function _setSyndicationData() {
+        // Perform Some Basic Error Checking
+        if ( NoNull($this->settings['channel_guid'], $this->settings['channel-guid']) == '' ) {
+            $this->_setMetaMessage("Invalid Channel GUID Supplied", 400);
+            return false;
+        }
+        $isWebReq = YNBool(NoNull($this->settings['web-req'], $this->settings['webreq']));
+        $cdnUrl = getCdnUrl();
+
+        // Determine if the Explicit value is valid
+        $validOpts = array( 'c', 'n', 'y' );
+        $siteExplicit = strtolower(NoNull($this->settings['explicit'], $this->settings['site-explicit']));
+        if ( in_array($siteExplicit, $validOpts) === false ) { $siteExplicit = 'n'; }
+
+        // Determine if the RSS Items value is valid
+        $validOpts = array( '1', '15', '25', '50', '100', '250', '99999' );
+        $siteRssItems = strtolower(NoNull($this->settings['rss-items'], $this->settings['rss-count']));
+        if ( in_array($siteRssItems, $validOpts) === false ) { $siteRssItems = '15'; }
+
+        // Determine if the RSS License is Valid
+        $validOpts = array( 'cc cc0', 'cc by', 'cc by-sa', 'cc by-nc', 'cc by-nc-sa', 'cc by-nd', 'cc by-nc-nd' );
+        $rssLicense = NoNull($this->settings['rss-license'], $this->settings['license']);
+        if ( in_array($rssLicense, $validOpts) === false ) { $rssLicense = 'CC BY-NC-SA'; }
+
+        // Determine if the Cover Image is Valid
+        $coverImg = str_replace($cdnUrl, '', NoNull($this->settings['cover-img'], $this->settings['cover']));
+        if ( $coverImg != '' ) {
+            $coverFile = CDN_PATH . $coverImg;
+            if ( file_exists($coverFile) === false ) { $coverImg = ''; }
+        }
+
+        // Determine the Correct Categories
+        $RssCat1 = $this->_getPodcastCategoriesFromKey(NoNull($this->settings['category_1'], $this->settings['category-1']));
+        $RssCat2 = $this->_getPodcastCategoriesFromKey(NoNull($this->settings['category_2'], $this->settings['category-2']));
+        $RssCat3 = $this->_getPodcastCategoriesFromKey(NoNull($this->settings['category_3'], $this->settings['category-3']));
+
+        // Let's Record the Data
+        $ReplStr = array( '[CHANNEL_GUID]'  => sqlScrub(NoNull($this->settings['channel_guid'], $this->settings['channel-guid'])),
+                          '[ACCOUNT_ID]'    => nullInt($this->settings['_account_id']),
+
+                          '[RSS_AUTHOR]'    => sqlScrub(NoNull($this->settings['rss_author'], $this->settings['rss-author'])),
+                          '[RSS_SUMMARY]'   => sqlScrub(NoNull($this->settings['rss_summary'], $this->settings['rss-summary'])),
+                          '[RSS_LICENSE]'   => sqlScrub(strtoupper($rssLicense)),
+                          '[RSS_ITEMS]'     => nullInt($siteRssItems),
+                          '[EXPLICIT]'      => sqlScrub(strtoupper($siteExplicit)),
+                          '[COVER_IMG]'     => sqlScrub($coverImg),
+
+                          '[RSS_CAT_1]'     => sqlScrub($RssCat1['category']),
+                          '[RSS_SUB_1]'     => sqlScrub($RssCat1['sub']),
+                          '[RSS_CAT_2]'     => sqlScrub($RssCat2['category']),
+                          '[RSS_SUB_2]'     => sqlScrub($RssCat2['sub']),
+                          '[RSS_CAT_3]'     => sqlScrub($RssCat3['category']),
+                          '[RSS_SUB_3]'     => sqlScrub($RssCat3['sub']),
+
+                          '[SQL_SPLITTER]'  => sqlScrub(SQL_SPLITTER),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/site/setSyndicationMeta.sql', $ReplStr);
+        $rslt = doSQLExecute($sqlStr);
+
+        // If This is a Web Request, Redirect the Visitor
+        if ( $isWebReq ) { redirectTo($this->settings['HomeURL'] . '/syndication?sid=' . md5(json_encode($ReplStr)), $this->settings); }
+
+        // Get the Updated Information
+        $rVal = $this->_getSiteData();
+
+        // Return the Information
+        return $rVal;
+    }
+
+    private function _getPodcastCategoriesFromKey( $Category ) {
+        if ( array_key_exists('categories', $this->cache) === false ) {
+            $this->cache['categories'] = getPodcastCategories($this->strings);
+        }
+        $data = $this->cache['categories'];
+
+        if ( is_array($data) ) {
+            foreach ( $data as $Key=>$Val ) {
+                if ( strtolower($Key) == strtolower($Category) ) {
+                    return array( 'category' => $Key,
+                                  'sub'      => ''
+                                 );
+                }
+                if ( is_array($Val['subcategories']) ) {
+                    foreach ( $Val['subcategories'] as $sub ) {
+                        if ( is_array($sub) ) {
+                            foreach ( $sub as $kk=>$vv ) {
+                                if ( strtolower($kk) == strtolower($Category) ) {
+                                    return array( 'category' => $Key,
+                                                  'sub'      => $kk
+                                                 );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Return Empty Values
+        return array( 'category' => '',
+                      'sub'      => ''
+                     );
     }
 
     /**
