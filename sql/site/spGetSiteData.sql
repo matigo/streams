@@ -150,7 +150,7 @@ BEGIN
                    CASE WHEN sm.`key` = 'site_font-family' THEN sm.`value` ELSE '' END as `font_family`,
                    CASE WHEN sm.`key` = 'site_font-size' THEN sm.`value` ELSE '' END as `font_size`,
                    CASE WHEN sm.`key` = 'site.license' THEN sm.`value` ELSE '' END as `site_license`,
-                   CASE WHEN sm.`key` = 'site.rss-items' THEN sm.`value` ELSE 15 END as `rss_items`,
+                   CASE WHEN sm.`key` = 'site.rss-items' THEN sm.`value` ELSE '' END as `rss_items`,
 
                    CASE WHEN sm.`key` = 'site.explicit' THEN sm.`value` ELSE 'c' END as `explicit`,
                    CASE WHEN sm.`key` = 'site.cover-img' THEN sm.`value` ELSE '' END as `cover_img`,

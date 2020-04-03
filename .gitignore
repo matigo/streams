@@ -8,6 +8,7 @@
 *.tmp
 */staticmaps/*
 public/files/*
+cache/*
 files/*
 tmp/*
 jason_fox_box.jpg

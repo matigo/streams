@@ -190,6 +190,8 @@ class Route extends Streams {
      *  Function Returns an Array With the Appropriate Content
      */
     private function _getPageHTML( $data ) {
+        $isCacheable = $this->_isCacheable();
+
         $LockPrefix = '';
         if ( $data['site_locked'] ) { $LockPrefix = getRandomString(18); }
 
@@ -197,7 +199,7 @@ class Route extends Streams {
         $cache_file = md5($data['site_version'] . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
                           nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
                           NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
-        if ( defined('ENABLE_CACHING') ) {
+        if ( defined('ENABLE_CACHING') && $isCacheable ) {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
@@ -278,7 +280,7 @@ class Route extends Streams {
             $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
 
             // Save the File to Cache if Required and Populate the Base Sections
-            if ( defined('ENABLE_CACHING') ) {
+            if ( defined('ENABLE_CACHING') && $isCacheable ) {
                 if ( nullInt(ENABLE_CACHING) == 1 ) {
                     saveCache($data['site_id'], $cache_file, $html);
 
@@ -385,6 +387,40 @@ class Route extends Streams {
 
         readfile($cacheFile);
         exit();
+    }
+
+    private function _isCacheable() {
+        $Excludes = array( 'write', 'settings', 'syndication', 'account' );
+        $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
+        $data = readCacheObject($cacheFile);
+
+        // Get the Theme-specific List of Non-Cacheable Pages (if applicable)
+        if ( is_array($data) === false || $data === false ) {
+            if ( is_array($this->site->cache) ) {
+                foreach ( $this->site->cache as $site ) {
+                    $Location = THEME_DIR . '/' . NoNull($site['location']);
+                    if ( file_exists($Location) ) {
+                        foreach ( glob($Location . "/resources/content-*.html") as $filename) {
+                            $key = strtolower(str_replace(array("$Location/resources/", 'content-', '.html'), '', $filename));
+                            if ( in_array($key, $Excludes) === false ) {
+                                $Excludes[] = $key;
+                            }
+                        }
+                    }
+                }
+            }
+            saveCacheObject($cacheFile, $Excludes);
+
+        } else {
+            $Excludes = $data;
+        }
+
+        $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
+        if ( in_array($PgRoot, $Excludes) ) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**

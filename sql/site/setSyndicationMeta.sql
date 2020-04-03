@@ -15,7 +15,6 @@ SELECT si.`id` as `site_id`, tmp.`key`, tmp.`value`
                                 SELECT 'site.rss-category3sub' as `key`, '[RSS_SUB_3]' as `value`) tmp ON tmp.`key` <> ''
  WHERE si.`is_deleted` = 'N' and ch.`is_deleted` = 'N'
    and ch.`account_id` = [ACCOUNT_ID] and ch.`guid` = '[CHANNEL_GUID]'
- ORDER BY tmp.`key`
     ON DUPLICATE KEY UPDATE `value` = tmp.`value`;
 [SQL_SPLITTER]
 UPDATE `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`

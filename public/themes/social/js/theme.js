@@ -109,6 +109,7 @@ function splitSecondCheck() {
  ** ************************************************************************* */
 window.last_touch = 0;
 window.cursor_at = 0;
+window.has_audio = false;
 
 jQuery(function($) {
     window.KEY_DOWNARROW = 40;
@@ -151,6 +152,10 @@ jQuery(function($) {
     $('#content').keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
     $('#editor').keydown(function (e) { if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) { publishPost(); } });
     $('#source-url').on('input', function() { checkSourceUrl(); });
+
+    $(document).on('click', '.audio-button', function() { toggleAudioButton(this); });
+    $(document).on('touchend', '.audio-button', function() { toggleAudioButton(this); });
+    $(document).on('input change', '.audio-range', function () { scrubAudioSeek(this); });
 
     window.addEventListener('offline', function(e) { showNetworkStatus(); });
     window.addEventListener('online', function(e) { showNetworkStatus(); });
@@ -905,9 +910,16 @@ function parseSourceData( data ) {
                     if ( ds.title !== false && els[i].value == '' ) { els[i].value = NoNull(ds.title); }
                     break;
 
+                case 'audiofile_url':
+                    if ( ds.audio !== false && ds.audio.url != '' ) {
+                        els[i].value = ds.audio.url;
+                    }
+                    break;
+
                 case 'content':
                     if ( ptype == 'post.quotation' && NoNull(ds.summary, ds.text) != '' ) {
                         els[i].value = '> ' + NoNull(ds.summary, ds.text) + "\n\n" + els[i].value;
+                        setCharCount(els[i]);
                     }
                     break;
 
@@ -1044,6 +1056,227 @@ function openGeoLocation( el ) {
 
     var pel = el.parentElement;
     pel.innerHTML = '<img src="' + _src_url + '?zoom=14&width=1280&height=440" class="geo-map" alt="" />';
+}
+
+/** ************************************************************************* *
+ *  Audio Playback Functions
+ ** ************************************************************************* */
+function processAudio( obj ) {
+    if ( obj === undefined || obj === false || obj === null ) { obj = document; }
+    var els = obj.getElementsByTagName('AUDIO');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _done = els[i].getAttribute('data-done');
+            if ( _done === undefined || _done === false || _done === null || _done != 'Y' ) { _done = 'N'; }
+            if ( _done == 'N' ) {
+                var file_id = randName(12);
+
+                els[i].classList.add('audioplayer');
+                els[i].setAttribute('data-file-id', file_id);
+                els[i].setAttribute('data-done', 'Y');
+                els[i].autoplay = false;
+                els[i].controls = false;
+                els[i].preload = 'auto';
+                els[i].loop = false;
+
+                // Set the Audio Controls
+                var datas = ' data-file-id="' + file_id + '"';
+                var _tmback = 15;
+                var _tmfwd = 15;
+
+                var html = '<div class="audio-controls">' +
+                                '<span class="audio-position audio-' + file_id + '" data-role="timer"' + datas + ' data-value="0">--:-- / --:--</span>' +
+                                '<input id="range-' + file_id + '" type="range" class="audio-range audio-' + file_id + '" min="0" max="100" step="1" value="0" data-role="pos" ' + datas + ' />' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="backward"><i class="fas fa-undo-alt"></i> ' + _tmback + '</button>' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="playpause" data-value="pause"><i class="fas fa-play"></i></button>' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="forward">' + _tmfwd + ' <i class="fas fa-redo-alt"></i></button>' +
+                            '</div>';
+
+                // Ensure the Audio Element is Visible
+                els[i].parentNode.innerHTML += html;
+                els[i].parentNode.parentNode.style.display = 'block';
+                els[i].parentNode.parentNode.classList.remove('hidden');
+            }
+        }
+
+        if ( window.has_audio === false ) {
+            window.has_audio = true;
+            updateAudioTimers();
+        }
+
+    } else {
+        window.has_audio = false;
+    }
+}
+function toggleAudioButton(el) {
+    var last_touch = parseInt(el.getAttribute('data-lasttouch'));
+    var touch_ts = Math.floor(Date.now());
+
+    if ( (touch_ts - last_touch) <= 500 ) { return; }
+    el.setAttribute('data-lasttouch', touch_ts);
+    window.audiotouch = touch_ts;
+
+    var action = el.getAttribute('data-action');
+    var file_id = NoNull(el.getAttribute('data-file-id'));
+    if ( file_id === undefined || file_id === null || file_id.length < 6 ) { return; }
+    if ( action === undefined || action === null || action === false ) { action = ''; }
+    switch ( action.toLowerCase() ) {
+        case 'backward':
+            var _tm = window.audio_back;
+            if ( _tm === undefined || _tm === false || _tm === null || isNaN(_tm) ) { _tm = 15; } else { _tm = parseInt(_tm); }
+            toggleAudioSeek(file_id, (_tm * -1));
+            break;
+
+        case 'forward':
+            var _tm = window.audio_fwd;
+            if ( _tm === undefined || _tm === false || _tm === null || isNaN(_tm) ) { _tm = 15; } else { _tm = parseInt(_tm); }
+            toggleAudioSeek(file_id, _tm);
+            break;
+
+        case 'playpause':
+            var cur = el.getAttribute('data-value');
+            var is_play = true;
+            if ( cur === undefined || cur === null || cur != 'play' ) { is_play = false; }
+            if ( is_play ) { pauseAudio(file_id); } else { playAudio(file_id); }
+            break;
+
+        case 'script':
+            var els = document.getElementsByClassName('audio-script');
+            for ( var i = 0; i < els.length; i++ ) {
+                var _name = els[i].getAttribute('data-name');
+                if ( _name == file_id ) {
+                    if ( els[i].classList.contains('hidden') ) {
+                        els[i].classList.remove('hidden');
+                        el.innerHTML = '<i class="fas fa-angle-double-up"></i>';
+                    } else {
+                        els[i].classList.add('hidden');
+                        el.innerHTML = '<i class="fas fa-quote-left"></i>';
+                    }
+                }
+            }
+            break;
+    }
+}
+function playAudio(file_id) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            setPlayButton(file_id);
+            els[i].play();
+            return;
+        }
+    }
+}
+function pauseAudio(file_id) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            setPauseButton(file_id);
+            els[i].pause();
+            return;
+        }
+    }
+}
+function seekAudio(file_id, location) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            els[i].currentTime = location;
+            return;
+        }
+    }
+}
+function setPlayButton(file_id) {
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var action = els[i].getAttribute('data-action');
+        if ( action === undefined || action === null || action === false ) { action = ''; }
+        if ( action == 'playpause' ) {
+            els[i].innerHTML = '<i class="fa fa-pause"></i>';
+            els[i].setAttribute('data-value', 'play');
+        }
+    }
+}
+function setPauseButton(file_id) {
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var action = els[i].getAttribute('data-action');
+        if ( action === undefined || action === null || action === false ) { action = ''; }
+        if ( action == 'playpause' ) {
+            els[i].innerHTML = '<i class="fa fa-play"></i>';
+            els[i].setAttribute('data-value', 'pause');
+        }
+    }
+}
+function updateAudioTimers() {
+    if ( window.has_audio ) {
+        var els = document.getElementsByClassName('audioplayer');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( els[i].duration > 0 ) {
+                var _id = NoNull(els[i].getAttribute('data-file-id'));
+                if ( _id === undefined || _id === null || _id.length < 6 ) { _id = false; }
+                if ( _id !== false ) { setAudioTime(_id, els[i].currentTime, els[i].duration); }
+            }
+        }
+        setTimeout(function(){ updateAudioTimers(); }, 333);
+    }
+}
+function setAudioTime(file_id, pos, secs) {
+    var els = document.getElementsByClassName('audio-position');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _id = NoNull(els[i].getAttribute('data-file-id'));
+        if ( _id === undefined || _id === null || _id.length < 6 ) { _id = 0; }
+        if ( file_id == _id ) {
+            var _cur = new Date(null);
+            _cur.setMilliseconds(pos * 1000);
+            var _len = new Date(null);
+            _len.setMilliseconds(secs * 1000);
+
+            var html = _cur.toISOString().substr(14, 5) + ' / ' + _len.toISOString().substr(14, 5);
+            if ( els[i].innerHTML != html ) {
+                var rng = document.getElementById('range-' + file_id);
+                if ( rng !== undefined && rng !== null ) {
+                    rng.max = parseInt(secs);
+                    rng.value = parseInt(pos);
+                }
+                els[i].innerHTML = html;
+            }
+            return;
+        }
+    }
+}
+function scrubAudioSeek(el) {
+    var file_id = NoNull(el.getAttribute('data-file-id'));
+    var pos = parseInt(el.value);
+    var max = parseInt(el.max);
+
+    if ( file_id === undefined || file_id === null || file_id.length < 6 ) { file_id = false; }
+    if ( pos === undefined || pos === null || isNaN(pos) ) { return; }
+    if ( file_id !== false ) {
+        setAudioTime(file_id, pos, max);
+        seekAudio(file_id, pos);
+    }
+}
+function toggleAudioSeek(file_id, secs) {
+    var sld = false;
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var role = els[i].getAttribute('data-role');
+        if ( role === undefined || role === null || role === false ) { role = ''; }
+        if ( role == 'pos' ) {
+            sld = els[i];
+            break;
+        }
+    }
+
+    if ( sld !== false ) {
+        var val = parseInt(sld.value);
+        val += secs;
+        if ( val < parseInt(sld.min) ) { val = parseInt(sld.min); }
+        if ( val > parseInt(sld.max) ) { val = parseInt(sld.max); }
+        seekAudio(file_id, val);
+        sld.value = val;
+    }
 }
 
 /** ************************************************************************* *
@@ -2496,6 +2729,11 @@ function writePostToTL( _post, _view ) {
         ee[o].addEventListener('click', function(e) { toggleProfile(e); });
     }
 
+    // Handle any Audio Elements
+    if ( _post.meta !== undefined && _post.meta.episode !== undefined && _post.meta.episode !== false ) {
+        processAudio(_div);
+    }
+
     // Ensure the Minimum Nodes Exist
     if ( els[0].childNodes.length <= 0 ) {
         els[0].innerHTML = '<li class="post-entry hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></li>';
@@ -2551,6 +2789,16 @@ function buildHTML( post ) {
     var _title = NoNull(post.title, _src_title);
     var _icon = getVisibilityIcon( post.privacy );
 
+    var _audio_block = '';
+    if ( post.meta !== false && post.meta.episode !== undefined ) {
+        _audio_block = '<div class="metaline audio pad" data-file="' + post.meta.episode.file + '">' +
+                       '<audio class="audioplayer" preload="auto" controlslist="nodownload">' +
+                            '<source type="' + NoNull(post.meta.episode.mime, 'audio/mp3') + '" src="' + post.meta.episode.file + '">' +
+                            'Your browser does not support HTML5 audio, but you can still <a target="_blank" href="' + post.meta.episode.file + '" title="">download the file</a>.' +
+                       '</audio>' +
+                       '</div>';
+    }
+
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
     if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
     var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
@@ -2562,6 +2810,7 @@ function buildHTML( post ) {
                 '<div class="metaline content-expand pad text-center hidden" onClick="toggleOverflow(this);" data-guid="' + post.guid + '"><p>Show Full Post</p></div>' +
                 '<div class="metaline tags pad"><ul></ul></div>' +
                 ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
+                ((_audio_block != '') ? _audio_block : '') +
                 '<div class="metaline pad text-right">' +
                     '<time class="dt-published" datetime="' + post.publish_at + '" data-dateunix="' + post.publish_unix + '" data-thread-guid="' + post.guid + '" data-privacy="' + post.privacy + '" data-url="' + post.canonical_url + '">' +
                         '<a href="' + post.canonical_url + '" class="time-url" target="_blank">' + _icon + post.publish_at + '</a>' +
@@ -3015,14 +3264,21 @@ function showVisibilityType() {
     }
 }
 function setCharCount( editor ) {
+    var hasAudio = false;
     var txt = '';
     txt = (editor.value !== undefined ) ? editor.value : editor.currentTarget.value;
     txt = strip_tags(txt, '');
     if ( txt == "\n" ) { txt = ''; }
 
+    var el = document.getElementById('audiofile_url');
+    if ( el !== undefined && el !== false && el !== null ) {
+        if ( NoNull(el.value) != '' ) { hasAudio = true; }
+    }
+
     var els = document.getElementsByClassName('char-count');
     for ( var i = 0; i < els.length; i++ ) {
-        var html = (txt.length > 0) ? numberWithCommas(txt.length) : '&nbsp;';
+        var html = ((hasAudio) ? '<i class="fas fa-podcast"></i> ' : '') +
+                   ((txt.length > 0) ? numberWithCommas(txt.length) : '&nbsp;');
         if ( els[i].innerHTML != html ) { els[i].innerHTML = html; }
     }
 

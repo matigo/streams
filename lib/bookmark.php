@@ -136,6 +136,7 @@ class Bookmark {
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
         $PageURL = strtolower(NoNull($this->settings['source_url'], $this->settings['url']));
         if ( mb_strlen($PageURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
+        $TextLimit = 1200;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -179,20 +180,72 @@ class Bookmark {
         $xpath = new DOMXPath($doc);
         $els = $xpath->query("//*[contains(@class, 'e-content')]");
         foreach($els as $key=>$value) {
-            if ( NoNull($value->nodeValue) != '' ) { $PageText = NoNull($value->nodeValue); }
+            if ( NoNull($value->nodeValue) != '' && $PageText === false ) { $PageText = NoNull($value->nodeValue); }
         }
 
         // Prep a Final Clean of the Strings
-        $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"',
-                          "â" => '–', "" => '–', "" => '', "" => '', );
+        $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"', "\t" => ' ', "\r" => ' ', "\n" => ' ',
+                          "â" => '–', "" => '–', "" => '', "" => '',
+                          '      ' => ' ', '     ' => ' ', '    ' => ' ', '   ' => ' ', '  ' => ' ', );
+
+        // Is there a better Page Text value?
+        $els = $doc->getElementsByTagName('p');
+        $paragraphs = false;
+
+        if ( $els->length > 0 ) {
+            foreach ( $els as $pp ) {
+                $ppText = NoNull($pp->nodeValue, $pp->textContent);
+                $ppText = NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $ppText)));
+                if ( $ppText != '' ) {
+                    if ( $paragraphs === false ) { $paragraphs = array(); }
+                    $paragraphs[] = NoNull($ppText);
+                }
+            }
+        }
+
+        // Is there an audio file that can be included?
+        $audios = $doc->getElementsByTagName('audio');
+        $audioObj = false;
+
+        if ( $audios->length > 0 ) {
+            foreach ( $audios as $audio ) {
+                if ( $audioObj === false ) {
+                    $url = NoNull($audio->nodeValue, $audio->textContent);
+                    $ext = getFileExtension($url);
+                    $mime = getMimeFromExtension($ext);
+
+                    if ( in_array($mime, array('audio/mp3', 'audio/m4a')) ) {
+                        $audioObj = array( 'url' => NoNull($url),
+                                           'mime' => $mime,
+                                          );
+                    }
+                }
+            }
+        }
 
         // Return the Summary Data If We Have It
         if ( NoNull($data) != '' ) {
-            return array( 'title'    => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageTitle)),
-                          'summary'  => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageDescr)),
-                          'image'    => $PageImage,
-                          'keywords' => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageKeys)),
-                          'text'     => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageText)),
+            $PageText = NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageText)));
+            $AltText = '';
+            if ( is_array($paragraphs) ) {
+                foreach ( $paragraphs as $pp ) {
+                    if ( mb_strlen($pp) < $TextLimit && mb_strlen($pp) > mb_strlen($AltText) ) { $AltText = $pp; }
+                }
+            }
+
+            if ( $PageText == '' ) {
+                foreach ( $paragraphs as $pp ) {
+                    if ( $PageText == '' && mb_strlen($pp) > 50 ) { $PageText = $pp; }
+                }
+            }
+
+            return array( 'title'      => NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageTitle))),
+                          'summary'    => NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageDescr))),
+                          'image'      => $PageImage,
+                          'keywords'   => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageKeys)),
+                          'text'       => NoNull(((mb_strlen($PageText) >= $TextLimit && mb_strlen($AltText) > 20 && mb_strlen($AltText) < $TextLimit ) ? $AltText : $PageText), $PageText),
+                          'audio'      => $audioObj,
+                          'paragraphs' => $paragraphs,
                          );
         }
 

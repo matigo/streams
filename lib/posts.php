@@ -946,12 +946,12 @@ class Posts {
             // If there's an Episode Array, Ensure the File value is prefixed with the CDN
             if ( array_key_exists('episode', $data) ) {
                 $file = NoNull($data['episode']['file']);
+                $ext = getFileExtension($file);
+                $data['episode']['mime'] = getMimeFromExtension($ext);
+
                 if ( $file != '' && strpos($file, '//') === false ) {
                     $cdnUrl = getCdnUrl();
-                    $ext = getFileExtension($file);
-
                     $data['episode']['file'] = $cdnUrl . $file;
-                    $data['episode']['mime'] = getMimeFromExtension($ext);
                 }
             }
 

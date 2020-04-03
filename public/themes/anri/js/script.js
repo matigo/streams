@@ -1083,6 +1083,13 @@ function parseSourceData( data ) {
                     if ( ds.title !== false && els[i].value == '' ) { els[i].value = NoNull(ds.title); }
                     break;
 
+                case 'audiofile-url':
+                case 'audiofile_url':
+                    if ( ds.audio !== false && ds.audio.url != '' ) {
+                        els[i].value = ds.audio.url;
+                    }
+                    break;
+
                 case 'content':
                     if ( ptype == 'post.quotation' && NoNull(ds.summary, ds.text) != '' ) {
                         els[i].value = '> ' + NoNull(ds.summary, ds.text) + "\n\n" + els[i].value;
