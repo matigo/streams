@@ -199,7 +199,7 @@ class Route extends Streams {
         $cache_file = md5($data['site_version'] . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
                           nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
                           NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
-        if ( defined('ENABLE_CACHING') && $isCacheable ) {
+        if ( defined('ENABLE_CACHING') ) {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
@@ -280,9 +280,11 @@ class Route extends Streams {
             $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );
 
             // Save the File to Cache if Required and Populate the Base Sections
-            if ( defined('ENABLE_CACHING') && $isCacheable ) {
+            if ( defined('ENABLE_CACHING') ) {
                 if ( nullInt(ENABLE_CACHING) == 1 ) {
-                    saveCache($data['site_id'], $cache_file, $html);
+                    if ( $isCacheable ) {
+                        saveCache($data['site_id'], $cache_file, $html);
+                    }
 
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
