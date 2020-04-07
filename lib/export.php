@@ -161,6 +161,14 @@ class Export {
                 return $this->_exportForDayOne();
                 break;
 
+            case 'filesonly':
+            case 'zip':
+                return $this->_buildZipArchive();
+                break;
+
+            case 'json':
+                break;
+
             default:
                 $this->_setMetaMessage( "Invalid Export Format Provided", 401 );
         }
@@ -334,6 +342,48 @@ class Export {
 
         // Return the Cleaned Up Data
         return strip_tags($text);
+    }
+
+    /**
+     *  Function collects all the files in the Account's directory and packages them into a .zip
+     */
+    private function _buildZipArchive() {
+        $zipFile = CDN_PATH . '/' . intToAlpha($this->settings['_account_id']) . '/archive-' . time() . '.zip';
+        $zip = new ZipArchive;
+        $files = array();
+
+        $Location = CDN_PATH . '/' . intToAlpha($this->settings['_account_id']);
+        if ( file_exists($Location) ) {
+            foreach ( glob($Location . "/*") as $filename ) {
+                $files[] = $filename;
+            }
+        }
+
+        if ( count($files) > 0 ) {
+            if ( $zip->open($zipFile, ZipArchive::CREATE) ) {
+                foreach ( $files as $src ) {
+                    $ext = getFileExtension($src);
+                    $type = getMimeFromExtension($ext);
+                    $path = NoNull( substr(strrchr($type,'/'), 1) );
+                    $name = NoNull( substr(strrchr($src,'/'), 1) );
+
+                    // Add the file if this isn't a resized version of the original
+                    if ( mb_strpos($name, '_thumb') === false && mb_strpos($name, '_medium') === false ) {
+                        $zip->addFile($src, "$path/$name");
+                    }
+                }
+                $zip->close();
+
+                // Return the Data
+                $cdnUrl = getCdnUrl();
+                return array( 'url' => str_replace(CDN_PATH, $cdnUrl, $zipFile),
+                              'size' => filesize($zipFile)
+                             );
+            }
+        }
+
+        // If we're here, it didn't work
+        return false;
     }
 
     /** ********************************************************************* *

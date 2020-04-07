@@ -288,6 +288,12 @@ table th { word-break: normal; }
     padding: 1em 0.5em 0;
     width: calc(100% - 6em);
 }
+
+.content-area.toggle-action-bar.rtl p,
+.content-posts ul li.profile-post.rtl p {
+    text-align: initial;
+    direction: rtl;
+}
 .content-area.toggle-action-bar.full-post,
 .content-area .full-post {
     max-height: 100%;

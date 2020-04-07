@@ -1925,6 +1925,7 @@ class Posts {
                               '[AUTHOR_FOLLOW_RSS]' => NoNull($post['persona']['follow']['rss']),
                               '[TITLE]'         => NoNull($post['title']),
                               '[CONTENT]'       => NoNull($post['content']) . NoNull($ReplyHTML),
+                              '[IS_RTL]'        => (($this->_isRTL(NoNull($post['text']))) ? ' rtl' : ''),
                               '[BANNER]'        => '',
                               '[TAGLINE]'       => NoNull($tagLine, $this->strings['lblNoTags']),
                               '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
@@ -2076,6 +2077,7 @@ class Posts {
                                      'title'    => ((NoNull($post['title']) == '') ? false : NoNull($post['title'])),
                                      'content'  => $post_text,
                                      'text'     => NoNull($post['value']),
+                                     'rtl'      => $this->_isRTL(NoNull($post['value'])),
 
                                      'meta'     => $poMeta,
                                      'tags'     => $poTags,
@@ -3038,5 +3040,43 @@ class Posts {
         return '';
     }
 
+    /**
+     *  Function is used by the isRTL() function to determine text direction
+     */
+    private function _uniord($u) {
+        $k = mb_convert_encoding($u, 'UCS-2LE', 'UTF-8');
+        $k1 = ord(substr($k, 0, 1));
+        $k2 = ord(substr($k, 1, 1));
+        return $k2 * 256 + $k1;
+    }
+
+    /**
+     *  Function determines if a string should be LTR or RTL
+     */
+    private function _isRTL($str) {
+        if( mb_detect_encoding($str) !== 'UTF-8' ) {
+            $str = mb_convert_encoding($str,mb_detect_encoding($str),'UTF-8');
+        }
+
+        preg_match_all('/.|\n/u', $str, $matches);
+        $chars = $matches[0];
+        $arabic_count = 0;
+        $latin_count = 0;
+        $total_count = 0;
+        foreach($chars as $char) {
+            $pos = $this->_uniord($char);
+
+            if($pos >= 1536 && $pos <= 1791) {
+                $arabic_count++;
+            } else if($pos > 123 && $pos < 123) {
+                $latin_count++;
+            }
+            $total_count++;
+        }
+
+        // If we have 60% or more Arabic characters, it's RTL
+        if ( ($arabic_count/$total_count) > 0.6 ) { return true; }
+        return false;
+    }
 }
 ?>

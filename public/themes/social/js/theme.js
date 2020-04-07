@@ -1681,7 +1681,7 @@ function parseProfilePosts( data ) {
 
             for ( var i = 0; i < ds.length; i++ ) {
                 var _ts = ds[i].publish_unix * 1000;
-                _html += '<li class="profile-post ' + ds[i].type.replace('post.', '') + '">' +
+                _html += '<li class="profile-post ' + ds[i].type.replace('post.', '') + ((ds[i].rtl) ? ' rtl' : '') +'">' +
                             ((NoNull(ds[i].title) != '') ? '<h4><a href="' + NoNull(ds[i].canonical_url) + '" target="_blank" title="">' + NoNull(ds[i].title) + '</a></h4>' : '' ) +
                             ((NoNull(ds[i].title) != '') ? '<h6><a href="' + NoNull(ds[i].canonical_url) + '" target="_blank" title="">' + NoNull(ds[i].canonical_url) + '</a></h6>' : '' ) +
                             NoNull(ds[i].content) +
@@ -2802,7 +2802,7 @@ function buildHTML( post ) {
     var _ttxt = (_title != '') ? '<strong class="content-title full-wide">' + _title + '</strong>' : '';
     if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
     var _html = '<div class="content-author"><p class="avatar account" data-guid="' + post.persona.guid + '"><img class="logo photo avatar-img" src="' + post.persona.avatar + '"></p></div>' +
-                '<div class="content-area toggle-action-bar" data-guid="' + post.guid + '">' +
+                '<div class="content-area toggle-action-bar' + ((post.rtl) ? ' rtl' : '') + '" data-guid="' + post.guid + '">' +
                     '<strong class="persona full-wide">' + post.persona.as + '</strong>' +
                     _ttxt +
                     post.content +
