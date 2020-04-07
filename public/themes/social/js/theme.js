@@ -2266,7 +2266,7 @@ function parseReplyBox( data ) {
                 for ( var o = 0; o < ds[i].mentions.length; o++ ) {
                     if ( ds[i].mentions[o].is_you === false ) {
                         if ( txt == '' ) {
-                            txt = ds[i].mentions[o].as;
+                            txt = ds[i].mentions[o].as + ' ';
                         } else {
                             if ( txt_plus != '' ) { txt_plus += ' '; }
                             txt_plus += ds[i].mentions[o].as;
@@ -2281,7 +2281,7 @@ function parseReplyBox( data ) {
             */
 
             document.getElementById('reply_to').value = ds[i].guid;
-            var caret_pos = txt.indexOf("\n") - 1;
+            var caret_pos = txt.indexOf("\r");
             if ( caret_pos < 1 ) { caret_pos = txt.length; }
 
             var els = document.getElementsByClassName('write-area');

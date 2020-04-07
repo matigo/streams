@@ -594,17 +594,6 @@ class Posts {
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
-            $mids = array();
-
-            // Collect the Mentions
-            foreach ( $rslt as $Row ) {
-                if ( YNBool($Row['has_mentions']) ) {
-                    $mids[] = nullInt($Row['post_id']);
-                }
-            }
-            if ( count($mids) > 0 ) {
-                $pms = $this->_getPostMentions($mids);
-            }
 
             // Now Let's Parse the Posts
             foreach ( $rslt as $Row ) {
@@ -631,14 +620,14 @@ class Posts {
 
                 // Do We Have Mentions? Grab the List
                 $mentions = false;
-                if ( NoNull($post['mentions']) != '' ) {
-                    $json = json_decode('[' . $post['mentions'] . ']');
+                if ( NoNull($Row['mentions']) != '' ) {
+                    $json = json_decode('[' . $Row['mentions'] . ']');
                     $jArr = objectToArray($json);
                     if ( is_array($jArr) && count($jArr) > 0 ) {
                         $mentions = array();
                         foreach ( $jArr as $pa ) {
                             $mentions[] = array( 'guid'   => NoNull($pa['guid']),
-                                                 'name'   => NoNull($pa['as']),
+                                                 'as'     => NoNull($pa['as']),
                                                  'is_you' => YNBool($pa['is_you']),
                                                 );
                         }
