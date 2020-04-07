@@ -498,6 +498,7 @@ class Posts {
                                  'title'    => ((NoNull($Row['title']) == '') ? false : NoNull($Row['title'])),
                                  'content'  => str_replace('[HOMEURL]', $siteURL, $post_text),
                                  'text'     => NoNull($Row['value']),
+                                 'rtl'      => $this->_isRTL(NoNull($Row['value'])),
 
                                  'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at'])),
                                  'publish_unix' => strtotime($Row['publish_at']),
@@ -630,8 +631,18 @@ class Posts {
 
                 // Do We Have Mentions? Grab the List
                 $mentions = false;
-                if ( YNBool($Row['has_mentions']) ) {
-                    $mentions = $this->_getPostMentions($Row['post_id']);
+                if ( NoNull($post['mentions']) != '' ) {
+                    $json = json_decode('[' . $post['mentions'] . ']');
+                    $jArr = objectToArray($json);
+                    if ( is_array($jArr) && count($jArr) > 0 ) {
+                        $mentions = array();
+                        foreach ( $jArr as $pa ) {
+                            $mentions[] = array( 'guid'   => NoNull($pa['guid']),
+                                                 'name'   => NoNull($pa['as']),
+                                                 'is_you' => YNBool($pa['is_you']),
+                                                );
+                        }
+                    }
                 }
 
                 // Determine Which HTML Classes Can Be Applied to the Record
@@ -670,6 +681,7 @@ class Posts {
                                  'title'    => ((NoNull($Row['title']) == '') ? false : NoNull($Row['title'])),
                                  'content'  => str_replace('[HOMEURL]', $siteURL, $post_text),
                                  'text'     => NoNull($Row['value']),
+                                 'rtl'      => $this->_isRTL(NoNull($Row['value'])),
 
                                  'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at'])),
                                  'publish_unix' => strtotime($Row['publish_at']),
@@ -3058,6 +3070,19 @@ class Posts {
             $str = mb_convert_encoding($str,mb_detect_encoding($str),'UTF-8');
         }
 
+        // Check for Hebrew Characters
+        $chk = preg_match("/\p{Hebrew}/u", $str);
+        if ( (is_bool($chk) && $chk) || $chk == 1 ) { return true; }
+
+        // Check for Urdu Characters
+        $chk = preg_match("/\p{Urdu}/u", $str);
+        if ( (is_bool($chk) && $chk) || $chk == 1 ) { return true; }
+
+        // Check for Persian Characters
+        $chk = preg_match("/\p{Persian}/u", $str);
+        if ( (is_bool($chk) && $chk) || $chk == 1 ) { return true; }
+
+        // Check for Arabic Characters
         preg_match_all('/.|\n/u', $str, $matches);
         $chars = $matches[0];
         $arabic_count = 0;

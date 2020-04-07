@@ -7,6 +7,9 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
        (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
        (SELECT GROUP_CONCAT(z.`value`) as `value` FROM `PostTags` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id`) as `post_tags`,
        (SELECT CASE WHEN COUNT(z.`persona_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMention` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id`) as `has_mentions`,
+       (SELECT GROUP_CONCAT('{"guid": "', zpa.`guid`, '", "as": "@', zpa.`name`, '", "is_you": "', CASE WHEN zpa.`account_id` = [ACCOUNT_ID] THEN 'Y' ELSE 'N' END, '"}') as `mentions`
+          FROM `Persona` zpa INNER JOIN `PostMention` zpm ON zpa.`id` = zpm.`persona_id`
+         WHERE zpa.`is_deleted` = 'N' and zpm.`is_deleted` = 'N' and zpm.`post_id` = po.`id`) as `mentions`,
        IFNULL(act.`pin_type`, 'pin.none') as `pin_type`, IFNULL(act.`is_starred`, 'N') as `is_starred`,
        IFNULL(act.`is_muted`, 'N') as `is_muted`, IFNULL(act.`points`, 0) as `points`,
        po.`canonical_url`, po.`slug`, po.`reply_to`,
