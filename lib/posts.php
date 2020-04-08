@@ -627,7 +627,8 @@ class Posts {
                         $mentions = array();
                         foreach ( $jArr as $pa ) {
                             $mentions[] = array( 'guid'   => NoNull($pa['guid']),
-                                                 'name'     => NoNull($pa['as']),
+                                                 'as'     => NoNull($pa['as']),
+                                                 'name'   => NoNull($pa['as']),
                                                  'is_you' => YNBool($pa['is_you']),
                                                 );
                         }

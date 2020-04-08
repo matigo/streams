@@ -2259,17 +2259,17 @@ function parseReplyBox( data ) {
     if ( data.meta !== undefined && data.meta.code === 200 ) {
         var ds = data.data;
         for ( var i = 0; i < ds.length; i++ ) {
-            var txt = (ds[i].persona.is_you) ? '' : ds[i].persona.name + ' ';
+            var txt = (ds[i].persona.is_you) ? '' : ds[i].persona.as + ' ';
             var txt_plus = '';
 
             if ( ds[i].mentions !== undefined && ds[i].mentions !== false ) {
                 for ( var o = 0; o < ds[i].mentions.length; o++ ) {
                     if ( ds[i].mentions[o].is_you === false ) {
                         if ( txt == '' ) {
-                            txt = ds[i].mentions[o].name + ' ';
+                            txt = ds[i].mentions[o].as + ' ';
                         } else {
                             if ( txt_plus != '' ) { txt_plus += ' '; }
-                            txt_plus += ds[i].mentions[o].name;
+                            txt_plus += ds[i].mentions[o].as;
                         }
                     }
                 }
