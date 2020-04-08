@@ -627,7 +627,7 @@ class Posts {
                         $mentions = array();
                         foreach ( $jArr as $pa ) {
                             $mentions[] = array( 'guid'   => NoNull($pa['guid']),
-                                                 'as'     => NoNull($pa['as']),
+                                                 'name'     => NoNull($pa['as']),
                                                  'is_you' => YNBool($pa['is_you']),
                                                 );
                         }
@@ -644,7 +644,7 @@ class Posts {
                 $IsNote = true;
                 if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
                 $post_text = $this->_getMarkdownHTML($Row['value'], $Row['post_id'], $IsNote, true);
-                $post_text = $this->_parsePostMentions($post_text);
+                $post_text = $this->_parsePostMentions($post_text, $mentions);
 
                 $data[] = array( 'guid'     => NoNull($Row['post_guid']),
                                  'type'     => NoNull($Row['post_type']),
