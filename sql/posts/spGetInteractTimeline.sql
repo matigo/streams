@@ -169,6 +169,8 @@ BEGIN
        and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')
        and 'Y' = CASE WHEN ch.`privacy_type` = 'visibility.public' AND po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                      WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
+                      WHEN po.`privacy_type` = 'visibility.private' THEN IFNULL(pr.`follows`, 'N')
                       ELSE 'N' END
      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
 

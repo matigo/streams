@@ -167,8 +167,9 @@ BEGIN
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
        and ch.`type` = 'channel.site' and ch.`privacy_type` = 'visibility.public' and su.`is_active` = 'Y'
        and po.`privacy_type` IN ('visibility.public', 'visibility.private', 'visibility.none')
-       and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
-                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+       and 'Y' = CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                      WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
+                      WHEN po.`privacy_type` = 'visibility.private' THEN IFNULL(pr.`follows`, 'N')
                       ELSE 'N' END
      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
 
