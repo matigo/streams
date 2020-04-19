@@ -3062,7 +3062,9 @@ class Posts {
 
         // Check for Hebrew Characters
         $chk = preg_match("/\p{Hebrew}/u", $str);
-        if ( (is_bool($chk) && $chk) || $chk == 1 ) { return true; }
+        if ( (is_bool($chk) && $chk) || $chk == 1 ) {
+            if ( hebrev($str) == $str ) { return true; }
+        }
 
         // Check for Urdu Characters
         $chk = preg_match("/\p{Urdu}/u", $str);
