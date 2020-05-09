@@ -405,6 +405,10 @@ function prepNewPost() {
         for ( var i = 0; i < els.length; i++ ) {
             var _name = NoNull(els[i].getAttribute('data-name'));
             switch ( _name ) {
+                case 'content':
+                    els[i].addEventListener('paste', (event) => { updateContentHeight(els[i]); });
+                    break;
+
                 case 'publish_at':
                     els[i].value = moment().format('MMMM Do YYYY h:mm a');
                     break;

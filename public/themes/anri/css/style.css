@@ -141,6 +141,8 @@ body.font-xx, body .font-xx { font-size: 22px; }
     text-decoration: none;
 }
 .navbar .navitem { display: inline-block; font-size: 1.125em; margin-right: 1em; padding: 0.6em 1em 0; }
+.navbar .navitem span, .navbar .navitem i { display: inline-block; }
+.navbar .navitem .min { display: none; }
 .navbar .function { display: inline-block; float: right; overflow: hidden; }
 .navbar .function a, .navbar .function button { background: transparent; border: 0; font-size: 1.5em; overflow: visible; padding: 0.25em 0.5em; }
 .navbar .function a .notification, .navbar .function button .notification { background: #f00; border-radius: 1em; border: 1px solid #000; font-size: 0.5em; font-weight: bold; margin-left: -1em; padding: 0.25em 0.667em 0.333em 0.5em; z-index: 5; }
@@ -157,6 +159,13 @@ body.font-xx, body .font-xx { font-size: 22px; }
 @media (max-width: 768px) {
     .navbar .navitem { margin: 0; }
     .navbar .dropdown .dropbtn .hello { display: none; }
+}
+@media (max-width: 400px) {
+    .navbar .navitem .full { display: none; }
+    .navbar .navitem .min { display: inline-block; }
+}
+@media (max-width: 320px) {
+    .navbar .navitem .min { display: none; }
 }
 
 /*------------------------------------------------------------------
