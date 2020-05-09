@@ -209,11 +209,17 @@
             <div class="modal-dialog new-post">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title newpost-title" data-label="[lblWriteNewPostAs]">[lblWriteNewPost]</h4>
+                        <h4 class="modal-title newpost-title" data-label="[lblWriteNewPostAs]">
+                            [lblWriteNewPost]
+                        </h4>
+                        <div class="btn-group persona-group">
+                            <button id="persona-mode" class="btn btn-persona dropdown-toggle" style="background-image: url([AVATAR_URL]);" data-toggle="dropdown">&nbsp;</button>
+                            <ul class="dropdown-menu persona-list right" role="menu"></ul>
+                        </div>
                     </div>
                     <div class="modal-body" dir="auto" style="min-height: 185px;">
                         <select id="post-type" class="form-element ddown" name="fdata" onchange="toggleCreateView();">
-                            <option value="post.note" selected="">[optNote]</option>
+                            <option value="post.note" selected>[optNote]</option>
                             <option value="post.article">[optBlog]</option>
                             <option value="post.bookmark">[optBookmark]</option>
                             <option value="post.quotation">[optQuotation]</option>
@@ -226,41 +232,35 @@
                         <textarea id="content" name="fdata" class="required write-area bordered" data-type="mdown" rows="4" dir="auto" placeholder="[lblEditorPH]"></textarea>
                         <form id="dropzone" class="col-lg-12 col-md-12 col-sm-12 col-xs-12 uploads dropzone hidden"></form>
 
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 nopadding text-left">
-                            <span class="char-count">&nbsp;</span>
-                        </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 nopadding text-right">
-                            <button class="btn btn-camera btn-primary"><i class="fas fa-cloud-upload-alt"></i></button>
-                            <button class="btn btn-meta btn-primary" data-label="[btnAddMeta]" data-value="N" data-Y="[btnHideMeta]" data-N="[btnAddMeta]">[btnAddMeta]</button>
-                        </div>
-                        <input id="post-tags" name="fdata" type="text" autocomplete="off" class="form-element meta-obj hidden" placeholder="[lblPostTagsPH]" />
-                        <input id="post-geo" name="fdata" type="text" autocomplete="off" class="form-element right-4em meta-obj hidden" placeholder="[lblPostGeoPH]" />
-                        <input id="post-guid" name="fdata" type="hidden" autocomplete="off" />
-                        <button class="btn btn-geo btn-4em meta-obj btn-primary hidden"><i class="fas fa-map-pin"></i></button>
-
-                        <span id="reply_text" class="inreplyto"></span>
-                    </div>
-                    <div class="modal-footer">
-                        <div id="autocomp" class="post-autocomplete col-lg-12 col-md-12 col-sm-12 col-xs-12 text-left" style="padding: 0;"></div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 modal-publish-buttons nopadding text-left">
-                            <div class="btn-group">
-                                <button id="persona-mode" class="btn btn-persona dropdown-toggle" style="min-width: 4em;" data-toggle="dropdown"><img src="[AVATAR_URL]" class="persona-avatar active-avatar" alt="" /></button>
-                                <ul class="dropdown-menu persona-list" role="menu"></ul>
-                            </div>
+                        <div class="modal-meta-block">
                             <div class="btn-group">
                                 <button id="privacy-mode" class="btn btn-primary dropdown-toggle" style="min-width: 4em;" data-toggle="dropdown"><i class="fa fa-globe"></i></button>
                                 <ul class="dropdown-menu" role="menu">
                                     <li><a onclick="setVisibility('public');"><i class="fa fa-globe"></i> Visible to Everyone</a></li>
-                                    <li><a onclick="setVisibility('private');"><i class="fa fa-eye-slash"></i> Visible to Your Followers</a></li>
-                                    <li><a onclick="setVisibility('none');"><i class="fa fa-lock"></i> Visible Only to You</a></li>
+                                    <li><a onclick="setVisibility('private');"><i class="fa fa-eye-slash"></i> Visible to People You Follow</a></li>
+                                    <li><a onclick="setVisibility('none');"><i class="fa fa-lock"></i> Visible <em>Only</em> to You</a></li>
                                 </ul>
                             </div>
-                            <div class="btn-group channel-group" style="max-width: calc(100% - 115px);">
-                                <button id="publish-site" class="btn btn-primary publish-dropdown dropdown-toggle" style="min-width: 8em; max-width: 100%; overflow: hidden; text-overflow: ellipsis;" data-toggle="dropdown">matigo.ca</button>
+                            <div class="btn-group channel-group" style="max-width: calc(100% - 4em);">
+                                <button id="publish-site" class="btn btn-primary publish-dropdown dropdown-toggle" data-toggle="dropdown">&nbsp;</button>
                                 <ul class="dropdown-menu channel-list" role="menu"></ul>
                             </div>
                         </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 modal-action-buttons nopadding text-right">
+
+                        <div class="modal-meta-block text-right">
+                            <button class="btn btn-camera btn-4em btn-primary"><i class="fas fa-camera-retro"></i></button>
+                            <button class="btn btn-tags btn-4em btn-primary hidden"><i class="fas fa-tags"></i></button>
+                            <button class="btn btn-geo btn-4em btn-primary"><i class="fas fa-map-pin"></i></button>
+                        </div>
+                        <input id="post-tags" name="fdata" type="text" autocomplete="off" class="form-element meta-obj hidden" placeholder="[lblPostTagsPH]" />
+                        <input id="post-geo" name="fdata" type="text" autocomplete="off" class="form-element meta-geo hidden" placeholder="[lblPostGeoPH]" />
+                        <input id="post-guid" name="fdata" type="hidden" autocomplete="off" />
+                        <span id="reply_text" class="inreplyto"></span>
+                    </div>
+                    <div class="modal-footer">
+                        <div id="autocomp" class="post-autocomplete col-lg-12 col-md-12 col-sm-12 col-xs-12 text-left" style="padding: 0;"></div>
+                        <div class="modal-action-buttons nopadding text-right">
+                            <span class="char-count">&nbsp;</span>
                             <input type="hidden" id="reply_to" name="fdata" value="" />
                             <input type="hidden" id="post_id" name="fdata" value="" />
                             <button type="button" class="btn btn-grey btn-cancel" data-dismiss="modal">[btnCancel]</button>

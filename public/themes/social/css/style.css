@@ -540,9 +540,34 @@ table th { word-break: normal; }
 
 .compose .modal-title {
     display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     padding: 0.25em 0 0;
+    max-width: calc(100% - 4em);
 }
-.compose .btn-camera { min-width: 5em; }
+.compose .modal-header .persona-group {
+    position: absolute;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 15px 0 0;
+    right: 0;
+}
+.compose .modal-header .persona-group .dropdown-menu .right,
+.compose .modal-header .persona-group .dropdown-menu.right {
+    right: 0;
+    left: auto;
+}
+.compose .modal-header .persona-group .btn-persona {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 5px;
+    display: inline-block;
+    overflow: hidden;
+    height: 35px;
+    width: 35px;
+}
 .compose .modal-body { padding: 0.5em; }
 .compose .modal-body .write-area {
     background: transparent;
@@ -587,13 +612,6 @@ table th { word-break: normal; }
 }
 .compose .modal-body .form-element.right-4em { width: calc(100% - 4em); }
 .compose .modal-body .btn-4em { width: 4em; }
-.compose .modal-body .char-count {
-    display: inline-block;
-    font-size: 1.25em;
-    margin: 0.25em 0 0;
-    padding: 0.125em 0 0 0.5em;
-    width: 50%;
-}
 .compose .modal-body .btn-meta { margin: 0.25em 0; }
 .compose .modal-body .content,
 .compose .modal-body .dropzone {
@@ -613,14 +631,25 @@ table th { word-break: normal; }
     font-style: italic;
     padding: 0 5px;
 }
+.compose .modal-body input[type=text] { white-space: nowrap; }
 .compose .modal-body .lbl-pref {
     font-weight: normal;
     min-width: 150px;
     padding: 0 5px 0 0;
     text-align: right;
 }
-.compose .modal-body .btn-pref {
-    min-width: 65px;
+.compose .modal-body .btn-pref { min-width: 65px; }
+.compose .modal-body .meta-geo { margin: 5px 0 0; }
+.modal-meta-block {
+    display: inline-block;
+    margin: 3px 0 0;
+    padding: 0;
+    width: calc(50% - 3px);
+}
+.modal-meta-block .publish-dropdown {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 100%;
 }
 .btn-persona {
     background: transparent;
@@ -639,6 +668,18 @@ table th { word-break: normal; }
 }
 .compose .modal-footer {
     border-top: none !important;
+    padding: 0 15px 10px;
+}
+.compose .modal-action-buttons .btn { min-width: 6em; }
+.compose .modal-action-buttons .char-count {
+    display: inline-block;
+    font-size: 18px;
+    font-style: italic;
+    position: absolute;
+    margin: 0 15px;
+    text-align: left;
+    height: 32px;
+    left: 0;
 }
 
 .nav-puck {
@@ -1271,7 +1312,6 @@ a.u-bookmark-of {
     background: #551a8b;
     border-color: #551a8b;
 }
-.btn-publish { min-width: 5em; }
 .btn-show-full {
     background: #fff;
     font-size: 1.1em;

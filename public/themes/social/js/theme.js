@@ -664,6 +664,9 @@ function parseAuthToken( data ) {
                     els[i].innerHTML = _list;
                 }
             }
+            if ( ds.distributors.length <= 1 ) {
+                hideByClass('persona-group');
+            }
         }
 
         // Set the Page Meta Values
@@ -1031,11 +1034,28 @@ function refreshPreferences() {
  *  GeoLocation Functions
  ** ************************************************************************* */
 function getGeoLocation( btn ) {
-    if ( navigator.geolocation ) {
-        navigator.geolocation.watchPosition(showPosition);
+    if ( btn.classList.contains('btn-primary') ) {
+        btn.classList.remove('btn-primary');
+
+        if ( navigator.geolocation ) {
+            showByClass('meta-geo');
+            var geo = navigator.geolocation;
+            _id = geo.watchPosition(showPosition);
+            geo.clearWatch(_id);
+
+        } else {
+            hideByClass('meta-geo');
+            $(btn).notify("Geolocation Data Unavailable", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
+            btn.disabled = true;
+        }
+
     } else {
-        $(btn).notify("Geolocation Data Unavailable", { position: "bottom right", autoHide: true, autoHideDelay: 5000 });
-        btn.disabled = true;
+        btn.classList.add('btn-primary');
+        var els = document.getElementsByClassName('meta-geo');
+        for ( var i = 0; i < els.length; i++ ) {
+            els[i].classList.add('hidden');
+            els[i].value = '';
+        }
     }
 }
 function showPosition( position ) {
@@ -3186,6 +3206,7 @@ function loadChannelList( _persona_guid ) {
                 }
 
             } else {
+                hideByClass('channel-group');
                 var btns = document.getElementsByClassName('publish-dropdown');
                 for ( var c = 0; c < btns.length; c++ ) {
                     btns[c].classList.remove('btn-primary');
@@ -3229,8 +3250,8 @@ function setPersona( el ) {
 
         var els = document.getElementsByClassName('persona-select');
         for ( var i = 0; i < els.length; i++ ) { els[i].classList.remove('active'); }
-        var els = document.getElementsByClassName('active-avatar');
-        for ( var i = 0; i < els.length; i++ ) { els[i].src = _avatar_url; }
+        var els = document.getElementsByClassName('btn-persona');
+        for ( var i = 0; i < els.length; i++ ) { els[i].style.backgroundImage = "url('" + _avatar_url + "')" ; }
         el.parentNode.classList.add('active');
         loadChannelList(_persona_guid);
         showNewPostAs();
