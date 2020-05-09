@@ -406,7 +406,7 @@ function prepNewPost() {
             var _name = NoNull(els[i].getAttribute('data-name'));
             switch ( _name ) {
                 case 'content':
-                    els[i].addEventListener('paste', (event) => { updateContentHeight(els[i]); });
+                    checkContentArea();
                     break;
 
                 case 'publish_at':
@@ -415,6 +415,10 @@ function prepNewPost() {
             }
         }
     }
+}
+function checkContentArea() {
+    updatePublishPostButton();
+    window.setTimeout(checkContentArea, 500);
 }
 function togglePostType() {
     var pObj = document.getElementsByClassName('post-type');
@@ -495,16 +499,6 @@ function updateContentHeight(el) {
 }
 function updatePublishPostButton() {
     var _isValid = true;
-
-    /*
-    var els = document.getElementsByClassName('newpost-content');
-    if ( els.length > 0 ) {
-        for ( var i = 0; i < els.length; i++ ) {
-            var _txt = NoNull(els[i].value);
-            if ( _txt != '' ) { _isBlank = false; }
-        }
-    }
-    */
 
     var els = document.getElementsByName('fdata');
     for ( var i = 0; i < els.length; i++ ) {
