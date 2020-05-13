@@ -110,6 +110,7 @@ function splitSecondCheck() {
 window.last_touch = 0;
 window.cursor_at = 0;
 window.has_audio = false;
+window.geoId = false;
 
 jQuery(function($) {
     window.KEY_DOWNARROW = 40;
@@ -1040,8 +1041,9 @@ function getGeoLocation( btn ) {
         if ( navigator.geolocation ) {
             showByClass('meta-geo');
             var geo = navigator.geolocation;
-            _id = geo.watchPosition(showPosition);
-            geo.clearWatch(_id);
+            if ( window.geoId === false ) {
+                window.geoId = geo.watchPosition(showPosition);
+            }
 
         } else {
             hideByClass('meta-geo');
@@ -1067,6 +1069,12 @@ function showPosition( position ) {
     var els = document.getElementById('post-geo');
     if ( els !== undefined && els !== false && els !== null ) {
         els.value = pos;
+    }
+
+    if ( window.geoId !== undefined && window.geoId !== false ) {
+        var geo = navigator.geolocation;
+        geo.clearWatch(window.geoId);
+        window.geoId = false;
     }
 }
 function openGeoLocation( el ) {
@@ -1831,15 +1839,13 @@ function clearScreen() {
     if ( ($("#writePost").data('bs.modal') || {}).isShown ) { $("#writePost").modal('hide'); }
     toggleFileUpload(true);
 
-    var els = document.getElementsByClassName('post-actions');
+    var els = document.getElementsByClassName('btn-geo');
     for ( var i = 0; i < els.length; i++ ) {
-        els[i].classList.add('hidden');
+        els[i].classList.add('btn-primary');
     }
+    hideByClass('post-actions');
+    hideByClass('meta-geo');
 
-    /*
-    clearAutoComplete();
-    clearSaveDraft();
-    */
     window.focus();
     if (document.activeElement) { document.activeElement.blur(); }
 }
