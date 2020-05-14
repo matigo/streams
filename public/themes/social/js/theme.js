@@ -1061,9 +1061,11 @@ function getGeoLocation( btn ) {
     }
 }
 function showPosition( position ) {
-    var pos = position.coords.latitude + ', ' + position.coords.longitude;
+    var _lprec = 1000000;
+    var _aprec = 1000;
+    var pos = Math.round(position.coords.latitude * _lprec) / _lprec + ', ' + Math.round(position.coords.longitude * _lprec) / _lprec;
     if ( position.coords.altitude !== undefined && position.coords.altitude !== false && position.coords.altitude !== null && position.coords.altitude != 0 ) {
-        pos += ', ' + position.coords.altitude;
+        pos += ', ' + Math.round(position.coords.altitude, _aprec) / _aprec;
     }
 
     var els = document.getElementById('post-geo');
