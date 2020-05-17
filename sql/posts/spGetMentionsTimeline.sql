@@ -21,7 +21,7 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT po.`id` - 5000 INTO `min_id` FROM `Post` po
+    SELECT po.`id` - 25000 INTO `min_id` FROM `Post` po
      ORDER BY po.`id` DESC
      LIMIT 1;
 

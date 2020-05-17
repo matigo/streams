@@ -1065,7 +1065,7 @@ function showPosition( position ) {
     var _aprec = 1000;
     var pos = Math.round(position.coords.latitude * _lprec) / _lprec + ', ' + Math.round(position.coords.longitude * _lprec) / _lprec;
     if ( position.coords.altitude !== undefined && position.coords.altitude !== false && position.coords.altitude !== null && position.coords.altitude != 0 ) {
-        pos += ', ' + Math.round(position.coords.altitude, _aprec) / _aprec;
+        pos += ', ' + Math.round(position.coords.altitude * _aprec) / _aprec;
     }
 
     var els = document.getElementById('post-geo');
