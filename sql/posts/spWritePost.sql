@@ -2,8 +2,8 @@ DELIMITER ;;
 DROP PROCEDURE IF EXISTS WritePost;;
 CREATE PROCEDURE WritePost( IN `in_account_id` int(11), IN `in_channel_guid` varchar(36), IN `in_persona_guid` varchar(36), IN `in_token_guid` varchar(64), IN `in_token_id` int(11),
                             IN `in_title` varchar(512), IN `in_content` text, IN `in_words` text,
-                            IN `in_canon_url` varchar(512), IN `in_reply_to` varchar(512),
-                            IN `in_slug` varchar(255), IN `in_type` varchar(64), IN `in_privacy` varchar(64), IN `in_publish_at` varchar(40), IN `in_expires_at` varchar(40),
+                            IN `in_canon_url` varchar(512), IN `in_reply_to` varchar(512), IN `in_slug` varchar(255),
+                            IN `in_type` varchar(64), IN `in_privacy` varchar(64), IN `in_publish_at` varchar(40), IN `in_expires_at` varchar(40),
                             IN `in_thread` int(11), IN `in_parent` int(11), IN `in_post_id` int(11) )
 BEGIN
     DECLARE `x_post_id`     int(11);
@@ -15,10 +15,11 @@ BEGIN
      *  Function Inserts or Updates a record in the Post table and returns
      *      the Post.id value.
      *
-     *  Usage: CALL WritePost(1, '91c46924-5461-11e8-99a0-54ee758049c3', '07d2f4ec-545f-11e8-99a0-54ee758049c3',
-                             '1eda3a28-8cc8-11e9-98bd-7b3182f95ce1-f8d1-a87ff679', 538,
-                             'Short Title', 'A short body, too.', 'a,short,body,too', '/2019/06/18/short-title', '', 'short-title',
-                             'post.article', 'visibility.public', '2019-06-18 04:00:00', '',  0, 0, 0);
+     *  Usage: CALL WritePost(1, '91c46924-5461-11e8-99a0-54ee758049c3', '07d2f4ec-545f-11e8-99a0-54ee758049c3', '1eda3a28-8cc8-11e9-98bd-7b3182f95ce1-f8d1-a87ff679', 538,
+                              'Short Title', 'A short body, too.', 'a,short,body,too',
+                              '/2019/06/18/short-title', '', 'short-title',
+                              'post.article', 'visibility.public', '2019-06-18 04:00:00', '',
+                              0, 0, 0);
      ** ********************************************************************** **/
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
@@ -150,7 +151,7 @@ BEGIN
         INSERT INTO `PostFile` (`post_id`, `file_id`, `created_at`, `updated_at`)
         SELECT po.`id` as `post_id`, fi.`id` as `file_id`, po.`created_at`, po.`updated_at`
           FROM `File` fi INNER JOIN `Post` po ON po.`is_deleted` = 'N' and po.`id` = IFNULL(`x_post_id`, `in_post_id`)
-         WHERE LOCATE(CONCAT(fi.`location`, fi.`local_name`), po.`value`) > 0
+         WHERE LOCATE(CONCAT(fi.`location`, fi.`hash`), po.`value`) > 0
          ORDER BY po.`id`, fi.`id`
             ON DUPLICATE KEY UPDATE `is_deleted` = 'N',
                                     `updated_at` = Now();

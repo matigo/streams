@@ -719,6 +719,29 @@ CREATE TABLE IF NOT EXISTS `PostMeta` (
 CREATE INDEX `idx_pmeta_main` ON `PostMeta` (`is_deleted`, `post_id` DESC, `key`);
 CREATE INDEX `idx_pmeta_post` ON `PostMeta` (`is_deleted`, `post_id` DESC);
 
+DROP TABLE IF EXISTS `PostMarker`;
+CREATE TABLE IF NOT EXISTS `PostMarker` (
+    `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
+    `seq_id`        int(11)        UNSIGNED                     NOT NULL    ,
+
+    `marked_at`     timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+
+    `longitude`     decimal(16,8)                               NOT NULL    DEFAULT 0,
+    `latitude`      decimal(16,8)                               NOT NULL    DEFAULT 0,
+    `altitude`      decimal(16,8)                               NOT NULL    DEFAULT 0,
+
+    `value`         varchar(2048)                                   NULL    DEFAULT '',
+    `is_private`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`post_id`, `seq_id`),
+    FOREIGN KEY (`post_id`) REFERENCES `Post` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_pmark_main` ON `PostMarker` (`is_deleted`, `post_id` DESC, `seq_id`);
+CREATE INDEX `idx_pmark_post` ON `PostMarker` (`is_deleted`, `post_id` DESC);
+
 DROP TABLE IF EXISTS `PostWebMention`;
 CREATE TABLE IF NOT EXISTS `PostWebMention` (
     `post_id`       int(11)        UNSIGNED                     NOT NULL    ,
@@ -884,7 +907,27 @@ CREATE TRIGGER `before_update_postsrch`
     SET new.`updated_at` = Now();
    END
 ;;
-
+DROP TRIGGER IF EXISTS `before_insert_postmarker`;;
+CREATE TRIGGER `before_insert_postmarker`
+BEFORE INSERT ON `PostMarker`
+   FOR EACH ROW
+ BEGIN
+    IF IFNULL(new.`value`, '') = '' THEN
+        SET new.`value` = NULL;
+    END IF;
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_postmarker`;;
+CREATE TRIGGER `before_update_postmarker`
+BEFORE UPDATE ON `PostMarker`
+   FOR EACH ROW
+ BEGIN
+    IF IFNULL(new.`value`, '') = '' THEN
+        SET new.`value` = NULL;
+    END IF;
+    SET new.`updated_at` = Now();
+   END
+;;
 DROP TRIGGER IF EXISTS `before_insert_postwebmention`;;
 CREATE TRIGGER `before_insert_postwebmention`
 BEFORE INSERT ON `PostWebMention`

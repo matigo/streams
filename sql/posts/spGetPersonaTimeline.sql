@@ -90,6 +90,9 @@ BEGIN
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, '/', pa.`guid`, '/profile') as `profile_url`,
            po.`id` as `post_id`, po.`thread_id`, po.`parent_id`, po.`title`, po.`value`,
            (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
+           CASE WHEN po.`type` IN ('post.location')
+                THEN (SELECT CASE WHEN COUNT(DISTINCT z.`seq_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMarker` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1)
+                ELSE 'N' END as `has_markers`,
            (SELECT GROUP_CONCAT('{"guid": "', zpa.`guid`, '", "as": "@', zpa.`name`, '", "is_you": "', CASE WHEN zpa.`account_id` = `in_account_id` THEN 'Y' ELSE 'N' END, '"}') as `mentions`
               FROM `Persona` zpa INNER JOIN `PostMention` zpm ON zpa.`id` = zpm.`persona_id`
              WHERE zpa.`is_deleted` = 'N' and zpm.`is_deleted` = 'N' and zpm.`post_id` = po.`id`) as `mentions`,
@@ -119,7 +122,7 @@ BEGIN
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                         INNER JOIN (SELECT `post_id`, `posted_at`, `is_visible` FROM tmpPosts
                                      WHERE `is_visible` = 'Y'
-                                       and `posted_at` BETWEEN CASE WHEN `in_since_unix` = 0 THEN '2000-01-01 00:00:00' ELSE FROM_UNIXTIME(`in_since_unix`) END AND
+                                       and `posted_at` BETWEEN FROM_UNIXTIME(`in_since_unix`) AND
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`

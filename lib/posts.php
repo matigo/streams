@@ -12,11 +12,13 @@ use \Michelf\Markdown;
 class Posts {
     var $settings;
     var $strings;
+    var $markers;
     var $geo;
 
     function __construct( $settings, $strings = false ) {
         $this->settings = $settings;
         $this->strings = ((is_array($strings)) ? $strings : getLangDefaults($this->settings['_language_code']));
+        $this->markers = false;
         $this->geo = false;
     }
 
@@ -194,6 +196,9 @@ class Posts {
     public function getPersonaPosts() { return $this->_getTLStream('persona'); }
     public function getPopularPosts() { return $this->_getPopularPosts(); }
     public function getRSSFeed($site, $format) { return $this->_getRSSFeed($site, $format); }
+
+    public function getPostsByIDs( $ids ) { return $this->_getPostsByIDs($ids); }
+    public function writePost() { return $this->_writePost(); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -635,6 +640,15 @@ class Posts {
                     }
                 }
 
+                // Do We Have Geo-Markers? Grab the History
+                $markers = false;
+                if ( YNBool($Row['has_markers']) ) {
+                    $markers = $this->_getPostMarkers($Row['post_guid']);
+                    if ( is_array($markers) ) {
+                        $poMeta['markers'] = $markers;
+                    }
+                }
+
                 // Determine Which HTML Classes Can Be Applied to the Record
                 $pguid = NoNull($this->settings['PgSub1'], $this->settings['guid']);
                 if ( mb_strlen($pguid) != 36 ) { $pguid = ''; }
@@ -988,6 +1002,23 @@ class Posts {
             default:
                 return array();
         }
+    }
+
+    /**
+     *  Function Collects a List of Geo-Markers for a Post or an Unhappy Boolean
+     */
+    private function _getPostMarkers( $PostGuid ) {
+        if ( strlen(NoNull($PostGuid)) != 36 ) { return false; }
+
+        /* Load the Location Class if Required */
+        if ( $this->markers === false ) {
+            require_once(LIB_DIR . '/location.php');
+            $this->markers = new Location( $this->settings );
+        }
+
+        $rslt = $this->markers->getMarkerList( $PostGuid );
+        if ( is_array($rslt) ) { return $rslt; }
+        return false;
     }
 
     /**
@@ -2058,6 +2089,15 @@ class Posts {
                                                      'is_you' => YNBool($pa['is_you']),
                                                     );
                             }
+                        }
+                    }
+
+                    // Do We Have Geo-Markers? Grab the History
+                    $markers = false;
+                    if ( YNBool($Row['has_markers']) ) {
+                        $markers = $this->_getPostMarkers($Row['post_guid']);
+                        if ( is_array($markers) ) {
+                            $poMeta['markers'] = $markers;
                         }
                     }
 
