@@ -1499,15 +1499,13 @@ function parseAvatarUpload( data ) {
     }
 }
 function toggleProfileStatistics() {
-    var els = document.getElementsByClassName('profile-histogram');
+    var els = document.getElementsByClassName('profile-histochart');
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].classList.contains('hidden') ) {
-            /* showByClass('profile-histogram'); */
             showByClass('profile-histochart');
             showByClass('profile-stats');
             hideByClass('profile-posts');
         } else {
-            /* hideByClass('profile-histogram'); */
             hideByClass('profile-histochart');
             hideByClass('profile-stats');
             showByClass('profile-posts');
