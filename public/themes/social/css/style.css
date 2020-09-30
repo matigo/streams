@@ -1331,7 +1331,7 @@ a.u-bookmark-of {
     Audio Elements
  ** ******************************************************************************************** */
 .media-box {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.6);
     display: block;
     position: fixed;
     padding: 5px;

@@ -2687,12 +2687,26 @@ function handleThumbable( el ) {
 
     var els = document.getElementsByClassName('media-box');
     for ( var i = 0; i < els.length; i++ ) {
-        els[i].innerHTML = '<img src="' + _src + '" alt="' + _alt + '" onclick="closeThumbable();" />';
+        els[i].innerHTML = '<img src="' + _src + '" alt="' + _alt + '" onclick="closeThumbable();" onload="adjustThumbable(this);" />';
         els[i].classList.remove('hidden');
     }
 }
 function closeThumbable() {
     hideByClass('media-box');
+}
+function adjustThumbable(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'img' ) { return; }
+
+    var _viewY = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    var _imgY = Math.max(el.clientHeight || 0, el.innerHeight || 0);
+    if ( _viewY <= 0 ) { return; }
+    if ( _imgY <= 0 ) { return; }
+
+    var _gap = ((_viewY - _imgY) / 2) - 10;
+    if ( _gap <= 0 ) { return; }
+
+    el.style.margin = _gap + 'px auto';
 }
 function toggleOverflow( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
