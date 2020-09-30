@@ -158,6 +158,9 @@ jQuery(function($) {
     $(document).on('touchend', '.audio-button', function() { toggleAudioButton(this); });
     $(document).on('input change', '.audio-range', function () { scrubAudioSeek(this); });
 
+    $(document).on('click', '.thumbable', function() { handleThumbable(this); });
+    $(document).on('touchend', '.thumbable', function() { handleThumbable(this); });
+
     window.addEventListener('offline', function(e) { showNetworkStatus(); });
     window.addEventListener('online', function(e) { showNetworkStatus(); });
     var els = document.getElementsByClassName('write-area');
@@ -2659,7 +2662,37 @@ function updateForOverflow() {
                 }
             }
         }
+
+        var imgs = els[i].getElementsByTagName('IMG');
+        for ( var c = 0; c < imgs.length; c++ ) {
+            if ( imgs[c].classList.contains('thumbable') === false ) {
+                var _parentTag = NoNull(imgs[c].parentElement.tagName).toLowerCase();
+                if ( _parentTag == 'p' ) {
+                    if ( imgs[c].parentElement.classList.contains('text-center') === false ) {
+                        imgs[c].parentElement.classList.add('text-center');
+                    }
+                }
+                imgs[c].classList.add('thumbable');
+            }
+        }
     }
+}
+function handleThumbable( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'img' ) { return; }
+
+    /* Get the Image Attributes */
+    var _src = NoNull(el.src).replaceAll('_medium', '');
+    var _alt = NoNull(el.alt);
+
+    var els = document.getElementsByClassName('media-box');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = '<img src="' + _src + '" alt="' + _alt + '" onclick="closeThumbable();" />';
+        els[i].classList.remove('hidden');
+    }
+}
+function closeThumbable() {
+    hideByClass('media-box');
 }
 function toggleOverflow( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
@@ -3063,6 +3096,7 @@ function toggleView( op ) {
         if ( _view === undefined || _view === false || _view === null || _view != op ) { _view = ''; }
         if ( _view == op ) { els[i].classList.remove('hidden'); } else { els[i].classList.add('hidden'); }
     }
+    if ( op == 'signin' ) { hideByClass('nav-puck'); } else { showByClass('nav-puck'); }
     toggleSignInButton();
     toggleCreateView();
     resetCreate();

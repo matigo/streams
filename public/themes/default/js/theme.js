@@ -11,11 +11,11 @@ String.prototype.hashCode = function() {
   }
   return hash;
 };
-jQuery.fn.scrollTo = function(elem, speed) { 
+jQuery.fn.scrollTo = function(elem, speed) {
     $(this).animate({
-        scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top 
-    }, speed === undefined ? 1000 : speed); 
-    return this; 
+        scrollTop:  $(this).scrollTop() - $(this).offset().top + $(elem).offset().top
+    }, speed === undefined ? 1000 : speed);
+    return this;
 };
 function NoNull( txt, alt ) {
     if ( alt === undefined || alt === null || alt === false ) { alt = ''; }
@@ -61,7 +61,7 @@ function writeToZone( name, cdn_url ) {
     }
     window.scrollTo(0, 0);
 }
-    
+
 /** ************************************************************************* *
  *  Startup
  ** ************************************************************************* */
@@ -128,7 +128,7 @@ document.onreadystatechange = function () {
             var editor = new Quill('.quill-editor', { modules: { toolbar: [[{ header: [2, 3, false] }], ['bold', 'italic', 'strike'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'blockquote', 'image']] }, placeholder: _phtxt, theme: 'snow' });
             editor.on('text-change', function(delta, oldDelta, source) { setCharCount(editor); });
             editor.getModule('toolbar').addHandler('image', () => { toggleDropzone(); });
-            
+
             var els = document.getElementsByClassName('ql-formats');
             if ( els.length > 0 ) { els[0].classList.add('hidden-xs'); }
         }
@@ -164,9 +164,9 @@ function saveStorage( key, value, useStore ) {
 }
 function readStorage( key, useStore ) {
     if ( !key ) { return false; }
-    if ( hasStorage() && !useStore ) { 
+    if ( hasStorage() && !useStore ) {
         return localStorage.getItem(key) || false;
-    } else { 
+    } else {
         if ( window.store.hasOwnProperty(key) ) { return window.store[key]; } else { return false; }
     }
 }
@@ -196,7 +196,7 @@ function toggleSignInButton() {
     for ( var i = 0; i < btns.length; i++ ) {
         if ( _ok ) { btns[i].classList.add('green'); } else { btns[i].classList.remove('green'); }
     }
-    
+
 }
 function validateSignIn() {
     var els = document.getElementsByName('cdata');
@@ -374,7 +374,7 @@ function parseSourceData( data ) {
                     break;
             }
         }
-        
+
         var sel = document.getElementById('post-type');
         if ( sel !== undefined && sel !== false && sel !== null ) {
             if ( sel.value == 'post.quotation' ) {
@@ -523,7 +523,7 @@ function openGeoLocation( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
     var _pos = el.getAttribute('data-value');
     if ( _pos === undefined || _pos === false || _pos === null ) { return; }
-    
+
     var ntab = window.open('https://www.google.ca/maps/@' + _pos + ',17z', '_blank');
     ntab.focus();
 }
@@ -541,10 +541,10 @@ function toggleActionBar( el ) {
 
     if ( (touch_ts - last_touch) <= 500 ) { return; }
     el.setAttribute('data-lasttouch', touch_ts);
-    
+
     var pel = el.parentNode.parentNode;
     if ( pel === undefined || pel === false || pel === null ) { return; }
-    
+
     var sobj = el;
     var _starred = false;
     var _canedit = false;
@@ -603,7 +603,7 @@ function buildActionBar(can_edit) {
             }
         }
     }
-    
+
     return html;
 }
 function performAction( btn ) {
@@ -998,7 +998,7 @@ function parseThreadView(data) {
             els[0].append(_div);
         }
         updatePostTimestamps();
-        
+
         // Hide the Reply Pointers
         var els = document.getElementsByClassName('reply-pointer');
         for ( var i = 0; i < els.length; i++ ) {
@@ -1124,7 +1124,7 @@ function toggleButton(btn) {
 }
 function getButtonValue( _class ) {
     if ( _class === undefined || _class === false || _class === null ) { return; }
-    
+
     var btns = document.getElementsByClassName('btn-' + _class);
     for ( var i = 0; i < btns.length; i++ ) {
         if ( btns[i].classList.contains('btn-active') ) { return btns[i].getAttribute('data-value'); }
@@ -1143,14 +1143,14 @@ function toggleCreateView() {
         case 'post.article':
             _reqs = ['title'];
             break;
-        
+
         case 'post.quotation':
         case 'post.bookmark':
             _reqs = ['source-url', 'source-title'];
             _btns = ['btn-read'];
             break;
     }
-    
+
     var els = document.getElementsByClassName('create-obj');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].classList.add('hidden');
