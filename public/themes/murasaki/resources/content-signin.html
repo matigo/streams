@@ -1,0 +1,20 @@
+            <section class="signing">
+                <h1>[ttlSignIn]</h1>
+                <p>[msgSignIn]</p>
+                <form method="POST" action="[API_URL]/auth/login" class="login">
+                    <input type="text" name="fdata" data-name="account_name" placeholder="[lblAcctNamePH]" autocomplete="off" spellcheck="off">
+                    <input type="password" name="fdata" data-name="account_pass" placeholder="[lblAcctPassPH]" autocomplete="off" spellcheck="off">
+                    <div class="response hidden">
+                        <p>Could not sign you in.</p>
+                        <p>Please confirm your login and password.</p>
+                    </div>
+                    <div class="buttons">
+                        <button class="btn btn-signin" data-action="signin" data-label="[btnSignIn]" disabled>[btnSignIn]</button>
+                    </div>
+                </form>
+            </section>
+            <script type="text/javascript" src="[JS_DIR]/jquery-3.1.1.min.js"></script>
+            <script type="text/javascript" src="[JS_DIR]/bootstrap.min.js"></script>
+            <script type="text/javascript" src="[JS_DIR]/network.js?ver=[CSS_VER]"></script>
+            <script type="text/javascript" src="[JS_DIR]/globals.js?ver=[CSS_VER]"></script>
+            <script type="text/javascript" src="[JS_DIR]/signs.js?ver=[CSS_VER]"></script>
