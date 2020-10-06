@@ -1,9 +1,9 @@
             <section class="nav-left">
                 <ul class="list-views">
-                    <li class="selected"><span>[navStream]</span><i class="fas fa-home"></i></li>
-                    <li><span>[navMentions]</span><i class="far fa-comments"></i></li>
-                    <li><span>[navHighlights]</span><i class="fas fa-highlighter"></i></li>
-                    <li><span>[navPictures]</span><i class="fas fa-camera"></i></li>
+                    <li class="selected" data-action="collect" data-tl="global"><span>[navStream]</span><i class="fas fa-home"></i></li>
+                    <li data-action="collect" data-tl="mentions"><span>[navMentions]</span><i class="far fa-comments"></i></li>
+                    <li data-action="collect" data-tl="highlights"><span>[navHighlights]</span><i class="fas fa-highlighter"></i></li>
+                    <li data-action="collect" data-tl="photos"><span>[navPictures]</span><i class="fas fa-camera"></i></li>
                     <li><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
                 </ul>
             </section>
@@ -16,17 +16,15 @@
                         <li>[lblComposeAttachFile]</li>
                     </ul>
                 </div>
-                <div class="timeline">
-                    <p>Stuff should go here ...</p>
-                </div>
+                <div class="timeline" data-view="global"></div>
             </section>
             <section class="nav-right">
                 <ul class="post-types">
-                    <li class="selected" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
-                    <li data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
-                    <li data-type="notes">[navShowNotes] <i class="fas fa-comment"></i></li>
-                    <li data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
-                    <li data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
+                    <li class="selected" data-action="filter" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
+                    <li data-action="filter" data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
+                    <li data-action="filter" data-type="notes">[navShowNotes] <i class="fas fa-comment"></i></li>
+                    <li data-action="filter" data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
+                    <li data-action="filter" data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
                 </ul>
                 <ul class="post-visibility">
                     <li class="selected" data-type="all">[navVisAll]</li>

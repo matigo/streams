@@ -18,6 +18,15 @@ function NoNull( txt, alt ) {
 
     return txt.toString().replace(/^\s+|\s+$/gm, '');
 }
+function nullInt( num, alt ) {
+    if ( num === undefined || num === null || num === false || isNaN(num) ) { num = 0; }
+    if ( alt === undefined || alt === null || alt === false || isNaN(alt) ) { alt = 0; }
+
+    var ii = parseInt(num);
+    if ( ii === undefined || ii === null || ii === false || isNaN(ii) ) { ii = 0; }
+    if ( ii == 0 ) { return alt; }
+    return ii;
+}
 function numberWithCommas(x) {
     if ( x === undefined || x === false || x === null ) { return ''; }
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -27,6 +36,19 @@ function easyFileSize(bytes) {
     if ( isNaN(bytes) || bytes <= 0 ) { return 0; }
     var i = Math.floor( Math.log(bytes) / Math.log(1024) );
     return ( bytes / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
+}
+function formatDate( UTCString, shortIfRecent ) {
+    if ( shortIfRecent === undefined || shortIfRecent === null || shortIfRecent !== true ) { shortIfRecent = false; }
+    if ( NoNull(UTCString) == '' ) { return ''; }
+    if ( shortIfRecent ) {
+        var t1 = new Date(UTCString);
+        var t2 = new Date();
+        var diff = (t2.getTime() - t1.getTime()) / 1000;
+        if ( diff < 86400 ) {
+            return Intl.DateTimeFormat(navigator.language, { hour: "numeric", minute: "numeric", hour12: true }).format(t1);
+        }
+    }
+    return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: "numeric", minute: "numeric", hour12: true }).format(new Date(UTCString));
 }
 function secondsToHHMMSS( secs ) {
     var sec_num = parseInt(secs, 10);
