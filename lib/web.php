@@ -1298,7 +1298,12 @@ class Route extends Streams {
 
         $ResDIR = THEME_DIR . "/" . $data['location'] . "/resources/";
         $rVal = 'content-' . NoNull($this->settings['PgRoot'], 'main') . '.html';
-        if ( file_exists($ResDIR . $rVal) === false ) { $rVal = 'content-main.html'; }
+        if ( file_exists($ResDIR . $rVal) === false ) {
+            if ( file_exists($ResDIR . 'content-404.html') ) {
+                redirectTo( $data['protocol'] . '://' . NoNull($data['HomeURL']) . '/404', $this->settings );
+            }
+            $rVal = 'content-main.html';
+        }
 
         if ( $rVal == 'content-404.html' ) { $this->settings['status'] = 404; }
         if ( $rVal == 'content-403.html' ) { $this->settings['status'] = 403; }

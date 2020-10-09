@@ -1,0 +1,47 @@
+{
+    "navJoin": "Join!",
+    "navHelp": "Help",
+    "navHome": "Home",
+    "navAbout": "About",
+    "navInvite": "Invite",
+    "navSignIn": "Sign In",
+    "navSignout": "Sign Out",
+
+    "navStream": "Stream",
+    "navMentions": "Mentions",
+    "navHighlights": "Hightlights",
+    "navPictures": "Pictures",
+    "navSettings": "Settings",
+
+    "navShowAll": "All Posts",
+    "navShowPhoto": "Photos",
+    "navShowNotes": "Social",
+    "navShowArticle": "Articles",
+    "navShowQuotation": "Quotations",
+
+    "navVisAll": "Show All",
+    "navVisActive": "Most Active",
+
+    "btnPublish": "Publish",
+    "btnSignIn": "Sign In",
+
+    "lblComposePH": "What's up?",
+    "lblComposeChooseChannel": "Select a Channel",
+    "lblComposeAttachFile": "Attach ...",
+
+    "compatMsgHead": "This browser is not compatible with Mimosa.",
+    "compatMsgVersion": "The device is running {browser} version {version}.",
+    "compatMsgReq": "Please upgrade to at least 10.3.3 to use this tool.",
+    "compatMsgDefault": "Please update your software to use this tool.",
+
+    "ttlSignIn": "Sign In",
+    "msgSignIn": "Sign In to participate with the community",
+    "lblAcctNamePH": "(Your Email Address)",
+    "lblAcctPassPH": "(Your Password)",
+
+    "404Header": "404!",
+    "404Message": "Not quite sure what you're looking for, but click on one of the links at the top of the page to find something else.",
+
+    "msgOfflineMode": "There does not seem to be a working network connection. Now operating in offline mode.",
+    "msgCollectingData": "Reading data from the database ..."
+}
