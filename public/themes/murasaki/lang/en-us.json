@@ -4,14 +4,15 @@
     "navHome": "Home",
     "navAbout": "About",
     "navInvite": "Invite",
-    "navSignIn": "Sign In",
-    "navSignout": "Sign Out",
-
-    "navStream": "Stream",
-    "navMentions": "Mentions",
-    "navHighlights": "Hightlights",
-    "navPictures": "Pictures",
     "navSettings": "Settings",
+    "navSignIn": "Sign In",
+    "navSignOut": "Sign Out",
+
+    "navTLHome": "Home",
+    "navTLStream": "Stream",
+    "navTLMentions": "Mentions",
+    "navTLHighlights": "Hightlights",
+    "navTLPictures": "Pictures",
 
     "navShowAll": "All Posts",
     "navShowPhoto": "Photos",

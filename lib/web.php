@@ -156,7 +156,6 @@ class Route extends Streams {
         }
 
         // Return the HTML With the Appropriate Headers
-
         unset($this->strings);
         unset($this->site);
         return $html;

@@ -365,6 +365,17 @@ section.main-content .composer ul li {
     display: inline-block;
     margin: 0 0 0 15px;
 }
+section.main-content .composer .content-length {
+    display: inline-block;
+    font-size: 1.1em;
+    font-style: italic;
+    text-align: right;
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    max-width: calc(100% - 135px);
+    width: 100%;
+}
 
 @media (max-width: 1200px) {
     section.main-content {
@@ -448,4 +459,114 @@ section.main-content .timeline .post-item .content-area .bottom-spacer {
     max-width: 250px;
     width: 33%;
     margin: 0 0 5px;
+}
+section.main-content .timeline .post-item .content-area .metaline { display: block; }
+section.main-content .timeline .post-item .content-area .metaline.images span {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: text-top;
+    margin: 0 5px 5px 0;
+    max-height: 150px;
+}
+section.main-content .timeline .post-item .content-area .metaline.images span .post-image {
+    border: 1px solid #e7e3ed;
+    border-radius: 5px;
+    display: block;
+    padding: 3px;
+    margin: 0;
+    max-height: 150px;
+    min-height: 75px;
+    max-width: 100%;
+}
+section.main-content .timeline .post-item .content-area .metaline.images span .toggle {
+    background: rgba(0, 0, 0, 0.25);
+    border-top-left-radius: 50px;
+    color: #e7e3ed;
+    display: block;
+    float: right;
+    padding: 10px 0 0 10px;
+    position: relative;
+    text-align: right;
+    bottom: 60px;
+    right: 0;
+    max-height: 65px;
+    max-width: 65px;
+}
+section.main-content .timeline .post-item .content-area .metaline.images span .toggle i {
+    cursor: pointer;
+    padding: 15px;
+}
+
+section.main-content .timeline .post-item.post-quotation .content-area,
+section.main-content .timeline .post-item.post-article .content-area {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", Times, serif;
+}
+section.main-content .timeline .post-item.post-quotation .content-area ul,
+section.main-content .timeline .post-item.post-article .content-area ul {
+    list-style: outside;
+    padding: 0 10px 0 40px;
+    margin: 0 0 10px;
+}
+section.main-content .timeline .post-item.post-quotation .content-area ul li,
+section.main-content .timeline .post-item.post-article .content-area ul li { padding: 0; }
+section.main-content .timeline .post-item.post-quotation .content-area .content-title,
+section.main-content .timeline .post-item.post-article .content-area .content-title {
+    font-weight: bold;
+    margin: 0;
+}
+section.main-content .timeline .post-item.post-quotation .content-area .content-source-url,
+section.main-content .timeline .post-item.post-article .content-area .content-source-url {
+    display: block;
+    font-family: monospace;
+    font-size: 0.9em;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0 0 10px;
+    width: 100%;
+}
+section.main-content .timeline .post-item.post-quotation .content-area span.account,
+section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
+
+/** ************************************************************************ *
+ *  Carousel Modal
+ ** ************************************************************************ */
+#viewCarousel .modal-content {
+    background: rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+#viewCarousel .modal-content .carousel-body img {
+    max-height: calc(100vh - 150px);
+    max-width: 100%;
+}
+#viewCarousel .modal-content .carousel-foot .carousel-items {
+    display: block;
+    list-style: none;
+    text-align: center;
+}
+#viewCarousel .modal-content .carousel-foot .carousel-items li.carousel-item {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border: 2px solid transparent;
+    cursor: zoom-in;
+    display: inline-block;
+    opacity: 0.75;
+    margin: 0 5px 0 0;
+    max-height: 75px;
+    min-height: 75px;
+    max-width: 75px;
+    min-width: 75px;
+}
+#viewCarousel .modal-content .carousel-foot .carousel-items li.carousel-item.selected {
+    border: 2px solid #e7e3ed;
+    opacity: 1;
+}
+@media (min-width: 768px) {
+    #viewCarousel .modal-dialog {
+        margin: 30px auto;
+        max-width: calc(100% - 50px);
+        width: 100%;
+    }
 }
