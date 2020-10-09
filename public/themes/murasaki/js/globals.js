@@ -45,10 +45,10 @@ function formatDate( UTCString, shortIfRecent ) {
         var t2 = new Date();
         var diff = (t2.getTime() - t1.getTime()) / 1000;
         if ( diff < 86400 ) {
-            return Intl.DateTimeFormat(navigator.language, { hour: "numeric", minute: "numeric", hour12: true }).format(t1);
+            return Intl.DateTimeFormat(navigator.language, { hour: 'numeric', minute: 'numeric', hour12: true }).format(t1);
         }
     }
-    return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: "numeric", minute: "numeric", hour12: true }).format(new Date(UTCString));
+    return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(UTCString));
 }
 function secondsToHHMMSS( secs ) {
     var sec_num = parseInt(secs, 10);
@@ -147,6 +147,16 @@ function spinButton( el, doReset ) {
     }
     el.disabled = !doReset;
 }
+function splitSecondCheck(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var touch_ts = Math.floor(Date.now());
+    var last_ts = parseInt(el.getAttribute('data-lasttouch'));
+    var _sok = true;
+
+    if ( (touch_ts - last_ts) <= 333 ) { return false; }
+    el.setAttribute('data-lasttouch', touch_ts);
+    return _sok;
+}
 
 /** ************************************************************************* *
  *  Browser Elements
@@ -225,6 +235,24 @@ function hasStorage() {
     } catch (e) {
         return false;
     }
+}
+
+/** ************************************************************************* *
+ *  Common Posting Functions
+ ** ************************************************************************* */
+function getChannelGUID() {
+    var metas = document.getElementsByTagName('meta');
+    for (var i = 0; i < metas.length; i++) {
+        if ( metas[i].getAttribute("name") == 'channel_guid' ) { return NoNull(metas[i].getAttribute("content")); }
+    }
+    return '';
+}
+function getPersonaGUID() {
+    var metas = document.getElementsByTagName('meta');
+    for (var i = 0; i < metas.length; i++) {
+        if ( metas[i].getAttribute("name") == 'persona_guid' ) { return NoNull(metas[i].getAttribute("content")); }
+    }
+    return '';
 }
 
 /** ************************************************************************* *

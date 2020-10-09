@@ -103,7 +103,6 @@ function handleButtonClick(el) {
     if ( (touch_ts - last_touch) <= 500 ) { return; }
     tObj.setAttribute('data-lasttouch', touch_ts);
 
-
     var _action = NoNull(tObj.getAttribute('data-action')).toLowerCase();
     switch ( _action ) {
         case 'signin':

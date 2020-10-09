@@ -1,36 +1,50 @@
             <section class="nav-left">
                 <ul class="list-views">
-                    <li class="selected" data-action="collect" data-tl="global"><span>[navStream]</span><i class="fas fa-home"></i></li>
-                    <li data-action="collect" data-tl="mentions"><span>[navMentions]</span><i class="far fa-comments"></i></li>
-                    <li data-action="collect" data-tl="highlights"><span>[navHighlights]</span><i class="fas fa-highlighter"></i></li>
-                    <li data-action="collect" data-tl="photos"><span>[navPictures]</span><i class="fas fa-camera"></i></li>
+                    <li class="list-view selected" data-action="collect" data-tl="global"><span>[navTLStream]</span><i class="fas fa-globe"></i></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="home"><span>[navTLHome]</span><i class="fas fa-home"></i></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="mentions"><span>[navTLMentions]</span><i class="far fa-comments"></i></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="actions"><span>[navTLHighlights]</span><i class="fas fa-highlighter"></i></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="photos"><span>[navTLPictures]</span><i class="fas fa-camera"></i></li>
                     <li><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
                 </ul>
             </section>
             <section class="main-content">
-                <div class="composer">
-                    <textarea placeholder="[lblComposePH]"></textarea>
-                    <button class="btn btn-publish btn-primary" data-label="[btnPublish]">[btnPublish]</button>
-                    <ul data-highlight="N">
+                <form class="composer reqauth hidden" onsubmit="return false;">
+                    <textarea class="content-area" name="fdata" data-name="content" data-required="Y" placeholder="[lblComposePH]"></textarea>
+                    <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
+                    <ul class="hidden" data-highlight="N">
                         <li>[lblComposeChooseChannel]</li>
                         <li>[lblComposeAttachFile]</li>
                     </ul>
-                </div>
+                    <span class="content-length">&nbsp;</span>
+                </form>
                 <div class="timeline" data-view="global"></div>
             </section>
             <section class="nav-right">
                 <ul class="post-types">
-                    <li class="selected" data-action="filter" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
-                    <li data-action="filter" data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
-                    <li data-action="filter" data-type="notes">[navShowNotes] <i class="fas fa-comment"></i></li>
-                    <li data-action="filter" data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
-                    <li data-action="filter" data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
+                    <li class="post-type selected" data-action="filter" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
+                    <li class="post-type" data-action="filter" data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
+                    <li class="post-type" data-action="filter" data-type="notes">[navShowNotes] <i class="fas fa-comment"></i></li>
+                    <li class="post-type" data-action="filter" data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
+                    <li class="post-type" data-action="filter" data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
                 </ul>
                 <ul class="post-visibility">
                     <li class="selected" data-type="all">[navVisAll]</li>
                     <li data-type="active">[navVisActive]</li>
                 </ul>
             </section>
+            <div id="viewCarousel" class="modal fade compose" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body carousel-body" dir="auto">
+                            <p>&nbsp;</p>
+                        </div>
+                        <div class="modal-footer carousel-foot">
+                            <p>&nbsp;</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <script type="text/javascript" src="[JS_DIR]/jquery-3.1.1.min.js"></script>
             <script type="text/javascript" src="[JS_DIR]/bootstrap.min.js"></script>
             <script type="text/javascript" src="[JS_DIR]/network.js?ver=[CSS_VER]"></script>
