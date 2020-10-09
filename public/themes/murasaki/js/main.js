@@ -391,7 +391,8 @@ function publishPost(el) {
         // Collect the Appropriate Values and Fire Them Off
         var params = { 'channel_guid': getChannelGUID(),
                        'persona_guid': getPersonaGUID(),
-                       'privacy': 'visibility.' + privacy
+                       'privacy': 'visibility.' + privacy,
+                       'type': 'post.note',
                       };
 
         var els = document.getElementsByName(fname);
