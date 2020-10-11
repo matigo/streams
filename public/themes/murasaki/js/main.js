@@ -638,7 +638,7 @@ function buildHTML( post ) {
     var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
                 '<div class="content-header">' +
                     '<p class="persona">' + _dispName + '</p>' +
-                    '<p class="pubtime" data-utc="' + post.publish_at + '">' + formatDate(post.publish_at, true) + _icon + '</p>' +
+                    '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
                 '</div>' +
                 '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" data-guid="' + post.guid + '">' +
                     _ttxt +

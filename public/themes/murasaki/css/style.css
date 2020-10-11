@@ -139,15 +139,38 @@ section.titlebar ul li {
 
 @media (max-width: 1200px) {
     section.titlebar h1 {
-        padding: 0;
-        max-width: 75px;
-        min-width: 75px;
+        vertical-align: text-top;
+        margin: 5px 0 10px;
     }
     section.titlebar ul {
         display: inline-block;
         text-align: right;
         max-width: 1125px;
-        width: calc(100% - 125px)
+        width: calc(100% - 125px);
+    }
+}
+
+@media (max-width: 425px) {
+    section.titlebar {
+        max-height: 55px;
+        min-height: 55px;
+        height: 55px;
+    }
+    section.titlebar h1 {
+        padding: 0;
+        max-width: 75px;
+        min-width: 75px;
+    }
+    section.titlebar ul {
+        vertical-align: text-top;
+        text-align: center;
+        padding: 10px 0 0;
+        max-width: 400px;
+        width: calc(100% - 80px);
+    }
+    section.titlebar ul li {
+        font-size: 0.9em;
+        margin: 0 0 0 5px;
     }
 }
 
@@ -200,6 +223,10 @@ section.nav-left ul li span {
     section.nav-left ul li span { display: none; }
 }
 
+@media (max-width: 425px) {
+    section.nav-left { display: none; }
+}
+
 /** ************************************************************************ *
  *  Navigation Menu (Right)
  ** ************************************************************************ */
@@ -212,6 +239,42 @@ section.nav-right {
 }
 section.nav-right ul { margin: 15px 0 60px; }
 
+@media (max-width: 425px) {
+    section.nav-right { display: none; }
+}
+
+/** ************************************************************************ *
+ *  Navigation Menu (Bottom)
+ ** ************************************************************************ */
+section.nav-bottom { display: none; }
+section.nav-bottom ul {
+    list-style: none;
+    margin: 0;
+}
+
+@media (max-width: 425px) {
+    section.nav-bottom {
+        background: #fff;
+        border-top: 1px solid #000;
+        display: block;
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        left: 0;
+    }
+    section.nav-bottom ul li {
+        border-right: 1px solid #000;
+        border-radius: 0;
+        display: inline-block;
+        font-size: 1.33em;
+        text-align: center;
+        padding: 0.5em 0 0.333em;
+        margin: 0;
+        max-width: calc(25% - 4px);
+        width: 25%;
+    }
+    section.nav-bottom ul li:last-child { border: none; }
+}
 /** ************************************************************************ *
  *  400-series Messages
  ** ************************************************************************ */
@@ -384,6 +447,12 @@ section.main-content .composer .content-length {
     }
 }
 
+@media (max-width: 425px) {
+    section.main-content {
+        max-width: calc(100% - 5px);
+        width: 100%;
+    }
+}
 
 
 section.main-content .timeline {
@@ -528,6 +597,15 @@ section.main-content .timeline .post-item.post-article .content-area .content-so
 }
 section.main-content .timeline .post-item.post-quotation .content-area span.account,
 section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
+
+@media (max-width: 425px) {
+    section.main-content .timeline .post-item .content-area .bottom-spacer {
+        border-bottom: 1px solid #e7e3ed;
+        max-width: 325px;
+        width: 66%;
+        margin: 0 0 5px;
+    }
+}
 
 /** ************************************************************************ *
  *  Carousel Modal
