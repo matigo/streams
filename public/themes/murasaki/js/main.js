@@ -29,10 +29,24 @@ document.onreadystatechange = function () {
                 });
             }
 
+            var els = document.getElementsByClassName('navmenu-popover');
+            for ( var i = 0; i < els.length; i++ ) {
+                els[i].addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    handlePopover(e);
+                })
+                els[i].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handlePopover(e);
+                })
+            }
+
             var els = document.getElementsByClassName('content-area');
             for ( var i = 0; i < els.length; i++ ) {
                 els[i].addEventListener('keyup', function(e) { countCharacters(); });
             }
+
+
 
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
@@ -442,6 +456,7 @@ function clearWrite() {
     for ( var i = 0; i < els.length; i++ ) {
         spinButton(els[i], true);
     }
+    toggleComposerPop(true);
     countCharacters();
 }
 
@@ -482,6 +497,7 @@ function getTimeline( _tl ) {
     if ( window.navigator.onLine ) {
         if ( NoNull(_tl) == '' ) { _tl = getSelectedTimeline(); }
         resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Posts ...</p></div>');
+        updateNavButtons();
 
         /* Now let's query the API */
         var params = { 'types': getVisibleTypes(),
@@ -788,3 +804,156 @@ function toggleCarouselImage(el) {
     obj.classList.add('selected');
 }
 
+
+function handlePopover(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var tObj = false;
+
+    if ( tObj === false && el.currentTarget.tagName.toLowerCase() == 'button' ) { tObj = el.currentTarget; }
+    if ( tObj === false && el.target.tagName.toLowerCase() == 'button' ) { tObj = el.target; }
+    if ( tObj.tagName.toLowerCase() != 'button' ) { return; }
+
+    if ( splitSecondCheck(tObj) === false ) { return; }
+
+    $(tObj).popover({
+        container: 'body',
+        html: true,
+        placement: 'top',
+        content:function(){ return getPopoverContent(tObj); }
+    });
+    $(tObj).popover('show');
+    setTimeout(function () { $(tObj).popover('hide'); }, 7500);
+}
+function hidePopovers( _group ) {
+    var _grp = NoNull(_group);
+
+    var els = document.getElementsByClassName('navmenu-popover');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _gg = NoNull(els[i].getAttribute('data-group'));
+        if ( _gg != _grp ) { $(els[i]).popover('hide'); }
+    }
+}
+function getPopoverContent(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var actions = { 'timeline': [{ 'icon': 'fas fa-globe', 'label': 'Global', 'value': 'global', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-home', 'label': 'Home', 'value': 'home', 'function': 'getNavView' },
+                                 { 'icon': 'far fa-comments', 'label': 'Mentions', 'value': 'mentions', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-rss', 'label': 'RSS Feeds', 'value': 'rss', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-highlighter', 'label': 'Highlights', 'value': 'actions', 'function': 'getNavView' }],
+                    'filters':  [{ 'icon': 'fas fa-water', 'label': 'All Posts', 'value': 'all', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-images', 'label': 'Photos', 'value': 'photo', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-comment', 'label': 'Socials', 'value': 'notes', 'function': 'getNavView' },
+                                 { 'icon': 'far fa-newspaper', 'label': 'Articles', 'value': 'article', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-quote-right', 'label': 'Quotations', 'value': 'quotation', 'function': 'getNavView' }]
+                   };
+    var _grp = NoNull(el.getAttribute('data-group'));
+    hidePopovers(_grp);
+
+    var _html = '';
+    var ds = actions[_grp];
+    if ( ds !== undefined && ds !== false && ds !== null ) {
+        if ( ds.length !== undefined && ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                _html += '<li>' +
+                            '<button class="btn btn-paction" data-group="' + _grp + '" data-value="' + NoNull(ds[i].value) + '" onClick="' + NoNull(ds[i].function) + '(this);">' +
+                                '<i class="' + NoNull(ds[i].icon) + '"></i> ' + NoNull(ds[i].label) +
+                            '</button>' +
+                         '</li>';
+            }
+        }
+        if ( _html != '' ) { _html = '<ul class="popover-list">' + _html + '</ul>'; }
+    }
+
+    return NoNull(_html, '<p>Error!</p>');
+}
+function toggleComposerPop( _reset ) {
+    if ( _reset === undefined || _reset === null || _reset !== true ) { _reset = false; }
+    var els = document.getElementsByClassName('composer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _reset || els[i].classList.contains('hidden-pop') === false ) {
+            els[i].classList.add('hidden-pop');
+            _reset = true;
+
+        } else {
+            els[i].classList.remove('hidden-pop');
+        }
+    }
+    var els = document.getElementsByClassName('navmenu-write');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _reset ) {
+            if ( els[i].classList.contains('active') ) { els[i].classList.remove('active'); }
+            els[i].innerHTML = '<i class="fas fa-edit"></i>';
+        } else {
+            if ( els[i].classList.contains('active') === false ) { els[i].classList.add('active'); }
+            els[i].innerHTML = '<i class="far fa-times-circle"></i>';
+        }
+    }
+}
+function getNavView(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _group = NoNull(el.getAttribute('data-group')).toLowerCase();
+    var _value = NoNull(el.getAttribute('data-value')).toLowerCase();
+
+    switch ( _group ) {
+        case 'timeline':
+            var els = document.getElementsByClassName('list-view');
+            for ( var i = 0; i < els.length; i++ ) {
+                var _vv = NoNull(els[i].getAttribute('data-tl')).toLowerCase();
+                if ( _vv == _value ) {
+                    handleNavListAction(els[i]);
+                    i = els.length;
+                }
+            }
+            break;
+
+        case 'filters':
+            var els = document.getElementsByClassName('post-type');
+            for ( var i = 0; i < els.length; i++ ) {
+                var _vv = NoNull(els[i].getAttribute('data-type')).toLowerCase();
+                if ( _vv == _value ) {
+                    handleNavListAction(els[i]);
+                    i = els.length;
+                }
+            }
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+
+    hidePopovers();
+}
+
+function getSelectedIcon( cls ) {
+    var _cls = NoNull(cls);
+    if ( _cls != '' ) {
+        var els = document.getElementsByClassName(_cls);
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( els[i].classList.contains('selected') ) {
+                var icos = els[i].getElementsByTagName('I');
+                for ( var e = 0; e < icos.length; e++ ) {
+                    return icos[e].outerHTML;
+                }
+            }
+        }
+    }
+    return '';
+}
+function updateNavButtons() {
+    var els = document.getElementsByClassName('navmenu-popover');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _group = NoNull(els[i].getAttribute('data-group')).toLowerCase();
+        switch ( _group ) {
+            case 'timeline':
+                els[i].innerHTML = getSelectedIcon('list-view');
+                break;
+
+            case 'filters':
+                els[i].innerHTML = getSelectedIcon('post-type');
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+    }
+}

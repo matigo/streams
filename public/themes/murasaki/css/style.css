@@ -247,10 +247,6 @@ section.nav-right ul { margin: 15px 0 60px; }
  *  Navigation Menu (Bottom)
  ** ************************************************************************ */
 section.nav-bottom { display: none; }
-section.nav-bottom ul {
-    list-style: none;
-    margin: 0;
-}
 
 @media (max-width: 425px) {
     section.nav-bottom {
@@ -262,18 +258,20 @@ section.nav-bottom ul {
         right: 0;
         left: 0;
     }
-    section.nav-bottom ul li {
+    section.nav-bottom button {
+        background: transparent;
         border-right: 1px solid #000;
         border-radius: 0;
         display: inline-block;
         font-size: 1.33em;
         text-align: center;
         padding: 0.5em 0 0.333em;
-        margin: 0;
-        max-width: calc(25% - 4px);
+        margin: 0 0 0 -4px;
+        max-width: 25%;
+        min-width: 25%;
         width: 25%;
     }
-    section.nav-bottom ul li:last-child { border: none; }
+    section.nav-bottom button:last-child { border: none; }
 }
 /** ************************************************************************ *
  *  400-series Messages
@@ -599,6 +597,31 @@ section.main-content .timeline .post-item.post-quotation .content-area span.acco
 section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
 
 @media (max-width: 425px) {
+    section.main-content .composer.hidden-pop { display: none !important; }
+    section.main-content .composer {
+        background: #fff;
+        border-width: 3px;
+        display: block;
+        position: fixed;
+        margin: 0 5px;
+        right: 0;
+        left: 0;
+        min-width: calc(100% - 10px);
+        max-width: calc(100% - 10px);
+        width: 100%;
+    }
+    section.main-content .composer textarea { min-height: 125px; }
+    section.main-content .composer .btn-publish { float: right; }
+    section.main-content .composer .content-length {
+        padding: 0 0 0 10px;
+        text-align: left;
+    }
+    section.main-content .timeline {
+        max-height: calc(100vh - 250px);
+        min-height: calc(100vh - 250px);
+        height: 100vh;
+    }
+
     section.main-content .timeline .post-item .content-area .bottom-spacer {
         border-bottom: 1px solid #e7e3ed;
         max-width: 325px;
@@ -647,4 +670,34 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
         max-width: calc(100% - 50px);
         width: 100%;
     }
+}
+
+/** ************************************************************************ *
+ *  Popover Overrides
+ ** ************************************************************************ */
+.popover-content { padding: 0 !important; }
+.popover-content ul li {
+    border-bottom: 1px solid #e7e3ed;
+    border-radius: 0;
+    padding: 0 !important;
+    margin: 0;
+}
+.popover-content ul li:last-child { border: none; }
+.popover-content ul li button {
+    background: transparent;
+    border-radius: 0;
+    display: block;
+    font-size: 1.1em;
+    text-align: left;
+    max-height: 7vh;
+    min-height: 7vh;
+    height: 45px;
+    max-width: 275px;
+    min-width: 75px;
+    width: 100%;
+}
+.popover-content ul li button i {
+    font-size: 1.5em;
+    vertical-align: middle;
+    min-width: 30px;
 }

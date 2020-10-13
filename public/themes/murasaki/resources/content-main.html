@@ -9,7 +9,7 @@
                 </ul>
             </section>
             <section class="main-content">
-                <form class="composer reqauth hidden" onsubmit="return false;">
+                <form class="composer reqauth hidden hidden-pop" onsubmit="return false;">
                     <textarea class="content-area" name="fdata" data-name="content" data-required="Y" placeholder="[lblComposePH]"></textarea>
                     <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
                     <ul class="hidden" data-highlight="N">
@@ -34,17 +34,15 @@
                 </ul>
             </section>
             <section class="nav-bottom">
-                <ul class="quick-navs">
-                    <li class="quick-nav" data-action="collect" data-tl="global"><i class="fas fa-globe"></i></li>
-                    <li class="quick-nav" data-action="collect" data-tl="home"><i class="fas fa-filter"></i></li>
-                    <li class="quick-nav" data-action="collect" data-tl="mentions"><i class="fas fa-cogs"></i></li>
-                    <li class="quick-nav" data-action="collect" data-tl="actions"><i class="fas fa-edit"></i></li>
-                </ul>
+                <button class="btn navmenu-popover" data-group="timeline" data-container="body" data-toggle="popover"><i class="fas fa-globe"></i></button>
+                <button class="btn navmenu-popover" data-group="filters" data-container="body" data-toggle="popover"><i class="fas fa-filter"></i></button>
+                <button class="btn navmenu-spacer" disabled>&nbsp;</button>
+                <button class="btn navmenu-write" onclick="toggleComposerPop();"><i class="fas fa-edit"></i></button>
             </section>
             <div id="viewCarousel" class="modal fade compose" role="dialog">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">
-                        <div class="modal-body carousel-body" dir="auto">
+                        <div class="modal-body carousel-body" data-dismiss="modal" dir="auto">
                             <p>&nbsp;</p>
                         </div>
                         <div class="modal-footer carousel-foot">
@@ -54,6 +52,7 @@
                 </div>
             </div>
             <script type="text/javascript" src="[JS_DIR]/jquery-3.1.1.min.js"></script>
+            <script type="text/javascript" src="[JS_DIR]/popper/popper.min.js"></script>
             <script type="text/javascript" src="[JS_DIR]/bootstrap.min.js"></script>
             <script type="text/javascript" src="[JS_DIR]/network.js?ver=[CSS_VER]"></script>
             <script type="text/javascript" src="[JS_DIR]/globals.js?ver=[CSS_VER]"></script>
