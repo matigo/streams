@@ -603,6 +603,7 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
         border-width: 3px;
         display: block;
         position: fixed;
+        z-index: 1000;
         margin: 0 5px;
         right: 0;
         left: 0;
@@ -616,12 +617,7 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
         padding: 0 0 0 10px;
         text-align: left;
     }
-    section.main-content .timeline {
-        max-height: calc(100vh - 250px);
-        min-height: calc(100vh - 250px);
-        height: 100vh;
-    }
-
+    section.main-content .timeline { padding-bottom: 50px; }
     section.main-content .timeline .post-item .content-area .bottom-spacer {
         border-bottom: 1px solid #e7e3ed;
         max-width: 325px;
