@@ -27,11 +27,12 @@
     "btnPublish": "Publish",
     "btnSignIn": "Sign In",
 
-    "lblComposePH": "What's up?",
+    "lblComposePH": "What's on your mind?",
     "lblComposeChooseChannel": "Select a Channel",
     "lblComposeAttachFile": "Attach ...",
 
     "lblPostGeo": "Geo Tag",
+    "lblPostGeoPH": "(Geographic Coordinates or a Description)",
     "lblPostType": "Post Type",
     "lblPostSource": "Source",
     "lblPostSourcePH": "(Paste a Website URL Here)",

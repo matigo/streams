@@ -59,6 +59,11 @@ document.onreadystatechange = function () {
                 el.addEventListener('keyup', function(e) { handlePostType(e); });
             }
 
+            /* Show Hidden Elements That Require HTTPS */
+            if ( window.location.protocol == 'https' ) {
+                showByClass('btn-getgeo');
+            }
+
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
         }
@@ -403,6 +408,23 @@ function checkSourceUrl() {
         els[i].disabled = !_sOK;
     }
 }
+function getPostType() {
+    var els = document.getElementsByClassName('form-element');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+        switch ( _name ) {
+            case 'post-type':
+            case 'posttype':
+                var _val = NoNull(els[i].value);
+                if ( _val != '' ) { return _val; }
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+    }
+    return '';
+}
 function handlePostType(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     var tObj = false;
@@ -470,7 +492,7 @@ function togglePostGeo( btn, _reset ) {
         } else {
             if ( els[i].classList.contains('hidden') ) { els[i].classList.remove('hidden'); }
             if ( NoNull(els[i].tagName).toLowerCase() == 'input' ) {
-                els[i].value = '0.00000, 0.00000, 0.00000';
+                els[i].value = '';
                 els[i].setAttribute('data-start', Math.floor(Date.now()));
                 getGeoLocation();
             }
@@ -823,7 +845,7 @@ function getGeoLocation( _active ) {
     var el = document.getElementById('post-geo');
     if ( el === undefined || el === false || el === null ) { return; }
 
-    if ( _active || navigator.geolocation ) {
+    if ( window.location.protocol == 'https' && (_active || navigator.geolocation) ) {
         var current_ts = Math.floor(Date.now());
         var start_ts = parseInt(el.getAttribute('data-start'));
 
@@ -840,7 +862,7 @@ function getGeoLocation( _active ) {
 
     } else {
         alert("Geo-Location Data is Unavailable");
-        el.classList.add('hidden');
+        hideByClass('btn-getgeo');
         hideByClass('show-geo');
     }
 }
@@ -852,10 +874,10 @@ function showPosition( position ) {
         pos += ', ' + Math.round(position.coords.altitude * _aprec) / _aprec;
     }
 
-    var els = document.getElementById('post-geo');
-    if ( els !== undefined && els !== false && els !== null ) {
-        els.value = pos;
-    }
+    console.log(position.coords);
+
+    var el = document.getElementById('post-geo');
+    if ( el !== undefined && el !== false && el !== null ) { el.value = NoNull(pos); }
 }
 function openGeoLocation( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
@@ -1003,7 +1025,7 @@ function getPopoverContent(el) {
                                  { 'icon': 'fas fa-highlighter', 'label': 'Highlights', 'value': 'actions', 'function': 'getNavView' }],
                     'filters':  [{ 'icon': 'fas fa-water', 'label': 'All Posts', 'value': 'all', 'function': 'getNavView' },
                                  { 'icon': 'fas fa-images', 'label': 'Photos', 'value': 'photo', 'function': 'getNavView' },
-                                 { 'icon': 'fas fa-comment', 'label': 'Socials', 'value': 'notes', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-comment', 'label': 'Socials', 'value': 'note', 'function': 'getNavView' },
                                  { 'icon': 'far fa-newspaper', 'label': 'Articles', 'value': 'article', 'function': 'getNavView' },
                                  { 'icon': 'fas fa-quote-right', 'label': 'Quotations', 'value': 'quotation', 'function': 'getNavView' }]
                    };

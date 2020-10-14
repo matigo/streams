@@ -253,6 +253,8 @@ section.nav-bottom { display: none; }
         background: #fff;
         border-top: 1px solid #000;
         display: block;
+        white-space: nowrap;
+        overflow: hidden;
         position: fixed;
         bottom: 0;
         right: 0;
@@ -271,8 +273,24 @@ section.nav-bottom { display: none; }
         min-width: 25%;
         width: 25%;
     }
-    section.nav-bottom button:last-child { border: none; }
+    section.nav-bottom button:first-child { margin: 0 0 0 -5px; }
+    section.nav-bottom button:last-child {
+        border-right: none;
+        margin: 0 0 0 -5px;
+        max-width: calc(25% + 5px);
+        min-width: calc(25% + 5px);
+        width: calc(25% + 5px);
+    }
 }
+
+@media (max-width: 425px) AND (min-height: 800px) {
+    section.nav-bottom button {
+        background: #fff;
+        background: linear-gradient(0deg, rgba(90,59,134,1) 0%, rgba(90,59,134,0.65) 12.5%, rgba(255,255,255,1) 40%);
+        padding: 10px 0 40px;
+    }
+}
+
 /** ************************************************************************ *
  *  400-series Messages
  ** ************************************************************************ */
@@ -711,6 +729,7 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
 /** ************************************************************************ *
  *  Popover Overrides
  ** ************************************************************************ */
+.popover { position: fixed !important; }
 .popover-content { padding: 0 !important; }
 .popover-content ul li {
     border-bottom: 1px solid #e7e3ed;

@@ -263,23 +263,6 @@ function getPersonaGUID() {
     }
     return '';
 }
-function getPostType() {
-    var els = document.getElementsByClassName('form-element');
-    for ( var i = 0; i < els.length; i++ ) {
-        var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
-        switch ( _name ) {
-            case 'post-type':
-            case 'posttype':
-                var _val = NoNull(els[i].value);
-                if ( _val != '' ) { return _val; }
-                break;
-
-            default:
-                /* Do Nothing */
-        }
-    }
-    return '';
-}
 
 /** ************************************************************************* *
  *  Copy/Pasta

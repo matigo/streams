@@ -27,7 +27,7 @@
                     <input class="form-element show-geo hidden" id="post-geo" name="fdata" data-name="post-geo" data-required="N" placeholder="[lblPostGeoPH]" value="" autocomplete="off" />
                     <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
                     <button class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></button>
-                    <button class="btn btn-getgeo btn-primary" onclick="togglePostGeo(this);"><i class="fas fa-map-marker-alt"></i></button>
+                    <button class="btn btn-getgeo btn-primary hidden" onclick="togglePostGeo(this);"><i class="fas fa-map-marker-alt"></i></button>
                     <ul class="hidden" data-highlight="N">
                         <li>[lblComposeChooseChannel]</li>
                         <li>[lblComposeAttachFile]</li>
@@ -40,7 +40,7 @@
                 <ul class="post-types">
                     <li class="post-type selected" data-action="filter" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
                     <li class="post-type" data-action="filter" data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
-                    <li class="post-type" data-action="filter" data-type="notes">[navShowNotes] <i class="fas fa-comment"></i></li>
+                    <li class="post-type" data-action="filter" data-type="note">[navShowNotes] <i class="fas fa-comment"></i></li>
                     <li class="post-type" data-action="filter" data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
                     <li class="post-type" data-action="filter" data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
                 </ul>

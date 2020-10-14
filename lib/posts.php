@@ -2389,7 +2389,7 @@ class Posts {
                     $hash_list .= strtolower($hash);
                 }
             }
-            $out_str .= ($hash != '') ? str_ireplace($clean_word, '<a class="hash" href="[HOMEURL]/tag/' . strtolower($hash) . '" data-hash="' . strtolower($hash) . '">' . NoNull($clean_word) . '</a> ', $word)
+            $out_str .= ($hash != '') ? str_ireplace($clean_word, '<span class="hash" data-hash="' . strtolower($hash) . '">' . NoNull($clean_word) . '</span> ', $word)
                                       : "$word ";
         }
         $rVal = NoNull($out_str);
@@ -2576,7 +2576,7 @@ class Posts {
 
             if ( NoNull(substr($clean_word, 0, 1)) == '@' ) {
                 $name_scrub = array('@', '#', "\r", "\t", "\n", '//', '/', '</', '<br>');
-                $name = NoNull($clean_word);
+                $name = NoNull(strip_tags($clean_word));
 
                 for ( $i = 0; $i < (count($name_scrub) - 1); $i++ ) {
                     $name = NoNull(str_replace($name_scrub, '', $name));
