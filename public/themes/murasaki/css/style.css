@@ -426,6 +426,45 @@ section.main-content .composer ul li {
     display: inline-block;
     margin: 0 0 0 15px;
 }
+section.main-content .composer label {
+    display: inline-block;
+    padding: 5px 5px 0 0;
+    text-align: right;
+    vertical-align: text-top;
+    max-width: 90px;
+    min-width: 90px;
+}
+section.main-content .composer select {
+    display: inline-block;
+    padding: 5px 5px 3px;
+}
+section.main-content .composer textarea { margin: 2px 0 5px; }
+section.main-content .composer .form-element {
+    display: inline-block;
+    vertical-align: text-top;
+    padding: 0 5px;
+    margin: 0 0 3px;
+    max-height: 30px;
+    min-height: 30px;
+    max-width: calc(100% - 95px);
+    width: calc(100% - 95px);
+}
+section.main-content .composer .form-element.short {
+    padding: 0 5px;
+    max-height: 30px;
+    min-height: 30px;
+    max-width: calc(100% - 165px);
+    width: calc(100% - 165px);
+}
+section.main-content .composer button.short {
+    padding: 5px 0 3px;
+    vertical-align: text-top;
+    max-height: 30px;
+    min-height: 30px;
+    max-width: 65px;
+    min-width: 65px;
+    width: 65px;
+}
 section.main-content .composer .content-length {
     display: inline-block;
     font-size: 1.1em;
@@ -434,8 +473,9 @@ section.main-content .composer .content-length {
     vertical-align: middle;
     padding: 0;
     margin: 0;
-    max-width: calc(100% - 135px);
-    width: 100%;
+    float: right;
+    max-width: 75px;
+    width: 75px;
 }
 
 @media (max-width: 1200px) {

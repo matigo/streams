@@ -4,14 +4,30 @@
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="home"><span>[navTLHome]</span><i class="fas fa-home"></i></li>
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="mentions"><span>[navTLMentions]</span><i class="far fa-comments"></i></li>
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="actions"><span>[navTLHighlights]</span><i class="fas fa-highlighter"></i></li>
-                    <li class="list-view reqauth hidden" data-action="collect" data-tl="photos"><span>[navTLPictures]</span><i class="fas fa-camera"></i></li>
                     <li><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
                 </ul>
             </section>
             <section class="main-content">
                 <form class="composer reqauth hidden hidden-pop" onsubmit="return false;">
+                    <label for="post-type">[lblPostType]:</label>
+                    <select class="form-element" id="post-type" name="fdata" data-name="post-type">
+                        <option value="post.note">[optPostNote]</option>
+                        <option value="post.article">[optPostArticle]</option>
+                        <option value="post.quotation">[optPostQuotation]</option>
+                    </select>
+                    <label for="post-source" class="show-quotation hidden">[lblPostSource]:</label>
+                    <input class="form-element show-quotation short hidden" id="post-source" name="fdata" data-name="source-url" data-required="N" placeholder="[lblPostSourcePH]" value="" autocomplete="off" />
+                    <button class="btn btn-fetch-source show-quotation short hidden" disabled>[btnGoFetch]</button>
+                    <label for="post-srctitle" class="show-quotation hidden">[lblPostSrcTitle]:</label>
+                    <input class="form-element show-quotation hidden" id="post-srctitle" name="fdata" data-name="source-title" data-required="N" placeholder="[lblPostSrcTitlePH]" value="" autocomplete="off" />
+                    <label for="post-title" class="show-article hidden">[lblPostTitle]:</label>
+                    <input class="form-element show-article hidden" id="post-title" name="fdata" data-name="title" data-required="N" placeholder="[lblPostTitlePH]" value="" autocomplete="off" />
                     <textarea class="content-area" name="fdata" data-name="content" data-required="Y" placeholder="[lblComposePH]"></textarea>
+                    <label for="post-geo" class="show-geo hidden">[lblPostGeo]:</label>
+                    <input class="form-element show-geo hidden" id="post-geo" name="fdata" data-name="post-geo" data-required="N" placeholder="[lblPostGeoPH]" value="" autocomplete="off" />
                     <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
+                    <button class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></button>
+                    <button class="btn btn-getgeo btn-primary" onclick="togglePostGeo(this);"><i class="fas fa-map-marker-alt"></i></button>
                     <ul class="hidden" data-highlight="N">
                         <li>[lblComposeChooseChannel]</li>
                         <li>[lblComposeAttachFile]</li>

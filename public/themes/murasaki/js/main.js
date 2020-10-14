@@ -6,6 +6,7 @@ window.audiotouch = 0;
 window.audio_load = 0;
 window.audio_rate = 1;
 window.lasttouch = 0;
+window.geoId = false;
 
 window.KEY_DOWNARROW = 40;
 window.KEY_ESCAPE = 27;
@@ -46,7 +47,17 @@ document.onreadystatechange = function () {
                 els[i].addEventListener('keyup', function(e) { countCharacters(); });
             }
 
+            var el = document.getElementById('post-source');
+            if ( el !== undefined && el !== false && el !== null ) {
+                el.addEventListener('change', function(e) { checkSourceUrl(); });
+                el.addEventListener('keyup', function(e) { checkSourceUrl(); });
+            }
 
+            var el = document.getElementById('post-type');
+            if ( el !== undefined && el !== false && el !== null ) {
+                el.addEventListener('change', function(e) { handlePostType(e); });
+                el.addEventListener('keyup', function(e) { handlePostType(e); });
+            }
 
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
@@ -371,6 +382,103 @@ function showVisibilityType() {
 }
 
 /** ************************************************************************* *
+ *  Authoring Visibility Functions
+ ** ************************************************************************* */
+function checkSourceUrl() {
+    var el = document.getElementById('post-source');
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _val = NoNull(el.value);
+    var _sOK = false;
+
+    /* Check if the value appears to be valid */
+    if ( _val != '' ) { _sOK = isValidUrl(_val); }
+
+    var els = document.getElementsByClassName('btn-fetch-source');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _sOK ) {
+            if ( els[i].classList.contains('btn-primary') === false ) { els[i].classList.add('btn-primary'); }
+        } else {
+            if ( els[i].classList.contains('btn-primary') ) { els[i].classList.remove('btn-primary'); }
+        }
+        els[i].disabled = !_sOK;
+    }
+}
+function handlePostType(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var tObj = false;
+    if ( NoNull(el.tagName).toLowerCase() == 'select' ) { tObj = el; }
+    if ( tObj === false ) { if ( NoNull(el.currentTarget.tagName).toLowerCase() == 'select' ) { tObj = el.currentTarget; } }
+    if ( tObj === false ) { if ( NoNull(el.target.tagName).toLowerCase() == 'select' ) { tObj = el.target; } }
+    if ( tObj === undefined || tObj === false || tObj === null ) { return; }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(tObj) === false ) { return; }
+
+    /* Reset the Required Field Values */
+    setComposeRequirement('source-title', 'N');
+    setComposeRequirement('source-url', 'N');
+
+    /* Determine What to Do and Do It */
+    var _val = NoNull(tObj.value).toLowerCase();
+    switch ( _val ) {
+        case 'post.quotation':
+            showByClass('show-quotation');
+            hideByClass('show-article');
+            setComposeRequirement('source-title', 'Y');
+            setComposeRequirement('source-url', 'Y');
+            break;
+
+        case 'post.article':
+            hideByClass('show-quotation');
+            showByClass('show-article');
+            break;
+
+        default:
+            hideByClass('show-quotation');
+            hideByClass('show-article');
+    }
+}
+function setComposeRequirement( _name, _req ) {
+    if ( NoNull(_req).toUpperCase() != 'Y' ) { _req = 'N'; }
+    if ( NoNull(_name).length <= 3 ) { return; }
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _nm = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+        if ( _nm == _name ) {
+            els[i].setAttribute('data-required', NoNull(_req, 'N').toUpperCase());
+            return;
+        }
+    }
+}
+function togglePostGeo( btn, _reset ) {
+    if ( _reset === undefined || _reset === null || _reset !== true ) { _reset = false; }
+    if ( btn === undefined || btn === false || btn === null ) {
+        var els = document.getElementsByClassName('btn-getgeo');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( NoNull(els[i].tagName).toLowerCase() == 'button' ) {
+                btn = els[i];
+                i = els.length;
+            }
+        }
+    }
+
+    var els = document.getElementsByClassName('show-geo');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( _reset || els[i].classList.contains('hidden') === false ) {
+            if ( els[i].classList.contains('hidden') === false ) { els[i].classList.add('hidden'); }
+            if ( NoNull(els[i].tagName).toLowerCase() == 'input' ) { els[i].value = ''; }
+        } else {
+            if ( els[i].classList.contains('hidden') ) { els[i].classList.remove('hidden'); }
+            if ( NoNull(els[i].tagName).toLowerCase() == 'input' ) {
+                els[i].value = '0.00000, 0.00000, 0.00000';
+                els[i].setAttribute('data-start', Math.floor(Date.now()));
+                getGeoLocation();
+            }
+        }
+    }
+}
+
+/** ************************************************************************* *
  *  Publishing Functions
  ** ************************************************************************* */
 function validatePublish( fname ) {
@@ -406,7 +514,7 @@ function publishPost(el) {
         var params = { 'channel_guid': getChannelGUID(),
                        'persona_guid': getPersonaGUID(),
                        'privacy': 'visibility.' + privacy,
-                       'type': 'post.note',
+                       'type': getPostType()
                       };
 
         var els = document.getElementsByName(fname);
@@ -444,8 +552,8 @@ function clearWrite() {
         var _tag = NoNull(els[i].tagName).toLowerCase();
         switch ( _tag ) {
             case 'select':
+                els[i].value = els[i].options[0].value;
                 els[i].selectedIndex = 0;
-                els[i].value = '';
                 break;
 
             default:
@@ -457,6 +565,7 @@ function clearWrite() {
         spinButton(els[i], true);
     }
     toggleComposerPop(true);
+    togglePostGeo(null, true);
     countCharacters();
 }
 
@@ -705,6 +814,58 @@ function checkCanDisplayPost( _view, post ) {
         }
     }
 }
+
+/** ************************************************************************* *
+ *  GeoLocation Functions
+ ** ************************************************************************* */
+function getGeoLocation( _active ) {
+    if ( _active === undefined || _active === null || _active !== true ) { _active = false; }
+    var el = document.getElementById('post-geo');
+    if ( el === undefined || el === false || el === null ) { return; }
+
+    if ( _active || navigator.geolocation ) {
+        var current_ts = Math.floor(Date.now());
+        var start_ts = parseInt(el.getAttribute('data-start'));
+
+        var geo = navigator.geolocation;
+        if ( (current_ts - start_ts) < 5000 ) {
+            if ( window.geoId === false ) { window.geoId = geo.watchPosition(showPosition); }
+            setTimeout(function () { getGeoLocation(true); }, 500);
+            console.log("GeoTag Obtained");
+
+        } else {
+            geo.clearWatch(window.geoId);
+            window.geoId = false;
+        }
+
+    } else {
+        alert("Geo-Location Data is Unavailable");
+        el.classList.add('hidden');
+        hideByClass('show-geo');
+    }
+}
+function showPosition( position ) {
+    var _lprec = 1000000;
+    var _aprec = 1000;
+    var pos = Math.round(position.coords.latitude * _lprec) / _lprec + ', ' + Math.round(position.coords.longitude * _lprec) / _lprec;
+    if ( position.coords.altitude !== undefined && position.coords.altitude !== false && position.coords.altitude !== null && position.coords.altitude != 0 ) {
+        pos += ', ' + Math.round(position.coords.altitude * _aprec) / _aprec;
+    }
+
+    var els = document.getElementById('post-geo');
+    if ( els !== undefined && els !== false && els !== null ) {
+        els.value = pos;
+    }
+}
+function openGeoLocation( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _src_url = NoNull(el.getAttribute('data-value'));
+    if ( _src_url === undefined || _src_url === false || _src_url === null || _src_url == '' ) { return; }
+
+    var pel = el.parentElement;
+    pel.innerHTML = '<img src="' + _src_url + '?zoom=14&width=1280&height=440" class="geo-map" alt="" />';
+}
+
 /** ************************************************************************* *
  *  Image Carousel Functions
  ** ************************************************************************* */

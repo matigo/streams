@@ -100,6 +100,15 @@ function shuffleArray(array) {
     }
     return array;
 }
+function isValidUrl(str) {
+  var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+                           '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                           '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                           '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                           '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                           '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(str);
+}
 function setHeadMeta( _name, _value ) {
     if ( _name === undefined || _name === false || _name === null || _name.length <= 3 ) { return; }
     if ( _value === undefined || _value === false || _value === null ) { _value = ''; }
@@ -251,6 +260,23 @@ function getPersonaGUID() {
     var metas = document.getElementsByTagName('meta');
     for (var i = 0; i < metas.length; i++) {
         if ( metas[i].getAttribute("name") == 'persona_guid' ) { return NoNull(metas[i].getAttribute("content")); }
+    }
+    return '';
+}
+function getPostType() {
+    var els = document.getElementsByClassName('form-element');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+        switch ( _name ) {
+            case 'post-type':
+            case 'posttype':
+                var _val = NoNull(els[i].value);
+                if ( _val != '' ) { return _val; }
+                break;
+
+            default:
+                /* Do Nothing */
+        }
     }
     return '';
 }

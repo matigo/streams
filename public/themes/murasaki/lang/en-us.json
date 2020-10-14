@@ -23,6 +23,7 @@
     "navVisAll": "Show All",
     "navVisActive": "Most Active",
 
+    "btnGoFetch": "Go!",
     "btnPublish": "Publish",
     "btnSignIn": "Sign In",
 
@@ -30,10 +31,23 @@
     "lblComposeChooseChannel": "Select a Channel",
     "lblComposeAttachFile": "Attach ...",
 
-    "compatMsgHead": "This browser is not compatible with Mimosa.",
+    "lblPostGeo": "Geo Tag",
+    "lblPostType": "Post Type",
+    "lblPostSource": "Source",
+    "lblPostSourcePH": "(Paste a Website URL Here)",
+    "lblPostSrcTitle": "Title",
+    "lblPostSrcTitlePH": "(A Title for the Post)",
+    "lblPostTitle": "Title",
+    "lblPostTitlePH": "(A Title for the Post)",
+
+    "optPostNote": "Social",
+    "optPostArticle": "Article",
+    "optPostQuotation": "Quotation",
+
+    "compatMsgHead": "Your browser is not compatible with this website.",
     "compatMsgVersion": "The device is running {browser} version {version}.",
-    "compatMsgReq": "Please upgrade to at least 10.3.3 to use this tool.",
-    "compatMsgDefault": "Please update your software to use this tool.",
+    "compatMsgReq": "Please upgrade to at least 10.3.3 to use this site.",
+    "compatMsgDefault": "Please update your software to use this site.",
 
     "ttlSignIn": "Sign In",
     "msgSignIn": "Sign In to participate with the community",
