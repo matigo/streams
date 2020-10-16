@@ -17,6 +17,7 @@ document.onreadystatechange = function () {
     if (document.readyState == "interactive") {
         if ( isBrowserCompatible() ) {
             document.addEventListener('keydown', function(e) { handleDocumentKeyPress(e); });
+            document.addEventListener('click', function(e) { handleDocumentClick(e); });
 
             var els = document.getElementsByTagName('LI');
             for ( var i = 0; i < els.length; i++ ) {
@@ -60,12 +61,105 @@ document.onreadystatechange = function () {
             }
 
             /* Show Hidden Elements That Require HTTPS */
-            if ( window.location.protocol == 'https' ) {
+            if ( window.location.protocol.replace(':').toLowerCase() == 'https' ) {
                 showByClass('btn-getgeo');
             }
 
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
+        }
+    }
+}
+function handleDocumentClick(e) {
+    if ( e === undefined || e === false || e === null ) { return; }
+    var tObj = e.target;
+    var tagName = NoNull(tObj.tagName).toLowerCase();
+
+    switch ( tagName ) {
+        case 'span':
+            handleSpanClick(tObj);
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+}
+function handleSpanClick(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( splitSecondCheck(el) === false ) { return; }
+
+    var _class = NoNull(el.classList);
+    var _action = NoNull(el.getAttribute('data-action'), _class).toLowerCase();
+    var _html = '';
+
+    switch ( _class ) {
+        case 'account':
+            _html = '<h3 class="word-title" onclick="dismissPopover(this);">Too Soon!</h3>' +
+                    '<div class="word-results" onclick="dismissPopover(this);">' +
+                        '<p class="text-center">Sorry! Just a little more time, please ...</p>' +
+                    '</div>';
+            break;
+
+        case 'hash':
+            var _word = NoNull(el.getAttribute('data-hash'));
+            if ( _word != '' ) {
+                setTimeout(function () { getWordStatistics(_word); }, 150)
+                _html = '<h3 class="word-title" onclick="dismissPopover(this);">#' + _word + '</h3>' +
+                        '<div class="word-results" onclick="dismissPopover(this);" data-word="' + _word + '">' +
+                            '<p class="text-center"><i class="fas fa-spin fa-spinner"></i></p>' +
+                        '</div>';
+            }
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+
+    if ( NoNull(_html) != '' ) {
+        $(el).popover({
+            container: 'body',
+            html: true,
+            placement: 'bottom',
+            trigger: 'focus',
+            content:function(){ return _html; }
+        });
+        $(el).popover('show');
+    }
+}
+function getWordStatistics( _word ) {
+    if ( _word === undefined || _word === false || _word === null ) { return; }
+    var params = { 'word': _word };
+    doJSONQuery('posts/hash', 'GET', params, parseWordStatistics);
+}
+function parseWordStatistics(data) {
+    var _word = false;
+    var _html = '';
+
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        _word = NoNull(ds.word);
+        _html = '<table><tbody>' +
+                '<tr><td class="cell-label">Times Used:</td><td class="text-right">' + numberWithCommas(ds.instances) + '</td></tr>' +
+                '<tr><td class="cell-label">Times You Used:</td><td class="text-right">' + numberWithCommas(ds.yours) + '</td></tr>' +
+                '<tr><td class="cell-label">First Time:</td><td class="text-right">' + formatShortDate(ds.first_at) + '</td></tr>' +
+                '<tr><td class="cell-label">Most Recent:</td><td class="text-right">' + formatShortDate(ds.until_at) + '</td></tr>' +
+                '</tbody></table>';
+    }
+
+    var els = document.getElementsByClassName('word-results');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _val = NoNull(els[i].getAttribute('data-word'));
+        if ( _word !== false && _val == _word ) {
+            els[i].innerHTML = _html;
+            els[i].addEventListener('touchend', function(e) {
+                e.preventDefault();
+                $(els[i]).popover('hide');
+            });
+            els[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                $(els[i]).popover('hide');
+            });
         }
     }
 }

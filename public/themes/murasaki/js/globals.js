@@ -50,6 +50,16 @@ function formatDate( UTCString, shortIfRecent ) {
     }
     return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(UTCString));
 }
+function formatShortDate( UTCString ) {
+    if ( NoNull(UTCString) == '' ) { return ''; }
+
+    var t1 = new Date(UTCString);
+    var t2 = new Date();
+    var diff = (t2.getTime() - t1.getTime()) / 1000;
+    if ( diff < 86400 ) { return 'Today'; }
+
+    return Intl.DateTimeFormat(navigator.language, { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(UTCString));
+}
 function secondsToHHMMSS( secs ) {
     var sec_num = parseInt(secs, 10);
     var hours   = Math.floor(sec_num / 3600);
@@ -146,6 +156,10 @@ function toggleVisibility( _cls ) {
         }
         return;
     }
+}
+function dismissPopover(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    $(el).closest('div.popover').popover('hide');
 }
 function spinButton( el, doReset ) {
     if ( doReset === undefined || doReset !== true || doReset === null ) { doReset = false; }

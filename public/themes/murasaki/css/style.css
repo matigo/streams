@@ -455,6 +455,7 @@ section.main-content .composer label {
 section.main-content .composer select {
     display: inline-block;
     padding: 5px 5px 3px;
+    -webkit-appearance: none;
 }
 section.main-content .composer textarea { margin: 2px 0 5px; }
 section.main-content .composer .form-element {
@@ -557,7 +558,9 @@ section.main-content .timeline .post-item .content-header p {
     margin: 0;
 }
 section.main-content .timeline .post-item .content-header p.persona {
+    color: #5a3b86;
     cursor: pointer;
+    font-size: 0.95em;
     font-weight: bold;
 }
 section.main-content .timeline .post-item .content-header p.pubtime { font-size: 0.9em; }
@@ -571,6 +574,13 @@ section.main-content .timeline .post-item .content-area {
 section.main-content .timeline .post-item .content-area p span.account {
     color: #5a3b86;
     cursor: pointer;
+    font-size: 0.95em;
+    font-weight: bold;
+}
+section.main-content .timeline .post-item .content-area p span.hash {
+    color: #5a3b86;
+    cursor: pointer;
+    font-size: 0.95em;
     font-weight: bold;
 }
 section.main-content .timeline .post-item .content-area p img {
@@ -729,7 +739,7 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
 /** ************************************************************************ *
  *  Popover Overrides
  ** ************************************************************************ */
-.popover { position: fixed !important; }
+.popover .top, .popover.top { position: fixed !important; }
 .popover-content { padding: 0 !important; }
 .popover-content ul li {
     border-bottom: 1px solid #e7e3ed;
@@ -756,3 +766,27 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
     vertical-align: middle;
     min-width: 30px;
 }
+.popover-content h3 {
+    padding: 5px 10px;
+    margin: 0;
+}
+.popover-content .word-results {
+    border-top: 1px solid #00f;
+    display: block;
+    padding: 15px 0 5px;
+    margin: 0;
+    max-height: 500px;
+    min-height: 100px;
+    max-width: 250px;
+    min-width: 250px;
+    width: 250px;
+}
+.popover-content .word-results table {
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+.popover-content .word-results table tr { border-bottom: 1px dotted #ccc; }
+.popover-content .word-results table tr:last-child { border-bottom: none; }
+.popover-content .word-results table td { padding: 3px 5px; }
+.popover-content .word-results table td.cell-label { font-weight: bold; }

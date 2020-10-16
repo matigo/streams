@@ -27,81 +27,83 @@ class Posts {
      ** ********************************************************************* */
     public function performAction() {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
-        $rVal = false;
 
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If we're here, there's nothing to return
+        return false;
     }
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         if ( mb_strlen($Activity) == 36 ) { $Activity = 'read'; }
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'globals':
             case 'global':
-                $rVal = $this->_getTLStream('global');
+                return $this->_getTLStream('global');
                 break;
 
             case 'mentions':
             case 'mention':
-                $rVal = $this->_getTLStream('mentions');
+                return $this->_getTLStream('mentions');
                 break;
 
             case 'home':
-                $rVal = $this->_getTLStream('home');
+                return $this->_getTLStream('home');
                 break;
 
             case 'interactions':
             case 'interaction':
             case 'actions':
-                $rVal = $this->_getTLStream('interact');
+                return $this->_getTLStream('interact');
+                break;
+
+            case 'hashes':
+            case 'hash':
+                return $this->_getWordHistory();
                 break;
 
             case 'list':
             case '':
-                $rVal = false;
+                return false;
                 break;
 
             case 'read':
-                $rVal = $this->_getPostByGUID();
+                return  $this->_getPostByGUID();
                 break;
 
             case 'thread':
-                $rVal = $this->_getThreadByGUID();
+                return $this->_getThreadByGUID();
                 break;
 
             default:
 
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If we're here, there's nothing to return
+        return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         if ( mb_strlen($Activity) == 36 ) { $Activity = 'edit'; }
-        $rVal = false;
 
         // Check the User Token is Valid
         if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
@@ -110,29 +112,28 @@ class Posts {
             case 'write':
             case 'edit':
             case '':
-                $rVal = $this->_writePost();
+                return $this->_writePost();
                 break;
 
             case 'pin':
-                $rVal = $this->_setPostPin();
+                return $this->_setPostPin();
                 break;
 
             case 'star':
-                $rVal = $this->_setPostStar();
+                return $this->_setPostStar();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If we're here, there's nothing to return
+        return false;
     }
 
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         if ( mb_strlen($Activity) == 36 ) { $Activity = 'delete'; }
-        $rVal = false;
 
         // Check the User Token is Valid
         if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
@@ -140,23 +141,23 @@ class Posts {
         switch ( $Activity ) {
             case 'delete':
             case '':
-                $rVal = $this->_deletePost();
+                return $this->_deletePost();
                 break;
 
             case 'pin':
-                $rVal = $this->_setPostPin();
+                return $this->_setPostPin();
                 break;
 
             case 'star':
-                $rVal = $this->_setPostStar();
+                return $this->_setPostStar();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        // If we're here, there's nothing to return
+        return false;
     }
 
     /**
@@ -2965,6 +2966,43 @@ class Posts {
 
         // If We're Here, There's Nothing
         return false;
+    }
+
+    /** ********************************************************************* *
+     *  Hash & Word Lookup Functions
+     ** ********************************************************************* */
+    private function _getWordHistory() {
+        $excludes = array( '#' );
+        $word = NoNull($this->settings['word'], $this->settings['hash']);
+        $word = strip_tags(str_replace($excludes, '', $word));
+
+        if ( mb_strlen($word) < 1 ) { return "Please provide a word to look for"; }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[WORD]'       => sqlScrub($word),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getWordHistory.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = false;
+
+            foreach ( $rslt as $Row ) {
+                $data = array( 'word'       => NoNull($Row['word']),
+                               'instances'  => nullInt($Row['instances']),
+                               'yours'      => nullInt($Row['yours']),
+                               'first_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['first_at'])),
+                               'first_unix' => strtotime($Row['first_at']),
+                               'until_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['recent_at'])),
+                               'until_unix' => strtotime($Row['recent_at']),
+                              );
+            }
+
+            /* If we have data, let's return it */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, we could not collect the Word history. Return an Empty Array. */
+        return array();
     }
 
     /** ********************************************************************* *
