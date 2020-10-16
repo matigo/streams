@@ -61,7 +61,7 @@ document.onreadystatechange = function () {
             }
 
             /* Show Hidden Elements That Require HTTPS */
-            if ( window.location.protocol.replace(':').toLowerCase() == 'https' ) {
+            if ( window.location.protocol.replace(':', '').toLowerCase() == 'https' ) {
                 showByClass('btn-getgeo');
             }
 
