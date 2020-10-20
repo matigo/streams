@@ -16,6 +16,10 @@ window.KEY_N = 78;
 document.onreadystatechange = function () {
     if (document.readyState == "interactive") {
         if ( isBrowserCompatible() ) {
+            /* Ensure the Preferences are Loaded */
+            applyPreferences();
+
+            /* Add the various Event Listeners that make the site come alive */
             document.addEventListener('keydown', function(e) { handleDocumentKeyPress(e); });
             document.addEventListener('click', function(e) { handleDocumentClick(e); });
 
@@ -64,6 +68,12 @@ document.onreadystatechange = function () {
             if ( window.location.protocol.replace(':', '').toLowerCase() == 'https' ) {
                 showByClass('btn-getgeo');
             }
+
+            /* Align modal when it is displayed */
+            $(".modal").on("shown.bs.modal", alignModal);
+
+            /* Align modal when user resize the window */
+            $(window).on("resize", function(){ $(".modal:visible").each(alignModal); });
 
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
@@ -251,7 +261,7 @@ function handleNavListAction( el ) {
     /* Reset the LI Items in the Parent and Highlight (If Required) */
     var pel = tObj.parentElement;
     if ( pel === undefined || pel === false || pel === null ) { return; }
-    var _highlight = NoNull(pel.getAttribute('data-highlight'), 'Y').toUpperCase();
+    var _highlight = NoNull(pel.getAttribute('data-highlight'), NoNull(tObj.getAttribute('data-highlight'), 'Y')).toUpperCase();
     if ( _highlight == 'Y' ) {
         if ( NoNull(pel.tagName).toLowerCase() == 'ul' ) {
             var els = pel.getElementsByTagName('LI');
@@ -279,12 +289,15 @@ function handleNavListAction( el ) {
                 getTimeline();
                 break;
 
+            case 'settings':
+                showSettingsModal();
+                break;
+
             default:
                 /* Do Nothing */
         }
     }
 }
-
 
 /** ************************************************************************* *
  *  Authentication Functions
@@ -928,6 +941,103 @@ function checkCanDisplayPost( _view, post ) {
             /* If we're here, a match was not found */
             return true;
         }
+    }
+}
+
+/** ************************************************************************* *
+ *  Preferences Functions
+ ** ************************************************************************* */
+function applyPreferences() {
+    var _items = ['fontsize', 'refreshtime', 'postcount'];
+    for ( var i = 0; i < _items.length; i++ ) {
+        _val = readStorage(_items[i]);
+        if ( _val !== false ) {
+            switch ( _items[i] ) {
+                case 'fontsize':
+                    applyFontSize(_val);
+                    break;
+
+                default:
+                    /* Do Nothing ... probably because the setting is non-visual */
+            }
+        }
+    }
+}
+function showSettingsModal() {
+    var _items = ['fontsize', 'refreshtime', 'postcount'];
+    for ( var i = 0; i < _items.length; i++ ) {
+        _val = readStorage(_items[i]);
+        if ( _val !== false ) {
+            var els = document.getElementsByClassName('btn-' + _items[i]);
+            for ( var e = 0; e < els.length; e++ ) {
+                var _vv = NoNull(els[e].getAttribute('data-value')).toLowerCase();
+                if ( _vv == _val ) {
+                    if ( els[e].classList.contains('btn-primary') === false ) { els[e].classList.add('btn-primary'); }
+                } else {
+                    if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+                }
+            }
+        }
+    }
+    $('#viewSettings').modal('show');
+}
+function togglePreference(btn) {
+    if ( btn === undefined || btn === false || btn === null ) { return; }
+    if ( btn.classList.contains('btn-primary') ) { return; }
+    var _key = NoNull(btn.getAttribute('data-class')).toLowerCase();
+    var _val = NoNull(btn.getAttribute('data-value')).toLowerCase();
+
+    /* Ensure Other Buttons in the Set are Reset */
+    var btns = btn.parentElement.getElementsByTagName('BUTTON');
+    for ( var i = 0; i < btns.length; i++ ) {
+        if ( btns[i].classList.contains('btn-primary') ) { btns[i].classList.remove('btn-primary'); }
+    }
+
+    switch ( _key ) {
+        case 'fontsize':
+            applyFontSize(_val);
+            break;
+
+        case 'refreshtime':
+            applyRefreshTime(_val);
+            break;
+
+        case 'postcount':
+            applyPostCount(_val);
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+
+    /* Ensure the Button is Properly Highlighted */
+    btn.classList.add('btn-primary');
+}
+
+function applyFontSize( _val ) {
+    var _valids = ['xs', 's', 'm', 'l', 'xl'];
+    if ( _valids.indexOf(_val) >= 0 ) {
+        for ( var i = 0; i < _valids.length; i++ ) {
+            _cls = 'fontsize-' + _valids[i];
+            console.log( "Class: " + _cls );
+            if ( document.body.classList.contains(_cls) ) { document.body.classList.remove(_cls); }
+        }
+        document.body.classList.add('fontsize-' + _val);
+        saveStorage('fontsize', _val);
+    }
+}
+function applyRefreshTime( _val ) {
+    var _secs = nullInt(_val);
+    if ( _secs >= 15 ) {
+        console.log( "Refresh Time: " + _secs );
+        saveStorage('refreshtime', _secs);
+    }
+}
+function applyPostCount( _val ) {
+    var _cnt = nullInt(_val);
+    if ( _cnt >= 15 ) {
+        console.log( "Post Count: " + _cnt );
+        saveStorage('postcount', _cnt);
     }
 }
 

@@ -23,8 +23,11 @@
     "navVisAll": "Show All",
     "navVisActive": "Most Active",
 
+    "btnCancel": "Cancel",
+    "btnClose": "Close",
     "btnGoFetch": "Go!",
     "btnPublish": "Publish",
+    "btnSave": "Save",
     "btnSignIn": "Sign In",
 
     "lblComposePH": "What's on your mind?",
@@ -40,6 +43,28 @@
     "lblPostSrcTitlePH": "(A Title for the Post)",
     "lblPostTitle": "Title",
     "lblPostTitlePH": "(A Title for the Post)",
+
+    "ttlSettings": "Preferences",
+    "lblSetFontsize": "Character Size",
+    "lblSetFontSizeXS": "XS",
+    "lblSetFontSizeS": "S",
+    "lblSetFontSizeM": "M",
+    "lblSetFontSizeL": "L",
+    "lblSetFontSizeXL": "XL",
+
+    "lblSetRefreshTime": "Refresh Time (Seconds)",
+    "lblSetRefresh00": "Never",
+    "lblSetRefresh15": "15",
+    "lblSetRefresh30": "30",
+    "lblSetRefresh45": "45",
+    "lblSetRefresh60": "60",
+
+    "lblSetPostCount": "Posts to Collect",
+    "lblSetPosts50": "50",
+    "lblSetPosts75": "75",
+    "lblSetPosts100": "100",
+    "lblSetPosts150": "150",
+    "lblSetPosts200": "200",
 
     "optPostNote": "Social",
     "optPostArticle": "Article",

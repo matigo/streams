@@ -63,6 +63,11 @@ body {
     min-width: 100%;
     width: 100%;
 }
+body .fontsize-xs, body.fontsize-xs { font-size: 10px; }
+body .fontsize-s, body.fontsize-s { font-size: 13px; }
+body .fontsize-m, body.fontsize-m { font-size: 16px; }
+body .fontsize-l, body.fontsize-l { font-size: 19px; }
+body .fontsize-xl, body.fontsize-xl { font-size: 22px; }
 ul {
     list-style: none;
     padding: 0;
@@ -735,6 +740,12 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
         width: 100%;
     }
 }
+
+/** ************************************************************************ *
+ *  Settings Modal
+ ** ************************************************************************ */
+#viewSettings .modal-content button { min-width: 50px; }
+#viewSettings .modal-content label { min-width: 190px; }
 
 /** ************************************************************************ *
  *  Popover Overrides

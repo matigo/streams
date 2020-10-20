@@ -4,7 +4,7 @@
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="home"><span>[navTLHome]</span><i class="fas fa-home"></i></li>
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="mentions"><span>[navTLMentions]</span><i class="far fa-comments"></i></li>
                     <li class="list-view reqauth hidden" data-action="collect" data-tl="actions"><span>[navTLHighlights]</span><i class="fas fa-highlighter"></i></li>
-                    <li><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
+                    <li data-action="settings" data-highlight="N"><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
                 </ul>
             </section>
             <section class="main-content">
@@ -56,13 +56,51 @@
                 <button class="btn navmenu-write" onclick="toggleComposerPop();"><i class="fas fa-edit"></i></button>
             </section>
             <div id="viewCarousel" class="modal fade compose" role="dialog">
-                <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-body carousel-body" data-dismiss="modal" dir="auto">
                             <p>&nbsp;</p>
                         </div>
                         <div class="modal-footer carousel-foot">
                             <p>&nbsp;</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="viewSettings" class="modal fade" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header settings-header" data-dismiss="modal">
+                            <h3>[ttlSettings]</h3>
+                        </div>
+                        <div class="modal-body settings-body" dir="auto">
+                            <p>
+                                <label>[lblSetFontsize]</label>
+                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="xs">[lblSetFontSizeXS]</button>
+                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="s">[lblSetFontSizeS]</button>
+                                <button class="btn btn-fontsize btn-primary" onclick="togglePreference(this);" data-class="fontsize" data-value="m">[lblSetFontSizeM]</button>
+                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="l">[lblSetFontSizeL]</button>
+                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="xl">[lblSetFontSizeXL]</button>
+                            </p>
+                            <p>
+                                <label>[lblSetRefreshTime]</label>
+                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="15">[lblSetRefresh15]</button>
+                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="30">[lblSetRefresh30]</button>
+                                <button class="btn btn-refreshtime btn-primary" onclick="togglePreference(this);" data-class="refreshtime" data-value="45">[lblSetRefresh45]</button>
+                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="60">[lblSetRefresh60]</button>
+                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="9999999">[lblSetRefresh00]</button>
+                            </p>
+                            <p>
+                                <label>[lblSetPostCount]</label>
+                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="50">[lblSetPosts50]</button>
+                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="75">[lblSetPosts75]</button>
+                                <button class="btn btn-postcount btn-primary" onclick="togglePreference(this);" data-class="postcount" data-value="100">[lblSetPosts100]</button>
+                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="150">[lblSetPosts150]</button>
+                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="200">[lblSetPosts200]</button>
+                            </p>
+                        </div>
+                        <div class="modal-footer settings-footer">
+                            <button class="btn btn-secondary" data-dismiss="modal">[btnClose]</button>
                         </div>
                     </div>
                 </div>
