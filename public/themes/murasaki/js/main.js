@@ -1334,9 +1334,13 @@ function updateNavButtons() {
     var els = document.getElementsByClassName('navmenu-popover');
     for ( var i = 0; i < els.length; i++ ) {
         var _group = NoNull(els[i].getAttribute('data-group')).toLowerCase();
+
         switch ( _group ) {
             case 'timeline':
-                els[i].innerHTML = getSelectedIcon('list-view');
+                var _news = nullInt(els[i].getAttribute('data-new'));
+                var _suffix = ( _news > 0 ) ? _suffix = '<span class="notify">' + numberWithCommas(_news) + '</span>' : '';
+
+                els[i].innerHTML = getSelectedIcon('list-view') + _suffix;
                 break;
 
             case 'filters':

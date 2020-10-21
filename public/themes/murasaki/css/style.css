@@ -293,6 +293,19 @@ section.nav-bottom { display: none; }
         min-width: calc(25% + 5px);
         width: calc(25% + 5px);
     }
+    section.nav-bottom button span.notify {
+        background: #f00;
+        border-radius: 50px;
+        color: #fff;
+        display: inline-block;
+        font-size: 0.75em;
+        padding: 0 5px 0 5px;
+        text-align: center;
+        vertical-align: super;
+        position: absolute;
+        top: 5px;
+        min-width: 1.5em;
+    }
 }
 
 @media (max-width: 425px) AND (min-height: 800px) {
