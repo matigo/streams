@@ -790,6 +790,8 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
         max-width: none;
         width: 100%;
     }
+    #viewSettings .modal-content button.btn { border: 1px solid #5a3b86; }
+    #viewSettings .modal-content button.btn.btn-primary { border: 1px solid transparent; }
 }
 
 /** ************************************************************************ *
