@@ -97,6 +97,7 @@ ul li a:hover {
 }
 hr { border-top: 1px solid #e7e3ed; }
 blockquote { font-size: 16px; }
+button.btn { font-size: 1em; }
 
 section { margin: 0; }
 section.wrapper {
@@ -168,15 +169,17 @@ section.titlebar ul li {
     }
     section.titlebar ul {
         vertical-align: text-top;
-        text-align: center;
+        text-align: right;
         padding: 10px 0 0;
         max-width: 400px;
-        width: calc(100% - 80px);
+        width: calc(100% - 85px);
     }
     section.titlebar ul li {
         font-size: 0.9em;
         margin: 0 0 0 5px;
+        padding: 5px 5px 3px;
     }
+    body.fontsize-xl section.titlebar ul li.xl-hidden { display: none !important; }
 }
 
 /** ************************************************************************ *
@@ -198,7 +201,7 @@ section.nav-left {
 section.nav-left ul {
     list-style: none;
     padding: 10px 25px 0 5px;
-    font-size: 20px;
+    font-size: 1.15em;
     font-weight: normal;
     text-align: right;
     width: 100%;
@@ -214,6 +217,8 @@ section.nav-left ul li span {
     display: inline-block;
     margin: 0 5px 0 0;
 }
+
+body.fontsize-xl section.nav-left ul { padding: 10px 0 0 0; }
 
 @media (max-width: 1200px) {
     section.nav-left {
@@ -243,6 +248,8 @@ section.nav-right {
     width: 155px;
 }
 section.nav-right ul { margin: 15px 0 60px; }
+
+body.fontsize-xl section.nav-right i { display: none; }
 
 @media (max-width: 425px) {
     section.nav-right { display: none; }
@@ -433,9 +440,9 @@ section.main-content .composer textarea {
     max-height: 250px;
     min-height: 75px;
     height: auto;
-    max-width: 100%;
-    min-width: 100%;
-    width: 100%;
+    max-width: calc(100% - 5px);
+    min-width: calc(100% - 5px);
+    width: calc(100% - 5px);
 }
 section.main-content .composer .btn-publish {
     display: inline-block;
@@ -453,7 +460,9 @@ section.main-content .composer label {
     display: inline-block;
     padding: 5px 5px 0 0;
     text-align: right;
+    text-overflow: clip;
     vertical-align: text-top;
+    white-space: nowrap;
     max-width: 90px;
     min-width: 90px;
 }
@@ -470,8 +479,8 @@ section.main-content .composer .form-element {
     margin: 0 0 3px;
     max-height: 30px;
     min-height: 30px;
-    max-width: calc(100% - 95px);
-    width: calc(100% - 95px);
+    max-width: calc(100% - 100px);
+    width: calc(100% - 100px);
 }
 section.main-content .composer .form-element.short {
     padding: 0 5px;
@@ -500,6 +509,16 @@ section.main-content .composer .content-length {
     float: right;
     max-width: 75px;
     width: 75px;
+}
+
+body.fontsize-xl section.main-content .composer .form-element {
+    max-width: calc(100% - 120px);
+    width: calc(100% - 120px);
+}
+body.fontsize-xl section.main-content .composer label {
+    padding: 0;
+    max-width: 110px;
+    min-width: 110px;
 }
 
 @media (max-width: 1200px) {
@@ -745,7 +764,20 @@ section.main-content .timeline .post-item.post-article .content-area span.accoun
  *  Settings Modal
  ** ************************************************************************ */
 #viewSettings .modal-content button { min-width: 50px; }
-#viewSettings .modal-content label { min-width: 190px; }
+#viewSettings .modal-content label {
+    vertical-align: text-top;
+    max-width: 190px;
+    min-width: 190px;
+}
+@media (max-width: 425px) {
+    #viewSettings .modal-content p { text-align: center; }
+    #viewSettings .modal-content label {
+        display: block;
+        text-align: justify;
+        max-width: none;
+        width: 100%;
+    }
+}
 
 /** ************************************************************************ *
  *  Popover Overrides

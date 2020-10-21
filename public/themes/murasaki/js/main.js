@@ -737,10 +737,14 @@ function getTimeline( _tl ) {
         resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Posts ...</p></div>');
         updateNavButtons();
 
+        /* Get the Post Count */
+        var _posts = nullInt(readStorage('postcount'), 75);
+        if ( _posts === undefined || _posts === false || _posts === null || _posts <= 0 ) { _posts = 75; }
+
         /* Now let's query the API */
         var params = { 'types': getVisibleTypes(),
                        'since': 0,
-                       'count': 75
+                       'count': _posts
                       };
         setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, parseTimeline); }, 150);
 
