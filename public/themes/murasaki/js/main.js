@@ -699,6 +699,40 @@ function clearWrite() {
 }
 
 /** ************************************************************************* *
+ *  Timer Functions
+ ** ************************************************************************* */
+window.getTLts = 0;
+window.lastchk = 0;
+
+function setTouchTimelineTS() {
+    var ts = new Date();
+    window.getTLts = ts.getTime();
+    return window.getTLts;
+}
+function getTouchTimelineTS() {
+    return window.getTLts;
+}
+function checkUpdateSchedule() {
+    var ts = new Date();
+    var _unix = ts.getTime();
+    var _gap = 500;
+
+    if ( (_unix - window.lastchk) >= _gap ) {
+        setTimeout(function () { checkUpdateSchedule(); }, _gap);
+        window.lastchk = _unix;
+
+        var _secs = nullInt(readStorage('refreshtime'), 45);
+        var _last = getTouchTimelineTS();
+
+        if ( _secs <= 0 ) { _secs = 45; }
+        if ( (_unix - _last) > (_secs * 1000) ) {
+            var _tl = getSelectedTimeline();
+            getTimeline( _tl, true );
+        }
+    }
+}
+
+/** ************************************************************************* *
  *  Timeline Functions
  ** ************************************************************************* */
 function getSelectedTimeline() {
@@ -725,17 +759,35 @@ function getVisibleTypes() {
     }
     return valids.join(',');
 }
+function getSinceUnixTS() {
+    var els = document.getElementsByClassName('post-item');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _owner = NoNull(els[i].getAttribute('data-owner'), 'N');
+        if ( _owner == 'N' ) {
+            var _unix = nullInt(els[i].getAttribute('data-updx'), els[i].getAttribute('data-unix'));
+            if ( _unix > 0 ) { return _unix; }
+        }
+    }
+    /* If we're here, there's nothing */
+    return 0;
+}
 function resetTimeline( _msg ) {
     var els = document.getElementsByClassName('timeline');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _msg;
     }
+    setNewCount(0);
 }
-function getTimeline( _tl ) {
+function getTimeline( _tl, _append ) {
+    if ( _append === undefined || _append === null || _append !== true ) { _append = false; }
     if ( window.navigator.onLine ) {
-        if ( NoNull(_tl) == '' ) { _tl = getSelectedTimeline(); }
-        resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Posts ...</p></div>');
-        updateNavButtons();
+        var _selected = getSelectedTimeline();
+        if ( NoNull(_tl) == '' ) { _tl = _selected; }
+        if ( _tl != _selected || _append === false ) {
+            resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Posts ...</p></div>');
+            updateNavButtons();
+        }
+        setTouchTimelineTS();
 
         /* Get the Post Count */
         var _posts = nullInt(readStorage('postcount'), 75);
@@ -743,10 +795,17 @@ function getTimeline( _tl ) {
 
         /* Now let's query the API */
         var params = { 'types': getVisibleTypes(),
-                       'since': 0,
+                       'since': getSinceUnixTS(),
                        'count': _posts
                       };
-        setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, parseTimeline); }, 150);
+        if ( _append ) {
+            setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, appendTimeline); }, 150);
+        } else {
+            setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, parseTimeline); }, 150);
+        }
+
+        /* Ensure the Timer is Running */
+        checkUpdateSchedule();
 
     } else {
         console.log("Offline ...");
@@ -766,6 +825,40 @@ function parseTimeline(data) {
     } else {
         resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center">Error! Could not read posts ...</p></div>');
     }
+}
+function appendTimeline(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        var _news = 0;
+        for ( var i = 0; i < ds.length; i++ ) {
+            if ( ds[i].persona.is_you === false ) { _news++; }
+        }
+        setNewCount(_news);
+
+    } else {
+        console.log('Could not appendTimeline');
+    }
+}
+function setNewCount( _count ) {
+    var _selected = getSelectedTimeline();
+    var _clss = [ 'navmenu-popover', 'list-view' ];
+
+    var _val = nullInt(_count);
+    if ( _val < 0 ) { _val = 0; }
+
+    for ( var e = 0; e < _clss.length; e++ ) {
+        var els = document.getElementsByClassName(_clss[e]);
+        for ( var i = 0; i < els.length; i++ ) {
+            var _name = NoNull(els[i].getAttribute('data-group'), els[i].getAttribute('data-tl')).toLowerCase();
+            if ( _name == 'timeline' || _name == _selected ) {
+                els[i].setAttribute('data-new', _val);
+            } else {
+                els[i].setAttribute('data-new', 0);
+            }
+        }
+    }
+    updateNavButtons();
 }
 function writePostToTL( _view, post ) {
     if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
@@ -1349,6 +1442,17 @@ function updateNavButtons() {
 
             default:
                 /* Do Nothing */
+        }
+    }
+    var els = document.getElementsByClassName('new-count');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _news = nullInt(els[i].parentElement.getAttribute('data-new'));
+        els[i].innerHTML = numberWithCommas(_news);
+
+        if ( els[i].parentElement.classList.contains('selected') && _news > 0 ) {
+            if ( els[i].parentElement.classList.contains('has-notify') === false ) { els[i].parentElement.classList.add('has-notify'); }
+        } else {
+            if ( els[i].parentElement.classList.contains('has-notify') ) { els[i].parentElement.classList.remove('has-notify'); }
         }
     }
 }

@@ -217,6 +217,19 @@ section.nav-left ul li span {
     display: inline-block;
     margin: 0 5px 0 0;
 }
+section.nav-left ul li span.notify { display: none; }
+section.nav-left ul li.has-notify i { display: none; }
+section.nav-left ul li.has-notify span.notify {
+    background: #f00;
+    border-radius: 50px;
+    color: #fff;
+    display: inline-block;
+    font-size: 0.75em;
+    padding: 0 5px 0 5px;
+    text-align: center;
+    vertical-align: text-top;
+    min-width: 1.5em;
+}
 
 body.fontsize-xl section.nav-left ul { padding: 10px 0 0 0; }
 
