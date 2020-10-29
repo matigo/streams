@@ -830,11 +830,57 @@ function appendTimeline(data) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
 
+        var _html = '';
         var _news = 0;
+        var _rows = 0;
         for ( var i = 0; i < ds.length; i++ ) {
-            if ( ds[i].persona.is_you === false ) { _news++; }
+            if ( ds[i].persona.is_you === false ) {
+                if ( _rows <= 9 ) {
+                    _html += '<li>&nbsp;</li>';
+                    _rows++;
+                }
+                _news++;
+            }
         }
         setNewCount(_news);
+
+        var _div = document.createElement("div");
+            _div.className = 'post-item post-notify-block';
+            _div.setAttribute('data-unix', '9999999999');
+            _div.setAttribute('data-updx', '9999999999');
+            _div.setAttribute('data-owner', 'Y');
+            _div.innerHTML = '<ul class="rows-' + _rows + '>' + _html + '</ul><span>' + numberWithCommas(_news) + ' New Posts</span>';
+
+        // Apply the Event Listeners
+        /*
+        var ee = _div.getElementsByClassName('toggle-action-bar');
+        for ( var o = 0; o < ee.length; o++ ) {
+            ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
+        }
+        var ee = _div.getElementsByClassName('account');
+        for ( var o = 0; o < ee.length; o++ ) {
+            ee[o].addEventListener('click', function(e) { toggleProfile(e); });
+        }
+        */
+
+        var els = document.getElementsByClassName('timeline');
+        for ( var e = 0; e < els.length; e++ ) {
+            // Ensure the Minimum Nodes Exist
+            if ( els[e].childNodes.length <= 0 ) {
+                els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+            }
+
+            // Add the Element
+            var pe = els[e].getElementsByClassName('post-item');
+            for ( var p = 0; p < pe.length; p++ ) {
+                var _at = nullInt(pe[p].getAttribute('data-unix'));
+                if ( _at <= 0 || 9999999999 >= _at ) {
+                    els[e].insertBefore(_div, pe[p]);
+                    p = pe.length;
+                    break;
+                }
+            }
+        }
 
     } else {
         console.log('Could not appendTimeline');
