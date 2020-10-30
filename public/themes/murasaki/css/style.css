@@ -213,6 +213,7 @@ section.nav-left ul li.selected {
     color: #5a3b86;
     opacity: 1;
 }
+section.nav-left ul li.selected.has-notify { padding: 5px 0 3px 5px; }
 section.nav-left ul li span {
     display: inline-block;
     margin: 0 5px 0 0;
@@ -681,6 +682,16 @@ section.main-content .timeline .post-item .content-area .metaline.images span .t
     cursor: pointer;
     padding: 15px;
 }
+section.main-content .timeline .post-item .content-area .metaline.geo span.location {
+    color: #5a3b86;
+    cursor: pointer;
+}
+section.main-content .timeline .post-item .content-area .metaline.geo img.geo-map {
+    border: 1px solid #5a3b86;
+    display: block;
+    padding: 3px;
+    max-width: 100%;
+}
 
 section.main-content .timeline .post-item.post-quotation .content-area,
 section.main-content .timeline .post-item.post-article .content-area {
@@ -713,6 +724,48 @@ section.main-content .timeline .post-item.post-article .content-area .content-so
 }
 section.main-content .timeline .post-item.post-quotation .content-area span.account,
 section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
+
+section.main-content .timeline .post-notify-block {
+    display: block;
+    width: 100%;
+}
+section.main-content .timeline .post-notify-block ul {
+    background: #000;
+    border: 1px solid #ccc;
+    border-radius: 0;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    max-height: 30px;
+    min-height: 30px;
+}
+section.main-content .timeline .post-notify-block ul li {
+    background: #fff;
+    border-bottom: 1px dotted #ccc;
+    border-radius: 0;
+    display: block;
+    font-size: 2px;
+    padding: 0;
+    margin: 0;
+}
+section.main-content .timeline .post-notify-block ul.rows-1 li { height: 30px; }
+section.main-content .timeline .post-notify-block ul.rows-2 li { height: 15px; }
+section.main-content .timeline .post-notify-block ul.rows-3 li { height: 10px; }
+section.main-content .timeline .post-notify-block ul.rows-4 li { height: 7.5px; }
+section.main-content .timeline .post-notify-block ul.rows-5 li { height: 6px; }
+section.main-content .timeline .post-notify-block ul.rows-6 li { height: 5px; }
+section.main-content .timeline .post-notify-block ul.rows-7 li { height: 4.25px; }
+section.main-content .timeline .post-notify-block ul.rows-8 li { height: 3.75px; }
+section.main-content .timeline .post-notify-block ul.rows-9 li { height: 3.33px; }
+section.main-content .timeline .post-notify-block span {
+    background: #fff;
+    border-radius: 15px;
+    cursor: pointer;
+    display: block;
+    padding: 0 5px;
+    margin: -25px auto 10px;
+    width: fit-content;
+}
 
 @media (max-width: 425px) {
     section.main-content .composer.hidden-pop { display: none !important; }

@@ -715,9 +715,9 @@ function getTouchTimelineTS() {
 function checkUpdateSchedule() {
     var ts = new Date();
     var _unix = ts.getTime();
-    var _gap = 500;
+    var _gap = 550;
 
-    if ( (_unix - window.lastchk) >= _gap ) {
+    if ( (_unix - window.lastchk) >= (_gap - 50) ) {
         setTimeout(function () { checkUpdateSchedule(); }, _gap);
         window.lastchk = _unix;
 
@@ -778,6 +778,11 @@ function resetTimeline( _msg ) {
     }
     setNewCount(0);
 }
+function updateTimeline(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( splitSecondCheck(el) === false ) { return; }
+    getTimeline();
+}
 function getTimeline( _tl, _append ) {
     if ( _append === undefined || _append === null || _append !== true ) { _append = false; }
     if ( window.navigator.onLine ) {
@@ -835,55 +840,106 @@ function appendTimeline(data) {
         var _rows = 0;
         for ( var i = 0; i < ds.length; i++ ) {
             if ( ds[i].persona.is_you === false ) {
-                if ( _rows <= 9 ) {
-                    _html += '<li>&nbsp;</li>';
-                    _rows++;
-                }
                 _news++;
             }
         }
         setNewCount(_news);
 
-        var _div = document.createElement("div");
-            _div.className = 'post-item post-notify-block';
-            _div.setAttribute('data-unix', '9999999999');
-            _div.setAttribute('data-updx', '9999999999');
-            _div.setAttribute('data-owner', 'Y');
-            _div.innerHTML = '<ul class="rows-' + _rows + '>' + _html + '</ul><span>' + numberWithCommas(_news) + ' New Posts</span>';
+        /* Do we need the notification block? */
+        if ( _news > 0 && document.getElementsByClassName('post-notify-block').length <= 0 ) {
+            _rows = ((_news <= 9) ? _news : 9);
 
-        // Apply the Event Listeners
-        /*
-        var ee = _div.getElementsByClassName('toggle-action-bar');
-        for ( var o = 0; o < ee.length; o++ ) {
-            ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
-        }
-        var ee = _div.getElementsByClassName('account');
-        for ( var o = 0; o < ee.length; o++ ) {
-            ee[o].addEventListener('click', function(e) { toggleProfile(e); });
-        }
-        */
+            var _label = NoNull('{num} New Post(s)').replace('{num}', numberWithCommas(_news));
+            if ( _news == 1 ) { _label = _label.replace('(s)', ''); }
+            if ( _news > 1 ) { _label = _label.replace('(s)', 's'); }
 
-        var els = document.getElementsByClassName('timeline');
-        for ( var e = 0; e < els.length; e++ ) {
-            // Ensure the Minimum Nodes Exist
-            if ( els[e].childNodes.length <= 0 ) {
-                els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+            var _html = '';
+            for ( var i = 0; i < 9; i++ ) {
+                _html += '<li>&nbsp;</li>';
             }
 
-            // Add the Element
-            var pe = els[e].getElementsByClassName('post-item');
-            for ( var p = 0; p < pe.length; p++ ) {
-                var _at = nullInt(pe[p].getAttribute('data-unix'));
-                if ( _at <= 0 || 9999999999 >= _at ) {
-                    els[e].insertBefore(_div, pe[p]);
-                    p = pe.length;
-                    break;
+            var _div = document.createElement("div");
+                _div.className = 'post-item post-notify-block';
+                _div.setAttribute('data-unix', '9999999999');
+                _div.setAttribute('data-updx', '9999999999');
+                _div.setAttribute('data-owner', 'Y');
+                _div.innerHTML = '<ul class="post-notify-count rows-' + _rows + '" onclick="updateTimeline(this);">' + _html + '</ul>' +
+                                 '<span class="post-notify-count" data-label="{num} New Post(s)">' + _label + '</span>';
+
+            // Apply the Event Listeners
+            /*
+            var ee = _div.getElementsByClassName('toggle-action-bar');
+            for ( var o = 0; o < ee.length; o++ ) {
+                ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
+            }
+            var ee = _div.getElementsByClassName('account');
+            for ( var o = 0; o < ee.length; o++ ) {
+                ee[o].addEventListener('click', function(e) { toggleProfile(e); });
+            }
+            */
+
+            var els = document.getElementsByClassName('timeline');
+            for ( var e = 0; e < els.length; e++ ) {
+                // Ensure the Minimum Nodes Exist
+                if ( els[e].childNodes.length <= 0 ) {
+                    els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+                }
+
+                // Add the Element
+                var pe = els[e].getElementsByClassName('post-item');
+                for ( var p = 0; p < pe.length; p++ ) {
+                    var _at = nullInt(pe[p].getAttribute('data-unix'));
+                    if ( _at <= 0 || 9999999999 >= _at ) {
+                        els[e].insertBefore(_div, pe[p]);
+                        p = pe.length;
+                        break;
+                    }
+                }
+            }
+
+        } else {
+            var els = document.getElementsByClassName('post-notify-count');
+            for ( var i = 0; i < els.length; i++ ) {
+                if ( _news > 0 ) {
+                    switch ( els[i].tagName.toLowerCase() ) {
+                        case 'span':
+                        case 'p':
+                            var _label = NoNull(els[i].getAttribute('data-label')).replace('{num}', numberWithCommas(_news));
+                            if ( _news == 1 ) { _label = _label.replace('(s)', ''); }
+                            if ( _news > 1 ) { _label = _label.replace('(s)', 's'); }
+                            els[i].innerHTML = _label;
+                            break;
+
+                        case 'ul':
+                        case 'ol':
+                            _rows = ((_news <= 9) ? _news : 9);
+                            for ( var e = 0; e <= 9; e++ ) {
+                                if ( e != _rows ) { els[i].classList.remove('rows-' + e); }
+                            }
+                            els[i].classList.add('rows-' + _rows);
+                            break;
+
+                        default:
+                            /* Do Nothing! */
+                    }
+
+                } else {
+                    clearNotifyBlocks();
+                    i = els.length;
                 }
             }
         }
 
     } else {
         console.log('Could not appendTimeline');
+    }
+}
+function clearNotifyBlocks() {
+    var els = document.getElementsByClassName('post-notify-block');
+    if ( els.length > 0 ) {
+        for ( var i = els.length - 1; i >= 0; i-- ) {
+            els[i].parentElement.removeChild(els[i]);
+        }
     }
 }
 function setNewCount( _count ) {
@@ -1162,7 +1218,6 @@ function applyFontSize( _val ) {
     if ( _valids.indexOf(_val) >= 0 ) {
         for ( var i = 0; i < _valids.length; i++ ) {
             _cls = 'fontsize-' + _valids[i];
-            console.log( "Class: " + _cls );
             if ( document.body.classList.contains(_cls) ) { document.body.classList.remove(_cls); }
         }
         document.body.classList.add('fontsize-' + _val);
@@ -1171,17 +1226,11 @@ function applyFontSize( _val ) {
 }
 function applyRefreshTime( _val ) {
     var _secs = nullInt(_val);
-    if ( _secs >= 15 ) {
-        console.log( "Refresh Time: " + _secs );
-        saveStorage('refreshtime', _secs);
-    }
+    if ( _secs >= 15 ) { saveStorage('refreshtime', _secs); }
 }
 function applyPostCount( _val ) {
     var _cnt = nullInt(_val);
-    if ( _cnt >= 15 ) {
-        console.log( "Post Count: " + _cnt );
-        saveStorage('postcount', _cnt);
-    }
+    if ( _cnt >= 15 ) { saveStorage('postcount', _cnt); }
 }
 
 /** ************************************************************************* *
