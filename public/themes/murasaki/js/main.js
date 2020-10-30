@@ -840,7 +840,7 @@ function appendTimeline(data) {
         var _rows = 0;
         for ( var i = 0; i < ds.length; i++ ) {
             if ( ds[i].persona.is_you === false ) {
-                _news++;
+                if ( checkCanDisplayPost('global', ds[i]) ) { _news++; }
             }
         }
         setNewCount(_news);

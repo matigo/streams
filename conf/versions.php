@@ -4,8 +4,8 @@
  * @author Jason F. Irwin
  */
 
-define('APP_VER', '20J300');                                            // The Application Version
-define('CSS_VER', '241');                                               // The CSS Update Version
+define('APP_VER', '20J301');                                            // The Application Version
+define('CSS_VER', '242');                                               // The CSS Update Version
 define('SQL_VER', '001');                                               // The SQL Update Version
 define('SQL_HASH', '39.385|e2c4db08-2651-0170-0045-43c08656bde2');      // The Hash Expected of the Database
 
