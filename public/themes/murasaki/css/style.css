@@ -537,6 +537,7 @@ section.main-content .composer .content-length {
     max-width: 75px;
     width: 75px;
 }
+section.main-content .composer .error { border: 2px solid #f00; }
 
 body.fontsize-xl section.main-content .composer .form-element {
     max-width: calc(100% - 120px);

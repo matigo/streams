@@ -44,29 +44,33 @@ class cookies {
         $JSON = json_decode(file_get_contents('php://input'), true);
         if ( is_array($JSON) ) {
             foreach( $JSON as $key=>$val ) {
-                $rVal[ $key ] = (is_array($val)) ? $val : $this->_CleanRequest($key, $val);
+                $propKey = str_replace('-', '_', $key);
+                $rVal[ $propKey ] = (is_array($val)) ? $val : $this->_CleanRequest($key, $val);
             }
         }
 
         foreach( $_POST as $key=>$val ) {
-            $rVal[ $key ] = $this->_CleanRequest($key, $val);
+            $propKey = str_replace('-', '_', $key);
+            $rVal[ $propKey ] = $this->_CleanRequest($key, $val);
         }
 
         foreach( $_GET as $key=>$val ) {
+            $propKey = str_replace('-', '_', $key);
             if ( is_array($val) ) {
-                if ( array_key_exists($key, $rVal) === false ) { $rVal[ $key ] = array(); }
+                if ( array_key_exists($propKey, $rVal) === false ) { $rVal[ $propKey ] = array(); }
                 foreach ( $val as $kk=>$vv ) {
-                    $rVal[ $key ][] = NoNull($vv);
+                    $rVal[ $propKey ][] = NoNull($vv);
                 }
 
             } else {
-                if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
+                if ( !array_key_exists($propKey, $rVal) ) { $rVal[ $propKey ] = $this->_CleanRequest($key, $val); }
             }
 
         }
 
         foreach( $_COOKIE as $key=>$val ) {
-            if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
+            $propKey = str_replace('-', '_', $key);
+            if ( !array_key_exists($propKey, $rVal) ) { $rVal[ $propKey ] = $this->_CleanRequest($key, $val); }
         }
 
         $gah = getallheaders();
@@ -75,8 +79,9 @@ class cookies {
                            'authorization'     => 'token',
                           );
             foreach ( getallheaders() as $key=>$val ) {
-                if ( array_key_exists(strtolower($key), $opts) ) {
-                    $rVal[ $opts[strtolower($key)] ] = $this->_CleanRequest($key, $val);
+                $propKey = str_replace('-', '_', $key);
+                if ( array_key_exists(strtolower($propKey), $opts) ) {
+                    $rVal[ $opts[strtolower($propKey)] ] = $this->_CleanRequest($key, $val);
                 }
             }
         }
@@ -94,8 +99,9 @@ class cookies {
         // Add Any Missing Data from URL Query String (Does Not Override Existing Data)
         $missedData = $this->checkForMissingData();
         foreach( $missedData as $key=>$val ) {
-            if ( !array_key_exists($key, $rVal) ) {
-                $rVal[ $key ] = $this->_CleanRequest($key, $val);
+            $propKey = str_replace('-', '_', $key);
+            if ( !array_key_exists($propKey, $rVal) ) {
+                $rVal[ $propKey ] = $this->_CleanRequest($key, $val);
             }
         }
 

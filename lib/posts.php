@@ -1145,8 +1145,8 @@ class Posts {
         $PublishUnix = strtotime($PublishAt);
 
         // Additional Meta
-        $SourceURL = NoNull($this->settings['source_url'], NoNull($this->settings['source-url'], $this->settings['source']));
-        $SourceTitle = NoNull($this->settings['source_title']);
+        $SourceURL = NoNull($this->settings['source_url'], NoNull($this->settings['src_url'], $this->settings['source']));
+        $SourceTitle = NoNull($this->settings['source_title'], $this->settings['src_title']);
 
         $UniqueWords = '';
         $uWords = UniqueWords($Value);

@@ -145,6 +145,20 @@ function hideByClass( _cls ) {
         els[i].classList.add('hidden');
     }
 }
+function disableByClass( _cls ) {
+    if ( _cls === undefined || _cls === false || _cls === null ) { return; }
+    var els = document.getElementsByClassName(_cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].disabled = true;
+    }
+}
+function enableByClass( _cls ) {
+    if ( _cls === undefined || _cls === false || _cls === null ) { return; }
+    var els = document.getElementsByClassName(_cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].disabled = false;
+    }
+}
 function toggleVisibility( _cls ) {
     if ( _cls === undefined || _cls === false || _cls === null ) { return; }
     var els = document.getElementsByClassName(_cls);

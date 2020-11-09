@@ -187,6 +187,11 @@ function handleDocumentKeyPress(e) {
                     handleButtonClick(form.elements[idx]);
                     break;
 
+                case 'textarea':
+                    var _name = NoNull(form.elements[idx].getAttribute('data-name')).toLowerCase();
+                    if ( _name == 'content' ) { publishPost(form.elements[idx]); }
+                    break;
+
                 default:
                     idx++;
                     if ( idx >= form.elements.length ) { idx = 0; }
@@ -494,6 +499,64 @@ function showVisibilityType() {
 }
 
 /** ************************************************************************* *
+ *  Quotation-Specific Functions
+ ** ************************************************************************* */
+function getSourceData( el ) {
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+
+    var els = document.getElementById('post-source');
+    if ( els !== undefined && els !== false && els !== null ) {
+        var params = { 'source_url': els.value };
+        setTimeout(function () { doJSONQuery('bookmark', 'GET', params, parseSourceData); }, 150);
+        spinButton(el);
+    } else {
+        alert("Could Not Identify Source URL");
+    }
+}
+function parseSourceData( data ) {
+    var btns = document.getElementsByClassName('btn-fetch-source');
+    for ( var i = 0; i < btns.length; i++ ) {
+        spinButton(btns[i], true);
+    }
+
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ptype = 'post.note';
+        var ds = data.data;
+
+        var sel = document.getElementById('post-type');
+        var els = document.getElementsByName('fdata');
+
+        if ( sel !== undefined && sel !== false && sel !== null ) { ptype = sel.value; }
+
+        for ( var i = 0; i < els.length; i++ ) {
+            var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+            switch ( _name ) {
+                case 'source-title':
+                    if ( ds.title !== false && els[i].value == '' ) { els[i].value = NoNull(ds.title); }
+                    break;
+
+                case 'audiofile_url':
+                    if ( ds.audio !== false && ds.audio.url != '' ) { els[i].value = ds.audio.url; }
+                    break;
+
+                case 'content':
+                    if ( ptype == 'post.quotation' && NoNull(ds.summary, ds.text) != '' ) {
+                        var txt = '> ' + NoNull(ds.summary, ds.text) + "\n\n" + NoNull(els[i].value);
+                        if ( NoNull(els[i].value) != NoNull(txt) ) { els[i].value = txt; }
+                        disableByClass('btn-fetch-source');
+                        countCharacters();
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+/** ************************************************************************* *
  *  Authoring Visibility Functions
  ** ************************************************************************* */
 function checkSourceUrl() {
@@ -522,7 +585,7 @@ function getPostType() {
         switch ( _name ) {
             case 'post-type':
             case 'posttype':
-                var _val = NoNull(els[i].value);
+                var _val = NoNull(els[i].value).toLowerCase();
                 if ( _val != '' ) { return _val; }
                 break;
 
@@ -630,8 +693,9 @@ function validatePublish( fname ) {
 function publishPost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     if ( splitSecondCheck(el) === false ) { return; }
+    document.activeElement.blur();
 
-    var fname = NoNull(el.getAttribute('data-form'));
+    var fname = NoNull(el.getAttribute('data-form'), el.getAttribute('name'));
     if ( fname == '' ) { return; }
 
     if ( validatePublish(fname) ) {
