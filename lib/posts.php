@@ -1145,7 +1145,7 @@ class Posts {
         $PublishUnix = strtotime($PublishAt);
 
         // Additional Meta
-        $SourceURL = NoNull($this->settings['source_url'], $this->settings['source']);
+        $SourceURL = NoNull($this->settings['source_url'], NoNull($this->settings['source-url'], $this->settings['source']));
         $SourceTitle = NoNull($this->settings['source_title']);
 
         $UniqueWords = '';
@@ -1364,11 +1364,11 @@ class Posts {
                       'token_guid'    => $TokenGUID,
                       'token_id'      => $TokenID,
 
-                      'title'         => $Title,
+                      'title'         => strip_tags($Title),
                       'value'         => $this->_cleanContent($Value),
 
-                      'canonical_url' => $CanonURL,
-                      'reply_to'      => $ReplyTo,
+                      'canonical_url' => strip_tags($CanonURL),
+                      'reply_to'      => strip_tags($ReplyTo),
 
                       'slug'          => $PostSlug,
                       'type'          => $PostType,
@@ -1379,18 +1379,18 @@ class Posts {
 
                       'words'         => $UniqueWords,
                       'tags'          => $PostTags,
-                      'meta'          => array( 'source_url'      => $SourceURL,
-                                                'source_title'    => $SourceTitle,
-                                                'geo_latitude'    => $GeoLat,
-                                                'geo_longitude'   => $GeoLong,
-                                                'geo_altitude'    => $GeoAlt,
-                                                'geo_description' => $GeoFull,
+                      'meta'          => array( 'source_url'      => strip_tags($SourceURL),
+                                                'source_title'    => strip_tags($SourceTitle),
+                                                'geo_latitude'    => strip_tags($GeoLat),
+                                                'geo_longitude'   => strip_tags($GeoLong),
+                                                'geo_altitude'    => strip_tags($GeoAlt),
+                                                'geo_description' => strip_tags($GeoFull),
 
-                                                'episode_explicit' => $AudioExplicit,
-                                                'episode_summary'  => $AudioSummary,
-                                                'episode_number'   => $AudioEpNo,
-                                                'episode_file'     => $AudioFile,
-                                                'episode_time'     => $AudioTime,
+                                                'episode_explicit' => strip_tags($AudioExplicit),
+                                                'episode_summary'  => $this->_cleanContent($AudioSummary),
+                                                'episode_number'   => strip_tags($AudioEpNo),
+                                                'episode_file'     => strip_tags($AudioFile),
+                                                'episode_time'     => strip_tags($AudioTime),
                                                ),
 
                       'thread_id'     => $ThreadID,
@@ -1403,13 +1403,27 @@ class Posts {
      *  Function Tries Like Heck to Sanitize the Content of a Post to Fit Expectations
      */
     private function _cleanContent( $text ) {
-        $ReplStr = array( '//@' => '// @', '<p>' => '', '</p>' => "\r\n", '<strong>' => '**', '</strong>' => '**', '<em>' => '*', '</em>' => '*',
-                          '<p class="">' => '', 'ql-align-justify' => '', 'ql-align-center' => '', 'ql-align-right' => '',
+        $ReplStr = array( '//@' => '// @', '<p>' => '', '</p>' => "\r\n",
+                          '<strong>' => '**', '</strong>' => '**', '<b>' => '**', '</b>' => '**', '<em>' => '*', '</em>' => '*',
                          );
 
         for ( $i = 0; $i < 5; $i++ ) {
             $text = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $text));
         }
+
+        /* Remove Inline Styling */
+        $text = preg_replace('/(<[^>]*) style=("[^"]+"|\'[^\']+\')([^>]*>)/i', '$1$3', $text);
+
+        /* Try to Handle Inline HTML */
+        $text = NoNull(str_replace('<', '&lt;', $text));
+        $ReplStr = array( '&lt;section' => '<section', '&lt;iframe' => '<iframe',
+                          '&lt;str' => '<str', '&lt;del' => '<del', '&lt;pre' => '<pre',
+                          '&lt;h1' => '<h1', '&lt;h2' => '<h2', '&lt;h3' => '<h3',
+                          '&lt;h4' => '<h4', '&lt;h5' => '<h5', '&lt;h6' => '<h6',
+                          '&lt;ol' => '<ol', '&lt;ul' => '<ul', '&lt;li' => '<li',
+                          '&lt;b' => '<b', '&lt;i' => '<i', '&lt;u' => '<u',
+                         );
+        $text = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $text));
 
         // Return the Scrubbed Text
         return $text;
