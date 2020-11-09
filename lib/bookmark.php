@@ -164,7 +164,7 @@ class Bookmark {
             $meta = $metas->item($i);
 
             if ( in_array($meta->getAttribute('property'), array('title', 'og:title', 'twitter:title')) ) { $PageTitle = NoNull($meta->getAttribute('content')); }
-            if ( $PageImage === false && in_array($meta->getAttribute('title'), array('image', 'og:title', 'twitter:title')) ) { $PageTitle = NoNull($meta->getAttribute('content')); }
+            if ( $PageTitle === false && in_array($meta->getAttribute('title'), array('image', 'og:title', 'twitter:title')) ) { $PageTitle = NoNull($meta->getAttribute('content')); }
 
             if ( in_array($meta->getAttribute('property'), array('description', 'twitter:description', 'og:description')) ) { $PageDescr = str_replace(array_keys($ReplStr), array_values($ReplStr), html_entity_decode(NoNull($meta->getAttribute('content')))); }
             if ( $PageDescr === false && in_array($meta->getAttribute('name'), array('description', 'twitter:description', 'og:description')) ) { $PageDescr = str_replace(array_keys($ReplStr), array_values($ReplStr), html_entity_decode(NoNull($meta->getAttribute('content')))); }
@@ -186,14 +186,6 @@ class Bookmark {
             if ( NoNull($value->nodeValue) != '' && $PageText === false ) { $PageText = NoNull($value->nodeValue); }
         }
 
-        // Prep a Final Clean of the Strings
-        $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"', "\t" => ' ', "\r" => ' ', "\n" => ' ',
-                          "â" => '–', "" => '–', "" => '', "" => '',
-                         );
-        for ( $i = 2; $i < 50; $i++ ) {
-            $inplace[] = str_repeat(' ', $i);
-        }
-
         // Is there a better Page Text value?
         $els = $doc->getElementsByTagName('p');
         $paragraphs = false;
@@ -202,23 +194,8 @@ class Bookmark {
             foreach ( $els as $pp ) {
                 $ppText = NoNull($pp->nodeValue, $pp->textContent);
 
-
-                /* Remove Inline Styling */
-                $ppText = preg_replace('/(<[^>]*) style=("[^"]+"|\'[^\']+\')([^>]*>)/i', '$1$3', $ppText);
-
-                /* Try to Handle Inline HTML */
-                $ppText = NoNull(str_replace('<', '&lt;', $ppText));
-                $ReplStr = array( '&lt;section' => '<section', '&lt;iframe' => '<iframe',
-                                  '&lt;str' => '<str', '&lt;del' => '<del', '&lt;pre' => '<pre',
-                                  '&lt;h1' => '<h1', '&lt;h2' => '<h2', '&lt;h3' => '<h3',
-                                  '&lt;h4' => '<h4', '&lt;h5' => '<h5', '&lt;h6' => '<h6',
-                                  '&lt;ol' => '<ol', '&lt;ul' => '<ul', '&lt;li' => '<li',
-                                  '&lt;b' => '<b', '&lt;i' => '<i', '&lt;u' => '<u',
-                                 );
-                $ppText = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $ppText));
-
                 // Now Clear the Rest
-                $ppText = NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $ppText)));
+                $ppText = $this->_cleanText($ppText);
                 if ( $ppText != '' ) {
                     if ( $paragraphs === false ) { $paragraphs = array(); }
                     $paragraphs[] = NoNull($ppText);
@@ -248,11 +225,11 @@ class Bookmark {
 
         // Return the Summary Data If We Have It
         if ( NoNull($data) != '' ) {
-            $PageText = NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageText)));
+            $PageText = $this->_cleanText(strip_tags($PageText));
             $AltText = '';
             if ( is_array($paragraphs) ) {
                 foreach ( $paragraphs as $pp ) {
-                    if ( mb_strlen($pp) < $TextLimit && mb_strlen($pp) > mb_strlen($AltText) ) { $AltText = $pp; }
+                    if ( $AltText == '' && mb_strlen($pp) >= 100 && mb_strlen($pp) < $TextLimit && mb_strpos($pp, '©') === false ) { $AltText = $pp; }
                 }
             }
 
@@ -262,10 +239,10 @@ class Bookmark {
                 }
             }
 
-            return array( 'title'      => NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageTitle))),
-                          'summary'    => NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $PageDescr))),
+            return array( 'title'      => $this->_cleanText(strip_tags($PageTitle)),
+                          'summary'    => $this->_cleanText(strip_tags($PageDescr)),
                           'image'      => $PageImage,
-                          'keywords'   => NoNull(str_replace(array_keys($inplace), array_values($inplace), $PageKeys)),
+                          'keywords'   => $this->_cleanText(strip_tags($PageKeys)),
                           'text'       => NoNull(((mb_strlen($PageText) >= $TextLimit && mb_strlen($AltText) > 20 && mb_strlen($AltText) < $TextLimit ) ? $AltText : $PageText), $PageText),
                           'audio'      => $audioObj,
                           'paragraphs' => $paragraphs,
@@ -274,6 +251,33 @@ class Bookmark {
 
         // If We're Here, There Is No Summary (That We Know Of)
         return false;
+    }
+
+    private function _cleanText( $text ) {
+        $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"', "\t" => ' ', "\r" => ' ', "\n" => ' ',
+                          "â" => '–', "" => '–', "" => '', "" => '',
+                         );
+        for ( $i = 2; $i < 50; $i++ ) {
+            $inplace[str_repeat(' ', $i)] = '';
+        }
+        $text = NoNull(str_replace(array_keys($inplace), array_values($inplace), $text));
+
+        /* Now Ditch Inline Styling (if applicable) */
+        $text = preg_replace('/(<[^>]*) style=("[^"]+"|\'[^\']+\')([^>]*>)/i', '$1$3', $text);
+
+        /* Try to Handle Inline HTML */
+        $text = NoNull(str_replace('<', '&lt;', $text));
+        $ReplStr = array( '&lt;section' => '<section', '&lt;iframe' => '<iframe',
+                          '&lt;str' => '<str', '&lt;del' => '<del', '&lt;pre' => '<pre',
+                          '&lt;h1' => '<h1', '&lt;h2' => '<h2', '&lt;h3' => '<h3',
+                          '&lt;h4' => '<h4', '&lt;h5' => '<h5', '&lt;h6' => '<h6',
+                          '&lt;ol' => '<ol', '&lt;ul' => '<ul', '&lt;li' => '<li',
+                          '&lt;b' => '<b', '&lt;i' => '<i', '&lt;u' => '<u',
+                         );
+        $text = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $text));
+
+        // Now Clear and Return the Rest
+        return NoNull($text);
     }
 
     /** ********************************************************************* *
