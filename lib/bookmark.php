@@ -134,14 +134,17 @@ class Bookmark {
      ** ********************************************************************* */
     private function _getPageSummary() {
         $ReplStr = array( '&#39;' => "'", '&gt;' => '>', '&lt;' => '<' );
-        $PageURL = strtolower(NoNull($this->settings['source_url'], $this->settings['url']));
-        if ( mb_strlen($PageURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
+        $SourceURL = NoNull($this->settings['source_url'], NoNull($this->settings['source-url'], NoNull($this->settings['source']), $thiis->settings['url']));
+        if ( mb_strlen($SourceURL) <= 9 ) { $this->_setMetaMessage("Invalid URL Provided", 400); return false; }
+
+        $agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36';
         $TextLimit = 1200;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $PageURL);
+        curl_setopt($ch, CURLOPT_USERAGENT, $agent);
+        curl_setopt($ch, CURLOPT_URL, $SourceURL);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         $data = curl_exec($ch);
         curl_close($ch);
@@ -186,7 +189,10 @@ class Bookmark {
         // Prep a Final Clean of the Strings
         $inplace = array( '’' => "'", '‘' => "'", '“' => '"', '”' => '"', "\t" => ' ', "\r" => ' ', "\n" => ' ',
                           "â" => '–', "" => '–', "" => '', "" => '',
-                          '      ' => ' ', '     ' => ' ', '    ' => ' ', '   ' => ' ', '  ' => ' ', );
+                         );
+        for ( $i = 2; $i < 50; $i++ ) {
+            $inplace[] = str_repeat(' ', $i);
+        }
 
         // Is there a better Page Text value?
         $els = $doc->getElementsByTagName('p');
@@ -195,6 +201,23 @@ class Bookmark {
         if ( $els->length > 0 ) {
             foreach ( $els as $pp ) {
                 $ppText = NoNull($pp->nodeValue, $pp->textContent);
+
+
+                /* Remove Inline Styling */
+                $ppText = preg_replace('/(<[^>]*) style=("[^"]+"|\'[^\']+\')([^>]*>)/i', '$1$3', $ppText);
+
+                /* Try to Handle Inline HTML */
+                $ppText = NoNull(str_replace('<', '&lt;', $ppText));
+                $ReplStr = array( '&lt;section' => '<section', '&lt;iframe' => '<iframe',
+                                  '&lt;str' => '<str', '&lt;del' => '<del', '&lt;pre' => '<pre',
+                                  '&lt;h1' => '<h1', '&lt;h2' => '<h2', '&lt;h3' => '<h3',
+                                  '&lt;h4' => '<h4', '&lt;h5' => '<h5', '&lt;h6' => '<h6',
+                                  '&lt;ol' => '<ol', '&lt;ul' => '<ul', '&lt;li' => '<li',
+                                  '&lt;b' => '<b', '&lt;i' => '<i', '&lt;u' => '<u',
+                                 );
+                $ppText = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $ppText));
+
+                // Now Clear the Rest
                 $ppText = NoNull(strip_tags(str_replace(array_keys($inplace), array_values($inplace), $ppText)));
                 if ( $ppText != '' ) {
                     if ( $paragraphs === false ) { $paragraphs = array(); }
