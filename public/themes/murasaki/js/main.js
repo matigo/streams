@@ -1325,7 +1325,7 @@ function getGeoLocation( _active ) {
     var el = document.getElementById('post-geo');
     if ( el === undefined || el === false || el === null ) { return; }
 
-    if ( window.location.protocol == 'https' && (_active || navigator.geolocation) ) {
+    if ( window.location.protocol == 'https:' && (_active || navigator.geolocation) ) {
         var current_ts = Math.floor(Date.now());
         var start_ts = parseInt(el.getAttribute('data-start'));
 
