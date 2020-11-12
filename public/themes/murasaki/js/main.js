@@ -1211,13 +1211,17 @@ function checkCanDisplayPost( _view, post ) {
  *  Preferences Functions
  ** ************************************************************************* */
 function applyPreferences() {
-    var _items = ['fontsize', 'refreshtime', 'postcount'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
             switch ( _items[i] ) {
                 case 'fontsize':
                     applyFontSize(_val);
+                    break;
+
+                case 'showlabels':
+                    applyShowLabels(_val);
                     break;
 
                 default:
@@ -1227,7 +1231,7 @@ function applyPreferences() {
     }
 }
 function showSettingsModal() {
-    var _items = ['fontsize', 'refreshtime', 'postcount'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
@@ -1269,6 +1273,10 @@ function togglePreference(btn) {
             applyPostCount(_val);
             break;
 
+        case 'showlabels':
+            applyShowLabels(_val);
+            break;
+
         default:
             /* Do Nothing */
     }
@@ -1277,6 +1285,18 @@ function togglePreference(btn) {
     btn.classList.add('btn-primary');
 }
 
+function applyShowLabels( _val ) {
+    _val = NoNull(_val, 'N').toLowerCase();
+    switch ( _val ) {
+        case 'n':
+            hideByClass('label');
+            break;
+
+        default:
+            showByClass('label');
+    }
+    saveStorage('showlabels', _val);
+}
 function applyFontSize( _val ) {
     var _valids = ['xs', 's', 'm', 'l', 'xl'];
     if ( _valids.indexOf(_val) >= 0 ) {

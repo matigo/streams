@@ -26,9 +26,11 @@
     "btnCancel": "Cancel",
     "btnClose": "Close",
     "btnGoFetch": "Go!",
+    "btnNo": "No",
     "btnPublish": "Publish",
     "btnSave": "Save",
     "btnSignIn": "Sign In",
+    "btnYes": "Yes",
 
     "lblComposePH": "What's on your mind?",
     "lblComposeChooseChannel": "Select a Channel",
@@ -65,6 +67,8 @@
     "lblSetPosts100": "100",
     "lblSetPosts150": "150",
     "lblSetPosts200": "200",
+
+    "lblSetShowLabels": "Show Button Labels",
 
     "optPostNote": "Social",
     "optPostArticle": "Article",

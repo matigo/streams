@@ -1,10 +1,17 @@
             <section class="nav-left">
                 <ul class="list-views">
-                    <li class="list-view selected" data-action="collect" data-tl="global" data-new="0"><span>[navTLStream]</span><i class="fas fa-globe"></i><span class="new-count notify">0</span></li>
-                    <li class="list-view reqauth hidden" data-action="collect" data-tl="home" data-new="0"><span>[navTLHome]</span><i class="fas fa-home"></i><span class="new-count notify">0</span></li>
-                    <li class="list-view reqauth hidden" data-action="collect" data-tl="mentions" data-new="0"><span>[navTLMentions]</span><i class="far fa-comments"></i><span class="new-count notify">0</span></li>
-                    <li class="list-view reqauth hidden" data-action="collect" data-tl="actions"><span>[navTLHighlights]</span><i class="fas fa-highlighter"></i></li>
-                    <li data-action="settings" data-highlight="N"><span>[navSettings]</span><i class="fas fa-cogs"></i></li>
+                    <li class="list-view selected" data-action="collect" data-tl="global" data-new="0"><span>[navTLStream]</span><i class="fas fa-globe"></i><span class="new-count notify">0</span><span class="label">[navTLStream]</span></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="home" data-new="0"><span>[navTLHome]</span><i class="fas fa-home"></i><span class="new-count notify">0</span><span class="label">[navTLHome]</span></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="mentions" data-new="0"><span>[navTLMentions]</span><i class="far fa-comments"></i><span class="new-count notify">0</span><span class="label">[navTLMentions]</span></li>
+                    <li class="list-view reqauth hidden" data-action="collect" data-tl="actions"><span>[navTLHighlights]</span><i class="fas fa-highlighter"></i><span class="label">[navTLHighlights]</span></li>
+                    <li data-action="settings" data-highlight="N"><span>[navSettings]</span><i class="fas fa-cogs"></i><span class="label">[navSettings]</span></li>
+                </ul>
+                <ul class="post-types">
+                    <li class="post-type selected" data-action="filter" data-type="all"><i class="fas fa-water"></i><span class="label">[navShowAll]</span></li>
+                    <li class="post-type" data-action="filter" data-type="photo"><i class="fas fa-images"></i><span class="label">[navShowPhoto]</span></li>
+                    <li class="post-type" data-action="filter" data-type="note"><i class="fas fa-comment"></i><span class="label">[navShowNotes]</span></li>
+                    <li class="post-type" data-action="filter" data-type="article"><i class="far fa-newspaper"></i><span class="label">[navShowArticle]</span></li>
+                    <li class="post-type" data-action="filter" data-type="quotation"><i class="fas fa-quote-right"></i><span class="label">[navShowQuotation]</span></li>
                 </ul>
             </section>
             <section class="main-content">
@@ -97,6 +104,11 @@
                                 <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="100">[lblSetPosts100]</button>
                                 <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="150">[lblSetPosts150]</button>
                                 <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="200">[lblSetPosts200]</button>
+                            </p>
+                            <p>
+                                <label>[lblSetShowLabels]</label>
+                                <button class="btn btn-showlabels btn-primary" onclick="togglePreference(this);" data-class="showlabels" data-value="y">[btnYes]</button>
+                                <button class="btn btn-showlabels" onclick="togglePreference(this);" data-class="showlabels" data-value="n">[btnNo]</button>
                             </p>
                         </div>
                         <div class="modal-footer settings-footer">
