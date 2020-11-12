@@ -252,9 +252,10 @@ function handleNavListAction( el ) {
     if ( el === undefined || el === false || el === null ) { return; }
     var tObj = el;
     if ( tObj.getAttribute === undefined || tObj.getAttribute === false || tObj.getAttribute === null ) { tObj = el.currentTarget; }
+    var unread = nullInt(tObj.getAttribute('data-new'));
 
     if ( NoNull(tObj.tagName).toLowerCase() != 'li' ) { return; }
-    if ( tObj.classList.contains('selected') ) { return; }
+    if ( tObj.classList.contains('selected') && unread <= 0 ) { return; }
 
     /* Ensure the Touch Time is Decent to Prevent Double-Actions */
     var last_touch = parseInt(tObj.getAttribute('data-lasttouch'));
@@ -264,17 +265,19 @@ function handleNavListAction( el ) {
     tObj.setAttribute('data-lasttouch', touch_ts);
 
     /* Reset the LI Items in the Parent and Highlight (If Required) */
-    var pel = tObj.parentElement;
-    if ( pel === undefined || pel === false || pel === null ) { return; }
-    var _highlight = NoNull(pel.getAttribute('data-highlight'), NoNull(tObj.getAttribute('data-highlight'), 'Y')).toUpperCase();
-    if ( _highlight == 'Y' ) {
-        if ( NoNull(pel.tagName).toLowerCase() == 'ul' ) {
-            var els = pel.getElementsByTagName('LI');
-            for ( var i = 0; i < els.length; i++ ) {
-                if ( els[i].classList.contains('selected') ) { els[i].classList.remove('selected'); }
+    if ( tObj.classList.contains('selected') === false ) {
+        var pel = tObj.parentElement;
+        if ( pel === undefined || pel === false || pel === null ) { return; }
+        var _highlight = NoNull(pel.getAttribute('data-highlight'), NoNull(tObj.getAttribute('data-highlight'), 'Y')).toUpperCase();
+        if ( _highlight == 'Y' ) {
+            if ( NoNull(pel.tagName).toLowerCase() == 'ul' ) {
+                var els = pel.getElementsByTagName('LI');
+                for ( var i = 0; i < els.length; i++ ) {
+                    if ( els[i].classList.contains('selected') ) { els[i].classList.remove('selected'); }
+                }
             }
+            tObj.classList.add('selected');
         }
-        tObj.classList.add('selected');
     }
 
     /* Now let's actually handle the action */
