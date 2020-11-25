@@ -755,6 +755,7 @@ function clearWrite() {
             default:
                 els[i].value = '';
         }
+        els[i].disabled = false;
     }
     var els = document.getElementsByClassName('btn-publish');
     for ( var i = 0; i < els.length; i++ ) {

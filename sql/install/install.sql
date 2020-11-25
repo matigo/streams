@@ -872,6 +872,7 @@ CREATE TRIGGER `before_update_post`
 BEFORE UPDATE ON `Post`
    FOR EACH ROW
  BEGIN
+    SET new.`updated_at` = Now();
     SET new.`hash` = SHA1(CONCAT(new.`id`, IFNULL(new.`title`, ''), IFNULL(new.`value`, ''), IFNULL(new.`canonical_url`, ''), new.`channel_id`,
                                  IFNULL(new.`slug`, ''), IFNULL(new.`type`, ''), IFNULL(new.`privacy_type`, ''),
                                  DATE_FORMAT(new.`publish_at`, '%Y-%m-%d %H:%i:%s'), DATE_FORMAT(IFNULL(new.`expires_at`, new.`publish_at`), '%Y-%m-%d %H:%i:%s'), new.`is_deleted`));
