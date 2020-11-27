@@ -22,7 +22,7 @@ function nullInt( num, alt ) {
     if ( num === undefined || num === null || num === false || isNaN(num) ) { num = 0; }
     if ( alt === undefined || alt === null || alt === false || isNaN(alt) ) { alt = 0; }
 
-    var ii = parseInt(num);
+    var ii = parseFloat(num);
     if ( ii === undefined || ii === null || ii === false || isNaN(ii) ) { ii = 0; }
     if ( ii == 0 ) { return alt; }
     return ii;
@@ -190,13 +190,12 @@ function alignModal(){
 }
 function splitSecondCheck(el) {
     if ( el === undefined || el === false || el === null ) { return; }
-    var touch_ts = Math.floor(Date.now());
-    var last_ts = parseInt(el.getAttribute('data-lasttouch'));
-    var _sok = true;
+    var touch_ts = nullInt(Math.floor(Date.now()));
+    var last_ts = nullInt(el.getAttribute('data-lasttouch'));
 
     if ( (touch_ts - last_ts) <= 333 ) { return false; }
     el.setAttribute('data-lasttouch', touch_ts);
-    return _sok;
+    return true;
 }
 
 /** ************************************************************************* *

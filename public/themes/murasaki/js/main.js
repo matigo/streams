@@ -82,10 +82,20 @@ document.onreadystatechange = function () {
 }
 function handleDocumentClick(e) {
     if ( e === undefined || e === false || e === null ) { return; }
+    var valids = ['span', 'button'];
     var tObj = e.target;
     var tagName = NoNull(tObj.tagName).toLowerCase();
+    if ( valids.indexOf(tagName) < 0 ) {
+        tObj = tObj.parentElement;
+        tagName = NoNull(tObj.tagName).toLowerCase();
+    }
+    if ( valids.indexOf(tagName) < 0 ) { return; }
 
     switch ( tagName ) {
+        case 'button':
+            handleButtonClick(tObj);
+            break;
+
         case 'span':
             handleSpanClick(tObj);
             break;
@@ -206,26 +216,31 @@ function handleDocumentKeyPress(e) {
 }
 function countCharacters() {
     var els = document.getElementsByClassName('content-area');
-    var _ch = 0;
 
     for ( var i = 0; i < els.length; i++ ) {
+        var _btnCls = NoNull(els[i].getAttribute('data-button'), 'btn-publish');
+        var _cntCls = NoNull(els[i].getAttribute('data-counter'));
         var _val = NoNull(els[i].value);
+        var pEl = els[i].parentElement;
+
+        var _ch = 0;
         if ( _val != '' ) { _ch = els[i].value.length; }
-    }
 
-    var els = document.getElementsByClassName('content-length');
-    for ( var i = 0; i < els.length; i++ ) {
-        els[i].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
-    }
+        /* Set the Counter */
+        var ccs = pEl.getElementsByClassName(_cntCls);
+        for ( var e = 0; e < ccs.length; e++ ) {
+            ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
+        }
 
-    var els = document.getElementsByClassName('btn-publish');
-    for ( var i = 0; i < els.length; i++ ) {
-        if ( _ch > 0 ) {
-            if ( els[i].classList.contains('btn-primary') === false ) { els[i].classList.add('btn-primary'); }
-            els[i].disabled = false;
-        } else {
-            if ( els[i].classList.contains('btn-primary') ) { els[i].classList.remove('btn-primary'); }
-            els[i].disabled = true;
+        var ccs = pEl.getElementsByClassName(_btnCls);
+        for ( var e = 0; e < ccs.length; e++ ) {
+            if ( _ch > 0 ) {
+                if ( ccs[e].classList.contains('btn-primary') === false ) { ccs[e].classList.add('btn-primary'); }
+                ccs[e].disabled = false;
+            } else {
+                if ( ccs[e].classList.contains('btn-primary') ) { ccs[e].classList.remove('btn-primary'); }
+                ccs[e].disabled = true;
+            }
         }
     }
 }
@@ -234,9 +249,7 @@ function handleButtonClick(el) {
     var tObj = el;
     if ( tObj.getAttribute === undefined || tObj.getAttribute === false || tObj.getAttribute === null ) { tObj = el.currentTarget; }
     if ( NoNull(tObj.tagName).toLowerCase() != 'button' ) { return; }
-
-    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
-    if ( splitSecondCheck(tObj) === false ) { return; }
+    tObj.blur();
 
     var _action = NoNull(tObj.getAttribute('data-action')).toLowerCase();
     switch ( _action ) {
@@ -244,8 +257,58 @@ function handleButtonClick(el) {
             publishPost(tObj);
             break;
 
+        case 'post-reply':
+            publishPost(tObj);
+            break;
+
+        case 'cancel-reply':
+            clearReplyToPost();
+            break;
+
+        case 'reply':
+            replyToPost(tObj);
+            break;
+
         default:
             console.log("Not sure how to handle [" + _action + "]");
+    }
+}
+function replyToPost(el) {
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+    clearReplyToPost();
+
+    if ( el === undefined || el === false || el === null ) { return; }
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        var els = el.getElementsByClassName('post-reply');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( NoNull(els[i].innerHTML).length < 10 ) {
+                els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-name="content" placeholder="(Your Reply)"></textarea>' +
+                                   '<input type="hidden" name="rpy-data" data-name="reply_to" value="' + _guid + '">' +
+                                   '<button class="btn reply-post" data-form="rpy-data" data-action="post-reply" disabled>Reply</button>' +
+                                   '<button class="btn btn-danger" data-action="cancel-reply">Cancel</button>' +
+                                   '<span class="reply-length">&nbsp;</span>';
+                var ccs = els[i].getElementsByClassName('reply-content');
+                for ( var e = 0; e < ccs.length; e++ ) {
+                    ccs[e].focus();
+                }
+            }
+        }
+    }
+}
+function clearReplyToPost() {
+    var els = document.getElementsByClassName('post-reply');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = '';
     }
 }
 function handleNavListAction( el ) {
@@ -735,11 +798,38 @@ function parsePublish( data ) {
             if ( checkCanDisplayPost('global', ds[i]) ) {
                 writePostToTL('global', ds[i]);
             }
+            if ( ds.length == 1 ) {
+                if ( NoNull(ds[i].reply_to).length > 10 ) { setReplySuccessful(); }
+            }
         }
+        clearPostActives();
         clearWrite();
 
     } else {
         alert('Error: ' + NoNull(data.meta.text, 'Could not publish your post'));
+    }
+}
+function setReplySuccessful() {
+    var els = document.getElementsByClassName('reply-content');
+    for ( var i = (els.length - 1); i >= 0; i-- ) {
+        els[i].parentElement.innerHTML = '<p class="reply-success" style="opacity: 1;">Reply Published</p>';
+    }
+    setTimeout(fadeReplySuccess, 100);
+}
+function fadeReplySuccess() {
+    var els = document.getElementsByClassName('reply-success');
+    for ( var i = (els.length - 1); i >= 0; i-- ) {
+        var _oval = nullInt(els[i].style.opacity);
+        if ( _oval > 1 ) { _oval = 1; }
+        if ( _oval > 0 ) {
+            _oval -= 0.05;
+            if ( _oval < 0 ) { _oval = 0; }
+            els[i].style.opacity = _oval;
+            setTimeout(fadeReplySuccess, 100);
+
+        } else {
+            els[i].parentElement.removeChild(els[i]);
+        }
     }
 }
 function clearWrite() {
@@ -1161,13 +1251,20 @@ function buildHTML( post ) {
                     '<p class="persona">' + _dispName + '</p>' +
                     '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
                 '</div>' +
-                '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" data-guid="' + post.guid + '">' +
+                '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
                     _ttxt +
                     post.content +
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
                     ((_audio_block != '') ? _audio_block : '') +
-                    '<div class="metaline pad post-actions hidden" data-guid="' + post.guid + '"></div>' +
+                    '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
+                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="edit" disabled><i class="fas fa-edit"></i></button>' : '') +
+                        '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
+                        '<button class="btn btn-action" data-action="star" disabled><i class="far fa-star"></i></button>' +
+                        '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
+                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete" disabled><i class="fas fa-trash-alt"></i></button>' : '') +
+                    '</div>' +
+                    '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
                     '<div class="bottom-spacer">&nbsp;</div>' +
                 '</div>';
     return _html;
@@ -1208,6 +1305,25 @@ function checkCanDisplayPost( _view, post ) {
             /* If we're here, a match was not found */
             return true;
         }
+    }
+}
+function setPostActive(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+    clearPostActives();
+
+    el.classList.add('active');
+}
+function clearPostActives() {
+    var els = document.getElementsByClassName('post-item');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('active') ) { els[i].classList.remove('active'); }
     }
 }
 

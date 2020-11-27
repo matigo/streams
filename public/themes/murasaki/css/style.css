@@ -768,6 +768,63 @@ section.main-content .timeline .post-item.post-article .content-area .content-so
 section.main-content .timeline .post-item.post-quotation .content-area span.account,
 section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
 
+section.main-content .timeline .post-item .metaline.post-actions { display: none; }
+section.main-content .timeline .post-item.active .metaline.post-actions { display: block; }
+
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action {
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 5px 15px;
+    margin: 0 5px 0 0;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+section.main-content .timeline .post-item .metaline.post-reply {
+    display: block;
+    font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    padding: 0 5px;
+    max-width: 600px;
+    width: 100%;
+}
+section.main-content .timeline .post-item .metaline.post-reply button {
+    display: inline-block;
+    margin: 0 5px 0 0;
+    padding: 3px 0;
+    max-width: 75px;
+    min-width: 75px;
+    width: 75px;
+}
+section.main-content .timeline .post-item .metaline.post-reply button:disabled { border: 1px solid #e7e3ed; }
+section.main-content .timeline .post-item .metaline.post-reply span {
+    display: inline-block;
+    font-style: italic;
+    text-align: right;
+    max-width: calc(100% - 170px);
+    min-width: calc(100% - 170px);
+}
+section.main-content .timeline .post-item .metaline.post-reply textarea {
+    display: block;
+    font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    padding: 5px 7px;
+    margin: 0 0 5px;
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+section.main-content .timeline .post-item .metaline.post-reply textarea::placeholder { padding: 5px 0 0; text-align: center; }
+section.main-content .timeline .post-item .metaline.post-reply textarea::-ms-input-placeholder { padding: 5px 0 0; text-align: center; }
+section.main-content .timeline .post-item .metaline.post-reply .reply-success {
+    background-color: #dcedc8;
+    border: 1px solid #000;
+    display: block;
+    padding: 15px 25px;
+    margin: 0;
+    max-width: 400px;
+}
+
 section.main-content .timeline .post-notify-block {
     display: block;
     width: 100%;
