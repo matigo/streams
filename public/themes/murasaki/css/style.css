@@ -617,6 +617,10 @@ section.main-content .timeline .post-item {
     padding: 0;
     margin: 0;
 }
+section.main-content .timeline .post-item.deletion {
+    background-color: rgba(255, 0, 0, 0.5);
+    opacity: 1;
+}
 
 section.main-content .timeline .post-item .content-author {
     background: transparent;
@@ -768,6 +772,9 @@ section.main-content .timeline .post-item.post-article .content-area .content-so
 section.main-content .timeline .post-item.post-quotation .content-area span.account,
 section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
 
+section.main-content .timeline .post-item .content-area.confirmation p { display: none; }
+section.main-content .timeline .post-item .content-area.confirmation p.action-confirm { display: block; }
+
 section.main-content .timeline .post-item .metaline.post-actions { display: none; }
 section.main-content .timeline .post-item.active .metaline.post-actions { display: block; }
 
@@ -796,6 +803,12 @@ section.main-content .timeline .post-item .metaline.post-reply button {
     max-width: 75px;
     min-width: 75px;
     width: 75px;
+}
+section.main-content .timeline .post-item .metaline.post-reply button.btn-delete {
+    margin: 0 10px 0 0;
+    padding: 3px 15px;
+    max-width: 150px;
+    width: auto;
 }
 section.main-content .timeline .post-item .metaline.post-reply button:disabled { border: 1px solid #e7e3ed; }
 section.main-content .timeline .post-item .metaline.post-reply span {

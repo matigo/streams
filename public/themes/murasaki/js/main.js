@@ -269,6 +269,18 @@ function handleButtonClick(el) {
             clearReplyToPost();
             break;
 
+        case 'delete':
+            confirmDeletePost(tObj);
+            break;
+
+        case 'delete-cancel':
+            clearConfirmation();
+            break;
+
+        case 'delete-post':
+            deletePost(tObj);
+            break;
+
         case 'reply':
             replyToPost(tObj);
             break;
@@ -278,10 +290,6 @@ function handleButtonClick(el) {
     }
 }
 function replyToPost(el) {
-    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
-    if ( splitSecondCheck(el) === false ) { return; }
-    clearReplyToPost();
-
     if ( el === undefined || el === false || el === null ) { return; }
     for ( var i = 0; i < 5; i++ ) {
         if ( el.classList.contains('post-item') === false ) {
@@ -290,6 +298,10 @@ function replyToPost(el) {
             i = 999;
         }
     }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+    clearReplyToPost();
 
     /* Collect the Name(s) to reply to */
     var _replyTxt = '';
@@ -335,6 +347,78 @@ function replyToPost(el) {
             }
         }
     }
+}
+function confirmDeletePost(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+    clearPostActives();
+
+    var els = el.getElementsByClassName('content-area');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('confirmation') === false ) { els[i].classList.add('confirmation'); }
+    }
+
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        var els = el.getElementsByClassName('post-reply');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( NoNull(els[i].innerHTML).length < 10 ) {
+                els[i].innerHTML = '<p class="action-confirm">Are you sure you would like to delete this post?</p>' +
+                                   '<button class="btn btn-danger btn-delete" data-action="delete-post">Yes, Delete.</button>' +
+                                   '<button class="btn btn-grey" data-action="delete-cancel">Cancel</button>';
+            }
+        }
+    }
+}
+function deletePost(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        var params = { 'persona_guid': getPersonaGUID() };
+        doJSONQuery('posts/' + _guid, 'DELETE', params, parseDeletePost);
+        setTimeout(fadeDeletedPosts, 500);
+        el.classList.add('deletion');
+        el.style.opacity = 1;
+        clearConfirmation();
+    }
+}
+function parseDeletePost(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( NoNull(ds.post_guid) != '' ) {
+            console.log("Deleted Post: " + NoNull(ds.post_guid));
+        }
+    }
+}
+function clearConfirmation() {
+    var els = document.getElementsByClassName('confirmation');
+    if ( els.length > 0 ) {
+        for ( var i = (els.length - 1); i >= 0; i-- ) {
+            els[i].classList.remove('confirmation');
+        }
+    }
+    clearReplyToPost();
+    clearPostActives();
 }
 function clearReplyToPost() {
     var els = document.getElementsByClassName('post-reply');
@@ -863,6 +947,22 @@ function fadeReplySuccess() {
         }
     }
 }
+function fadeDeletedPosts() {
+    var els = document.getElementsByClassName('deletion');
+    for ( var i = (els.length - 1); i >= 0; i-- ) {
+        var _oval = nullInt(els[i].style.opacity);
+        if ( _oval > 1 ) { _oval = 1; }
+        if ( _oval > 0 ) {
+            _oval -= 0.05;
+            if ( _oval < 0 ) { _oval = 0; }
+            els[i].style.opacity = _oval;
+            setTimeout(fadeDeletedPosts, 100);
+
+        } else {
+            els[i].parentElement.removeChild(els[i]);
+        }
+    }
+}
 function clearWrite() {
     var els = document.getElementsByName('fdata');
     for ( var i = 0; i < els.length; i++ ) {
@@ -1293,7 +1393,7 @@ function buildHTML( post ) {
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
                         '<button class="btn btn-action" data-action="star" disabled><i class="far fa-star"></i></button>' +
                         '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
-                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete" disabled><i class="fas fa-trash-alt"></i></button>' : '') +
+                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
                     '</div>' +
                     '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
                     '<div class="bottom-spacer">&nbsp;</div>' +
