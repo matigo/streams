@@ -131,6 +131,15 @@ function setHeadMeta( _name, _value ) {
         }
     }
 }
+function readHeadMeta( _name ) {
+    if ( _name === undefined || _name === false || _name === null || _name.length <= 3 ) { return ''; }
+    var metas = document.getElementsByTagName('meta');
+    for ( var i = 0; i < metas.length; i++ ) {
+        var _attrib = NoNull(metas[i].getAttribute("name"));
+        if ( _attrib == _name ) { return NoNull(metas[i].getAttribute("content")); }
+    }
+
+}
 function showByClass( _cls ) {
     if ( _cls === undefined || _cls === false || _cls === null ) { return; }
     var els = document.getElementsByClassName(_cls);
@@ -196,6 +205,22 @@ function splitSecondCheck(el) {
     if ( (touch_ts - last_ts) <= 333 ) { return false; }
     el.setAttribute('data-lasttouch', touch_ts);
     return true;
+}
+function setSelectionRange(input, selectionStart, selectionEnd) {
+    if (input.setSelectionRange) {
+        input.focus();
+        input.setSelectionRange(selectionStart, selectionEnd);
+    }
+    else if (input.createTextRange) {
+        var range = input.createTextRange();
+        range.collapse(true);
+        range.moveEnd('character', selectionEnd);
+        range.moveStart('character', selectionStart);
+        range.select();
+    }
+}
+function setCaretToPos (input, pos) {
+    setSelectionRange(input, pos, pos);
 }
 
 /** ************************************************************************* *

@@ -811,6 +811,8 @@ section.main-content .timeline .post-item .metaline.post-reply textarea {
     font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
     padding: 5px 7px;
     margin: 0 0 5px;
+    max-height: 160px;
+    min-height: 80px;
     max-width: 100%;
     min-width: 100%;
     width: 100%;

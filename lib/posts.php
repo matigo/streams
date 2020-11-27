@@ -392,26 +392,28 @@ class Posts {
         $ReplStr = array();
         if ( is_array($mentions) ) {
             foreach ( $mentions as $u ) {
-                $ReplStr[ $u['name'] . '</' ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span></';
-                $ReplStr[ $u['name'] . '<br' ] = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><br';
-                $ReplStr[ $u['name'] . '<hr' ] = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><hr';
-                $ReplStr[ $u['name'] . '?' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>?';
-                $ReplStr[ $u['name'] . '!' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>!';
-                $ReplStr[ $u['name'] . '.' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>.';
-                $ReplStr[ $u['name'] . ':' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>:';
-                $ReplStr[ $u['name'] . ';' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>;';
-                $ReplStr[ $u['name'] . ',' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>,';
-                $ReplStr[ $u['name'] . ' ' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span> ';
-                $ReplStr[ $u['name'] . ')' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>)';
-                $ReplStr[ $u['name'] . "'" ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>'";
-                $ReplStr[ $u['name'] . "’" ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>’";
-                $ReplStr[ $u['name'] . '-' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>-';
-                $ReplStr[ $u['name'] . '"' ]   = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>"';
-                $ReplStr[ $u['name'] . "\n" ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\n";
-                $ReplStr[ $u['name'] . "\r" ]  = '<span class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\r";
-                $ReplStr[ "/" . $u['name'] ]  = "/<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
-                $ReplStr[ "\n" . $u['name'] ]  = "\n<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
-                $ReplStr[ "\r" . $u['name'] ]  = "\r<span" . ' class="account" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
+                $plain = NoNull(str_replace('@', '', $u['name']));
+
+                $ReplStr[ $u['name'] . '</' ]  = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span></';
+                $ReplStr[ $u['name'] . '<br' ] = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><br';
+                $ReplStr[ $u['name'] . '<hr' ] = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span><hr';
+                $ReplStr[ $u['name'] . '?' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>?';
+                $ReplStr[ $u['name'] . '!' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>!';
+                $ReplStr[ $u['name'] . '.' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>.';
+                $ReplStr[ $u['name'] . ':' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>:';
+                $ReplStr[ $u['name'] . ';' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>;';
+                $ReplStr[ $u['name'] . ',' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>,';
+                $ReplStr[ $u['name'] . ' ' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span> ';
+                $ReplStr[ $u['name'] . ')' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>)';
+                $ReplStr[ $u['name'] . "'" ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>'";
+                $ReplStr[ $u['name'] . "’" ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>’";
+                $ReplStr[ $u['name'] . '-' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>-';
+                $ReplStr[ $u['name'] . '"' ]   = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . '</span>"';
+                $ReplStr[ $u['name'] . "\n" ]  = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\n";
+                $ReplStr[ $u['name'] . "\r" ]  = '<span class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>\r";
+                $ReplStr[ "/" . $u['name'] ]  = "/<span" . ' class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
+                $ReplStr[ "\n" . $u['name'] ]  = "\n<span" . ' class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
+                $ReplStr[ "\r" . $u['name'] ]  = "\r<span" . ' class="account" data-nick="' . $plain . '" data-guid="' . $u['guid'] . '">' . $u['name'] . "</span>";
             }
         }
 

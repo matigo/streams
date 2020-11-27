@@ -291,12 +291,38 @@ function replyToPost(el) {
         }
     }
 
+    /* Collect the Name(s) to reply to */
+    var _replyTxt = '';
+    var _names = [];
+
+    var _myGuid = readHeadMeta('persona_guid');
+    var els = el.getElementsByClassName('account');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-nick'));
+        var _paid = NoNull(els[i].getAttribute('data-guid'));
+        if ( _name.length >= 2 && _names.indexOf(_name) < 0 && _paid != _myGuid ) { _names.push(_name); }
+    }
+    var _cPos = 0;
+
+    if ( _names.length > 0 ) {
+        for ( var i = 0; i < _names.length; i++ ) {
+            if ( i == 0 ) {
+                _replyTxt = '@' + _names[i] + ' ';
+                _cPos = _replyTxt.length;
+            }
+            if ( i == 1 ) { _replyTxt += "\r\n\r\n//"; }
+            if ( i >= 1 ) {
+                _replyTxt += ' @' + _names[i];
+            }
+        }
+    }
+
     var _guid = NoNull(el.getAttribute('data-guid'));
     if ( _guid.length == 36 ) {
         var els = el.getElementsByClassName('post-reply');
         for ( var i = 0; i < els.length; i++ ) {
             if ( NoNull(els[i].innerHTML).length < 10 ) {
-                els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-name="content" placeholder="(Your Reply)"></textarea>' +
+                els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-name="content" placeholder="(Your Reply)">' + _replyTxt + '</textarea>' +
                                    '<input type="hidden" name="rpy-data" data-name="reply_to" value="' + _guid + '">' +
                                    '<button class="btn reply-post" data-form="rpy-data" data-action="post-reply" disabled>Reply</button>' +
                                    '<button class="btn btn-danger" data-action="cancel-reply">Cancel</button>' +
@@ -304,6 +330,7 @@ function replyToPost(el) {
                 var ccs = els[i].getElementsByClassName('reply-content');
                 for ( var e = 0; e < ccs.length; e++ ) {
                     ccs[e].focus();
+                    setCaretToPos(ccs[e], _cPos);
                 }
             }
         }
@@ -1250,7 +1277,7 @@ function buildHTML( post ) {
     }
 
     /* Construct the full output */
-    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
+    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-nick="' + NoNull(post.persona.as.replaceAll('@', '')) + '" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
                 '<div class="content-header">' +
                     '<p class="persona">' + _dispName + '</p>' +
                     '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
