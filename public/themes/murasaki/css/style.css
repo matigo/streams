@@ -806,6 +806,7 @@ section.main-content .timeline .post-item .metaline.post-reply span {
     min-width: calc(100% - 170px);
 }
 section.main-content .timeline .post-item .metaline.post-reply textarea {
+    border: 2px solid #e7e3ed;
     display: block;
     font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
     padding: 5px 7px;

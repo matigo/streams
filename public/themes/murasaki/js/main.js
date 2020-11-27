@@ -187,28 +187,32 @@ function handleDocumentKeyPress(e) {
     if ( e === undefined || e === false || e === null ) { return; }
     if ( e.charCode !== undefined && e.charCode !== null ) {
         if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) {
-            var form = e.target.form;
+            var form = e.target.form || e.target.parentElement;
             var idx = Array.prototype.indexOf.call(form, e.target);
-            var tag = NoNull(form.elements[idx].tagName).toLowerCase();
+            var el = false;
+            if ( idx >= 0 ) { el = form.elements[idx]; } else { el = e.target; }
+            var tag = NoNull(el.tagName).toLowerCase();
             e.preventDefault();
 
-            switch ( tag ) {
-                case 'button':
-                    handleButtonClick(form.elements[idx]);
-                    break;
+            if ( el !== false ) {
+                switch ( tag ) {
+                    case 'button':
+                        handleButtonClick(el);
+                        break;
 
-                case 'textarea':
-                    var _name = NoNull(form.elements[idx].getAttribute('data-name')).toLowerCase();
-                    if ( _name == 'content' ) { publishPost(form.elements[idx]); }
-                    break;
+                    case 'textarea':
+                        var _name = NoNull(el.getAttribute('data-name')).toLowerCase();
+                        if ( _name == 'content' ) { publishPost(el); }
+                        break;
 
-                default:
-                    idx++;
-                    if ( idx >= form.elements.length ) { idx = 0; }
-                    form.elements[idx].focus();
-                    if ( NoNull(form.elements[idx].tagName).toLowerCase() == 'button' ) {
-                        handleButtonClick(form.elements[idx]);
-                    }
+                    default:
+                        idx++;
+                        if ( idx > 0 && idx >= form.elements.length ) { idx = 0; }
+                        if ( idx >= 0 ) {
+                            form.elements[idx].focus();
+                            if ( NoNull(form.elements[idx].tagName).toLowerCase() == 'button' ) { handleButtonClick(form.elements[idx]); }
+                        }
+                }
             }
             return;
         }
