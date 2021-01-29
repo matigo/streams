@@ -1416,7 +1416,7 @@ function parseProfile( data ) {
                     '<div class="content-area profile-content">' +
                         '<strong class="persona full-wide">@' + ds.as + ((ds.name != '') ? ' (' + ds.name + ')' : '') + '</strong>' +
                         '<strong class="sites full-wide"><a target="_blank" href="' + ds.site_url + '" title="">' + ds.site_url.replace('https://', '').replace('http://', '') + '</a></strong>' +
-                        '<em class="since full-wide">Joined ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ((ds.days > 1 ) ? ' (' + numberWithCommas(ds.days) + ' days)') + '</em>' +
+                        '<em class="since full-wide">Joined ' + ((moment(_ts).isSame(today, 'day') ) ? moment(_ts).format('h:mm a') : moment(_ts).format('MMMM Do YYYY')) + ((ds.days > 1 ) ? ' (' + numberWithCommas(ds.days) + ' days)' : '') + '</em>' +
                         '<em class="relation full-wide">' + _relation + '</em>' +
                         NoNull(ds.bio.html) +
                         _edit +
