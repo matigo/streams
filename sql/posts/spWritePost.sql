@@ -50,6 +50,9 @@ BEGIN
            CASE WHEN IFNULL(`in_reply_to`, '')  <> '' THEN LEFT(IFNULL(`in_reply_to`, ''), 512) ELSE NULL END as `reply_to`, ca.`channel_id`,
            CASE WHEN IFNULL(`in_slug`, '') <> '' THEN LEFT(IFNULL(`in_slug`, ''), 255) ELSE NULL END as `slug`,
            IFNULL(`in_type`, '') as `type`, CASE WHEN IFNULL(`in_privacy`, '') <> '' THEN IFNULL(`in_privacy`, '') ELSE NULL END as `privacy_type`,
+           IFNULL((SELECT z.`value` FROM `AccountMeta` z WHERE z.`account_id` = tt.`account_id` and z.`key` = 'post.has_published' LIMIT 1), 'N') as `has_published`,
+           IFNULL((SELECT CAST(FROM_UNIXTIME(z.`value`) AS datetime) FROM `AccountMeta` z
+                    WHERE z.`account_id` = tt.`account_id` and z.`key` = 'post.recent_at' LIMIT 1), Now()) as `recent_at`,
            CASE WHEN IFNULL(`in_publish_at`, '') <> '' THEN DATE_FORMAT(IFNULL(`in_publish_at`, ''), '%Y-%m-%d %H:%i:%s') ELSE Now() END as `publish_at`,
            CASE WHEN IFNULL(`in_expires_at`, '2000-01-01 00:00:00') > DATE_FORMAT(Now(), '%Y-%m-%d %H:%i:%s') THEN IFNULL(`in_expires_at`, '2000-01-01 00:00:00') ELSE NULL END as `expires_at`,
            tt.`account_id` as `created_by`, tt.`account_id` as `updated_by`
@@ -97,6 +100,10 @@ BEGIN
 
         IF IFNULL(`x_post_id`, 0) <= 0 AND `in_post_id` > 0 THEN
             SET `x_post_id` = `in_post_id`;
+        END IF;
+
+        IF IFNULL(`x_post_id`, 0) <= 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Could not insert into Post';
         END IF;
 
         /* Update the Site Version */
@@ -156,6 +163,15 @@ BEGIN
             ON DUPLICATE KEY UPDATE `is_deleted` = 'N',
                                     `updated_at` = Now();
 
+        /* Update the AccountMeta for the values */
+        INSERT INTO `AccountMeta` (`account_id`, `key`, `value`)
+        SELECT acct.`id` as `account_id`, meta.`key`, meta.`value`
+          FROM `Account` acct INNER JOIN (SELECT 'post.recent_at' as `key`, CAST(UNIX_TIMESTAMP(Now()) AS CHAR(64)) as `value` UNION ALL
+                                          SELECT 'post.has_published' as `key`, 'Y' as `value`) meta ON meta.`key` IS NOT NULL
+         WHERE acct.`id` = `in_account_id`
+            ON DUPLICATE KEY UPDATE `value` = meta.`value`,
+                                    `updated_at` = Now();
+
         /* Check for Duplicate Post Objects and Handle them Accordingly */
         UPDATE `Post` p INNER JOIN (SELECT SHA1(CONCAT(p.`persona_id`, IFNULL(p.`client_id`, 0), IFNULL(p.`thread_id`, 0), IFNULL(p.`parent_id`, 0), p.`value`,
                                                        IFNULL(p.`reply_to`, ''), p.`channel_id`, p.`privacy_type`, p.`created_by`, p.`updated_by`)) as `sha1`,
@@ -167,6 +183,8 @@ BEGIN
          WHERE tmp.`posts` > 1;
 
         /* Return the Post.id for this Object */
-        SELECT IFNULL(`x_post_id`, `in_post_id`) as `post_id`;
+        SELECT IFNULL(`x_post_id`, `in_post_id`) as `post_id`, t.`has_published`, DATEDIFF(Now(), t.`recent_at`) as `days_since`
+          FROM `tmp` t
+         LIMIT 1;
 END;;
 DELIMITER ;

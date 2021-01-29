@@ -782,8 +782,25 @@ class Posts {
                                              " [THREAD_ID], [PARENT_ID], [POST_ID]);", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
+            $has_published = false;
+            $days_since = 0;
+
             foreach ( $rslt as $Row ) {
                 $post_id = nullInt($Row['post_id']);
+                $has_published = YNBool($Row['has_published']);
+                $days_since = nullInt($Row['days_since']);
+            }
+
+            /* Do we need to trigger WelcomeBot to say something? */
+            if ( $has_published === false ) {
+                $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome to 10Centuries, @{name}!');", $ReplStr );
+                $tslt = doSQLQuery($sqlStr);
+            } else {
+                if ( $days_since > 90 ) {
+                    $ReplStr['[DAYS_SINCE]'] = number_format($days_since);
+                    $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome back to 10Centuries, @{name}! [DAYS_SINCE] have passed since your last post.');", $ReplStr );
+                    $tslt = doSQLQuery($sqlStr);
+                }
             }
         }
 

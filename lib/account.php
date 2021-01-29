@@ -412,12 +412,6 @@ class Account {
                 }
             }
 
-            // Send a Welcome Message
-            if ( $AcctID > 0 ) {
-                $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome to 10Centuries, @{name}!');", $ReplStr );
-                $tslt = doSQLQuery($sqlStr);
-            }
-
             // If CloudFlare is being used, configure the CNAME Record Accordingly
             if ( $AcctID > 0 ) {
                 if ( !defined('CLOUDFLARE_API_KEY') ) { define('CLOUDFLARE_API_KEY', ''); }
