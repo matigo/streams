@@ -798,7 +798,7 @@ class Posts {
             } else {
                 if ( $days_since > 90 ) {
                     $ReplStr['[DAYS_SINCE]'] = number_format($days_since);
-                    $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome back to 10Centuries, @{name}! [DAYS_SINCE] have passed since your last post.');", $ReplStr );
+                    $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome back to 10Centuries, @{name}! [DAYS_SINCE] days have passed since your last post.');", $ReplStr );
                     $tslt = doSQLQuery($sqlStr);
                 }
             }
