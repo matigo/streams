@@ -74,7 +74,33 @@ BEGIN
 
     /* Collect the Base Information */
     DROP TEMPORARY TABLE IF EXISTS tmp;
-    CREATE TEMPORARY TABLE tmp DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AS
+
+      DROP TEMPORARY TABLE IF EXISTS tmp;
+    CREATE TEMPORARY TABLE tmp (
+        `account_id`        int(11)        UNSIGNED NOT NULL    ,
+        `email`             varchar(256)            NOT NULL    ,
+        `type`              varchar(64)             NOT NULL    ,
+        `display_name`      varchar(256)            NOT NULL    ,
+        `language_code`     varchar(6)              NOT NULL    ,
+        `timezone`          varchar(128)            NOT NULL    ,
+        `avatar_url`        varchar(256)            NOT NULL    ,
+        `file_count`        int(11)        UNSIGNED NOT NULL    ,
+        `storage_limit`     bigint         UNSIGNED NOT NULL    ,
+        `storage_used`      bigint         UNSIGNED NOT NULL    ,
+        `primary_url`       varchar(768)            NOT NULL    ,
+        `default_persona`   varchar(64)             NOT NULL    ,
+        `default_channel`   varchar(64)             NOT NULL    ,
+        `pref_contact_mail` enum('N','Y')           NOT NULL    DEFAULT 'N',
+        `access_level`      varchar(64)             NOT NULL    ,
+        `password_change`   enum('N','Y')           NOT NULL    DEFAULT 'N',
+        `welcome_done`      enum('N','Y')           NOT NULL    DEFAULT 'N',
+        PRIMARY KEY (`account_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    INSERT INTO tmp (`account_id`, `email`, `type`, `display_name`, `language_code`, `timezone`, `avatar_url`,
+                     `file_count`, `storage_limit`, `storage_used`, `primary_url`,
+                     `default_persona`, `default_channel`, `pref_contact_mail`, `access_level`,
+                     `password_change`, `welcome_done`)
     SELECT a.`id` as `account_id`, a.`email`, a.`type`, a.`display_name`, a.`language_code`, a.`timezone`,
            IFNULL((SELECT z.`avatar_img` FROM `Persona` z
                     WHERE z.`is_deleted` = 'N' and z.`account_id` = a.`id`
@@ -130,7 +156,7 @@ BEGIN
      LIMIT 1;
 
     /* Get the Storage Results */
-    UPDATE tmp INNER JOIN (SELECT fi.`account_id`, COUNT(fi.`id`) as `file_count`, SUM(fi.`bytes`) as `storage_used`
+    UPDATE tmp INNER JOIN (SELECT fi.`account_id`, COUNT(fi.`id`) as `file_count`, CAST(SUM(fi.`bytes`) AS UNSIGNED) as `storage_used`
                              FROM `File` fi INNER JOIN `Tokens` tt ON fi.`account_id` = tt.`account_id`
                             WHERE tt.`is_deleted` = 'N' and fi.`is_deleted` = 'N' and IFNULL(fi.`expires_at`, DATE_ADD(Now(), INTERVAL 1 MINUTE)) >= Now()
                               and tt.`id` = `in_token_id`
