@@ -1355,21 +1355,8 @@ function toggleAudioButton(el) {
             if ( is_play ) { pauseAudio(file_id); } else { playAudio(file_id); }
             break;
 
-        case 'script':
-            var els = document.getElementsByClassName('audio-script');
-            for ( var i = 0; i < els.length; i++ ) {
-                var _name = els[i].getAttribute('data-name');
-                if ( _name == file_id ) {
-                    if ( els[i].classList.contains('hidden') ) {
-                        els[i].classList.remove('hidden');
-                        el.innerHTML = '<i class="fas fa-angle-double-up"></i>';
-                    } else {
-                        els[i].classList.add('hidden');
-                        el.innerHTML = '<i class="fas fa-quote-left"></i>';
-                    }
-                }
-            }
-            break;
+        default:
+            /* Do Nothing */
     }
 }
 function playAudio(file_id) {

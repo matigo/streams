@@ -17,6 +17,13 @@ class Streams {
     function __construct() {
         $GLOBALS['Perf']['app_s'] = getMicroTime();
 
+        /* Ensure the Asset Version.id Is Set */
+        if ( defined('CSS_VER') === false ) {
+            $ver = filemtime(CONF_DIR . '/versions.php');
+            if ( nullInt($ver) <= 0 ) { $ver = nullInt(APP_VER); }
+            define('CSS_VER', $ver);
+        }
+
         $sets = new cookies;
         $this->settings = $sets->cookies;
         $this->strings = getLangDefaults($this->settings['_language_code']);

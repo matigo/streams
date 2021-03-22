@@ -285,6 +285,17 @@ function handleButtonClick(el) {
             replyToPost(tObj);
             break;
 
+        case 'star':
+            togglePostStar(tObj);
+            break;
+
+        case 'playpause':
+        case 'playrate':
+        case 'backward':
+        case 'forward':
+            toggleAudioButton(tObj);
+            break;
+
         default:
             console.log("Not sure how to handle [" + _action + "]");
     }
@@ -343,6 +354,64 @@ function replyToPost(el) {
                 for ( var e = 0; e < ccs.length; e++ ) {
                     ccs[e].focus();
                     setCaretToPos(ccs[e], _cPos);
+                }
+            }
+        }
+    }
+}
+function togglePostStar(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
+    var _val = NoNull(el.getAttribute('data-value'));
+    if ( _val != 'Y' ) { _val = 'N'; }
+    if ( _guid == '' ) { return; }
+
+    /* Now let's flip the bit */
+    _val = (_val == 'N') ? 'Y' : 'N';
+
+    /* Update the DOM Accordingly */
+    el.innerHTML = '<i class="' + ((_val == 'Y') ? 'fas' : 'far') + ' fa-star"></i>';
+    el.setAttribute('data-value', _val);
+
+    /* Update the DB */
+    callStarPost(_guid, ((_val == 'N') ? 'DELETE' : 'POST'));
+}
+function callStarPost(guid, _req) {
+    if ( guid === undefined || guid === false || guid === null || guid.length <= 30 ) { return; }
+    if ( _req === undefined || _req === false || _req === null ) { _req = 'POST'; }
+    var _myGuid = readHeadMeta('persona_guid');
+    var params = { 'persona_guid': _myGuid,
+                   'guid': guid
+                  };
+    setTimeout(function () { doJSONQuery('posts/star', _req, params, parseStarPost); }, 250);
+}
+function parseStarPost( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _starred = false;
+                var _guid = '';
+
+                /* Determine the Post.Guid and Star status */
+                if ( ds[i].attributes !== undefined && ds[i].attributes !== false ) {
+                    _starred = ds[i].attributes.starred;
+                }
+                _guid = NoNull(ds[i].guid);
+
+                /* If we have a Post.guid, Confirm the Star on the DOM is correctly lit */
+                if ( _guid != '' ) {
+                    var els = document.getElementsByClassName('post-actions');
+                    for ( var e = 0; e < els.length; e++ ) {
+                        var btns = els[e].getElementsByClassName('btn-action');
+                        for ( var b = 0; b < btns.length; b++ ) {
+                            var _act = NoNull(btns[b].getAttribute('data-action'));
+                            if ( _act == 'star' ) {
+                                btns[b].innerHTML = '<i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i>';
+                                btns[b].setAttribute('data-value', ((_starred) ? 'Y' : 'N'));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1285,11 +1354,9 @@ function writePostToTL( _view, post ) {
             */
 
             // Handle any Audio Elements
-            /*
             if ( post.meta !== undefined && post.meta.episode !== undefined && post.meta.episode !== false ) {
                 processAudio(_div);
             }
-            */
 
             // Ensure the Minimum Nodes Exist
             if ( els[e].childNodes.length <= 0 ) {
@@ -1349,31 +1416,40 @@ function buildHTML( post ) {
     }
 
     /* Are there any images that need parsing? */
-    var _div = document.createElement("div");
-        _div.innerHTML = post.content;
+    if ( post.type == 'post.note' ) {
+        var _div = document.createElement("div");
+            _div.innerHTML = post.content;
 
-    var imgs = _div.getElementsByTagName('IMG');
-    if ( imgs.length > 0 ) {
-        for ( var i = (imgs.length - 1); i >= 0; i-- ) {
-            var _src = NoNull(imgs[i].src);
-            var _alt = NoNull(imgs[i].alt);
+        var imgs = _div.getElementsByTagName('IMG');
+        if ( imgs.length > 0 ) {
+            for ( var i = (imgs.length - 1); i >= 0; i-- ) {
+                var _src = NoNull(imgs[i].src);
+                var _alt = NoNull(imgs[i].alt);
 
-            if ( imgs[i].parentElement.tagName == 'A' ) {
-                imgs[i].parentElement.parentElement.removeChild(imgs[i].parentElement);
-            } else {
-                imgs[i].parentElement.removeChild(imgs[i]);
+                if ( imgs[i].parentElement.tagName == 'A' ) {
+                    imgs[i].parentElement.parentElement.removeChild(imgs[i].parentElement);
+                } else {
+                    imgs[i].parentElement.removeChild(imgs[i]);
+                }
+
+                if ( _src != '' ) {
+                    _images = '<span>' +
+                                '<img class="post-image" src="' + _src + '" alt="' + _alt + '" />' +
+                                '<span class="toggle" onclick="openCarousel(this);" data-src="' + _src + '"><i class="fas fa-search"></i></span>' +
+                              '</span>' +
+                              _images;
+                }
             }
-
-            if ( _src != '' ) {
-                _images = '<span>' +
-                            '<img class="post-image" src="' + _src + '" alt="' + _alt + '" />' +
-                            '<span class="toggle" onclick="openCarousel(this);" data-src="' + _src + '"><i class="fas fa-search"></i></span>' +
-                          '</span>' +
-                          _images;
-            }
+            post.content = _div.innerHTML;
+            _div = null;
         }
-        post.content = _div.innerHTML;
-        _div = null;
+    }
+
+    var _starred = false;
+    if ( post.attributes !== undefined && post.attributes !== false ) {
+        if ( post.attributes.starred !== undefined && post.attributes.starred !== null ) {
+            _starred = post.attributes.starred;
+        }
     }
 
     /* Construct the full output */
@@ -1385,13 +1461,13 @@ function buildHTML( post ) {
                 '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
                     _ttxt +
                     post.content +
+                    ((_audio_block != '') ? _audio_block : '') +
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
-                    ((_audio_block != '') ? _audio_block : '') +
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="edit" disabled><i class="fas fa-edit"></i></button>' : '') +
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
-                        '<button class="btn btn-action" data-action="star" disabled><i class="far fa-star"></i></button>' +
+                        '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' +
                         '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
                     '</div>' +
@@ -1884,5 +1960,246 @@ function updateNavButtons() {
         } else {
             if ( els[i].parentElement.classList.contains('has-notify') ) { els[i].parentElement.classList.remove('has-notify'); }
         }
+    }
+}
+
+/** ************************************************************************* *
+ *  Audio Playback Functions
+ ** ************************************************************************* */
+function processAudio( obj ) {
+    if ( obj === undefined || obj === false || obj === null ) { obj = document; }
+    var els = obj.getElementsByTagName('AUDIO');
+    if ( els.length > 0 ) {
+        for ( var i = 0; i < els.length; i++ ) {
+            var _done = els[i].getAttribute('data-done');
+            if ( _done === undefined || _done === false || _done === null || _done != 'Y' ) { _done = 'N'; }
+            if ( _done == 'N' ) {
+                var file_id = randName(12);
+
+                els[i].classList.add('audioplayer');
+                els[i].setAttribute('data-file-id', file_id);
+                els[i].setAttribute('data-done', 'Y');
+                els[i].playbackRate = window.audio_rate;
+                els[i].autoplay = false;
+                els[i].controls = false;
+                els[i].preload = 'auto';
+                els[i].loop = false;
+
+                // Set the Audio Controls
+                var datas = ' data-file-id="' + file_id + '"';
+                var _tmback = 15;
+                var _tmfwd = 15;
+
+                var html = '<div class="audio-controls">' +
+                                '<span class="audio-position audio-' + file_id + '" data-role="timer"' + datas + ' data-value="0">--:-- / --:--</span>' +
+                                '<input id="range-' + file_id + '" type="range" class="audio-range audio-' + file_id + '" min="0" max="100" step="1" value="0" data-role="pos" ' + datas + ' />' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="backward"><i class="fas fa-undo-alt"></i> ' + _tmback + '</button>' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="playpause" data-value="pause"><i class="fas fa-play"></i></button>' +
+                                '<button class="audio-button audio-' + file_id + '" data-role="btn"' + datas + ' data-action="forward">' + _tmfwd + ' <i class="fas fa-redo-alt"></i></button>' +
+                                '<button class="audio-button audio-' + file_id + ' btn-audiorate" data-role="btn"' + datas + ' data-action="playrate">x' + window.audio_rate + '</button>' +
+                            '</div>';
+
+                // Ensure the Audio Element is Visible
+                els[i].parentNode.innerHTML += html;
+                els[i].parentNode.parentNode.style.display = 'block';
+                els[i].parentNode.parentNode.classList.remove('hidden');
+            }
+        }
+
+        if ( window.has_audio === false ) {
+            window.has_audio = true;
+            updateAudioTimers();
+        }
+
+    } else {
+        window.has_audio = false;
+    }
+}
+function toggleAudioButton(el) {
+    var last_touch = parseInt(el.getAttribute('data-lasttouch'));
+    var touch_ts = Math.floor(Date.now());
+
+    if ( (touch_ts - last_touch) <= 500 ) { return; }
+    el.setAttribute('data-lasttouch', touch_ts);
+    window.audiotouch = touch_ts;
+
+    var action = el.getAttribute('data-action');
+    var file_id = NoNull(el.getAttribute('data-file-id'));
+    if ( file_id === undefined || file_id === null || file_id.length < 6 ) { return; }
+    if ( action === undefined || action === null || action === false ) { action = ''; }
+    switch ( action.toLowerCase() ) {
+        case 'backward':
+            var _tm = window.audio_back;
+            if ( _tm === undefined || _tm === false || _tm === null || isNaN(_tm) ) { _tm = 15; } else { _tm = parseInt(_tm); }
+            toggleAudioSeek(file_id, (_tm * -1));
+            break;
+
+        case 'forward':
+            var _tm = window.audio_fwd;
+            if ( _tm === undefined || _tm === false || _tm === null || isNaN(_tm) ) { _tm = 15; } else { _tm = parseInt(_tm); }
+            toggleAudioSeek(file_id, _tm);
+            break;
+
+        case 'playpause':
+            var cur = el.getAttribute('data-value');
+            var is_play = true;
+            if ( cur === undefined || cur === null || cur != 'play' ) { is_play = false; }
+            if ( is_play ) { pauseAudio(file_id); } else { playAudio(file_id); }
+            break;
+
+        case 'playrate':
+        case 'rate':
+            var valid_rates = [ 2, 1.5, 1, 0.9, 0.75 ];
+            var rate = parseFloat(window.audio_rate);
+            if ( isNaN(rate) ) { rate = 1.0; }
+            if ( rate > 2.0 ) { rate = 2.0; }
+            if ( rate < 0.75 ) { rate = 0.75; }
+
+            var idx = valid_rates.indexOf(rate);
+            if ( isNaN(idx) ) { idx = 0; } else { idx += 1; }
+            if ( idx >= valid_rates.length ) { idx = 0; }
+            setAudioRate(file_id, valid_rates[idx]);
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+}
+function playAudio(file_id) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            setPlayButton(file_id);
+            els[i].play();
+            return;
+        }
+    }
+}
+function pauseAudio(file_id) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            setPauseButton(file_id);
+            els[i].pause();
+            return;
+        }
+    }
+}
+function seekAudio(file_id, location) {
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( NoNull(els[i].getAttribute('data-file-id')) == file_id ) {
+            els[i].currentTime = location;
+            return;
+        }
+    }
+}
+function setPlayButton(file_id) {
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var action = els[i].getAttribute('data-action');
+        if ( action === undefined || action === null || action === false ) { action = ''; }
+        if ( action == 'playpause' ) {
+            els[i].innerHTML = '<i class="fa fa-pause"></i>';
+            els[i].setAttribute('data-value', 'play');
+        }
+    }
+}
+function setPauseButton(file_id) {
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var action = els[i].getAttribute('data-action');
+        if ( action === undefined || action === null || action === false ) { action = ''; }
+        if ( action == 'playpause' ) {
+            els[i].innerHTML = '<i class="fa fa-play"></i>';
+            els[i].setAttribute('data-value', 'pause');
+        }
+    }
+}
+function setAudioRate(file_id, rate) {
+    rate = parseFloat(rate);
+    if ( isNaN(rate) ) { rate = 1.0; }
+    if ( rate > 2.0 ) { rate = 2.0; }
+    if ( rate < 0.75 ) { rate = 0.75; }
+    window.audio_rate = rate;
+
+    var els = document.getElementsByClassName('audioplayer');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].playbackRate = window.audio_rate;
+    }
+
+    var els = document.getElementsByClassName('btn-audiorate');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = 'x' + numberWithCommas(window.audio_rate);
+    }
+}
+function updateAudioTimers() {
+    if ( window.has_audio ) {
+        var els = document.getElementsByClassName('audioplayer');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( els[i].duration > 0 ) {
+                var _id = NoNull(els[i].getAttribute('data-file-id'));
+                if ( _id === undefined || _id === null || _id.length < 6 ) { _id = false; }
+                if ( _id !== false ) { setAudioTime(_id, els[i].currentTime, els[i].duration); }
+            }
+        }
+        setTimeout(function(){ updateAudioTimers(); }, 333);
+    }
+}
+function setAudioTime(file_id, pos, secs) {
+    var els = document.getElementsByClassName('audio-position');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _id = NoNull(els[i].getAttribute('data-file-id'));
+        if ( _id === undefined || _id === null || _id.length < 6 ) { _id = 0; }
+        if ( file_id == _id ) {
+            var _cur = new Date(null);
+            _cur.setMilliseconds(pos * 1000);
+            var _len = new Date(null);
+            _len.setMilliseconds(secs * 1000);
+
+            var html = _cur.toISOString().substr(14, 5) + ' / ' + _len.toISOString().substr(14, 5);
+            if ( els[i].innerHTML != html ) {
+                var rng = document.getElementById('range-' + file_id);
+                if ( rng !== undefined && rng !== null ) {
+                    rng.max = parseInt(secs);
+                    rng.value = parseInt(pos);
+                }
+                els[i].innerHTML = html;
+            }
+            return;
+        }
+    }
+}
+function scrubAudioSeek(el) {
+    var file_id = NoNull(el.getAttribute('data-file-id'));
+    var pos = parseInt(el.value);
+    var max = parseInt(el.max);
+
+    if ( file_id === undefined || file_id === null || file_id.length < 6 ) { file_id = false; }
+    if ( pos === undefined || pos === null || isNaN(pos) ) { return; }
+    if ( file_id !== false ) {
+        setAudioTime(file_id, pos, max);
+        seekAudio(file_id, pos);
+    }
+}
+function toggleAudioSeek(file_id, secs) {
+    var sld = false;
+    var els = document.getElementsByClassName('audio-' + file_id);
+    for ( var i = 0; i < els.length; i++ ) {
+        var role = els[i].getAttribute('data-role');
+        if ( role === undefined || role === null || role === false ) { role = ''; }
+        if ( role == 'pos' ) {
+            sld = els[i];
+            break;
+        }
+    }
+
+    if ( sld !== false ) {
+        var val = parseInt(sld.value);
+        val += secs;
+        if ( val < parseInt(sld.min) ) { val = parseInt(sld.min); }
+        if ( val > parseInt(sld.max) ) { val = parseInt(sld.max); }
+        seekAudio(file_id, val);
+        sld.value = val;
     }
 }

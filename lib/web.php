@@ -21,6 +21,13 @@ class Route extends Streams {
         $this->strings = $strings;
 
         $this->site = new Site($this->settings);
+
+        /* Ensure the Asset Version.id Is Set */
+        if ( defined('CSS_VER') === false ) {
+            $ver = filemtime(CONF_DIR . '/versions.php');
+            if ( nullInt($ver) <= 0 ) { $ver = nullInt(APP_VER); }
+            define('CSS_VER', $ver);
+        }
     }
 
     /* ************************************************************************************** *
