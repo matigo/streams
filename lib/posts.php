@@ -826,7 +826,7 @@ class Posts {
                 $tgs = explode(',', NoNull($data['tags']));
                 $lst = '';
                 foreach ( $tgs as $Value ) {
-                    $pid = nullInt($data['post_id'], $rslt);
+                    $pid = nullInt($data['post_id'], $post_id);
                     $Key = $this->_getSafeTagSlug(NoNull($Value));
                     $Val = sqlScrub($Value);
 
@@ -835,7 +835,7 @@ class Posts {
                 }
 
                 // Extract the Tags from Inside the Post Text
-                $lst_hash = $this->_getTagsFromPost($data['value'], nullInt($data['post_id'], $rslt));
+                $lst_hash = $this->_getTagsFromPost($data['value'], nullInt($data['post_id'], $post_id));
                 if ( $lst_hash != '' ) { $lst .= ",$lst_hash"; }
 
                 if ( NoNull($lst) != '' ) {
