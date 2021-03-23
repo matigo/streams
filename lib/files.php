@@ -341,6 +341,7 @@ class Files {
 
             foreach ( $items as $FileID ) {
                 $FileName = NoNull(basename($_FILES[ $FileID ]['name']));
+                $FileSha1 = sha1_file($_FILES[ $FileID ]['tmp_name']);
                 $FileSize = nullInt($_FILES[ $FileID ]['size']);
                 $FileType = NoNull($_FILES[ $FileID ]['type']);
                 if ( NoNull($FileType) == '' ) {
@@ -405,7 +406,6 @@ class Files {
                                 $img->load($origPath);
                                 $geoData = $img->getGeolocation();
                                 $imgMeta = $img->getPhotoMeta();
-
                                 $imgWidth = $img->getWidth();
 
                                 $isAnimated = $img->is_animated();
@@ -438,7 +438,7 @@ class Files {
                             }
 
                             $rfu = $this->_recordFileUpload( strtolower($FileName), strtolower($LocalName), $FileSize, strtolower($FileType),
-                                                             md5("$FileName $now"), $geoData, $imgMeta, $hasProp, $hasThumb, $isAnimated );
+                                                             $FileSha1, $geoData, $imgMeta, $hasProp, $hasThumb, $isAnimated );
                             if ( is_array($rfu) && count($rfu) > 0 ) {
                                 if ( is_array($list) === false ) { $list = array(); }
                                 $list[] = $rfu;
@@ -536,6 +536,8 @@ class Files {
             if ( is_array($imgMeta) ) {
                 foreach ( $imgMeta as $Key=>$Value ) {
                     if ( $Value !== false ) {
+                        if ( strpos($Key, 'image.') === false ) { $Key = "image.$Key"; }
+
                         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                                           '[FILE_ID]'    => nullInt($FileID),
                                           '[KEY]'        => sqlScrub($Key),

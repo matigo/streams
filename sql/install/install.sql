@@ -503,9 +503,21 @@ BEFORE INSERT ON `Site`
                                                                SUBSTRING(tmp.`md5`, 13, 4), '-',
                                                                SUBSTRING(tmp.`md5`, 17, 4), '-',
                                                                SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+                                                   FROM (SELECT MD5(CONCAT(fi.`id`, '-', UNIX_TIMESTAMP(fi.`created_at`))) as `md5`) tmp); END IF;
    END
 ;;
+DROP TRIGGER IF EXISTS `before_update_site`;;
+CREATE TRIGGER `before_update_site`
+ BEFORE UPDATE ON `Site`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` <> old.`guid` THEN
+        SET new.`guid` = old.`guid`;
+    END IF;
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  File Resources
@@ -561,9 +573,45 @@ BEFORE INSERT ON `File`
                                                                SUBSTRING(tmp.`md5`, 13, 4), '-',
                                                                SUBSTRING(tmp.`md5`, 17, 4), '-',
                                                                SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(Now(), '-', uuid())) as `md5`) tmp); END IF;
+                                                   FROM (SELECT MD5(CONCAT(new.`id`, '-', UNIX_TIMESTAMP(new.`created_at`))) as `md5`) tmp); END IF;
    END
 ;;
+DROP TRIGGER IF EXISTS `before_update_file`;;
+CREATE TRIGGER `before_update_file`
+ BEFORE UPDATE ON `File`
+   FOR EACH ROW
+ BEGIN
+    IF new.`guid` <> old.`guid` THEN
+        SET new.`guid` = old.`guid`;
+    END IF;
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
+
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `before_filemeta`;;
+CREATE TRIGGER `before_filemeta`
+BEFORE INSERT ON `FileMeta`
+   FOR EACH ROW
+ BEGIN
+    IF IFNULL(new.`value`, '') = '' THEN
+        SET new.`is_deleted` = 'Y';
+    END IF;
+   END
+;;
+DROP TRIGGER IF EXISTS `before_update_filemeta`;;
+CREATE TRIGGER `before_update_filemeta`
+ BEFORE UPDATE ON `FileMeta`
+   FOR EACH ROW
+ BEGIN
+    IF IFNULL(new.`value`, '') = '' THEN
+        SET new.`is_deleted` = 'Y';
+    END IF;
+    SET new.`updated_at` = Now();
+   END
+;;
+DELIMITER ;
 
 /** ************************************************************************* *
  *  Channels & Content
@@ -872,6 +920,7 @@ CREATE TRIGGER `before_update_post`
 BEFORE UPDATE ON `Post`
    FOR EACH ROW
  BEGIN
+    SET new.`updated_at` = Now();
     SET new.`hash` = SHA1(CONCAT(new.`id`, IFNULL(new.`title`, ''), IFNULL(new.`value`, ''), IFNULL(new.`canonical_url`, ''), new.`channel_id`,
                                  IFNULL(new.`slug`, ''), IFNULL(new.`type`, ''), IFNULL(new.`privacy_type`, ''),
                                  DATE_FORMAT(new.`publish_at`, '%Y-%m-%d %H:%i:%s'), DATE_FORMAT(IFNULL(new.`expires_at`, new.`publish_at`), '%Y-%m-%d %H:%i:%s'), new.`is_deleted`));

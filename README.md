@@ -9,12 +9,13 @@ The Following is a list of notes regarding the use and configuration of Stremas.
 You will need:
 
 * a web server running Apache 2.4.x and PHP 7.0 or newer
-* MySQL 5.7 or above, ideally 8.0 or newer (MariaDB 10.x is supported)
+* MySQL 8.0 or above (MySQL 5.x and MariaDB 10.x are feasible, but not supported)
 
 ## LAMP Configuration Notes
 
 ### Linux Notes
-This code has been tested to run on Ubuntu Server 18.04 LTS, though it should run on any version of Linux released in the last 5 years. Your mileage may very. Test often. Test well.
+
+This code has been tested to run on Ubuntu Server 16.04 LTS, 18.04 LTS, and 20.04 LTS. That said, it should run on any version of Linux released in the last 5 years. Your mileage may very. Test often. Test well.
 
 ### Apache Notes
 
@@ -53,8 +54,8 @@ In addition to the basic LAMP stack, the following items need to be taken into a
 
 ### Basic Web Server -- Minimum Recommended
 
-* Ubuntu Server 18.04 LTS
-* Dual-Core CPU
+* Ubuntu Server 20.04 LTS
+* Dual-Core CPU (x86/x64/ARM)
 * 2GB RAM
 * 10GB Storage
 

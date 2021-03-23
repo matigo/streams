@@ -44,29 +44,33 @@ class cookies {
         $JSON = json_decode(file_get_contents('php://input'), true);
         if ( is_array($JSON) ) {
             foreach( $JSON as $key=>$val ) {
-                $rVal[ $key ] = (is_array($val)) ? $val : $this->_CleanRequest($key, $val);
+                $propKey = str_replace('-', '_', $key);
+                $rVal[ $propKey ] = (is_array($val)) ? $val : $this->_CleanRequest($key, $val);
             }
         }
 
         foreach( $_POST as $key=>$val ) {
-            $rVal[ $key ] = $this->_CleanRequest($key, $val);
+            $propKey = str_replace('-', '_', $key);
+            $rVal[ $propKey ] = $this->_CleanRequest($key, $val);
         }
 
         foreach( $_GET as $key=>$val ) {
+            $propKey = str_replace('-', '_', $key);
             if ( is_array($val) ) {
-                if ( array_key_exists($key, $rVal) === false ) { $rVal[ $key ] = array(); }
+                if ( array_key_exists($propKey, $rVal) === false ) { $rVal[ $propKey ] = array(); }
                 foreach ( $val as $kk=>$vv ) {
-                    $rVal[ $key ][] = NoNull($vv);
+                    $rVal[ $propKey ][] = NoNull($vv);
                 }
 
             } else {
-                if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
+                if ( !array_key_exists($propKey, $rVal) ) { $rVal[ $propKey ] = $this->_CleanRequest($key, $val); }
             }
 
         }
 
         foreach( $_COOKIE as $key=>$val ) {
-            if ( !array_key_exists($key, $rVal) ) { $rVal[ $key ] = $this->_CleanRequest($key, $val); }
+            $propKey = str_replace('-', '_', $key);
+            if ( !array_key_exists($propKey, $rVal) ) { $rVal[ $propKey ] = $this->_CleanRequest($key, $val); }
         }
 
         $gah = getallheaders();
@@ -75,8 +79,9 @@ class cookies {
                            'authorization'     => 'token',
                           );
             foreach ( getallheaders() as $key=>$val ) {
-                if ( array_key_exists(strtolower($key), $opts) ) {
-                    $rVal[ $opts[strtolower($key)] ] = $this->_CleanRequest($key, $val);
+                $propKey = str_replace('-', '_', $key);
+                if ( array_key_exists(strtolower($propKey), $opts) ) {
+                    $rVal[ $opts[strtolower($propKey)] ] = $this->_CleanRequest($key, $val);
                 }
             }
         }
@@ -94,8 +99,9 @@ class cookies {
         // Add Any Missing Data from URL Query String (Does Not Override Existing Data)
         $missedData = $this->checkForMissingData();
         foreach( $missedData as $key=>$val ) {
-            if ( !array_key_exists($key, $rVal) ) {
-                $rVal[ $key ] = $this->_CleanRequest($key, $val);
+            $propKey = str_replace('-', '_', $key);
+            if ( !array_key_exists($propKey, $rVal) ) {
+                $rVal[ $propKey ] = $this->_CleanRequest($key, $val);
             }
         }
 
@@ -153,6 +159,9 @@ class cookies {
             // Set the Display Language
             $rVal['DispLang'] = $this->_getDisplayLanguage($rVal['_language_code']);
         }
+
+        // Ensure the DispLang value is Logical, as an illogical value can break HTML
+        $rVal['DispLang'] = $this->_validateLanguage($rVal['DispLang']);
 
         // Don't Keep an Empty Array Object with the Request URI
         unset($rVal[substr($rVal['ReqURI'], 1)]);
@@ -258,6 +267,34 @@ class cookies {
         }
 
         return strtolower($rVal);
+    }
+
+    /**
+     *  Function validates the provided display language against the default langauge packages found
+     *      in /lang to ensure that invalid results are not passed around the system.
+     */
+    private function _validateLanguage( $LangCd ) {
+        if ( defined('LANG_DIR') === false ) { define('LANG_DIR', BASE_DIR . '/../lang'); }
+        if ( defined('DEFAULT_LANG') === false ) { define('DEFAULT_LANG', 'en'); }
+        $Default = $this->_getDisplayLanguage();
+        $valids = array( strtolower(DEFAULT_LANG) );
+        $LangCd = strtolower($LangCd);
+
+        /* Collect the List of Languages Available */
+        if ( file_exists(LANG_DIR) ) {
+            foreach ( glob(LANG_DIR . "/*.json") as $filename) {
+                $filename = substr(strrchr($filename, '/'), 1);
+                $ext = getFileExtension( $filename );
+                $code = strtolower(str_replace(array($ext, '.'), '', $filename));
+                if ( in_array($code, $valids) === false ) { $valids[] = $code; }
+            }
+
+            /* If the code is valid, return the code */
+            if ( in_array($LangCd, $valids) ) { return $LangCd; }
+        }
+
+        /* If we're here, we were given something invalid. Return the Default. */
+        return $Default;
     }
 
     /**

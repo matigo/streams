@@ -21,10 +21,15 @@ BEGIN
     END IF;
 
     /* Get the Initial Post.id Minimum */
-    SELECT po.`id` - 25000 INTO `min_id` FROM `Post` po
-     ORDER BY po.`id` DESC
-     LIMIT 1;
-
+    IF IFNULL(`min_id`, 0) <= 0 THEN
+        SET `min_id` = (SELECT MIN(po.`id`) FROM `Post` po
+                         WHERE po.`is_deleted` = 'N' and po.`publish_at` >= DATE_SUB(Now(), INTERVAL 14 DAY)
+                         LIMIT 1);
+    END IF;
+    IF IFNULL(`min_id`, 0) <= 0 THEN
+        SET `min_id` = (SELECT po.`id` - 25000 FROM `Post` po
+                         ORDER BY po.`id` DESC LIMIT 1);
+    END IF;
     IF IFNULL(`min_id`, 0) <= 0 THEN
         SET `min_id` = 1;
     END IF;

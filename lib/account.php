@@ -335,6 +335,10 @@ class Account {
         $CleanLang = NoNull($this->settings['lang'], DEFAULT_LANG);
         $Redirect = NoNull($this->settings['redirect'], $this->settings['is_web']);
 
+        /* Ensure there are no bad characters in the account name */
+        $CleanName = preg_replace("/[^a-zA-Z0-9]+/", '', $CleanName);
+
+        /* Now let's do some basic validation */
         if ( mb_strlen($CleanPass) <= 6 ) {
             $this->_setMetaMessage( "Password is too weak. Please choose a better one.", 400 );
             return false;
@@ -408,29 +412,25 @@ class Account {
                 }
             }
 
-            // Send a Welcome Message
-            if ( $AcctID > 0 ) {
-                $sqlStr = prepSQLQuery("CALL SendWelcomeBotMsg([ACCOUNT_ID], 'Welcome to 10Centuries, @{name}!');", $ReplStr );
-                $tslt = doSQLQuery($sqlStr);
-            }
-
             // If CloudFlare is being used, configure the CNAME Record Accordingly
-            if ( !defined('CLOUDFLARE_API_KEY') ) { define('CLOUDFLARE_API_KEY', ''); }
-            $zone = false;
+            if ( $AcctID > 0 ) {
+                if ( !defined('CLOUDFLARE_API_KEY') ) { define('CLOUDFLARE_API_KEY', ''); }
+                $zone = false;
 
-            if ( NoNull(CLOUDFLARE_API_KEY) != '' ) {
-                require_once(LIB_DIR . '/system.php');
-                $sys = new System( $this->settings );
-                $zone = $sys->createCloudFlareZone( $SiteUrl );
-                unset($sys);
-            }
+                if ( NoNull(CLOUDFLARE_API_KEY) != '' ) {
+                    require_once(LIB_DIR . '/system.php');
+                    $sys = new System( $this->settings );
+                    $zone = $sys->createCloudFlareZone( $SiteUrl );
+                    unset($sys);
+                }
 
-            // Collect an Authentication Token and (if needs be) Redirect
-            $sqlStr = prepSQLQuery( "CALL PerformDirectLogin([ACCOUNT_ID]);", $ReplStr );
-            $tslt = doSQLQuery($sqlStr);
-            if ( is_array($tslt) ) {
-                foreach ( $tslt as $Row ) {
-                    $Token = TOKEN_PREFIX . intToAlpha($Row['token_id']) . '_' . NoNull($Row['token_guid']);
+                // Collect an Authentication Token and (if needs be) Redirect
+                $sqlStr = prepSQLQuery( "CALL PerformDirectLogin([ACCOUNT_ID]);", $ReplStr );
+                $tslt = doSQLQuery($sqlStr);
+                if ( is_array($tslt) ) {
+                    foreach ( $tslt as $Row ) {
+                        $Token = TOKEN_PREFIX . intToAlpha($Row['token_id']) . '_' . NoNull($Row['token_guid']);
+                    }
                 }
             }
         }
