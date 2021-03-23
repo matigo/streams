@@ -281,6 +281,11 @@ class Route extends Streams {
 
             // If We're Here, We Have Data to Show
             $ReplStr['[PAGEHTML]'] = $this->_getPageContent($data);
+
+            /* Do we have any page-specific Header details? */
+            $ReplStr['[PAGEDESCR]'] = NoNull($GLOBALS['post_summary'], $ReplStr['[SITEDESCR]']);
+
+            /* Generate the Output */
             $ReplStr['[CONTENT]'] = readResource($ReqFile, $ReplStr);
             $ReplStr['[NAVMENU]'] = $this->_getSiteNav($data);
             $html = readResource( THEME_DIR . "/" . $data['location'] . "/base.html", $ReplStr );

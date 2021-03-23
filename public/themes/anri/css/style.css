@@ -782,14 +782,20 @@ body.font-xx, body .font-xx { font-size: 22px; }
 }
 .single-post__info textarea.newpost-full { border: 1px solid #eee; }
 .single-post__info .newpost-full.geo {
-    min-width: calc(100% - 185px);
-    max-width: calc(100% - 185px);
-    width: calc(100% - 185px);
+    min-width: calc(100% - 215px);
+    max-width: calc(100% - 215px);
+    width: 90%;
 }
 .single-post__info .newpost-full.top,
 .single-post__info label.top {
     vertical-align: text-top;
     margin-bottom: 10px;
+    max-height: 250px;
+}
+.single-post__info .newpost-full.top::placeholder,
+.single-post__info label.top::placeholder {
+    text-align: center;
+    padding: 0.675em 0;
 }
 .single-post__info .newpost-half {
     width: 33%;

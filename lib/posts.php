@@ -1149,8 +1149,10 @@ class Posts {
         $Value = NoNull($this->settings['post_text'], NoNull($this->settings['text'], $this->settings['content']));
         $CanonURL = NoNull($this->settings['canonical_url'], $this->settings['post_url']);
         $ReplyTo = NoNull($this->settings['post_reply_to'], $this->settings['reply_to']);
+        $PostAuthor = NoNull($this->settings['post_author'], $this->settings['author']);
         $PostSlug = NoNull($this->settings['post_slug'], $this->settings['slug']);
         $PostType = NoNull($this->settings['post_type'], NoNull($this->settings['type'], 'post.draft'));
+        $PostSummary = NoNull($this->settings['post_summary'], $this->settings['summary']);
         $Privacy = NoNull($this->settings['post_privacy'], $this->settings['privacy']);
         $PublishAt = NoNull($this->settings['post_publish_at'], $this->settings['publish_at']);
         $ExpiresAt = NoNull($this->settings['post_expires_at'], $this->settings['expires_at']);
@@ -1398,12 +1400,15 @@ class Posts {
 
                       'words'         => $UniqueWords,
                       'tags'          => $PostTags,
-                      'meta'          => array( 'source_url'      => strip_tags($SourceURL),
-                                                'source_title'    => strip_tags($SourceTitle),
-                                                'geo_latitude'    => strip_tags($GeoLat),
-                                                'geo_longitude'   => strip_tags($GeoLong),
-                                                'geo_altitude'    => strip_tags($GeoAlt),
-                                                'geo_description' => strip_tags($GeoFull),
+                      'meta'          => array( 'source_url'       => strip_tags($SourceURL),
+                                                'source_title'     => strip_tags($SourceTitle),
+                                                'geo_latitude'     => strip_tags($GeoLat),
+                                                'geo_longitude'    => strip_tags($GeoLong),
+                                                'geo_altitude'     => strip_tags($GeoAlt),
+                                                'geo_description'  => strip_tags($GeoFull),
+
+                                                'post_summary'     => strip_tags($PostSummary),
+                                                'post_author'      => strip_tags($PostAuthor),
 
                                                 'episode_explicit' => strip_tags($AudioExplicit),
                                                 'episode_summary'  => $this->_cleanContent($AudioSummary),
@@ -1760,6 +1765,7 @@ class Posts {
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $posts = $this->_parsePostResultSet($rslt);
+
             if ( is_array($posts) && count($posts) > 0 ) {
                 $html = '';
 
@@ -1771,6 +1777,17 @@ class Posts {
 
                         // Determine the Template File
                         $flatFile = THEME_DIR . '/' . $data['location'] . '/flats/' . $post['type'] . '.html';
+
+                        /* Is there something that should appear in the page description? */
+                        if ( count($posts) == 1 ) {
+                            $PostSummary = '';
+                            if ( array_key_exists('meta', $post) && is_array($post['meta']) ) {
+                                if ( array_key_exists('post', $post['meta']) && is_array($post['meta']['post']) ) {
+                                    $PostSummary = NoNull($post['meta']['post']['summary']);
+                                    if ( $PostSummary != '' ) { $GLOBALS['post_summary'] = $PostSummary; }
+                                }
+                            }
+                        }
 
                         if ( !file_exists($flatFile) ) {
                             $postClass .= 'post-entry post ' . str_replace('.', '-', $post['type']);

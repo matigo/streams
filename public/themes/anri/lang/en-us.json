@@ -51,8 +51,10 @@
     "btnLoginRetry": "Try Again",
 
     "lblPostTitlePH": "(Optional Title)",
-    "lblPostDatePH": "(Optional Publish Date)",
-    "lblPostContentPH": "(Write Your Post Here)",
+    "lblPostDatePH": "(Optional publication date)",
+    "lblPostContentPH": "(Write your post here)",
+    "lblPostDescr": "Preview",
+    "lblPostDescrPH": "(This is what people will see in a post-preview on social platforms)",
     "lblPostLocation": "Location",
     "lblPostPassword": "Password",
     "lblPostTags": "Tags",
