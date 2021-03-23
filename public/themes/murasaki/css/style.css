@@ -97,7 +97,10 @@ ul li a:hover {
 }
 hr { border-top: 1px solid #e7e3ed; }
 blockquote { font-size: 16px; }
-button.btn { font-size: 1em; }
+button.btn {
+    border-radius: 3px !important;
+    font-size: 1em;
+}
 audio {
     border: none;
     border-radius: 2em;
@@ -540,7 +543,7 @@ section.main-content .composer label {
 section.main-content .composer label.btn {
     display: inline-block;
     vertical-align: middle;
-    padding: 6px 12px;
+    padding: 7px 12px;
     min-width: 2.25em;
 }
 section.main-content .composer progress {
@@ -569,6 +572,7 @@ section.main-content .composer select {
     -webkit-appearance: none;
 }
 section.main-content .composer .form-element {
+    border: 1px solid #676767;
     border-radius: 3px;
     display: inline-block;
     vertical-align: text-top;
@@ -763,6 +767,19 @@ section.main-content .timeline .post-item .content-area p img {
     border-radius: 15px;
     max-height: 20vh;
     max-width: 100%;
+}
+section.main-content .timeline .post-item .content-area ul {
+    display: block;
+    list-style: decimal;
+    padding: 0 0 0 25px;
+    margin: 0 0 10px;
+}
+section.main-content .timeline .post-item .content-area ul li {
+    border: 0;
+    border-radius: 0;
+    cursor: auto;
+    padding: 5px 10px 0 0;
+    margin: 0;
 }
 section.main-content .timeline .post-item .content-area .bottom-spacer {
     border-bottom: 1px solid #e7e3ed;

@@ -2,6 +2,7 @@
  *  Startup
  ** ************************************************************************* */
 window.has_audio = false;
+window.personas = false;
 window.upload_pct = 0;
 window.audiotouch = 0;
 window.audio_load = 0;
@@ -315,6 +316,7 @@ function handleButtonClick(el) {
 }
 function replyToPost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
     for ( var i = 0; i < 5; i++ ) {
         if ( el.classList.contains('post-item') === false ) {
             el = el.parentElement;
@@ -374,6 +376,8 @@ function replyToPost(el) {
 }
 function togglePostStar(el) {
     if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+
     var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
     var _val = NoNull(el.getAttribute('data-value'));
     if ( _val != 'Y' ) { _val = 'N'; }
@@ -463,6 +467,8 @@ function confirmDeletePost(el) {
 }
 function deletePost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+
     for ( var i = 0; i < 5; i++ ) {
         if ( el.classList.contains('post-item') === false ) {
             el = el.parentElement;
@@ -570,7 +576,6 @@ function handleNavListAction( el ) {
 /** ************************************************************************* *
  *  Authentication Functions
  ** ************************************************************************* */
-window.personas = false;
 function checkAuthToken() {
     var access_token = getAuthToken();
     if ( access_token.length >= 30 ) {
@@ -947,6 +952,7 @@ function toggleImageIncludes(el) {
  *  Publishing Functions
  ** ************************************************************************* */
 function validatePublish( fname ) {
+    if ( window.personas === false ) { return false; }
     if ( NoNull(fname) == '' ) { return false; }
 
     var els = document.getElementsByName(fname);
@@ -1000,6 +1006,7 @@ function getContent() {
 }
 function publishPost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return false; }
     if ( splitSecondCheck(el) === false ) { return; }
     if ( window.upload_pct > 0 ) { return; }
     document.activeElement.blur();
@@ -1552,13 +1559,14 @@ function buildHTML( post ) {
                     ((_audio_block != '') ? _audio_block : '') +
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
+                    ((window.personas !== false) ?
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="edit" disabled><i class="fas fa-edit"></i></button>' : '') +
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
                         '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' +
                         '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
-                    '</div>' +
+                    '</div>' : '') +
                     '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
                     '<div class="bottom-spacer">&nbsp;</div>' +
                 '</div>';
