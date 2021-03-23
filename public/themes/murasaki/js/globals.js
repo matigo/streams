@@ -195,7 +195,8 @@ function spinButton( el, doReset ) {
 }
 function alignModal(){
     var _mod = $(this).find(".modal-dialog");
-    _mod.css("margin-top", Math.max(0, ($(window).height() - _mod.height()) / 2));
+    /* _mod.css("margin-top", Math.max(0, ($(window).height() - _mod.height()) / 2)); */
+    _mod.css("margin-top", 50);
 }
 function splitSecondCheck(el) {
     if ( el === undefined || el === false || el === null ) { return; }

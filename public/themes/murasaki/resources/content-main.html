@@ -32,14 +32,21 @@
                     <textarea class="content-area" name="fdata" data-name="content" data-counter="content-length" data-required="Y" placeholder="[lblComposePH]"></textarea>
                     <label for="post-geo" class="show-geo hidden">[lblPostGeo]:</label>
                     <input class="form-element show-geo hidden" id="post-geo" name="fdata" data-name="post-geo" data-required="N" placeholder="[lblPostGeoPH]" value="" autocomplete="off" />
+
+                    <progress class="progress pv-file-upload pu-prog hidden" value="0" min="0" max="100">&nbsp;</progress>
+                    <input id="pv-list-file" type="file" name="udata" class="form-control" accept="image/*" multiple>
+
                     <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
-                    <button class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></button>
+                    <label for="pv-list-file" class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></label>
                     <button class="btn btn-getgeo btn-primary hidden" onclick="togglePostGeo(this);"><i class="fas fa-map-marker-alt"></i></button>
                     <ul class="hidden" data-highlight="N">
                         <li>[lblComposeChooseChannel]</li>
                         <li>[lblComposeAttachFile]</li>
                     </ul>
                     <span class="content-length">&nbsp;</span>
+                    <section class="upload-log hidden">
+                        <ul class="upload-list"></ul>
+                    </section>
                 </form>
                 <div class="timeline" data-view="global"></div>
             </section>

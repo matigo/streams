@@ -2,6 +2,7 @@
  *  Startup
  ** ************************************************************************* */
 window.has_audio = false;
+window.upload_pct = 0;
 window.audiotouch = 0;
 window.audio_load = 0;
 window.audio_rate = 1;
@@ -63,6 +64,14 @@ document.onreadystatechange = function () {
                 el.addEventListener('change', function(e) { handlePostType(e); });
                 el.addEventListener('keyup', function(e) { handlePostType(e); });
             }
+
+            document.getElementById('pv-list-file').addEventListener('change', function(e) {
+                if ( this.files.length === 0 ) { return false; }
+                showByClass('pu-prog');
+
+                // Upload the Files One by One
+                uploadBatchFile(0);
+            }, false);
 
             /* Show Hidden Elements That Require HTTPS */
             if ( window.location.protocol.replace(':', '').toLowerCase() == 'https' ) {
@@ -236,6 +245,9 @@ function countCharacters() {
             ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
         }
 
+        /* Do not let the Button Appear as Active if an Upload is in Progress */
+        if ( window.upload_pct > 0 ) { _ch = 0; }
+
         var ccs = pEl.getElementsByClassName(_btnCls);
         for ( var e = 0; e < ccs.length; e++ ) {
             if ( _ch > 0 ) {
@@ -257,11 +269,8 @@ function handleButtonClick(el) {
 
     var _action = NoNull(tObj.getAttribute('data-action')).toLowerCase();
     switch ( _action ) {
-        case 'publish':
-            publishPost(tObj);
-            break;
-
         case 'post-reply':
+        case 'publish':
             publishPost(tObj);
             break;
 
@@ -279,6 +288,10 @@ function handleButtonClick(el) {
 
         case 'delete-post':
             deletePost(tObj);
+            break;
+
+        case 'image-toggle':
+            toggleImageIncludes(tObj);
             break;
 
         case 'reply':
@@ -919,7 +932,17 @@ function togglePostGeo( btn, _reset ) {
         }
     }
 }
-
+function toggleImageIncludes(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( el.tagName.toLowerCase() !== 'button' ) { return; }
+    if ( el.classList.contains('exclude') ) {
+        el.classList.remove('exclude');
+        el.innerHTML = '&nbsp;';
+    } else {
+        el.classList.add('exclude');
+        el.innerHTML = '<i class="far fa-times-circle"></i>';
+    }
+}
 /** ************************************************************************* *
  *  Publishing Functions
  ** ************************************************************************* */
@@ -940,9 +963,45 @@ function validatePublish( fname ) {
     }
     return true;
 }
+function getContent() {
+    var _txt = '',
+        _img = '';
+
+    /* First let's get the content */
+    var els = document.getElementsByName('fdata');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+        if ( _name == 'content' ) {
+            if ( NoNull(els[i].value) != '' ) {
+                _txt = els[i].value;
+            }
+        }
+    }
+
+    /* Now let's check for image attachments */
+    var els = document.getElementsByClassName('btn-preview');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('exclude') === false ) {
+            var _guid = NoNull(els[i].getAttribute('data-guid'));
+            var _src = NoNull(els[i].getAttribute('data-src'));
+            if ( _src != '' ) {
+                if ( _img != '' ) { _img += "\r\n\r\n"; }
+                _img += '![' + _guid + '](' + _src + ')';
+            }
+        }
+    }
+
+    /* Set the Return Output */
+    if ( _img != '' && _txt != '' ) { _txt += "\r\n\r\n"; }
+    _txt += _img;
+
+    /* Return the Content */
+    return _txt;
+}
 function publishPost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     if ( splitSecondCheck(el) === false ) { return; }
+    if ( window.upload_pct > 0 ) { return; }
     document.activeElement.blur();
 
     var fname = NoNull(el.getAttribute('data-form'), el.getAttribute('name'));
@@ -965,6 +1024,9 @@ function publishPost(el) {
             var _name = NoNull(els[i].getAttribute('data-name'));
             if ( NoNull(els[i].value) != '' ) { params[_name] = els[i].value; }
         }
+
+        /* Ensure the full content is grabbed if this is not a reply */
+        if ( fname == 'fdata' ) { params['content'] = getContent(); }
 
         setTimeout(function () { doJSONQuery('posts', 'POST', params, parsePublish); }, 150);
         spinButton(el);
@@ -1032,6 +1094,27 @@ function fadeDeletedPosts() {
         }
     }
 }
+function fadeFileUploadProgress( _init = false ) {
+    if ( _init !== true ) { _init = false; }
+    window.upload_pct = 0;
+
+    var els = document.getElementsByClassName('pv-file-upload');
+    for ( var i = (els.length - 1); i >= 0; i-- ) {
+        var _oval = nullInt(els[i].style.opacity);
+        if ( _init === true ) { _oval = 1; }
+        if ( _oval > 1 ) { _oval = 1; }
+        if ( _oval > 0 ) {
+            _oval -= 0.05;
+            if ( _oval < 0 ) { _oval = 0; }
+            els[i].style.opacity = _oval;
+            setTimeout(fadeFileUploadProgress, 100);
+
+        } else {
+            hideByClass('pv-file-upload');
+            els[i].style.opacity = 1;
+        }
+    }
+}
 function clearWrite() {
     var els = document.getElementsByName('fdata');
     for ( var i = 0; i < els.length; i++ ) {
@@ -1051,6 +1134,11 @@ function clearWrite() {
     for ( var i = 0; i < els.length; i++ ) {
         spinButton(els[i], true);
     }
+    var els = document.getElementsByClassName('upload-list');
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = '';
+    }
+    fadeFileUploadProgress(true);
     toggleComposerPop(true);
     togglePostGeo(null, true);
     countCharacters();
@@ -1783,7 +1871,16 @@ function toggleCarouselImage(el) {
     /* Now Let's Build the HTML */
     var _txt = NoNull(obj.getAttribute('data-text'));
     var _src = NoNull(obj.getAttribute('data-src')).replace('_medium', '').replace('_thumb', '');
-    var _html = '<img src="' + _src + '" alt="' + _txt + '" />';
+
+    var _height = nullInt(obj.getAttribute('data-height'));
+    var _width = nullInt(obj.getAttribute('data-width'));
+    var _attr = '';
+
+    if ( _height > 0 ) { _attr = ' height="' + _height + 'px"'; }
+    if ( _width > 0 ) { _attr = ' width:' + _width + 'px"'; }
+
+    /* Set the HTML */
+    var _html = '<img src="' + _src + '" alt="' + _txt + '"' + _attr + ' />';
 
     var els = document.getElementsByClassName('carousel-body');
     for ( var i = 0; i < els.length; i++ ) {
@@ -1792,6 +1889,7 @@ function toggleCarouselImage(el) {
 
     /* Finish off the Selection */
     obj.classList.add('selected');
+    alignModal();
 }
 
 
@@ -2203,3 +2301,153 @@ function toggleAudioSeek(file_id, secs) {
         sld.value = val;
     }
 }
+
+/** ************************************************************************ *
+ *  Uploads
+ ** ************************************************************************ */
+function addUploadLog( ds ) {
+    if ( ds === undefined || ds === false || ds === null || ds == '' ) { return; }
+    var obj = false;
+    if ( ds.files !== undefined && ds.files.length > 0 ) {
+        for ( var i = 0; i < ds.files.length; i++ ) {
+            if ( obj === false ) {
+                obj = ds.files[i];
+                i = ds.files.length + 1;
+            }
+        }
+    }
+
+    /* If we have a proper file object, do something with it */
+    if ( obj !== false ) {
+        if ( obj.is_image === undefined || obj.is_image === false ) { return; }
+        var _thumb = obj.cdn_url;
+        var _src = obj.cdn_url;
+
+        if ( obj.medium !== false ) {
+            _thumb = obj.medium;
+            _src = obj.medium;
+        }
+        if ( obj.thumb !== false ) {
+            _thumb = obj.thumb;
+        }
+        showByClass('upload-log');
+
+        var els = document.getElementsByClassName('upload-list');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( obj.thumb !== undefined && obj.thumb !== false ) {
+                var li = document.createElement('li');
+                    li.innerHTML = '<button class="btn btn-preview" style="background-image: url(' + _thumb + ');" data-action="image-toggle" data-guid="' + obj.guid + '" data-src="' + _src + '">&nbsp;</button>';
+                els[i].appendChild(li);
+            }
+        }
+    }
+}
+function getUploadProgress( cls ) {
+    var touch_ts = nullInt(Math.floor(Date.now()));
+    var last_ts = 0;
+    var prog = 0;
+
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].tagName.toLowerCase() == 'progress' ) {
+            if ( els[i].classList.contains('hidden') === false ) {
+                last_ts = nullInt(els[i].getAttribute('data-lasttouch'));
+                prog = nullInt(els[i].value);
+            }
+        }
+    }
+
+    /* If the progress value is complete or not yet started, set to zero */
+    if ( prog >= 100 ) { prog = 0; }
+    if ( prog < 0 ) { prog = 0; }
+
+    /* If more than 15 seconds have passed since the last update, consider this "stalled" and unlock */
+    if ( (touch_ts - last_ts) <= 15000 ) { prog = 0; }
+
+    /* Return the Completion Percentage */
+    return prog;
+}
+function setPublishButtonState( _disable = false ) {
+    var els = document.getElementsByClassName('btn-publish');
+    for ( var e = 0; e < els.length; e++ ) {
+        if ( _disable ) {
+            if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+            els[e].disabled = true;
+        } else {
+            countCharacters();
+        }
+    }
+}
+function showUploadProgress( cls, msg = '', val = 0 ) {
+    if ( cls === undefined || cls === false || cls === null || cls == '' ) { return; }
+    if ( msg === undefined || msg === false || msg === null || msg == '' ) { msg = '&nbsp;'; }
+    if ( val === undefined || val === false || val === null || isNaN(val) ) { val = 0; }
+    if ( val > 100 ) { val = 100; }
+    if ( val < 0 ) { val = 0; }
+
+    var touch_ts = nullInt(Math.floor(Date.now()));
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].tagName.toLowerCase() == 'progress' ) { els[i].value = val; }
+        if ( els[i].tagName.toLowerCase() == 'p' ) { els[i].innerHTML = msg; }
+        els[i].setAttribute('data-lasttouch', touch_ts);
+    }
+    if ( msg != '&nbsp;' || val > 0 ) { showByClass(cls); } else { hideByClass(cls); }
+}
+
+function uploadBatchFile( idx ) {
+    var el = document.getElementById('pv-list-file');
+    if ( idx === undefined || idx === false || idx === null || isNaN(idx) ) { return false; }
+    if ( idx >= el.files.length ) { return false; }
+    var _apiUrl = getApiURL() + 'files/upload';
+    setPublishButtonState(true);
+
+    // Upload the Specific File
+    var data = new FormData();
+    data.append('SelectedFile', el.files[idx]);
+
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+        if ( request.readyState == 4 ) {
+            try {
+                var resp = false;
+                if ( request.responseText != '' ) { resp = JSON.parse(request.responseText); }
+                if ( resp.meta !== undefined && resp.meta.code == 200 ) {
+                    var ds = resp.data;
+                    if ( (idx + 1) >= el.files.length ) {
+                        showUploadProgress('pv-file-upload', '', 100);
+                        fadeFileUploadProgress(true);
+                        setPublishButtonState();
+                        window.upload_pct = 0;
+                    }
+                    addUploadLog(ds);
+                }
+
+            } catch (e){
+                console.log( request.responseText );
+                fadeFileUploadProgress(true);
+                setPublishButtonState();
+            }
+            uploadBatchFile(idx + 1);
+        }
+    };
+    request.upload.addEventListener('progress', function(e) {
+        if ( e.total > 0 && el.files.length > 1 ) {
+            var _blk = 1 / parseFloat(el.files.length);
+            var _cur = parseFloat(e.loaded) / parseFloat(e.total);
+            var _prg = Math.round(((_blk * _cur) + (_blk * idx)) * 100);
+            if ( _prg < 1 ) { _prg = 1; }
+            window.upload_pct = _prg;
+
+            showUploadProgress('pv-file-upload', '', _prg);
+            setPublishButtonState(true);
+        }
+    }, false);
+
+    request.open('POST', _apiUrl, true);
+    request.send(data);
+}
+
+
+
+

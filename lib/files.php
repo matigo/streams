@@ -405,7 +405,6 @@ class Files {
                                 $img->load($origPath);
                                 $geoData = $img->getGeolocation();
                                 $imgMeta = $img->getPhotoMeta();
-
                                 $imgWidth = $img->getWidth();
 
                                 $isAnimated = $img->is_animated();
@@ -536,6 +535,8 @@ class Files {
             if ( is_array($imgMeta) ) {
                 foreach ( $imgMeta as $Key=>$Value ) {
                     if ( $Value !== false ) {
+                        if ( strpos($Key, 'image.') === false ) { $Key = "image.$Key"; }
+
                         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                                           '[FILE_ID]'    => nullInt($FileID),
                                           '[KEY]'        => sqlScrub($Key),

@@ -111,8 +111,8 @@ class Images {
     public function returnExifData() { return $this->exif; }
     public function is_animated() { return $this->is_animated; }
     public function is_reduced() { return $this->is_reduced; }
-    public function getWidth() { return imagesx($this->image); }
-    public function getHeight() { return imagesy($this->image); }
+    public function getHeight() { return nullInt($this->exif['ExifImageLength'], imagesy($this->image)); }
+    public function getWidth() { return nullInt($this->exif['ExifImageWidth'], imagesx($this->image)); }
     public function reduceToHeight($height = 480) {
         $propHeight = $this->getHeight();
         $propWidth = $this->getWidth();
@@ -133,8 +133,6 @@ class Images {
 
         if ( $height < $sizePx ) { $sizePx = $height; }
         if ( $width < $sizePx ) { $sizePx = $width; }
-
-        writeNote("sizePx: $sizePx", true);
 
         $image = imagecreatetruecolor($sizePx, $sizePx);
         $isOK = false;
@@ -188,17 +186,26 @@ class Images {
         if ( in_array('ApertureValue', $this->exif) ) {
             $apt_val = explode('/',$this->exif['ApertureValue']);
             $aperture = $apt_val[0] / $apt_val[1];
+            if ( is_nan($aperture) ) { $aperture = false; }
         }
 
-        return array( 'make'     => ((NoNull($this->exif['Make']) != '') ? NoNull($this->exif['Make']) : false),
-                      'model'    => ((NoNull($this->exif['Model']) != '') ? NoNull($this->exif['Model']) : false),
-                      'exposure' => ((NoNull($this->exif['ExposureTime']) != '') ? NoNull($this->exif['ExposureTime']) : false),
-                      'aperture' => $aperture,
-                      'shutter'  => ((NoNull($this->exif['ShutterSpeedValue']) != '') ? NoNull($this->exif['ShutterSpeedValue']) : false),
-                      'iso'      => ((nullInt($this->exif['ISOSpeedRatings']) > 0) ? nullInt($this->exif['ISOSpeedRatings']) : false),
-                      'datetime' => ((NoNull($this->exif['DateTime']) != '') ? NoNull($this->exif['DateTime']) : false),
-                      'width'    => ((nullInt($this->exif['ExifImageWidth']) > 0) ? nullInt($this->exif['ExifImageWidth'], imagesx($this->image)) : false),
-                      'height'   => ((nullInt($this->exif['ExifImageLength']) > 0) ? nullInt($this->exif['ExifImageLength'], imagesy($this->image)) : false),
+        /* Determine the Width and Height */
+        $height = nullInt($this->exif['ExifImageLength'], imagesy($this->image));
+        $width = nullInt($this->exif['ExifImageWidth'], imagesx($this->image));
+
+        /* Construct and Return an Array */
+        return array( 'make'        => ((NoNull($this->exif['Make']) != '') ? NoNull($this->exif['Make']) : false),
+                      'model'       => ((NoNull($this->exif['Model']) != '') ? NoNull($this->exif['Model']) : false),
+                      'software'    => ((NoNull($this->exif['Software']) != '') ? NoNull($this->exif['Software']) : false),
+                      'exposure'    => ((NoNull($this->exif['ExposureTime']) != '') ? NoNull($this->exif['ExposureTime']) : false),
+                      'aperture'    => $aperture,
+                      'shutter'     => ((NoNull($this->exif['ShutterSpeedValue']) != '') ? NoNull($this->exif['ShutterSpeedValue']) : false),
+                      'focallength' => ((NoNull($this->exif['FocalLength']) != '') ? NoNull($this->exif['FocalLength']) : false),
+                      'lens'        => ((NoNull($this->exif['UndefinedTag:0xA434']) != '') ? NoNull($this->exif['UndefinedTag:0xA434']) : false),
+                      'iso'         => ((nullInt($this->exif['ISOSpeedRatings']) > 0) ? nullInt($this->exif['ISOSpeedRatings']) : false),
+                      'datetime'    => ((NoNull($this->exif['DateTime']) != '') ? NoNull($this->exif['DateTime']) : false),
+                      'height'      => ((nullInt($height) > 0) ? nullInt($height) : false),
+                      'width'       => ((nullInt($width) > 0) ? nullInt($width) : false),
                      );
     }
 
