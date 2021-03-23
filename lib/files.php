@@ -341,6 +341,7 @@ class Files {
 
             foreach ( $items as $FileID ) {
                 $FileName = NoNull(basename($_FILES[ $FileID ]['name']));
+                $FileSha1 = sha1_file($_FILES[ $FileID ]['tmp_name']);
                 $FileSize = nullInt($_FILES[ $FileID ]['size']);
                 $FileType = NoNull($_FILES[ $FileID ]['type']);
                 if ( NoNull($FileType) == '' ) {
@@ -437,7 +438,7 @@ class Files {
                             }
 
                             $rfu = $this->_recordFileUpload( strtolower($FileName), strtolower($LocalName), $FileSize, strtolower($FileType),
-                                                             md5("$FileName $now"), $geoData, $imgMeta, $hasProp, $hasThumb, $isAnimated );
+                                                             $FileSha1, $geoData, $imgMeta, $hasProp, $hasThumb, $isAnimated );
                             if ( is_array($rfu) && count($rfu) > 0 ) {
                                 if ( is_array($list) === false ) { $list = array(); }
                                 $list[] = $rfu;
