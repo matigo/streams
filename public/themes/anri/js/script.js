@@ -24,6 +24,15 @@ function NoNull( txt, alt ) {
 
     return txt.toString().replace(/^\s+|\s+$/gm, '');
 }
+function nullInt( num, alt ) {
+    if ( num === undefined || num === null || num === false || isNaN(num) ) { num = 0; }
+    if ( alt === undefined || alt === null || alt === false || isNaN(alt) ) { alt = 0; }
+
+    var ii = parseFloat(num);
+    if ( ii === undefined || ii === null || ii === false || isNaN(ii) ) { ii = 0; }
+    if ( ii == 0 ) { return alt; }
+    return ii;
+}
 function numberWithCommas(x) {
     if ( x === undefined || x === false || x === null ) { return ''; }
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -571,6 +580,13 @@ function updatePostTimestamps() {
 
         if ( isNaN(_ts) === false ) {
             els[i].innerHTML = ((_cnt >= 1 && _guid == '') ? '<i class="fa fa-comments"></i> ' : '') + moment(_ts * 1000).format(_fmt);
+        }
+
+        /* If we have comments, let's present them */
+        if ( _cnt >= 1 ) {
+            var th_guid = NoNull(els[i].getAttribute('data-thread-guid'));
+            var single = NoNull(els[i].getAttribute('data-single'));
+            if ( single == 'Y' && th_guid.length > 30 ) { collectThread(th_guid); }
         }
     }
 
@@ -1129,6 +1145,51 @@ function isValidUrl( _url ) {
     var a  = document.createElement('a');
     a.href = _url;
     return (a.host && a.host != window.location.host);
+}
+
+/** ************************************************************************* *
+ *  Thread Functions
+ ** ************************************************************************* */
+function collectThread( guid = '' ) {
+    var _guid = NoNull(guid);
+    if ( _guid.length > 30 ) {
+        var params = { 'guid': _guid, 'simple': 'Y' };
+        window.setTimeout(function() { doJSONQuery('posts/thread', 'GET', params, parseThread); }, 250);
+    }
+}
+function parseThread( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.length > 0 ) {
+            var _html = '';
+
+            for ( var i = (ds.length - 1); i >= 0; i-- ) {
+                var thread_guid = NoNull(ds[i].thread.guid);
+                var post_guid = NoNull(ds[i].guid);
+
+                /* Do not add the source post, as that would be silly */
+                if ( thread_guid != post_guid ) {
+                    _html += '<div class="comment-item" data-guid="' + post_guid + '">' +
+                                '<div class="avatar">' +
+                                    '<span style="background-image: url(' + ds[i].persona.avatar + ');">&nbsp;</span>' +
+                                '</div>' +
+                                '<div class="content">' +
+                                    '<h4>' + NoNull(ds[i].persona.as) + '</h4>' + ds[i].content +
+                                '</div>' +
+                             '</div>';
+                }
+            }
+
+            /* Write the Comment to the DOM */
+            if ( _html != '' ) {
+                var els = document.getElementsByClassName('single-post__comments');
+                for ( var i = 0; i < els.length; i++ ) {
+                    els[i].classList.remove('hidden');
+                    els[i].innerHTML = _html;
+                }
+            }
+        }
+    }
 }
 
 /** ************************************************************************* *

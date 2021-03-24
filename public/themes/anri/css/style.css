@@ -1050,7 +1050,10 @@ body.font-xx, body .font-xx { font-size: 22px; }
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  display: none;
+}
+.single-post__footer-tags {
+    display: block;
+    width: 100%;
 }
 .single-post__footer-tags::after {
   content: "";
@@ -1067,6 +1070,25 @@ body.font-xx, body .font-xx { font-size: 22px; }
   text-transform: uppercase;
   line-height: 1;
   border: 1px dotted #ffffff;
+}
+.single-post__footer-tags ul {
+    list-style: none;
+    text-align: center;
+    width: 100%;
+}
+.single-post__footer-tags ul li {
+  border: 1px dotted #dcdcdc;
+  color: #262626;
+  display: inline-block;
+  font-size: 0.9em;
+  line-height: 1;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  padding: 5px 10px;
+  margin: 0 5px 5px 0;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
 }
 .single-post__footer-tags-list {
     float: left;
@@ -1303,9 +1325,45 @@ body.font-xx, body .font-xx { font-size: 22px; }
   font-size: 0.75em;
   color: #777777;
 }
-.single-post__comments {
-  padding: 50px 0px;
+.single-post__comments { padding: 25px 0 10px; }
+.single-post__comments .comment-item {
+    border-top: 1px dotted #ccc;
+    padding: 5px 0;
+    margin: 0 auto;
+    display: block;
+    max-width: 80%;
+    width: 80%;
 }
+.single-post__comments .comment-item .avatar {
+    display: inline-block;
+    padding: 5px 0 0;
+    vertical-align: text-top;
+    text-align: center;
+    max-width: 75px;
+    min-width: 75px;
+}
+.single-post__comments .comment-item .avatar span {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border: 1px solid #ccc;
+    display: block;
+    max-height: 50px;
+    min-height: 50px;
+    max-width: 50px;
+    min-width: 50px;
+    height: 50px;
+    width: 50px;
+}
+.single-post__comments .comment-item .content {
+    display: inline-block;
+    vertical-align: text-top;
+    max-width: calc(100% - 100px);
+    min-width: calc(100% - 100px);
+    width: 90%;
+}
+.single-post__comments .comment-item .content h4 { margin: 0 0 10px; }
+.single-post__comments .comment-item .content p span.account { font-weight: bold; }
 .single-post__comments h5 {
   margin-top: 0;
   margin-bottom: 30px;
