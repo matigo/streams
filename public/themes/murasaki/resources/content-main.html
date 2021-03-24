@@ -8,10 +8,11 @@
                 </ul>
                 <ul class="post-types">
                     <li class="post-type selected" data-action="filter" data-type="all"><i class="fas fa-water"></i><span class="label">[navShowAll]</span></li>
-                    <li class="post-type" data-action="filter" data-type="photo"><i class="fas fa-images"></i><span class="label">[navShowPhoto]</span></li>
+                    <li class="post-type hidden" data-action="filter" data-type="photo"><i class="fas fa-images"></i><span class="label">[navShowPhoto]</span></li>
                     <li class="post-type" data-action="filter" data-type="note"><i class="fas fa-comment"></i><span class="label">[navShowNotes]</span></li>
                     <li class="post-type" data-action="filter" data-type="article"><i class="far fa-newspaper"></i><span class="label">[navShowArticle]</span></li>
                     <li class="post-type" data-action="filter" data-type="quotation"><i class="fas fa-quote-right"></i><span class="label">[navShowQuotation]</span></li>
+                    <li class="post-type" data-action="filter" data-type="bookmark"><i class="fas fa-bookmark"></i><span class="label">[navShowBookmark]</span></li>
                 </ul>
             </section>
             <section class="main-content">
@@ -52,13 +53,14 @@
             </section>
             <section class="nav-right">
                 <ul class="post-types">
-                    <li class="post-type selected" data-action="filter" data-type="all">[navShowAll] <i class="fas fa-water"></i></li>
-                    <li class="post-type" data-action="filter" data-type="photo">[navShowPhoto] <i class="fas fa-images"></i></li>
-                    <li class="post-type" data-action="filter" data-type="note">[navShowNotes] <i class="fas fa-comment"></i></li>
-                    <li class="post-type" data-action="filter" data-type="article">[navShowArticle] <i class="far fa-newspaper"></i></li>
-                    <li class="post-type" data-action="filter" data-type="quotation">[navShowQuotation] <i class="fas fa-quote-right"></i></li>
+                    <li class="post-type selected" data-action="filter" data-type="all"><i class="fas fa-water"></i> [navShowAll]</li>
+                    <li class="post-type hidden" data-action="filter" data-type="photo"><i class="fas fa-images"></i> [navShowPhoto]</li>
+                    <li class="post-type" data-action="filter" data-type="note"><i class="fas fa-comment"></i> [navShowNotes]</li>
+                    <li class="post-type" data-action="filter" data-type="article"><i class="far fa-newspaper"></i> [navShowArticle]</li>
+                    <li class="post-type" data-action="filter" data-type="quotation"><i class="fas fa-quote-right"></i> [navShowQuotation]</li>
+                    <li class="post-type" data-action="filter" data-type="bookmark"><i class="fas fa-bookmark"></i> [navShowBookmark]</li>
                 </ul>
-                <ul class="post-visibility">
+                <ul class="post-visibility hidden">
                     <li class="selected" data-type="all">[navVisAll]</li>
                     <li data-type="active">[navVisActive]</li>
                 </ul>
@@ -67,7 +69,8 @@
                 <button class="btn navmenu-popover" data-group="timeline" data-container="body" data-toggle="popover" data-new="0"><i class="fas fa-globe"></i></button>
                 <button class="btn navmenu-popover" data-group="filters" data-container="body" data-toggle="popover"><i class="fas fa-filter"></i></button>
                 <button class="btn navmenu-prefs" onclick="showSettingsModal();"><i class="fas fa-cogs"></i></button>
-                <button class="btn navmenu-write" onclick="toggleComposerPop();"><i class="fas fa-edit"></i></button>
+                <button class="btn navmenu-signin isguest" onclick="redirectTo('signin');"><i class="fas fa-sign-in-alt"></i></button>
+                <button class="btn navmenu-write reqauth" onclick="toggleComposerPop();"><i class="fas fa-edit"></i></button>
             </section>
             <div id="viewCarousel" class="modal fade compose" role="dialog">
                 <div class="modal-dialog" role="document">

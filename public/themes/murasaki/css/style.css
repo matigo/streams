@@ -95,6 +95,10 @@ ul li a:hover {
     padding: 0 5px;
     text-decoration: underline;
 }
+ul li i {
+    text-align: center;
+    min-width: 25px;
+}
 hr { border-top: 1px solid #e7e3ed; }
 blockquote { font-size: 16px; }
 button.btn {
@@ -332,7 +336,7 @@ section.nav-bottom { display: none; }
     section.nav-bottom button {
         background: transparent;
         border-right: 1px solid #000;
-        border-radius: 0;
+        border-radius: 0 !important;
         display: inline-block;
         font-size: 1.33em;
         text-align: center;
@@ -342,6 +346,8 @@ section.nav-bottom { display: none; }
         min-width: 25%;
         width: 25%;
     }
+    section.nav-bottom button .isguest,
+    section.nav-bottom button.isguest { border-right: none; }
     section.nav-bottom button:first-child { margin: 0 0 0 -5px; }
     section.nav-bottom button:last-child {
         border-right: none;
@@ -1001,8 +1007,9 @@ section.main-content .timeline .post-notify-block span {
     section.main-content .composer textarea { min-height: 125px; }
     section.main-content .composer .btn-publish { float: right; }
     section.main-content .composer .content-length {
-        padding: 0 0 0 10px;
-        text-align: left;
+        padding: 5px 0 0;
+        text-align: center;
+        width: 60px;
     }
     section.main-content .timeline { padding-bottom: 50px; }
     section.main-content .timeline .post-item .content-area .bottom-spacer {
@@ -1076,6 +1083,8 @@ section.main-content .timeline .post-notify-block span {
     }
 }
 @media (max-width: 425px) {
+    #viewSettings .modal-content button { min-width: 40px; }
+    #viewSettings .modal-content button.btn { padding: 6px 12px; }
     #viewSettings .modal-content p { text-align: center; }
     #viewSettings .modal-content label {
         display: block;

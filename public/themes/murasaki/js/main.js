@@ -550,7 +550,7 @@ function handleNavListAction( el ) {
     if ( tObj.hasAttribute('data-url') ) {
         var _url = NoNull(tObj.getAttribute('data-url'));
         if ( _url != '' ) {
-            window.location.href = location.protocol + '//' + location.hostname + _url;
+            redirectTo(_url);
             return;
         }
     }
@@ -570,6 +570,14 @@ function handleNavListAction( el ) {
             default:
                 /* Do Nothing */
         }
+    }
+}
+function redirectTo( url ) {
+    if ( url === undefined || url === false || url === null ) { return; }
+    if ( url != '' ) {
+        if ( url.indexOf('/') != 0 ) { url = '/' + url; }
+        window.location.href = location.protocol + '//' + location.hostname + url;
+        return;
     }
 }
 
@@ -1937,9 +1945,9 @@ function getPopoverContent(el) {
                                  { 'icon': 'fas fa-rss', 'label': 'RSS Feeds', 'value': 'rss', 'function': 'getNavView' },
                                  { 'icon': 'fas fa-highlighter', 'label': 'Highlights', 'value': 'actions', 'function': 'getNavView' }],
                     'filters':  [{ 'icon': 'fas fa-water', 'label': 'All Posts', 'value': 'all', 'function': 'getNavView' },
-                                 { 'icon': 'fas fa-images', 'label': 'Photos', 'value': 'photo', 'function': 'getNavView' },
                                  { 'icon': 'fas fa-comment', 'label': 'Socials', 'value': 'note', 'function': 'getNavView' },
                                  { 'icon': 'far fa-newspaper', 'label': 'Articles', 'value': 'article', 'function': 'getNavView' },
+                                 { 'icon': 'fas fa-bookmark', 'label': 'Bookmarks', 'value': 'bookmark', 'function': 'getNavView' },
                                  { 'icon': 'fas fa-quote-right', 'label': 'Quotations', 'value': 'quotation', 'function': 'getNavView' }]
                    };
     var _grp = NoNull(el.getAttribute('data-group'));
