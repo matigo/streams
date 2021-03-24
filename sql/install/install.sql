@@ -4,7 +4,7 @@
  *  This is the main SQL DataTable Definition for Streams
  * ************************************************************************* */
 CREATE DATABASE `streams` DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE USER 'sapi'@'localhost' IDENTIFIED BY 'JlM94sK0';
+CREATE USER 'sapi'@'localhost' IDENTIFIED WITH mysql_native_password BY 'JlM94sK0';
 GRANT ALL ON `streams`.* TO 'sapi'@'localhost';
 
 /** ************************************************************************* *
@@ -568,12 +568,12 @@ CREATE TRIGGER `before_file`
 BEFORE INSERT ON `File`
    FOR EACH ROW
  BEGIN
-    IF new.`guid` IS NULL THEN SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`md5`, 1, 8), '-',
-                                                               SUBSTRING(tmp.`md5`, 9, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 13, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 17, 4), '-',
-                                                               SUBSTRING(tmp.`md5`, 21, 12)) as `guid`
-                                                   FROM (SELECT MD5(CONCAT(new.`id`, '-', UNIX_TIMESTAMP(new.`created_at`))) as `md5`) tmp); END IF;
+    SET new.`guid` = (SELECT CONCAT(SUBSTRING(tmp.`hash`, 1, 8), '-',
+                                    SUBSTRING(tmp.`hash`, 9, 4), '-',
+                                    SUBSTRING(tmp.`hash`, 13, 4), '-',
+                                    SUBSTRING(tmp.`hash`, 17, 4), '-',
+                                    SUBSTRING(tmp.`hash`, 21, 12)) as `guid`
+                        FROM (SELECT MD5(CONCAT(UNIX_TIMESTAMP(Now()), '-', ROUND(RAND() * (RAND() + RAND()), 6), '-', uuid())) as `hash`) tmp);
    END
 ;;
 DROP TRIGGER IF EXISTS `before_update_file`;;

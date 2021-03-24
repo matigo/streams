@@ -156,10 +156,12 @@ BEGIN
 
         /* Mark any Files contained in the Post as Attached */
         INSERT INTO `PostFile` (`post_id`, `file_id`, `created_at`, `updated_at`)
-        SELECT po.`id` as `post_id`, fi.`id` as `file_id`, po.`created_at`, po.`updated_at`
-          FROM `File` fi INNER JOIN `Post` po ON po.`is_deleted` = 'N' and po.`id` = IFNULL(`x_post_id`, `in_post_id`)
-         WHERE LOCATE(CONCAT(fi.`location`, fi.`hash`), po.`value`) > 0
-         ORDER BY po.`id`, fi.`id`
+        SELECT DISTINCT po.`id` as `post_id`, tmp.`file_id`, po.`created_at`, po.`updated_at`
+          FROM `Post` po INNER JOIN (SELECT fi.`id` as `file_id`, REPLACE(fi.`local_name`, CONCAT('.', SUBSTRING_INDEX(fi.`local_name`, '.', -1)), '') as `ffix`
+                                       FROM `File` fi
+                                      WHERE fi.`is_deleted` = 'N') tmp ON INSTR(po.`value`, tmp.`ffix`) > 0
+         WHERE po.`is_deleted` = 'N' AND po.`id` = IFNULL(`x_post_id`, `in_post_id`)
+         ORDER BY po.`id`, tmp.`file_id`
             ON DUPLICATE KEY UPDATE `is_deleted` = 'N',
                                     `updated_at` = Now();
 

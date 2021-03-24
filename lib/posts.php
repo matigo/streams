@@ -1770,7 +1770,8 @@ class Posts {
                 $html = '';
 
                 foreach ( $posts as $post ) {
-                    $el = $this->_buildHTMLElement($data, $post);
+                    $single = (count($posts) == 1) ? true : false;
+                    $el = $this->_buildHTMLElement($data, $post, $single);
                     if ( $el != '' ) {
                         $postClass = NoNull($post['class']);
                         if ( $postClass != '' ) { $postClass .= ' '; }
@@ -1898,7 +1899,7 @@ class Posts {
     /**
      *  Function Constructs a Standardized HTML Element and Returns the Object or an Empty String
      */
-    private function _buildHTMLElement($data, $post) {
+    private function _buildHTMLElement($data, $post, $single = false) {
         if ( is_array($post) ) {
             // Check to See If We Have a Cached Version of the Post
             $cache_file = md5($data['site_version'] . '-' . NoNull(APP_VER . CSS_VER) . '-' .
@@ -1912,7 +1913,7 @@ class Posts {
             $tagLine = '';
             if ( is_array($post['tags']) ) {
                 foreach ( $post['tags'] as $tag ) {
-                    $tagLine .= '<li><a href="' . NoNull($tag['url']) . '" class="p-category">' . NoNull($tag['name']) . '</a></li>';
+                    $tagLine .= '<li class="post-tag">' . NoNull($tag['name']) . '</li>';
                 }
             }
             $geoLine = '';
@@ -2011,11 +2012,12 @@ class Posts {
                               '[CONTENT]'       => NoNull($post['content']) . NoNull($ReplyHTML),
                               '[IS_RTL]'        => (($this->_isRTL(NoNull($post['text']))) ? ' rtl' : ''),
                               '[BANNER]'        => '',
-                              '[TAGLINE]'       => NoNull($tagLine, $this->strings['lblNoTags']),
+                              '[TAGLINE]'       => NoNull($tagLine),
                               '[HOMEURL]'       => NoNull($this->settings['HomeURL']),
                               '[GEOTAG]'        => $geoLine,
                               '[AUDIO]'         => $audio,
                               '[THREAD]'        => $PostThread,
+                              '[IS_SINGLE]'     => (($single) ? 'Y' : 'N'),
                               '[SOURCE_NETWORK]'=> NoNull($post['meta']['source']['network']),
                               '[SOURCE_ICON]'   => $SourceIcon,
                               '[WEBMENTIONS]'   => $WebMentions,
