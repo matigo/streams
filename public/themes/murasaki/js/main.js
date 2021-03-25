@@ -125,10 +125,19 @@ function handleSpanClick(el) {
     switch ( _class ) {
         case 'avatar account':
         case 'account':
-            _html = '<h3 class="word-title" onclick="dismissPopover(this);">Too Soon!</h3>' +
-                    '<div class="word-results" onclick="dismissPopover(this);">' +
-                        '<p class="text-center">Sorry! Just a little more time, please ...</p>' +
-                    '</div>';
+            var _guid = NoNull(el.getAttribute('data-guid'));
+            if ( _guid.length == 36 ) {
+                var _nick = NoNull(el.getAttribute('data-nick'));
+                _html = '<h3 class="word-title" onclick="dismissPopover(this);">@' + _nick + '</h3>' +
+                        '<div class="word-results" onclick="dismissPopover(this);" data-guid="' + _guid +'">' +
+                            '<p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Profile ...</p>' +
+                        '</div>' +
+                        '<div class="word-footer">' +
+                            '<p class="text-center">' +
+                                '<a href="' + location.protocol + '//' + location.hostname + '/@' + _nick + '" title="" target="_blank">View Full Profile <i class="fas fa-external-link-alt"></i></a>' +
+                            '</p>' +
+                        '</div>';
+            }
             break;
 
         case 'hash':
