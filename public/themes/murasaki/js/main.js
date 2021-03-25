@@ -123,6 +123,7 @@ function handleSpanClick(el) {
     var _html = '';
 
     switch ( _class ) {
+        case 'avatar account':
         case 'account':
             _html = '<h3 class="word-title" onclick="dismissPopover(this);">Too Soon!</h3>' +
                     '<div class="word-results" onclick="dismissPopover(this);">' +
@@ -1672,7 +1673,7 @@ function buildHTML( post ) {
     }
 
     /* Construct the full output */
-    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-nick="' + NoNull(post.persona.as.replaceAll('@', '')) + '" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
+    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-action="profile" data-nick="' + NoNull(post.persona.as.replaceAll('@', '')) + '" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
                 '<div class="content-header">' +
                     '<p class="persona">' + _dispName + '</p>' +
                     '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +

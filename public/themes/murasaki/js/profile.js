@@ -63,14 +63,6 @@ document.onreadystatechange = function () {
                 el.addEventListener('keyup', function(e) { handlePostType(e); });
             }
 
-            document.getElementById('pv-list-file').addEventListener('change', function(e) {
-                if ( this.files.length === 0 ) { return false; }
-                showByClass('pu-prog');
-
-                // Upload the Files One by One
-                uploadBatchFile(0);
-            }, false);
-
             /* Align modal when it is displayed */
             $(".modal").on("shown.bs.modal", alignModal);
 
