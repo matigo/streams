@@ -32,6 +32,17 @@ document.onreadystatechange = function () {
                     handleButtonClick(e);
                 });
             }
+            var els = document.getElementsByTagName('LI');
+            for ( var i = 0; i < els.length; i++ ) {
+                els[i].addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    handleNavListAction(e);
+                });
+                els[i].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handleNavListAction(e);
+                });
+            }
         }
     }
 }
@@ -113,6 +124,76 @@ function handleButtonClick(el) {
             console.log("Not sure how to handle [" + _action + "]");
     }
 }
+function handleNavListAction( el ) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var tObj = el;
+    if ( tObj.getAttribute === undefined || tObj.getAttribute === false || tObj.getAttribute === null ) { tObj = el.currentTarget; }
+    var unread = nullInt(tObj.getAttribute('data-new'));
+
+    if ( NoNull(tObj.tagName).toLowerCase() != 'li' ) { return; }
+    if ( tObj.classList.contains('selected') && unread <= 0 ) { return; }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    var last_touch = parseInt(tObj.getAttribute('data-lasttouch'));
+    var touch_ts = Math.floor(Date.now());
+
+    if ( (touch_ts - last_touch) <= 500 ) { return; }
+    tObj.setAttribute('data-lasttouch', touch_ts);
+
+    /* Reset the LI Items in the Parent and Highlight (If Required) */
+    if ( tObj.classList.contains('selected') === false ) {
+        var pel = tObj.parentElement;
+        if ( pel === undefined || pel === false || pel === null ) { return; }
+        var _highlight = NoNull(pel.getAttribute('data-highlight'), NoNull(tObj.getAttribute('data-highlight'), 'Y')).toUpperCase();
+        if ( _highlight == 'Y' ) {
+            if ( NoNull(pel.tagName).toLowerCase() == 'ul' ) {
+                var els = pel.getElementsByTagName('LI');
+                for ( var i = 0; i < els.length; i++ ) {
+                    if ( els[i].classList.contains('selected') ) { els[i].classList.remove('selected'); }
+                }
+            }
+            tObj.classList.add('selected');
+        }
+    }
+
+    /* Now let's actually handle the action */
+    if ( tObj.hasAttribute('data-url') ) {
+        var _url = NoNull(tObj.getAttribute('data-url'));
+        if ( _url != '' ) {
+            redirectTo(_url);
+            return;
+        }
+    }
+
+    if ( tObj.hasAttribute('data-action') ) {
+        var _action = NoNull(tObj.getAttribute('data-action')).toLowerCase();
+        switch ( _action ) {
+            case 'collect':
+            case 'filter':
+                getTimeline();
+                break;
+
+            case 'settings':
+                showSettingsModal();
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+    }
+}
+function redirectTo( url ) {
+    if ( url === undefined || url === false || url === null ) { return; }
+    if ( url != '' ) {
+        if ( url.indexOf('/') != 0 ) { url = '/' + url; }
+        window.location.href = location.protocol + '//' + location.hostname + url;
+        return;
+    }
+}
+
+
+
+
 
 function validateSignIn() {
     var els = document.getElementsByName('fdata');

@@ -34,7 +34,6 @@ class Route extends Streams {
      *  Function determines what needs to be done and returns the appropriate HTML Document.
      * ************************************************************************************** */
     public function getResponseData() {
-        $ThemeLocation = NoNull($this->settings['theme'], 'default');
         $ReplStr = $this->_getReplStrArray();
         $this->settings['status'] = 200;
 
@@ -44,6 +43,7 @@ class Route extends Streams {
 
         // Collect the Site Data - Redirect if Invalid
         $data = $this->site->getSiteData();
+        $this->settings['_theme'] = NoNull($data['location'], 'default');
         if ( is_array($data) ) {
             $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
             $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
@@ -227,8 +227,11 @@ class Route extends Streams {
         }
 
         // If We're Here, We Need to Build the File
-        $ThemeLocation = THEME_DIR . '/' . $data['location'];
-        if ( checkDIRExists($ThemeLocation) === false ) { $data['location'] = 'default'; }
+        $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
+        if ( checkDIRExists($ThemeLocation) === false ) {
+            $this->settings['_theme'] = 'default';
+            $data['location'] = 'default';
+        }
 
         if ( $data['site_locked'] ) {
             $HomeUrl = NoNull($this->settings['HomeURL']);
@@ -476,14 +479,14 @@ class Route extends Streams {
      *  Function Returns the Requisite Content That People Would Expect to See on a
      *      page based on its purpose.
      */
-    private function _getPageContent( $data ) {
-        $ThemeLocation = THEME_DIR . '/' . $data['location'];
+    private function _getPageContent($data) {
+        $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
 
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ResDIR = $ThemeLocation . "/resources";
         if ( file_exists("$ThemeLocation/custom.php") ) {
             require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($data['location']);
+            $ClassName = ucfirst($this->settings['_theme']);
 
             $res = new $ClassName( $this->settings, $this->strings );
             $html = $res->getPageHTML($data);
@@ -523,6 +526,21 @@ class Route extends Streams {
         $posts = 0;
         $pages = 0;
 
+        // Is there a custom.php file in the theme that will provide the requisite data?
+        $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
+        if ( file_exists("$ThemeLocation/custom.php") ) {
+            require_once("$ThemeLocation/custom.php");
+            $ClassName = ucfirst($this->settings['_theme']);
+            $res = new $ClassName( $this->settings, $this->strings );
+            if ( method_exists($res, 'getPagination') ) {
+                $this->settings['errors'] = $res->getResponseMeta();
+                $this->settings['status'] = $res->getResponseCode();
+                return $res->getPagination($data);
+            }
+            unset($res);
+        }
+
+        /* If we're here, let's keep going */
         $rslt = getPaginationSets();
         if ( is_array($rslt) === false && in_array($PgRoot, $Excludes) === false ) {
             $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
@@ -705,19 +723,19 @@ class Route extends Streams {
      *  Function Collects the Navigation Bar for the Site
      */
     private function _getSiteNav( $data ) {
-        $ThemeLocation = THEME_DIR . '/' . $data['location'];
+        $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
         $html = '';
 
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ResDIR = $ThemeLocation . "/resources";
         if ( file_exists("$ThemeLocation/custom.php") ) {
             require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($data['location']);
+            $ClassName = ucfirst($this->settings['_theme']);
             $res = new $ClassName( $this->settings, $this->strings );
-            if ( function_exists($res->getSiteNav) ) {
-                $html = $res->getSiteNav($data);
+            if ( method_exists($res, 'getSiteNav') ) {
                 $this->settings['errors'] = $res->getResponseMeta();
                 $this->settings['status'] = $res->getResponseCode();
+                $html = $res->getSiteNav($data);
             }
             unset($res);
 
@@ -1067,6 +1085,20 @@ class Route extends Streams {
     }
 
     private function _getPopularPosts() {
+        // Is there a custom.php file in the theme that will provide the requisite data?
+        $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
+        if ( file_exists("$ThemeLocation/custom.php") ) {
+            require_once("$ThemeLocation/custom.php");
+            $ClassName = ucfirst($this->settings['_theme']);
+            $res = new $ClassName( $this->settings, $this->strings );
+            if ( method_exists($res, 'getPopularPosts') ) {
+                $this->settings['errors'] = $res->getResponseMeta();
+                $this->settings['status'] = $res->getResponseCode();
+                return $res->getPopularPosts($data);
+            }
+            unset($res);
+        }
+
         require_once( LIB_DIR . '/posts.php' );
         $post = new Posts( $this->settings, $this->strings );
         $html = $post->getPopularPosts();

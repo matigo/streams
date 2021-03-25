@@ -1237,6 +1237,73 @@ section.main-content .timeline .post-notify-block span {
 }
 
 /** ************************************************************************ *
+ *  Profile Page
+ ** ************************************************************************ */
+.profile-overview {
+    border-right: 1px solid #ccc;
+    display: inline-block;
+
+    max-height: calc(100vh - 75px);
+    min-height: calc(100vh - 75px);
+    height: 100%;
+    max-width: 325px;
+    min-width: 325px;
+    width: 325px;
+}
+.profile-overview h3 { margin: 10px 0; }
+.profile-overview h4.site {
+    display: block;
+    line-height: 1.25em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0;
+    margin: 0 0 10px;
+}
+.profile-overview h4.site a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+.profile-overview p.avatar {
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    margin: 0 auto;
+
+    max-height: 250px;
+    min-height: 250px;
+    max-width: 250px;
+    min-width: 250px;
+    height: 250px;
+    width: 250px;
+
+}
+.profile-overview p.avatar span.avatar-image {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: block;
+
+    max-height: 250px;
+    min-height: 250px;
+    max-width: 250px;
+    min-width: 250px;
+    height: 250px;
+    width: 250px;
+}
+.profile-overview .bio {
+    display: block;
+    padding: 5px 10px 5px 0;
+    margin: 0;
+    width: 100%;
+}
+
+
+/** ************************************************************************ *
  *  Popover Overrides
  ** ************************************************************************ */
 .popover .top, .popover.top { position: fixed !important; }
