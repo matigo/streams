@@ -1607,8 +1607,10 @@ function buildHTML( post ) {
     var _icon = getVisibilityIcon( post.privacy );
     var _tags = '';
     if ( post.tags !== undefined && post.tags !== false && post.tags.length > 0 ) {
-        for ( var i = 0; i < post.tags.length; i++ ) {
-            _tags += '<li class="post-tag">' + NoNull(post.tags[i].name) + '</li>';
+        if ( post.type != 'post.note' ) {
+            for ( var i = 0; i < post.tags.length; i++ ) {
+                _tags += '<li class="post-tag">' + NoNull(post.tags[i].name) + '</li>';
+            }
         }
     }
 
