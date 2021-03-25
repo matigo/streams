@@ -234,29 +234,33 @@ function countCharacters() {
     for ( var i = 0; i < els.length; i++ ) {
         var _btnCls = NoNull(els[i].getAttribute('data-button'), 'btn-publish');
         var _cntCls = NoNull(els[i].getAttribute('data-counter'));
-        var _val = NoNull(els[i].value);
-        var pEl = els[i].parentElement;
 
-        var _ch = 0;
-        if ( _val != '' ) { _ch = els[i].value.length; }
+        /* No Point Continuing Without a Class */
+        if ( _cntCls != '' ) {
+            var _val = NoNull(els[i].value);
+            var pEl = els[i].parentElement;
 
-        /* Set the Counter */
-        var ccs = pEl.getElementsByClassName(_cntCls);
-        for ( var e = 0; e < ccs.length; e++ ) {
-            ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
-        }
+            var _ch = 0;
+            if ( _val != '' ) { _ch = els[i].value.length; }
 
-        /* Do not let the Button Appear as Active if an Upload is in Progress */
-        if ( window.upload_pct > 0 ) { _ch = 0; }
+            /* Set the Counter */
+            var ccs = pEl.getElementsByClassName(_cntCls);
+            for ( var e = 0; e < ccs.length; e++ ) {
+                ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
+            }
 
-        var ccs = pEl.getElementsByClassName(_btnCls);
-        for ( var e = 0; e < ccs.length; e++ ) {
-            if ( _ch > 0 ) {
-                if ( ccs[e].classList.contains('btn-primary') === false ) { ccs[e].classList.add('btn-primary'); }
-                ccs[e].disabled = false;
-            } else {
-                if ( ccs[e].classList.contains('btn-primary') ) { ccs[e].classList.remove('btn-primary'); }
-                ccs[e].disabled = true;
+            /* Do not let the Button Appear as Active if an Upload is in Progress */
+            if ( window.upload_pct > 0 ) { _ch = 0; }
+
+            var ccs = pEl.getElementsByClassName(_btnCls);
+            for ( var e = 0; e < ccs.length; e++ ) {
+                if ( _ch > 0 ) {
+                    if ( ccs[e].classList.contains('btn-primary') === false ) { ccs[e].classList.add('btn-primary'); }
+                    ccs[e].disabled = false;
+                } else {
+                    if ( ccs[e].classList.contains('btn-primary') ) { ccs[e].classList.remove('btn-primary'); }
+                    ccs[e].disabled = true;
+                }
             }
         }
     }
@@ -289,6 +293,11 @@ function handleButtonClick(el) {
 
         case 'delete-post':
             deletePost(tObj);
+            break;
+
+        case 'edit-post':
+        case 'edit':
+            editPost(tObj);
             break;
 
         case 'image-toggle':
@@ -420,12 +429,15 @@ function parseStarPost( data ) {
                 if ( _guid != '' ) {
                     var els = document.getElementsByClassName('post-actions');
                     for ( var e = 0; e < els.length; e++ ) {
-                        var btns = els[e].getElementsByClassName('btn-action');
-                        for ( var b = 0; b < btns.length; b++ ) {
-                            var _act = NoNull(btns[b].getAttribute('data-action'));
-                            if ( _act == 'star' ) {
-                                btns[b].innerHTML = '<i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i>';
-                                btns[b].setAttribute('data-value', ((_starred) ? 'Y' : 'N'));
+                        var _uid = NoNull(els[e].getAttribute('data-guid'));
+                        if ( _uid == _guid ) {
+                            var btns = els[e].getElementsByClassName('btn-action');
+                            for ( var b = 0; b < btns.length; b++ ) {
+                                var _act = NoNull(btns[b].getAttribute('data-action'));
+                                if ( _act == 'star' ) {
+                                    btns[b].innerHTML = '<i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i>';
+                                    btns[b].setAttribute('data-value', ((_starred) ? 'Y' : 'N'));
+                                }
                             }
                         }
                     }
@@ -433,6 +445,94 @@ function parseStarPost( data ) {
             }
         }
     }
+}
+function editPost(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+
+    /* Ensure the Touch Time is Decent to Prevent Double-Actions */
+    if ( splitSecondCheck(el) === false ) { return; }
+
+    var _guid = NoNull(el.getAttribute('data-guid'));
+    if ( _guid.length == 36 ) {
+        var params = { 'guid': _guid, 'simple': 'Y' };
+        doJSONQuery('posts/read', 'GET', params, parseEditPost);
+    }
+}
+function parseEditPost( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var post = false;
+        var ds = data.data;
+        if ( ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _guid = NoNull(ds[i].guid);
+                if ( post === false && _guid.length >= 36 ) {
+                    if ( ds[i].can_edit !== undefined && ds[i].can_edit ) { post = ds[i]; }
+                }
+            }
+        }
+
+        /* We have a post, so let's prep the DOM */
+        if ( post !== false && post.guid !== undefined ) {
+            var els = document.getElementsByClassName( post.type.replace('.', '-') );
+            for ( var i = 0; i < els.length; i++ ) {
+                var _uid = NoNull(els[i].getAttribute('data-guid'));
+                if ( _uid == post.guid ) {
+                    clearEditPost();
+
+                    el = checkChildExists(els[i], 'content-editor');
+                    if ( el !== undefined && el.tagName !== undefined && el.tagName.toLowerCase() == 'div' ) {
+                        hideByClass('content-area', els[i]);
+
+                        /* Construct the Editor */
+                        var _name = 'edit-data';
+                        var _html = '<textarea class="content-area edit-content" onkeyup="countCharacters();" name="' + _name + '" data-name="content" data-button="edit-post" data-counter="edit-length">' + post.text + '</textarea>' +
+                                    '<input type="hidden" name="' + _name + '" data-name="post_guid" value="' + post.guid + '">' +
+                                    '<input type="hidden" name="' + _name + '" data-name="publish_unix" value="' + post.publish_unix + '">' +
+                                    '<button class="btn edit-post" data-form="' + _name + '" data-action="publish" data-label="Update" disabled>Update</button> ' +
+                                    '<button class="btn btn-danger" data-label="Cancel">Cancel</button>' +
+                                    '<span class="edit-length">&nbsp;</span>' +
+                                    '<div class="bottom-spacer">&nbsp;</div>';
+                        el.innerHTML = _html;
+
+                        /* Ensure proper visibility */
+                        showByClass('content-editor', els[i]);
+                        countCharacters();
+                    }
+                }
+            }
+        }
+    }
+}
+function checkChildExists( pEl, cls ) {
+    if ( pEl === undefined || pEl === false || pEl === null ) { return; }
+    if ( cls === undefined || cls === false || cls === null ) { return; }
+    if ( NoNull(cls) == '' ) { return; }
+
+    /* Check to see if a next-level child with a given class exists */
+    if ( pEl.childNodes !== undefined && pEl.hasChildNodes() ) {
+        for ( var i = 0; i < pEl.childNodes.length; i++ ) {
+            var child = pEl.childNodes[i];
+            if ( child.classList !== undefined && child.classList !== null ) {
+                if ( child.classList.contains(cls) ) { return child; }
+            }
+        }
+    }
+
+    /* If we're here, we probably do not have a next-level child with the class */
+    var _div = document.createElement("div");
+        _div.classList.add(cls);
+        _div.innerHTML = '';
+    pEl.appendChild(_div);
+    return _div;
 }
 function confirmDeletePost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
@@ -511,6 +611,14 @@ function clearConfirmation() {
 function clearReplyToPost() {
     var els = document.getElementsByClassName('post-reply');
     for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = '';
+    }
+}
+function clearEditPost() {
+    var els = document.getElementsByClassName('content-editor');
+    for ( var i = 0; i < els.length; i++ ) {
+        showByClass('content-area', els[i].parentElement);
+        els[i].classList.add('hidden');
         els[i].innerHTML = '';
     }
 }
@@ -1056,7 +1164,7 @@ function parsePublish( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         for ( var i = 0; i < ds.length; i++ ) {
-            if ( checkCanDisplayPost('global', ds[i]) ) {
+            if ( checkCanDisplayPost('global', ds[i], ((ds.length == 1) ? true : false)) ) {
                 writePostToTL('global', ds[i]);
             }
             if ( ds.length == 1 ) {
@@ -1497,6 +1605,12 @@ function buildHTML( post ) {
     var _images = '';
     var _title = NoNull(post.title, _src_title);
     var _icon = getVisibilityIcon( post.privacy );
+    var _tags = '';
+    if ( post.tags !== undefined && post.tags !== false && post.tags.length > 0 ) {
+        for ( var i = 0; i < post.tags.length; i++ ) {
+            _tags += '<li class="post-tag">' + NoNull(post.tags[i].name) + '</li>';
+        }
+    }
 
     var _audio_block = '';
     if ( post.meta !== false && post.meta.episode !== undefined ) {
@@ -1509,7 +1623,7 @@ function buildHTML( post ) {
     }
 
     var _ttxt = (_title != '') ? '<h3 class="content-title">' + _title + '</h3>' : '';
-    if (_ttxt != '' && _src_url != '') { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
+    if ( _ttxt != '' && _src_url != '' ) { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
 
     var _dispName = NoNull(post.persona.name, post.persona.as);
     if ( _dispName.toLowerCase() != post.persona.as.replace('@', '').toLowerCase() ) {
@@ -1567,9 +1681,10 @@ function buildHTML( post ) {
                     ((_audio_block != '') ? _audio_block : '') +
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
+                    ((_tags != '') ? '<ul class="tag-list">' + _tags + '</ul>' : '') +
                     ((window.personas !== false) ?
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
-                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="edit" disabled><i class="fas fa-edit"></i></button>' : '') +
+                        ((post.persona.is_you && post.type != 'post.article' ) ? '<button class="btn btn-action" data-action="edit"><i class="fas fa-edit"></i></button>' : '') +
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
                         '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' +
                         '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
@@ -1595,9 +1710,10 @@ function getVisibilityIcon( privacy ) {
             return '';
     }
 }
-function checkCanDisplayPost( _view, post ) {
+function checkCanDisplayPost( _view, post, pop = false ) {
     if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
     if ( post === undefined || post === false || post === null ) { return false; }
+    if ( pop === undefined || pop === null || pop !== true ) { pop = false; }
 
     var tl = document.getElementsByClassName('timeline');
     for ( var t = 0; t < tl.length; t++ ) {
@@ -1609,7 +1725,13 @@ function checkCanDisplayPost( _view, post ) {
                     var _unix = nullInt(els[i].getAttribute('data-updx'));
                     var _guid = NoNull(els[i].getAttribute('data-guid'));
 
-                    if ( _guid == NoNull(post.guid) ) { return false; }
+                    if ( _guid == NoNull(post.guid) ) {
+                        if ( pop ) {
+                            els[i].parentElement.removeChild(els[i]);
+                            return true;
+                        }
+                        return false;
+                    }
                 }
             }
 

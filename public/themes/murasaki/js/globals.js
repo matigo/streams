@@ -140,16 +140,18 @@ function readHeadMeta( _name ) {
     }
 
 }
-function showByClass( _cls ) {
+function showByClass( _cls, parent = false ) {
+    if ( parent === undefined || parent === false || parent === null ) { parent = document; }
     if ( _cls === undefined || _cls === false || _cls === null ) { return; }
-    var els = document.getElementsByClassName(_cls);
+    var els = parent.getElementsByClassName(_cls);
     for ( var i = 0; i < els.length; i++ ) {
         els[i].classList.remove('hidden');
     }
 }
-function hideByClass( _cls ) {
+function hideByClass( _cls, parent = false  ) {
+    if ( parent === undefined || parent === false || parent === null ) { parent = document; }
     if ( _cls === undefined || _cls === false || _cls === null ) { return; }
-    var els = document.getElementsByClassName(_cls);
+    var els = parent.getElementsByClassName(_cls);
     for ( var i = 0; i < els.length; i++ ) {
         els[i].classList.add('hidden');
     }

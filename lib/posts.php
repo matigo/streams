@@ -1154,21 +1154,29 @@ class Posts {
         $PostType = NoNull($this->settings['post_type'], NoNull($this->settings['type'], 'post.draft'));
         $PostSummary = NoNull($this->settings['post_summary'], $this->settings['summary']);
         $Privacy = NoNull($this->settings['post_privacy'], $this->settings['privacy']);
+        $PublishUnix = nullInt($this->settings['post_publish_unix'], $this->settings['publish_unix']);
         $PublishAt = NoNull($this->settings['post_publish_at'], $this->settings['publish_at']);
         $ExpiresAt = NoNull($this->settings['post_expires_at'], $this->settings['expires_at']);
         $PostTags = NoNull($this->settings['post_tags'], $this->settings['tags']);
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $PostID = $this->_getPostIDFromGUID($PostGUID);
 
-        // More Elements
+        /* More Elements */
         $ParentID = 0;
         $ThreadID = 0;
-        $PublishUnix = strtotime($PublishAt);
 
-        // Additional Meta
+        /* Additional Meta */
         $SourceURL = NoNull($this->settings['source_url'], NoNull($this->settings['src_url'], $this->settings['source']));
         $SourceTitle = NoNull($this->settings['source_title'], $this->settings['src_title']);
 
+        /* Clean up the Post Content a bit */
+        $ReplStr = array( "\n\n\n\n" => "\n\n" );
+        for ( $i = 0; $i < 5; $i++ ) {
+            $Value = str_replace(array_keys($ReplStr), array_values($ReplStr), $Value);
+        }
+        $Value = NoNull($Value);
+
+        /* Grab the Unique Words in the Post */
         $UniqueWords = '';
         $uWords = UniqueWords($Value);
         if ( is_array($uWords) && count($uWords) > 0 ) {
@@ -1276,8 +1284,9 @@ class Posts {
         // Ensure the Dates are Set to UTC
         if ( strtotime($PublishAt) === false ) { $PublishAt = ''; }
         if ( strtotime($ExpiresAt) === false ) { $ExpiresAt = ''; }
-        if ($PublishAt != '') { $PublishAt = $this->_convertTimeToUTC($PublishAt); }
-        if ($ExpiresAt != '') { $ExpiresAt = $this->_convertTimeToUTC($ExpiresAt); }
+        if ( $PublishAt != '' ) { $PublishAt = $this->_convertTimeToUTC($PublishAt); }
+        if ( $ExpiresAt != '' ) { $ExpiresAt = $this->_convertTimeToUTC($ExpiresAt); }
+        if ( $PublishAt == '' && $PublishUnix > 1000 ) { $PublishAt = date("Y-m-d H:i:s", $PublishUnix); }
 
         // Ensure the Expiration Is Valid (If It Exists)
         if ( strtotime($ExpiresAt) !== false && strtotime($ExpiresAt) > time() ) {

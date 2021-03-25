@@ -750,6 +750,7 @@ section.main-content .timeline .post-item .content-header p.persona {
 }
 section.main-content .timeline .post-item .content-header p.pubtime { font-size: 0.9em; }
 
+section.main-content .timeline .post-item .content-editor,
 section.main-content .timeline .post-item .content-area {
     border-left: 2px solid #e7e3ed;
     display: block;
@@ -787,11 +788,43 @@ section.main-content .timeline .post-item .content-area ul li {
     padding: 5px 10px 0 0;
     margin: 0;
 }
+section.main-content .timeline .post-item .content-area ul.tag-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 0 5px !important;
+}
+section.main-content .timeline .post-item .content-area ul.tag-list li {
+    border: 1px dotted #ccc;
+    border-radius: 3px;
+    display: inline-block;
+    list-style: none;
+    padding: 3px 5px 1px !important;
+    margin: 0 3px 3px 0;
+}
+section.main-content .timeline .post-item .content-editor .bottom-spacer,
 section.main-content .timeline .post-item .content-area .bottom-spacer {
     border-bottom: 1px solid #e7e3ed;
     max-width: 250px;
     width: 33%;
     margin: 0 0 5px;
+}
+section.main-content .timeline .post-item .content-editor textarea {
+    border: 2px solid #e7e3ed;
+    border-radius: 3px;
+    display: block;
+    padding: 3px 5px;
+    margin: 0 0 5px;
+    max-height: 600px;
+    min-height: 125px;
+    max-width: calc(100% - 25px);
+    min-width: calc(100% - 25px);
+    height: 125px;
+    width: 100%;
+}
+section.main-content .timeline .post-item .content-editor span.edit-length {
+    padding: 6px 25px 0 0;
+    font-style: italic;
+    float: right;
 }
 section.main-content .timeline .post-item .content-area .metaline { display: block; }
 section.main-content .timeline .post-item .content-area .metaline.images span {
