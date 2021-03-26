@@ -127,16 +127,27 @@ class Murasaki {
         $name = filter_var(NoNull($this->settings['PgRoot']), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
         $name = NoNull(str_replace(array('@'), '', strtolower($name)));
 
-        $ReplStr = array( '[DISPLAY_NAME]' => sqlScrub($name) );
-        $sqlStr = prepSQLQuery("CALL GetPersonaProfile( '[DISPLAY_NAME]' );", $ReplStr);
+        $ReplStr = array( '[DISPLAY_NAME]' => sqlScrub($name),
+                          '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                         );
+        $sqlStr = prepSQLQuery("CALL GetPersonaProfile( '[DISPLAY_NAME]', [ACCOUNT_ID] );", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $SiteUrl = NoNull($this->settings['HomeURL']);
+            $avatar = $SiteUrl . '/avatars/default.png';
 
             foreach ( $rslt as $Row ) {
                 /* Ensure the Active Years are Accurate */
                 $years = json_decode($Row['years_active'], true);
                 if ( is_array($years) === false ) { $Row['years_active'] = ''; }
+
+                /* Construct the Bio */
+                $bio_html = '';
+                if ( NoNull($Row['bio']) != '' ) {
+                    $bio_html = $this->_getMarkdownHTML($Row['bio'], 0, true, true);
+                    $bio_html = str_replace($ScrubTags, 'p>', $bio_html);
+                    $bio_html = str_replace('[HOMEURL]', NoNull($Row['site_url']), $bio_html);
+                }
 
                 /* Ensure the Name is not repeated Needlessly */
                 if ( NoNull($Row['display_name']) != NoNull($Row['name']) ) {
@@ -146,11 +157,12 @@ class Murasaki {
                     $Row['name'] = '';
                 }
 
-                $ReplStr = array( '[AVATAR_URL]'    => $SiteUrl . '/avatars/' . NoNull($Row['avatar_img'], 'default.png'),
+                $ReplStr = array( '[AVATAR_URL]'    => NoNull($Row['avatar_url'], $avatar),
                                   '[DISPLAY_NAME]'  => NoNull($Row['display_name'], $Row['name']),
                                   '[PROFILE_NAME]'  => NoNull($Row['name']),
                                   '[PROFILE_GUID]'  => NoNull($Row['guid']),
-                                  '[PROFILE_BIO]'   => NoNull($Row['bio']),
+                                  '[PROFILE_BIO]'   => $bio_html,
+
                                   '[SITE_URL]'      => NoNull($Row['site_url']),
                                   '[SITE_DOMAIN]'   => NoNull(str_replace(array('https://', 'http://'), '', $Row['site_url'])),
 
@@ -166,9 +178,10 @@ class Murasaki {
                                   '[PHOTOS]'        => nullInt($Row['photos']),
                                   '[PINS]'          => nullInt($Row['pins']),
                                   '[STARS]'         => nullInt($Row['stars']),
-                                  '[POINTS]'        => nullInt($Row['points']),
+                                  '[POINTS_RCVD]'   => nullInt($Row['points']),
+                                  '[POINTS_SENT]'   => nullInt($Row['points']),
 
-                                  '[YEARS_ACTIVE]'  => NoNull($Row['years_active']),
+                                  '[YEARS_ACTIVE]'  => NoNull($Row['years_active'], 'false'),
 
                                   '[CREATED_AT]'    => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                                   '[CREATED_UNIX]'  => strtotime($Row['created_at']),
@@ -197,6 +210,7 @@ class Murasaki {
      *  Function Converts a Text String to HTML Via Markdown
      */
     private function _getMarkdownHTML( $text, $post_id, $isNote = false, $showLinkURL = false ) {
+        $ScrubTags = array( 'h1>', 'h2>', 'h3>', 'h4>', 'h5>', 'h6>' );
         $Excludes = array("\r", "\n", "\t");
 
         // Fix the Lines with Breaks Where Appropriate
@@ -310,7 +324,7 @@ class Murasaki {
                     $hash_list .= strtolower($hash);
                 }
             }
-            $out_str .= ($hash != '') ? str_ireplace($clean_word, '<a class="hash" href="[HOMEURL]/tag/' . strtolower($hash) . '" data-hash="' . strtolower($hash) . '">' . NoNull($clean_word) . '</a> ', $word)
+            $out_str .= ($hash != '') ? str_ireplace($clean_word, '<span class="hash" data-name="' . strtolower($hash) . '">' . NoNull($clean_word) . '</span> ', $word)
                                       : "$word ";
         }
         $rVal = NoNull($out_str);

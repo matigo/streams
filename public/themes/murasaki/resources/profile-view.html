@@ -1,4 +1,4 @@
-            <section class="profile-overview">
+            <section class="profile-overview" data-guid="[PROFILE_GUID]">
                 <p class="avatar">
                     <span class="avatar-image" style="background-image: url('[AVATAR_URL]');">&nbsp;</span>
                 </p>
@@ -9,42 +9,47 @@
                     <i class="fas fa-user-friends"></i> <span class="profile-counts" data-count="[FOLLOWERS]">[FOLLOWERS] followers</span> &middot; <span class="profile-counts" data-count="[FOLLOWING]">[FOLLOWING] following</span>
                 </p>
                 <p class="counts">
+                    <i class="far fa-arrow-alt-circle-up"></i> <span class="profile-counts" data-count="[POINTS_RCVD]">[POINTS_RCVD] received</span> &middot; <span class="profile-counts" data-count="[POINTS_SENT]">[POINTS_SENT] given</span>
+                </p>
+                <p class="counts">
                     <i class="far fa-star"></i> <span class="profile-counts" data-count="[STARS]">[STARS] stars</span> &middot;
-                    <i class="fas fa-map-pin"></i> <span class="profile-counts" data-count="[PINS]">[PINS] pins</span> &middot;
-                    <i class="far fa-money-bill-alt"></i> <span class="profile-counts" data-count="[POINTS]">[POINTS] points</span>
+                    <i class="fas fa-map-pin"></i> <span class="profile-counts" data-count="[PINS]">[PINS] pins</span>
                 </p>
                 <div class="bio">[PROFILE_BIO]</div>
             </section>
-            <section class="profile-stats">
-                <p>This is where post history statistics will go</p>
+            <section class="profile-detail">
+                <section class="history-chart">
+                    <h4 class="history-chart-title" data-label="{num} posts since {date}">&nbsp;</h4>
+                    <table>
+                        <tbody class="history-chart-data hidden"></tbody>
+                    </table>
+                    <p class="history-chart-detail text-right hidden">
+                        <span class="history-chart-min">&nbsp;</span>
+                        <span class="history-chart-legend" style="opacity: 0.2">&nbsp;</span>
+                        <span class="history-chart-legend" style="opacity: 0.4">&nbsp;</span>
+                        <span class="history-chart-legend" style="opacity: 0.6">&nbsp;</span>
+                        <span class="history-chart-legend" style="opacity: 0.8">&nbsp;</span>
+                        <span class="history-chart-legend" style="opacity: 1.0">&nbsp;</span>
+                        <span class="history-chart-max">&nbsp;</span>
+                    </p>
+                </section>
+                <section class="profile-posts">
+                    <section class="post-types">
+                        <button class="post-type btn-primary" data-value="post.all" data-action="show-type">Everything</button>
+                        <button class="post-type" data-value="post.note" data-action="show-type">Notes</button>
+                        <button class="post-type" data-value="post.article" data-action="show-type">Articles</button>
+                        <button class="post-type" data-value="post.bookmark" data-action="show-type">Bookmarks</button>
+                        <button class="post-type" data-value="post.quotation" data-action="show-type">Quotations</button>
+                        <button class="post-type" data-value="post.photo" data-action="show-type">Photos</button>
+                    </section>
+                    <section class="main-content">
+                        <div class="timeline">
+                            <p><i class="fas fa-spin fa-spinner"></i> Collecting Posts ...</p>
+                        </div>
+                    </section>
+                    <section class="post-chronology"></section>
+                </section>
             </section>
-            <section class="profile-posts">
-                <div class="post-types">
-                    <button class="btn-primary" data-value="post.note">Notes</button>
-                    <button data-value="post.article">Articles</button>
-                    <button data-value="post.bookmark">Bookmarks</button>
-                    <button data-value="post.quotation">Quotations</button>
-                    <button data-value="post.photo">Photos</button>
-                </div>
-                <div class="post-list">
-                    <p>This is where recent posts (by type) will go</p>
-                </div>
-                <div class="post-chronology">
-                    <button class="btn-primary" data-value="2021">2021</button>
-                    <button data-value="2020">2020</button>
-                    <button data-value="2019">2019</button>
-                    <button data-value="2018">2018</button>
-                    <button data-value="2017">2017</button>
-                    <button data-value="2016">2016</button>
-                    <button data-value="2015">2015</button>
-                    <button data-value="2014">2014</button>
-                    <button data-value="2013">2013</button>
-                    <button data-value="2012">2012</button>
-                    <button data-value="2011">2011</button>
-                    <button data-value="2010">2010</button>
-                    <button data-value="2009">2009</button>
-                    <button data-value="2008">2008</button>
-                    <button data-value="2007">2007</button>
-                    <button data-value="2006">2006</button>
-                </div>
-            </section>
+            <script>
+                window.years = [YEARS_ACTIVE];
+            </script>

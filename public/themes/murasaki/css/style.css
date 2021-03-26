@@ -1240,8 +1240,8 @@ section.main-content .timeline .post-notify-block span {
  *  Profile Page
  ** ************************************************************************ */
 .profile-overview {
-    border-right: 1px solid #ccc;
     display: inline-block;
+    vertical-align: text-top;
 
     max-height: calc(100vh - 75px);
     min-height: calc(100vh - 75px);
@@ -1301,7 +1301,152 @@ section.main-content .timeline .post-notify-block span {
     margin: 0;
     width: 100%;
 }
+.profile-overview .bio span.hash {
+    border-bottom: 1px dotted #ccc;
+    font-weight: bold;
+    padding: 0 5px;
+}
 
+.profile-detail {
+    border-left: 1px solid #ccc;
+    display: inline-block;
+    padding: 0 5px 0 10px;
+    vertical-align: text-top;
+
+    max-width: calc(100% - 375px);
+    min-width: calc(100% - 375px);
+    width: calc(100% - 375px);
+}
+.profile-detail .history-chart {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    text-align: center;
+    width: 100%;
+}
+.profile-detail .history-chart h4 {
+    text-align: left;
+    margin: 0 0 5px;
+}
+.profile-detail .history-chart table {
+    display: block;
+    margin: 0 auto;
+    padding: 0;
+}
+.profile-detail .history-chart table tbody {
+    border: 2px solid #e7e3ed;
+    display: block;
+    padding: 2px;
+}
+.profile-detail .history-chart table tr {
+    border: 0;
+    display: block;
+    font-size: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+.profile-detail .history-chart table tr td {
+    border: 1px solid #fff;
+    background: #5a3b86;
+    display: inline-block;
+    padding: 0;
+
+    max-height: 20px;
+    min-height: 10px;
+    height: 10px;
+
+    max-width: 20px;
+    min-width: 10px;
+    width: calc(100% / 53);
+}
+.profile-detail .history-chart span.history-chart-max,
+.profile-detail .history-chart span.history-chart-min {
+    font-size: 14px;
+    font-style: italic;
+    padding: 0 5px;
+    vertical-align: middle;
+}
+.profile-detail .history-chart span.history-chart-legend {
+    display: inline-block;
+    background: #5a3b86;
+    vertical-align: middle;
+
+    max-height: 10px;
+    min-height: 10px;
+    max-width: 20px;
+    min-width: 10px;
+}
+.profile-detail .history-chart p.histo-count {
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+.profile-detail .profile-posts button {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 6px 12px;
+}
+.profile-detail .profile-posts button.btn-primary { background-color: #5a3b86; }
+.profile-detail .profile-posts button.btn-white {
+    background-color: transparent;
+    border: 1px solid #ccc;
+}
+
+.profile-detail .profile-posts .post-types {
+    border-bottom: 1px solid #ccc;
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+.profile-detail .profile-posts .post-types button {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+}
+.profile-detail .profile-posts .post-types button.btn-primary {
+    background-color: #5a3b86;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    border-right: 1px solid #5a3b86;
+    border-left: 1px solid #5a3b86;
+    border-top: 1px solid #5a3b86;
+    font-weight: bold;
+    font-style: italic;
+    padding: 12px 25px 6px;
+}
+.profile-detail .profile-posts .post-chronology {
+    display: inline-block;
+    vertical-align: text-top;
+
+    max-width: 90px;
+    min-width: 90px;
+    width: 90px;
+}
+.profile-detail .profile-posts .post-chronology button {
+    margin: 0 0 5px;
+    width: 100%;
+}
+
+.profile-detail .profile-posts .main-content {
+    width: calc(100% - 100px);
+}
+.profile-detail .profile-posts .main-content .timeline p.reset-msg {
+    display: block;
+    text-align: center;
+    padding: 3em 0 0;
+    margin: 0;
+}
+.profile-detail .profile-posts .main-content .timeline .post-item .content-area {
+    border-left: none;
+    padding: 10px 10px 5px 0;
+    margin: 0 0 0 10px;
+}
+.profile-detail .profile-posts .main-content .timeline .post-item .pubtime {
+    font-size: 0.9em;
+}
 
 /** ************************************************************************ *
  *  Popover Overrides

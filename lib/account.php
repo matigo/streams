@@ -97,6 +97,11 @@ class Account {
                 return $this->_getPreference();
                 break;
 
+            case 'persona':
+            case 'person':
+                return $this->_getPersonaProfile();
+                break;
+
             case 'profile':
             case 'bio':
                 return $this->_getPublicProfile();
@@ -996,6 +1001,108 @@ class Account {
         }
 
         // If We're Here, There Is No Persona
+        return false;
+    }
+
+    /**
+     *  Function Returns the Public Profile for a Given Persona
+     */
+    private function _getPersonaProfile() {
+        $ScrubTags = array( 'h1>', 'h2>', 'h3>', 'h4>', 'h5>', 'h6>' );
+        $CleanVal = '';
+        $opts = ['persona_guid', 'guid', 'persona_name', 'persona', 'name', 'for'];
+        foreach ( $opts as $opt ) {
+            if ( array_key_exists($opt, $this->settings) ) {
+                $val = filter_var(NoNull($this->settings[$opt]), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW);
+                if ( strpos($val, '@') !== false ) { $val = NoNull(str_replace(array('@'), '', $val)); }
+                if ( $CleanVal == '' && strlen($val) > 0 ) { $CleanVal = $val; }
+            }
+        }
+
+        $ReplStr = array( '[PERSONA]'    => sqlScrub($CleanVal),
+                          '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                         );
+        $sqlStr = prepSQLQuery("CALL GetPersonaProfile( '[PERSONA]', [ACCOUNT_ID] );", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $SiteUrl = NoNull($this->settings['HomeURL']);
+            $avatar = $SiteUrl . '/avatars/default.png';
+            $data = false;
+
+            foreach ( $rslt as $Row ) {
+                /* Ensure the Active Years are Accurate */
+                $years = json_decode($Row['years_active'], true);
+                if ( is_array($years) === false ) { $Row['years_active'] = ''; }
+
+                /* Do we have a Biography? */
+                $bio_html = NoNull($Row['bio']);
+                if ( $bio_html != '' ) {
+                    require_once(LIB_DIR . '/posts.php');
+                    $post = new Posts($this->settings);
+                    $bio_html = $post->getMarkdownHTML($bio_html, 0, true, true);
+                    $bio_html = str_replace($ScrubTags, 'p>', $bio_html);
+                    unset($post);
+                }
+
+                /* Ensure the Dates are Cromulent */
+                $recent_at = false;
+                $first_at = false;
+
+                if ( strtotime($Row['recent_at']) !== false ) { $recent_at = strtotime($Row['recent_at']); }
+                if ( strtotime($Row['first_at']) !== false ) { $first_at = strtotime($Row['first_at']); }
+
+                /* Construct the Output Array */
+                $data = array( 'guid'           => NoNull($Row['guid']),
+                               'name'           => NoNull($Row['name']),
+                               'last_name'      => NoNull($Row['last_name']),
+                               'first_name'     => NoNull($Row['first_name']),
+                               'display_name'   => NoNull($Row['display_name']),
+
+                               'bio'            => array( 'html' => $bio_html,
+                                                          'text' => NoNull($Row['bio']),
+                                                         ),
+
+                               'site_url'       => NoNull($Row['site_url']),
+                               'avatar_url'     => NoNull($Row['avatar_url'], $avatar),
+
+                               'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
+                               'created_unix'   => strtotime($Row['created_at']),
+                               'first_at'       => (($first_at !== false) ? date("Y-m-d\TH:i:s\Z", $first_at) : false),
+                               'first_unix'     => (($first_at !== false) ? $first_at : false),
+                               'recent_at'      => (($recent_at !== false) ? date("Y-m-d\TH:i:s\Z", $recent_at) : false),
+                               'recent_unix'    => (($recent_at !== false) ? $recent_at : false),
+
+                               'counts'         => array( 'posts'   => nullInt($Row['posts']),
+                                                          'notes'   => nullInt($Row['notes']),
+                                                          'articles'    => nullInt($Row['articles']),
+                                                          'bookmarks'   => nullInt($Row['bookmarks']),
+                                                          'locations'   => nullInt($Row['locations']),
+                                                          'quotations'  => nullInt($Row['quotations']),
+                                                          'photos'      => nullInt($Row['photos']),
+
+                                                          'following'   => nullInt($Row['following']),
+                                                          'followers'   => nullInt($Row['followers']),
+                                                         ),
+
+                               'relationship'   => array( 'you_follow'  => YNBool($Row['you_follow']),
+                                                          'you_muted'   => YNBool($Row['you_muted']),
+                                                          'you_blocked' => YNBool($Row['you_blocked']),
+                                                          'you_starred' => YNBool($Row['you_starred']),
+                                                          'you_pinned'  => YNBool($Row['you_pinned']),
+                                                          'follows_you' => YNBool($Row['follows_you']),
+
+                                                          'is_you'      => ((nullInt($Row['account_id']) == nullInt($this->settings['_account_id']) ) ? true : false),
+                                                         ),
+
+                               'years_active'   => $years,
+                              );
+            }
+
+            /* If we have data, let's return it */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, then there is no persona record that matches the search criteria */
         return false;
     }
 

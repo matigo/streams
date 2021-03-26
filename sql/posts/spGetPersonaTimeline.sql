@@ -2,7 +2,8 @@ DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetPersonaTimeline;;
 CREATE PROCEDURE GetPersonaTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
 BEGIN
-    DECLARE `min_id` int(11);
+    DECLARE `x_start_at` datetime;
+    DECLARE `x_until_at` datetime;
 
     /** ********************************************************************** **
      *  Function returns the Visible Timeline for a Given Persona GUID
@@ -20,8 +21,19 @@ BEGIN
         SET `in_count` = 75;
     END IF;
 
-    /* Get the Initial Post.id Minimum */
-    SELECT MAX(`id`) - 5000 INTO `min_id` FROM `Post`;
+    /* Set the Date Limits */
+    SET `x_start_at` = DATE_FORMAT(DATE_SUB(Now(), INTERVAL 14 DAY), '%Y-%m-%d 00:00:00');
+    IF IFNULL(`in_since_unix`, 0) > 1000 THEN
+        SET `x_start_at` = FROM_UNIXTIME(`in_since_unix`);
+    END IF;
+
+    SET `x_until_at` = Now();
+    IF IFNULL(`in_until_unix`, 0) > 1000 THEN
+        SET `x_until_at` = FROM_UNIXTIME(`in_until_unix`);
+    END IF;
+    IF `x_until_at` > Now() THEN
+        SET `x_until_at` = Now();
+    END IF;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
@@ -36,7 +48,7 @@ BEGIN
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
-    SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
+    SELECT DISTINCT po.`id` as `post_id`, po.`publish_at` as `posted_at`,
            LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
@@ -52,12 +64,17 @@ BEGIN
      WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
        and pa.`is_deleted` = 'N' and pa.`guid` = `in_persona_guid`
-       and po.`publish_at` <= Now() and po.`id` >= IFNULL(`min_id`, 0);
+       and po.`publish_at` BETWEEN `x_start_at` AND `x_until_at`
+       and po.`publish_at` <= Now();
 
     /* If there aren't enough posts, reach back farther to look for some */
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
+        IF IFNULL(`in_since_unix`, 0) < 1000 THEN
+            SET `x_start_at` = '1970-01-01 00:00:00';
+        END IF;
+
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
-        SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, po.`updated_at`) as `posted_at`,
+        SELECT DISTINCT po.`id` as `post_id`, po.`publish_at` as `posted_at`,
                LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
@@ -73,7 +90,8 @@ BEGIN
          WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
            and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
            and pa.`is_deleted` = 'N' and pa.`guid` = `in_persona_guid`
-           and po.`publish_at` <= Now() and po.`id` < IFNULL(`min_id`, 4294967295);
+           and po.`publish_at` <= `x_start_at` and po.`publish_at` <= Now()
+         LIMIT 5000;
     END IF;
 
     /* Output the Completed Timeline */

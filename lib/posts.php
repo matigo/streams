@@ -2241,7 +2241,7 @@ class Posts {
         if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
 
         // Get the Types Requested (Default is Social Posts Only)
-        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location' );
+        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location', 'post.photo' );
         $CleanTypes = '';
         $rTypes = explode(',', NoNull($this->settings['types'], $this->settings['post_types']));
         if ( is_array($rTypes) ) {

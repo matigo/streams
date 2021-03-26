@@ -69,6 +69,9 @@ document.onreadystatechange = function () {
             /* Align modal when user resize the window */
             $(window).on("resize", function(){ $(".modal:visible").each(alignModal); });
 
+            /* Parse and Process the Years */
+            setYearsActive();
+
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
         }
@@ -138,6 +141,172 @@ function handleSpanClick(el) {
             content:function(){ return _html; }
         });
         $(el).popover('show');
+    }
+}
+function getProfileGuid() {
+    var els = document.getElementsByClassName('profile-overview');
+    for ( var i = 0; i < els.length; i++ ) {
+        var guid = NoNull(els[i].getAttribute('data-guid'));
+        if ( guid.length == 36 ) { return guid; }
+    }
+    return false;
+}
+function getHistoChart() {
+    var _guid = getProfileGuid();
+    if ( _guid !== false && _guid.length == 36 ) {
+        setTimeout(function () { doJSONQuery('account/' + _guid + '/histochart', 'GET', {}, parseHistoChart); }, 250);
+    }
+}
+function parseHistoChart( data ) {
+    var els = document.getElementsByClassName('history-chart-data');
+    var _html = '';
+
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.html !== undefined ) { _html = ds.html; }
+        if ( ds.detail !== undefined && ds.detail !== false && ds.detail.length > 0 ) {
+            var _since = 0,
+                _count = 0;
+            var _min = 0,
+                _max = 0;
+            for ( var i = 0; i < ds.detail.length; i++ ) {
+                if ( ds.detail[i].publish_unix < _since || _since <= 0 ) { _since = ds.detail[i].publish_unix; }
+                if ( ds.detail[i].posts > 0 && (ds.detail[i].posts < _min || _min <= 0) ) { _min = ds.detail[i].posts; }
+                if ( ds.detail[i].posts > _max ) { _max = ds.detail[i].posts; }
+                _count += ds.detail[i].posts;
+            }
+
+            /* Update the Counts */
+            var lbl = getElementLabel('history-chart-title');
+            lbl = lbl.replaceAll('{num}', numberWithCommas(_count)).replaceAll('{date}', moment(_since * 1000).format('MMMM Do YYYY'));
+            setElementValue('history-chart-title', lbl);
+            setElementValue('history-chart-max', numberWithCommas(_max));
+            setElementValue('history-chart-min', numberWithCommas(_min));
+            showByClass('history-chart-detail');
+            showByClass('history-chart-data');
+        }
+    }
+
+    /* If nothing was returned, or if there is some other issue, say so */
+    if ( _html === undefined || _html === false || _html === null || _html.length <= 10 ) {
+        _html = '<tr><td>Could not collect history chart.</td></tr>';
+    }
+
+    /* Write the HTML to the DOM */
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = _html;
+    }
+
+    /* Collect the Posts */
+    getTimeline();
+}
+function setYearsActive() {
+    if ( window.years === undefined || window.years === false || window.years === null ) { return; }
+    var _now = new Date();
+    var _max = 0,
+        _min = 0;
+
+    for ( yr in window.years ) {
+        var idx = nullInt(yr);
+        if ( idx < _min || _min <= 0 ) { _min = idx; }
+        if ( idx > _max ) { _max = idx; }
+    }
+
+    /* Error Checking */
+    if ( _max > _now.getFullYear() ) { _max = _now.getFullYear(); }
+    if ( _min < 1900 ) { _min = 1900; }
+
+    /* Create the Buttons */
+    var _html = '';
+
+    var els = document.getElementsByClassName('post-chronology');
+    for ( var e = 0; e < els.length; e++ ) {
+        for ( var i = _max; i >= _min; i-- ) {
+            var idx = NoNull(i);
+            var cnt = parseInt(window.years[idx]);
+            if ( cnt === undefined || isNaN(cnt) ) { cnt = 0; }
+
+            var _btn = document.createElement("button");
+                _btn.setAttribute('data-action', 'show-year');
+                _btn.setAttribute('data-count', cnt);
+                _btn.setAttribute('data-value', idx);
+                _btn.classList.add('tab-year');
+                _btn.innerHTML = idx;
+            if ( i == _max ) { _btn.classList.add('btn-primary'); }
+            if ( cnt <= 0 ) {
+                _btn.classList.add('btn-white');
+                _btn.disabled = true;
+            }
+            els[e].appendChild(_btn);
+        }
+    }
+}
+function getElementLabel(cls) {
+    if ( cls === undefined || cls === false || cls === null || NoNull(cls) == '' ) { return ''; }
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        var lbl = NoNull(els[i].getAttribute('data-label'));
+        if ( lbl != '' ) { return lbl; }
+    }
+    return '';
+}
+function setElementValue( cls, html ) {
+    if ( cls === undefined || cls === false || cls === null || NoNull(cls) == '' ) { return; }
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        els[i].innerHTML = html;
+    }
+}
+function toggleYearView(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( el.classList === undefined || el.classList === null || el.classList.contains('btn-primary') ) { return; }
+
+    var _year = parseInt(el.getAttribute('data-value'));
+    if ( _year === undefined || isNaN(_year) ) { _year = 0; }
+    if ( _year > 0 ) {
+        var els = document.getElementsByClassName('tab-year');
+        for ( var e = 0; e < els.length; e++ ) {
+            if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+        }
+        el.classList.add('btn-primary');
+        resetPostTypes();
+
+        getUntilUnixTS();
+
+        /* Load the Posts for the Selected Year */
+        getTimeline();
+    }
+}
+function toggleTypeView(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( el.classList === undefined || el.classList === null || el.classList.contains('btn-primary') ) { return; }
+
+    var _type = NoNull(el.getAttribute('data-value'));
+    if ( _type != '' ) {
+        var els = document.getElementsByClassName('post-types');
+        for ( var e = 0; e < els.length; e++ ) {
+            var btns = els[e].getElementsByTagName('BUTTON');
+            for ( var i = 0; i < btns.length; i++ ) {
+                if ( btns[i].classList.contains('btn-primary') ) { btns[i].classList.remove('btn-primary'); }
+            }
+        }
+        el.classList.add('btn-primary');
+
+        /* Load the Posts for the Selected Year */
+        getTimeline();
+    }
+}
+function resetPostTypes() {
+    var els = document.getElementsByClassName('post-types');
+    for ( var e = 0; e < els.length; e++ ) {
+        var btns = els[e].getElementsByTagName('BUTTON');
+        for ( var i = 0; i < btns.length; i++ ) {
+            if ( i <= 0 ) {
+                if ( btns[i].classList.contains('btn-primary') === false ) { btns[i].classList.add('btn-primary'); }
+            } else {
+                if ( btns[i].classList.contains('btn-primary') ) { btns[i].classList.remove('btn-primary'); }
+            }
+        }
     }
 }
 function getWordStatistics( _word ) {
@@ -301,6 +470,14 @@ function handleButtonClick(el) {
         case 'backward':
         case 'forward':
             toggleAudioButton(tObj);
+            break;
+
+        case 'show-type':
+            toggleTypeView(tObj);
+            break;
+
+        case 'show-year':
+            toggleYearView(tObj);
             break;
 
         default:
@@ -679,11 +856,15 @@ function redirectTo( url ) {
 function checkAuthToken() {
     var access_token = getAuthToken();
     if ( access_token.length >= 30 ) {
-        setTimeout(function () { doJSONQuery('auth/status', 'GET', {}, parseAuthToken); }, 150)
+        setTimeout(function () { doJSONQuery('auth/status', 'GET', {}, parseAuthToken); }, 150);
+
     } else {
         hideByClass('reqauth');
         showByClass('isguest');
     }
+
+    resetTimeline('<p class="reset-msg"><i class="fas fa-spin fa-spinner"></i> Collecting Posts ...</p>');
+    getHistoChart();
 }
 function parseAuthToken( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
@@ -937,7 +1118,7 @@ function publishPost(el) {
         var params = { 'channel_guid': getChannelGUID(),
                        'persona_guid': getPersonaGUID(),
                        'privacy': 'visibility.' + privacy,
-                       'type': getPostType()
+                       'type': 'post.note'
                       };
 
         var els = document.getElementsByName(fname);
@@ -962,9 +1143,6 @@ function parsePublish( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         for ( var i = 0; i < ds.length; i++ ) {
-            if ( checkCanDisplayPost('global', ds[i], ((ds.length == 1) ? true : false)) ) {
-                writePostToTL('global', ds[i]);
-            }
             if ( ds.length == 1 ) {
                 if ( NoNull(ds[i].reply_to).length > 10 ) { setReplySuccessful(); }
             }
@@ -1031,82 +1209,67 @@ function clearWrite() {
 /** ************************************************************************* *
  *  Timeline Functions
  ** ************************************************************************* */
-function getSelectedTimeline() {
-    var els = document.getElementsByClassName('list-view');
-    if ( els.length > 0 ) {
-        for ( var i = 0; i < els.length; i++ ) {
-            if ( els[i].classList.contains('selected') ) {
-                var _tl = NoNull(els[i].getAttribute('data-tl'));
-                if ( _tl != '' ) { return _tl; }
-            }
-        }
-    }
-    return 'global';
-}
 function getVisibleTypes() {
     var valids = ['post.article', 'post.bookmark', 'post.note', 'post.quotation', 'post.photo'];
 
     var els = document.getElementsByClassName('post-type');
     for ( var i = 0; i < els.length; i++ ) {
-        if ( els[i].classList.contains('selected') ) {
-            var _val = NoNull(els[i].getAttribute('data-type')).toLowerCase();
-            if ( valids.indexOf('post.' + _val) >= 0 ) { return 'post.' + _val; }
+        if ( els[i].classList.contains('btn-primary') ) {
+            var _val = NoNull(els[i].getAttribute('data-value')).toLowerCase();
+            if ( valids.indexOf(_val) >= 0 ) { return _val; }
         }
     }
     return valids.join(',');
 }
 function getSinceUnixTS() {
-    var els = document.getElementsByClassName('post-item');
+    var els = document.getElementsByClassName('tab-year');
     for ( var i = 0; i < els.length; i++ ) {
-        var _owner = NoNull(els[i].getAttribute('data-owner'), 'N');
-        if ( _owner == 'N' ) {
-            var _unix = nullInt(els[i].getAttribute('data-updx'), els[i].getAttribute('data-unix'));
-            if ( _unix > 0 ) { return _unix; }
+        if ( els[i].classList.contains('btn-primary') ) {
+            var _year = parseInt(els[i].getAttribute('data-value'));
+            if ( _year === undefined || isNaN(_year) ) { _year = 0; }
+            if ( _year > 1900 ) {
+                var _dt = new Date(_year + "-01-01T00:00:00");
+                return Math.floor(_dt / 1000);
+            }
         }
     }
-    /* If we're here, there's nothing */
+    return 0;
+}
+function getUntilUnixTS() {
+    var els = document.getElementsByClassName('tab-year');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('btn-primary') ) {
+            var _year = parseInt(els[i].getAttribute('data-value'));
+            if ( _year === undefined || isNaN(_year) ) { _year = 0; }
+            if ( _year > 1900 ) {
+                var _dt = new Date(_year + "-12-31T23:59:59");
+                return Math.floor(_dt / 1000);
+            }
+        }
+    }
     return 0;
 }
 function resetTimeline( _msg ) {
+    if ( _msg === undefined || _msg === false || _msg === null ) { _msg = ''; }
     var els = document.getElementsByClassName('timeline');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _msg;
     }
-    setNewCount(0);
 }
-function updateTimeline(el) {
-    if ( el === undefined || el === false || el === null ) { return; }
-    if ( splitSecondCheck(el) === false ) { return; }
-    getTimeline();
-}
-function getTimeline( _tl, _append ) {
-    if ( _append === undefined || _append === null || _append !== true ) { _append = false; }
+function getTimeline() {
     if ( window.navigator.onLine ) {
-        var _selected = getSelectedTimeline();
-        if ( NoNull(_tl) == '' ) { _tl = _selected; }
-        if ( _tl != _selected || _append === false ) {
-            resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Posts ...</p></div>');
-            updateNavButtons();
-        }
-        setTouchTimelineTS();
-
-        /* Get the Post Count */
         var _posts = nullInt(readStorage('postcount'), 75);
         if ( _posts === undefined || _posts === false || _posts === null || _posts <= 0 ) { _posts = 75; }
 
         /* Now let's query the API */
-        var params = { 'types': getVisibleTypes(),
+        var params = { 'guid': getProfileGuid(),
+                       'types': getVisibleTypes(),
                        'since': getSinceUnixTS(),
+                       'until': getUntilUnixTS(),
                        'count': _posts
                       };
-        if ( _append ) {
-            setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, appendTimeline); }, 150);
-        } else {
-            setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, parseTimeline); }, 150);
-        }
-
-        /* Ensure the Timer is Running */
-        checkUpdateSchedule();
+        setTimeout(function () { doJSONQuery('account/posts', 'GET', params, parseTimeline); }, 150);
+        resetTimeline('<p class="reset-msg"><i class="fas fa-spin fa-spinner"></i> Collecting Posts ...</p>');
 
     } else {
         console.log("Offline ...");
@@ -1114,120 +1277,19 @@ function getTimeline( _tl, _append ) {
 }
 function parseTimeline(data) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
-        resetTimeline('');
-
+        var _since = getSinceUnixTS();
+        var _until = getUntilUnixTS();
         var ds = data.data;
+        resetTimeline();
+
         for ( var i = 0; i < ds.length; i++ ) {
-            if ( checkCanDisplayPost('global', ds[i]) ) {
-                writePostToTL('global', ds[i]);
+            if ( ds[i].publish_unix >= _since && ds[i].publish_unix <= _until ) {
+                writePostToTL(ds[i]);
             }
         }
 
     } else {
-        resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center">Error! Could not read posts ...</p></div>');
-    }
-}
-function appendTimeline(data) {
-    if ( data.meta !== undefined && data.meta.code == 200 ) {
-        var ds = data.data;
-
-        var _html = '';
-        var _news = 0;
-        var _rows = 0;
-        for ( var i = 0; i < ds.length; i++ ) {
-            if ( ds[i].persona.is_you === false ) {
-                if ( checkCanDisplayPost('global', ds[i]) ) { _news++; }
-            }
-        }
-        setNewCount(_news);
-
-        /* Do we need the notification block? */
-        if ( _news > 0 && document.getElementsByClassName('post-notify-block').length <= 0 ) {
-            _rows = ((_news <= 9) ? _news : 9);
-
-            var _label = NoNull('{num} New Post(s)').replace('{num}', numberWithCommas(_news));
-            if ( _news == 1 ) { _label = _label.replace('(s)', ''); }
-            if ( _news > 1 ) { _label = _label.replace('(s)', 's'); }
-
-            var _html = '';
-            for ( var i = 0; i < 9; i++ ) {
-                _html += '<li>&nbsp;</li>';
-            }
-
-            var _div = document.createElement("div");
-                _div.className = 'post-item post-notify-block';
-                _div.setAttribute('data-unix', '9999999999');
-                _div.setAttribute('data-updx', '9999999999');
-                _div.setAttribute('data-owner', 'Y');
-                _div.innerHTML = '<ul class="post-notify-count rows-' + _rows + '" onclick="updateTimeline(this);">' + _html + '</ul>' +
-                                 '<span class="post-notify-count" data-label="{num} New Post(s)">' + _label + '</span>';
-
-            // Apply the Event Listeners
-            /*
-            var ee = _div.getElementsByClassName('toggle-action-bar');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
-            }
-            var ee = _div.getElementsByClassName('account');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleProfile(e); });
-            }
-            */
-
-            var els = document.getElementsByClassName('timeline');
-            for ( var e = 0; e < els.length; e++ ) {
-                // Ensure the Minimum Nodes Exist
-                if ( els[e].childNodes.length <= 0 ) {
-                    els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
-                }
-
-                // Add the Element
-                var pe = els[e].getElementsByClassName('post-item');
-                for ( var p = 0; p < pe.length; p++ ) {
-                    var _at = nullInt(pe[p].getAttribute('data-unix'));
-                    if ( _at <= 0 || 9999999999 >= _at ) {
-                        els[e].insertBefore(_div, pe[p]);
-                        p = pe.length;
-                        break;
-                    }
-                }
-            }
-
-        } else {
-            var els = document.getElementsByClassName('post-notify-count');
-            for ( var i = 0; i < els.length; i++ ) {
-                if ( _news > 0 ) {
-                    switch ( els[i].tagName.toLowerCase() ) {
-                        case 'span':
-                        case 'p':
-                            var _label = NoNull(els[i].getAttribute('data-label')).replace('{num}', numberWithCommas(_news));
-                            if ( _news == 1 ) { _label = _label.replace('(s)', ''); }
-                            if ( _news > 1 ) { _label = _label.replace('(s)', 's'); }
-                            els[i].innerHTML = _label;
-                            break;
-
-                        case 'ul':
-                        case 'ol':
-                            _rows = ((_news <= 9) ? _news : 9);
-                            for ( var e = 0; e <= 9; e++ ) {
-                                if ( e != _rows ) { els[i].classList.remove('rows-' + e); }
-                            }
-                            els[i].classList.add('rows-' + _rows);
-                            break;
-
-                        default:
-                            /* Do Nothing! */
-                    }
-
-                } else {
-                    clearNotifyBlocks();
-                    i = els.length;
-                }
-            }
-        }
-
-    } else {
-        console.log('Could not appendTimeline');
+        resetTimeline('<p class="reset-msg">Error! Could not read posts ...</p>');
     }
 }
 function clearNotifyBlocks() {
@@ -1238,78 +1300,54 @@ function clearNotifyBlocks() {
         }
     }
 }
-function setNewCount( _count ) {
-    var _selected = getSelectedTimeline();
-    var _clss = [ 'navmenu-popover', 'list-view' ];
-
-    var _val = nullInt(_count);
-    if ( _val < 0 ) { _val = 0; }
-
-    for ( var e = 0; e < _clss.length; e++ ) {
-        var els = document.getElementsByClassName(_clss[e]);
-        for ( var i = 0; i < els.length; i++ ) {
-            var _name = NoNull(els[i].getAttribute('data-group'), els[i].getAttribute('data-tl')).toLowerCase();
-            if ( _name == 'timeline' || _name == _selected ) {
-                els[i].setAttribute('data-new', _val);
-            } else {
-                els[i].setAttribute('data-new', 0);
-            }
-        }
-    }
-    updateNavButtons();
-}
-function writePostToTL( _view, post ) {
-    if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
+function writePostToTL( post ) {
     if ( post === undefined || post === false || post === null ) { return false; }
 
     var els = document.getElementsByClassName('timeline');
     for ( var e = 0; e < els.length; e++ ) {
-        var _tlName = NoNull(els[e].getAttribute('data-view')).toLowerCase();
-        if ( _tlName == _view ) {
-            var _div = document.createElement("div");
-                _div.className = 'post-item ' + post.type.replace('.', '-');
-                _div.setAttribute('data-unix', post.publish_unix);
-                _div.setAttribute('data-updx', post.updated_unix);
-                _div.setAttribute('data-guid', post.guid);
-                _div.setAttribute('data-type', post.type);
-                _div.setAttribute('data-url', post.canonical_url);
-                _div.setAttribute('data-pin', post.attributes.pin);
-                _div.setAttribute('data-starred', ((post.attributes.starred) ? 'Y' : 'N'));
-                _div.setAttribute('data-threaded', ((post.reply_to !== false) ? 'Y' : 'N'));
-                _div.setAttribute('data-owner', ((post.persona.is_you === true) ? 'Y' : 'N'));
-                _div.innerHTML = buildHTML(post);
+        var _div = document.createElement("div");
+            _div.className = 'post-item ' + post.type.replace('.', '-');
+            _div.setAttribute('data-unix', post.publish_unix);
+            _div.setAttribute('data-updx', post.updated_unix);
+            _div.setAttribute('data-guid', post.guid);
+            _div.setAttribute('data-type', post.type);
+            _div.setAttribute('data-url', post.canonical_url);
+            _div.setAttribute('data-pin', post.attributes.pin);
+            _div.setAttribute('data-starred', ((post.attributes.starred) ? 'Y' : 'N'));
+            _div.setAttribute('data-threaded', ((post.reply_to !== false) ? 'Y' : 'N'));
+            _div.setAttribute('data-owner', ((post.persona.is_you === true) ? 'Y' : 'N'));
+            _div.innerHTML = buildHTML(post);
 
-            // Apply the Event Listeners
-            /*
-            var ee = _div.getElementsByClassName('toggle-action-bar');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
-            }
-            var ee = _div.getElementsByClassName('account');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleProfile(e); });
-            }
-            */
+        // Apply the Event Listeners
+        /*
+        var ee = _div.getElementsByClassName('toggle-action-bar');
+        for ( var o = 0; o < ee.length; o++ ) {
+            ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
+        }
+        var ee = _div.getElementsByClassName('account');
+        for ( var o = 0; o < ee.length; o++ ) {
+            ee[o].addEventListener('click', function(e) { toggleProfile(e); });
+        }
+        */
 
-            // Handle any Audio Elements
-            if ( post.meta !== undefined && post.meta.episode !== undefined && post.meta.episode !== false ) {
-                processAudio(_div);
-            }
+        // Handle any Audio Elements
+        if ( post.meta !== undefined && post.meta.episode !== undefined && post.meta.episode !== false ) {
+            processAudio(_div);
+        }
 
-            // Ensure the Minimum Nodes Exist
-            if ( els[e].childNodes.length <= 0 ) {
-                els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
-            }
+        // Ensure the Minimum Nodes Exist
+        if ( els[e].childNodes.length <= 0 ) {
+            els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+        }
 
-            // Add the Element
-            var pe = els[e].getElementsByClassName('post-item');
-            for ( var p = 0; p < pe.length; p++ ) {
-                var _at = parseInt(pe[p].getAttribute('data-unix'));
-                if ( _at <= 0 || post.publish_unix >= _at ) {
-                    els[e].insertBefore(_div, pe[p]);
-                    p = pe.length;
-                    break;
-                }
+        // Add the Element
+        var pe = els[e].getElementsByClassName('post-item');
+        for ( var p = 0; p < pe.length; p++ ) {
+            var _at = parseInt(pe[p].getAttribute('data-unix'));
+            if ( _at <= 0 || post.publish_unix >= _at ) {
+                els[e].insertBefore(_div, pe[p]);
+                p = pe.length;
+                break;
             }
         }
     }
@@ -1399,10 +1437,8 @@ function buildHTML( post ) {
     }
 
     /* Construct the full output */
-    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-nick="' + NoNull(post.persona.as.replaceAll('@', '')) + '" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
-                '<div class="content-header">' +
-                    '<p class="persona">' + _dispName + '</p>' +
-                    '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
+    var _html = '<div class="content-header">' +
+
                 '</div>' +
                 '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
                     _ttxt +
@@ -1411,6 +1447,7 @@ function buildHTML( post ) {
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
                     ((_tags != '') ? '<ul class="tag-list">' + _tags + '</ul>' : '') +
+                    '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
                     ((window.personas !== false) ?
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
                         ((post.persona.is_you && post.type != 'post.article' ) ? '<button class="btn btn-action" data-action="edit"><i class="fas fa-edit"></i></button>' : '') +
@@ -1437,36 +1474,6 @@ function getVisibilityIcon( privacy ) {
 
         default:
             return '';
-    }
-}
-function checkCanDisplayPost( _view, post, pop = false ) {
-    if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
-    if ( post === undefined || post === false || post === null ) { return false; }
-    if ( pop === undefined || pop === null || pop !== true ) { pop = false; }
-
-    var tl = document.getElementsByClassName('timeline');
-    for ( var t = 0; t < tl.length; t++ ) {
-        var _tlName = NoNull(tl[t].getAttribute('data-view'));
-        if ( _tlName == _view ) {
-            var els = tl[t].getElementsByClassName('post-item');
-            if ( els.length > 0 ) {
-                for ( var i = 0; i < els.length; i++ ) {
-                    var _unix = nullInt(els[i].getAttribute('data-updx'));
-                    var _guid = NoNull(els[i].getAttribute('data-guid'));
-
-                    if ( _guid == NoNull(post.guid) ) {
-                        if ( pop ) {
-                            els[i].parentElement.removeChild(els[i]);
-                            return true;
-                        }
-                        return false;
-                    }
-                }
-            }
-
-            /* If we're here, a match was not found */
-            return true;
-        }
     }
 }
 function setPostActive(el) {

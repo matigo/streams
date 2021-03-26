@@ -134,7 +134,7 @@ function handleSpanClick(el) {
                         '</div>' +
                         '<div class="word-footer">' +
                             '<p class="text-center">' +
-                                '<a href="' + location.protocol + '//' + location.hostname + '/@' + _nick + '" title="" target="_blank">View Full Profile <i class="fas fa-external-link-alt"></i></a>' +
+                                '<a href="' + location.protocol + '//' + location.hostname + '/@' + _nick + '" title="" target="_blank">View Full Profile</a> <i class="fas fa-external-link-alt"></i>' +
                             '</p>' +
                         '</div>';
             }
