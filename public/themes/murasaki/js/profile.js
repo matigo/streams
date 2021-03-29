@@ -81,9 +81,11 @@ function handleDocumentClick(e) {
     if ( e === undefined || e === false || e === null ) { return; }
     var valids = ['span', 'button'];
     var tObj = e.target;
+    if ( tObj === undefined || tObj === null ) { return; }
     var tagName = NoNull(tObj.tagName).toLowerCase();
     if ( valids.indexOf(tagName) < 0 ) {
         tObj = tObj.parentElement;
+        if ( tObj === undefined || tObj === null ) { return; }
         tagName = NoNull(tObj.tagName).toLowerCase();
     }
     if ( valids.indexOf(tagName) < 0 ) { return; }

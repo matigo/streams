@@ -94,9 +94,11 @@ function handleDocumentClick(e) {
     if ( e === undefined || e === false || e === null ) { return; }
     var valids = ['span', 'button'];
     var tObj = e.target;
+    if ( tObj === undefined || tObj === null ) { return; }
     var tagName = NoNull(tObj.tagName).toLowerCase();
     if ( valids.indexOf(tagName) < 0 ) {
         tObj = tObj.parentElement;
+        if ( tObj === undefined || tObj === null ) { return; }
         tagName = NoNull(tObj.tagName).toLowerCase();
     }
     if ( valids.indexOf(tagName) < 0 ) { return; }
@@ -306,6 +308,10 @@ function handleButtonClick(el) {
 
         case 'delete-post':
             deletePost(tObj);
+            break;
+
+        case 'edit-cancel':
+            clearEditPost();
             break;
 
         case 'edit-post':
@@ -615,7 +621,7 @@ function parseEditPost( data ) {
                                     '<input type="hidden" name="' + _name + '" data-name="post_guid" value="' + post.guid + '">' +
                                     '<input type="hidden" name="' + _name + '" data-name="publish_unix" value="' + post.publish_unix + '">' +
                                     '<button class="btn edit-post" data-form="' + _name + '" data-action="publish" data-label="Update" disabled>Update</button> ' +
-                                    '<button class="btn btn-danger" data-label="Cancel">Cancel</button>' +
+                                    '<button class="btn btn-danger" data-action="edit-cancel" data-label="Cancel">Cancel</button>' +
                                     '<span class="edit-length">&nbsp;</span>' +
                                     '<div class="bottom-spacer">&nbsp;</div>';
                         el.innerHTML = _html;
@@ -2221,18 +2227,6 @@ function toggleVisibilityPopover(el) {
 
     var _autohide = readStorage('persistpopover').toLowerCase();
     if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
-
-    setTimeout( function () {
-        var els = document.getElementsByClassName('btn-visible-opt');
-        for ( var i = 0; i < els.length; i++ ) {
-            var _val = NoNull(els[i].getAttribute('data-value')).toLowerCase();
-            if ( _val == 'visibility.' + _mode ) {
-                if ( els[i].classList.contains('btn-primary') === false ) { els[i].classList.add('btn-primary'); }
-            } else {
-                if ( els[i].classList.contains('btn-primary') ) { els[i].classList.remove('btn-primary'); }
-            }
-        }
-    }, 100);
 }
 function handlePopover(el) {
     if ( el === undefined || el === false || el === null ) { return; }
@@ -2260,14 +2254,14 @@ function hidePopovers( _group ) {
     var _grp = NoNull(_group);
 
     var els = document.getElementsByClassName('navmenu-popover');
-    for ( var i = 0; i < els.length; i++ ) {
-        var _gg = NoNull(els[i].getAttribute('data-group'));
-        if ( _gg != _grp ) { $(els[i]).popover('hide'); }
+    for ( var e = 0; e < els.length; e++ ) {
+        var _gg = NoNull(els[e].getAttribute('data-group'));
+        if ( _gg != _grp ) { $(els[e]).popover('destroy'); }
     }
-    var els = document.getElementsByClassName('btn');
-    for ( var i = 0; i < els.length; i++ ) {
-        var _gg = NoNull(els[i].getAttribute('aria-describedby'));
-        if ( _gg != _grp ) { $(els[i]).popover('hide'); }
+    var els = document.getElementsByClassName('btn-popover');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _ddby = NoNull(els[e].getAttribute('aria-describedby'));
+        if ( _ddby != '' ) { $(els[e]).popover('destroy'); }
     }
 }
 function getPopoverContent(el) {

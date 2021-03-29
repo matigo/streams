@@ -107,6 +107,8 @@ button.btn {
     font-size: 1em;
     min-width: 48px;
 }
+button .btn-primary,
+button.btn-primary { border: 1px solid #5a3b86 !important; }
 audio {
     border: none;
     border-radius: 2em;
@@ -351,7 +353,10 @@ section.nav-bottom { display: none; }
     }
     section.nav-bottom button {
         background: transparent;
+        border-bottom: none !important;
         border-right: 1px solid #000;
+        border-left: none !important;
+        border-top: none !important;
         border-radius: 0 !important;
         display: inline-block;
         font-size: 1.33em;
@@ -541,9 +546,6 @@ section.main-content .composer .btn-publish {
     display: inline-block;
     width: 125px;
 }
-section.main-content .composer .btn-publish.btn-primary {
-    border: 1px solid #5a3b86;
-}
 section.main-content .composer ul {
     display: inline-block;
     list-style: none;
@@ -707,6 +709,10 @@ body.fontsize-xl section.main-content .composer label {
         max-width: calc(100% - 5px);
         width: 100%;
     }
+    section.main-content .composer .btn-publish {
+        margin-right: 5px;
+        width: 100px;
+    }
 }
 
 
@@ -794,7 +800,7 @@ section.main-content .timeline .post-item .content-area p img {
 }
 section.main-content .timeline .post-item .content-area ul {
     display: block;
-    list-style: decimal;
+    list-style: disc;
     padding: 0 0 0 25px;
     margin: 0 0 10px;
 }
@@ -802,7 +808,7 @@ section.main-content .timeline .post-item .content-area ul li {
     border: 0;
     border-radius: 0;
     cursor: auto;
-    padding: 5px 10px 0 0;
+    padding: 0 10px 0 0;
     margin: 0;
 }
 section.main-content .timeline .post-item .content-area ul.tag-list {
@@ -1148,6 +1154,11 @@ section.main-content .timeline .post-notify-block span {
         max-width: none;
         width: 100%;
     }
+    #viewSettings .modal-content span.explain {
+        line-height: 1.2em;
+        margin: 5px 0 0 15px;
+        text-align: justify;
+    }
 }
 
 /** ******************************************************************************************** *
@@ -1317,6 +1328,11 @@ section.main-content .timeline .post-notify-block span {
     min-width: 250px;
     height: 250px;
     width: 250px;
+}
+.profile-overview p.counts i {
+    display: inline-block;
+    text-align: right;
+    min-width: 25px;
 }
 .profile-overview .bio {
     display: block;
@@ -1499,11 +1515,6 @@ section.main-content .timeline .post-notify-block span {
         border-bottom: 1px dotted #ccc;
         padding: 0 0 8px;
     }
-    .profile-overview p.counts i {
-        display: inline-block;
-        text-align: right;
-        min-width: 25px;
-    }
     .profile-detail {
         padding: 0 5px;
         max-width: calc(100% - 255px);
@@ -1536,6 +1547,7 @@ section.main-content .timeline .post-notify-block span {
 .popover-content ul li button {
     background: transparent;
     border-radius: 0;
+    border: none;
     display: block;
     font-size: 1.1em;
     text-align: left;
