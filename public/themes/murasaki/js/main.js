@@ -318,12 +318,24 @@ function handleButtonClick(el) {
             toggleImageIncludes(tObj);
             break;
 
+        case 'points':
+            setPostPoints(tObj);
+            break;
+
         case 'reply':
             replyToPost(tObj);
             break;
 
         case 'setpreference':
             togglePreference(tObj);
+            break;
+
+        case 'setvisibility':
+            setVisibility(tObj);
+            break;
+
+        case 'showvisibility':
+            toggleVisibilityPopover(tObj);
             break;
 
         case 'star':
@@ -467,6 +479,85 @@ function parseStarPost( data ) {
                 }
             }
         }
+    }
+}
+function setPostPoints(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+    var _max = 1;
+
+    var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
+    var _pnts = nullInt(el.getAttribute('data-points'));
+    var _val = nullInt(el.getAttribute('data-value'));
+
+    /* Remove points awarded by current account */
+    _pnts -= _val;
+
+    /* Validate */
+    if ( _val < 0 || _val > _max ) { _val = 0; }
+    if ( _guid == '' ) { return; }
+
+    /* Add one and validate again */
+    _val += 1;
+    if ( _val > _max ) { _val = 0; }
+    _pnts += _val;
+
+    /* Update the DOM Accordingly */
+    el.innerHTML = '<i class="' + ((_val > 0) ? 'fas' : 'far') + ' fa-arrow-alt-circle-up"></i>';
+    el.setAttribute('data-points', _pnts);
+    el.setAttribute('data-value', _val);
+
+    /* Notify the API */
+    updatePostPointDisplay(_guid, _pnts);
+    callPostPoints(_guid, _val);
+}
+function callPostPoints(_guid, _points) {
+    if ( _guid === undefined || _guid === false || _guid === null || _guid.length <= 30 ) { return; }
+    var _myGuid = readHeadMeta('persona_guid');
+    var params = { 'persona_guid': _myGuid,
+                   'guid': _guid,
+                   'points': _points
+                  };
+    setTimeout(function () { doJSONQuery('posts/points', ((_points > 0) ? 'POST' : 'DELETE'), params, parsePostPoints); }, 250);
+}
+function parsePostPoints( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        if ( ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                if ( checkCanDisplayPost('global', ds[i]) ) {
+                    writePostToTL('global', ds[i], true);
+                }
+            }
+        }
+    }
+}
+function updatePostPointDisplay( _guid, _points ) {
+    if ( _points === undefined || _points === false || _points === null || isNaN(_points)) { _points = 0; }
+    if ( _guid === undefined || _guid === false || _guid === null || _guid.length < 30 ) { return; }
+
+    var els = document.getElementsByClassName('post-points');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _gg = NoNull(els[e].getAttribute('data-guid'));
+        if ( _guid == _gg ) {
+            els[e].setAttribute('data-points', _points);
+            els[e].innerHTML = numberWithCommas(_points);
+
+            /* Ensure the visibility is correct */
+            if ( _points <= 0 && els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
+            if ( _points > 0 && els[e].classList.contains('hidden') ) { els[e].classList.remove('hidden'); }
+        }
+    }
+}
+function checkPostPointDisplay() {
+    var els = document.getElementsByClassName('post-points');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _points = nullInt(els[e].getAttribute('data-value'));
+        els[e].innerHTML = numberWithCommas(_points);
+
+        /* Ensure the visibility is correct */
+        if ( _points <= 0 && els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
+        if ( _points > 0 && els[e].classList.contains('hidden') ) { els[e].classList.remove('hidden'); }
     }
 }
 function editPost(el) {
@@ -880,29 +971,45 @@ function setPersona( el ) {
         showNewPostAs();
     }
 }
-function setVisibility(mode) {
-    saveStorage('privacy', mode);
+function setVisibility(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var tObj = false;
+
+    if ( el.tagName !== undefined && el.tagName !== null && el.tagName.toLowerCase() == 'button' ) { tObj = el; }
+    if ( tObj === false && el.parentElement.tagName.toLowerCase() == 'button' ) { tObj = el.parentElement; }
+    if ( splitSecondCheck(tObj) === false ) { return; }
+
+    var _mode = NoNull(tObj.getAttribute('data-value')).toLowerCase();
+    if ( _mode != '' ) { setVisibilityValue(_mode); }
+    hidePopovers('');
+}
+function setVisibilityValue(mode) {
+    if ( mode === undefined || mode === false || mode === null ) { mode = 'public'; }
+    saveStorage('privacy', mode.replaceAll('visibility.', ''));
     showVisibilityType();
     return false;
 }
 function showVisibilityType() {
-    var btn = document.getElementById('privacy-mode');
     var mode = readStorage('privacy');
-    if ( mode === undefined || mode === false || mode === null || mode == '' ) { mode = 'public'; }
-    if ( btn !== undefined && btn !== false && btn !== null ) {
-        switch ( mode ) {
-            case 'private':
-                btn.innerHTML = '<i class="fa fa-eye-slash"></i>';
-                break;
+    var els = document.getElementsByClassName('btn-visibility');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _tag = NoNull(els[i].tagName).toLowerCase();
+        if ( _tag == 'button' ) {
+            switch ( mode ) {
+                case 'private':
+                    els[i].innerHTML = '<i class="fas fa-eye-slash"></i>';
+                    break;
 
-            case 'none':
-                btn.innerHTML = '<i class="fa fa-lock"></i>';
-                break;
+                case 'none':
+                    els[i].innerHTML = '<i class="fas fa-lock"></i>';
+                    break;
 
-            default:
-                btn.innerHTML = '<i class="fa fa-globe"></i>';
+                default:
+                    els[i].innerHTML = '<i class="fas fa-globe"></i>';
+            }
         }
     }
+    hidePopovers('');
 }
 
 /** ************************************************************************* *
@@ -1195,6 +1302,7 @@ function parsePublish( data ) {
                 if ( NoNull(ds[i].reply_to).length > 10 ) { setReplySuccessful(); }
             }
         }
+        checkPostPointDisplay();
         clearPostActives();
         clearWrite();
 
@@ -1420,6 +1528,7 @@ function parseTimeline(data) {
                 writePostToTL('global', ds[i]);
             }
         }
+        checkPostPointDisplay();
 
     } else {
         resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center">Error! Could not read posts ...</p></div>');
@@ -1690,10 +1799,15 @@ function buildHTML( post ) {
     }
 
     var _starred = false;
+    var _points = 0;
     if ( post.attributes !== undefined && post.attributes !== false ) {
         if ( post.attributes.starred !== undefined && post.attributes.starred !== null ) {
             _starred = post.attributes.starred;
         }
+        if ( post.attributes.points !== undefined && post.attributes.points !== null ) {
+            _points = post.attributes.points;
+        }
+
     }
 
     /* Construct the full output */
@@ -1703,6 +1817,7 @@ function buildHTML( post ) {
                     '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
                 '</div>' +
                 '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
+                    '<label class="post-points hidden" data-guid="' + post.guid + '" data-value="' + nullInt(post.points) + '">' + numberWithCommas(post.points) + '</label>' +
                     _ttxt +
                     post.content +
                     ((_audio_block != '') ? _audio_block : '') +
@@ -1712,9 +1827,10 @@ function buildHTML( post ) {
                     ((window.personas !== false) ?
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
                         ((post.persona.is_you && post.type != 'post.article' ) ? '<button class="btn btn-action" data-action="edit"><i class="fas fa-edit"></i></button>' : '') +
+                        '<button class="btn btn-action' + ((post.persona.is_you) ? ' hidden' : '') + '" data-action="points" data-value="' + _points + '" data-points="' + nullInt(post.points) + '"><i class="' + ((_points > 0) ? 'fas' : 'far') + ' fa-arrow-alt-circle-up"></i>' + ((_points > 1) ? ' ' + numberWithCommas(_points) : '') + '</button>' +
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
                         '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' +
-                        '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
+                        ((post.has_thread) ? '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' : '') +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
                     '</div>' : '') +
                     '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
@@ -1809,6 +1925,8 @@ function applyPreferences() {
             }
         }
     }
+    /* Ensure the Rest of the Page is Displaying Appropriately */
+    showVisibilityType();
 }
 function showSettingsModal() {
     var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels'];
@@ -1827,6 +1945,7 @@ function showSettingsModal() {
         }
     }
     $('#viewSettings').modal('show');
+    hidePopovers('');
 }
 function togglePreference(btn) {
     if ( btn === undefined || btn === false || btn === null ) { return; }
@@ -2054,7 +2173,35 @@ function toggleCarouselImage(el) {
     alignModal();
 }
 
+function toggleVisibilityPopover(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var tObj = false;
 
+    if ( el.tagName !== undefined && el.tagName !== null && el.tagName.toLowerCase() == 'button' ) { tObj = el; }
+    if ( tObj === false && el.parentElement.tagName.toLowerCase() == 'button' ) { tObj = el.parentElement; }
+    if ( splitSecondCheck(tObj) === false ) { return; }
+
+    var _html = '<p class="explain">' +
+                    '<button data-action="setvisibility" data-value="visibility.public"><i class="fas fa-globe"></i> Public</button>' +
+                    '<span>Visible to everybody</span>' +
+                '</p>' +
+                '<p class="explain">' +
+                    '<button data-action="setvisibility" data-value="visibility.private"><i class="fas fa-eye-slash"></i> Private</button>' +
+                    '<span>Visible to people <em>you</em> follow</span>' +
+                '</p>' +
+                '<p class="explain">' +
+                    '<button data-action="setvisibility" data-value="visibility.none"><i class="fas fa-lock"></i> Invisible</button>' +
+                    '<span>Visible <em>only</em> to you</span>' +
+                '</p>';
+
+    $(tObj).popover({
+        container: 'body',
+        html: true,
+        placement: 'bottom',
+        content: _html
+    });
+    $(tObj).popover('show');
+}
 function handlePopover(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     var tObj = false;
@@ -2080,6 +2227,11 @@ function hidePopovers( _group ) {
     var els = document.getElementsByClassName('navmenu-popover');
     for ( var i = 0; i < els.length; i++ ) {
         var _gg = NoNull(els[i].getAttribute('data-group'));
+        if ( _gg != _grp ) { $(els[i]).popover('hide'); }
+    }
+    var els = document.getElementsByClassName('btn');
+    for ( var i = 0; i < els.length; i++ ) {
+        var _gg = NoNull(els[i].getAttribute('aria-describedby'));
         if ( _gg != _grp ) { $(els[i]).popover('hide'); }
     }
 }

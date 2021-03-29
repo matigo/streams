@@ -70,11 +70,17 @@
     "lblSetPosts200": "200",
 
     "lblSetShowLabels": "Show Button Labels",
+    "lblSetPopoversPersist": "Persistent Popovers",
 
     "optPostNote": "Social",
     "optPostArticle": "Article",
     "optPostBookmark": "Bookmark",
     "optPostQuotation": "Quotation",
+
+    "optVisNone": "Invisible",
+    "optVisPassword": "Password Protected",
+    "optVisPrivate": "Private",
+    "optVisPublic": "Public",
 
     "compatMsgHead": "Your browser is not compatible with this website.",
     "compatMsgVersion": "The device is running {browser} version {version}.",

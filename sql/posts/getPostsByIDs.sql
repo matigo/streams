@@ -15,6 +15,8 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
          WHERE zpa.`is_deleted` = 'N' and zpm.`is_deleted` = 'N' and zpm.`post_id` = po.`id`) as `mentions`,
        IFNULL(act.`pin_type`, 'pin.none') as `pin_type`, IFNULL(act.`is_starred`, 'N') as `is_starred`,
        IFNULL(act.`is_muted`, 'N') as `is_muted`, IFNULL(act.`points`, 0) as `points`,
+       (SELECT SUM(pts.`points`) as `total` FROM `PostAction` pts
+             WHERE pts.`is_deleted` = 'N' and pts.`points` <> 0 and pts.`post_id` = po.`id`) as `total_points`,
        po.`canonical_url`, po.`slug`, po.`reply_to`,
        po.`channel_id`, ch.`name` as `channel_name`, ch.`type` as `channel_type`, ch.`privacy_type` as `channel_privacy_type`, ch.`guid` as `channel_guid`,
        ch.`created_at` as `channel_created_at`, ch.`updated_at` as `channel_updated_at`,

@@ -119,6 +119,11 @@ class Posts {
                 return $this->_setPostPin();
                 break;
 
+            case 'points':
+            case 'point':
+                return $this->_setPostPoints();
+                break;
+
             case 'star':
                 return $this->_setPostStar();
                 break;
@@ -146,6 +151,11 @@ class Posts {
 
             case 'pin':
                 return $this->_setPostPin();
+                break;
+
+            case 'points':
+            case 'point':
+                return $this->_setPostPoints();
                 break;
 
             case 'star':
@@ -697,9 +707,11 @@ class Posts {
                                  'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
                                  'updated_unix' => strtotime($Row['updated_at']),
 
-                                 'meta'     => $poMeta,
-                                 'tags'     => $poTags,
-                                 'mentions' => $mentions,
+                                 'meta'       => $poMeta,
+                                 'tags'       => $poTags,
+                                 'mentions'   => $mentions,
+                                 'points'     => nullInt($Row['total_points']),
+                                 'has_thread' => ((nullInt($Row['thread_posts']) > 1) ? true : false),
 
                                  'canonical_url'    => $siteURL . NoNull($Row['canonical_url']),
                                  'slug'             => NoNull($Row['slug']),
@@ -916,7 +928,7 @@ class Posts {
     }
 
     /**
-     *  Function Records (or Resets) a Post Pin for a Post/Persona combination
+     *  Function Records (or Resets) a Post Star for a Post/Persona combination
      */
     private function _setPostStar() {
         $PersonaGUID = NoNull($this->settings['persona_guid']);
@@ -939,6 +951,42 @@ class Posts {
                           '[VALUE]'        => sqlScrub(BoolYN(($ReqType == 'post'))),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/setPostStar.sql', $ReplStr);
+        $rslt = doSQLExecute($sqlStr);
+
+        // Return the Updated Post
+        return $this->_getPostByGUID();
+    }
+
+    /**
+     *  Function records (or Resets) as Post Point for a Post/Persona combination
+     */
+    private function _setPostPoints() {
+        $PersonaGUID = NoNull($this->settings['persona_guid']);
+        $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
+        $ReqType = NoNull(strtolower($this->settings['ReqType']));
+        $Points = nullInt($this->settings['points'], $this->settings['point']);
+
+        // Ensure we Have the requisite GUIDs
+        if ( mb_strlen($PersonaGUID) <= 30 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); return false; }
+        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        $this->settings['guid'] = $PostGUID;
+        $this->settings['ReqType'] = 'GET';
+
+        // Verify the Points value is correct
+        if ( $ReqType == 'delete' ) { $Points = 0; }
+        if ( $Points > 1 ) { $Points = 1; }
+        if ( $Points < 0 ) { $Points = 0; }
+
+        // Prep the Action Record (if applicable)
+        $sOK = $this->_preparePostAction();
+
+        // Build and Run the SQL Query
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[POST_GUID]'    => sqlScrub($PostGUID),
+                          '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
+                          '[VALUE]'        => nullInt($Points),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/setPostPoints.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
 
         // Return the Updated Post
@@ -2177,6 +2225,7 @@ class Posts {
 
                                      'canonical_url' => NoNull($post['canonical_url']),
                                      'reply_to'      => ((NoNull($post['reply_to']) == '') ? false : NoNull($post['reply_to'])),
+                                     'has_thread'    => ((nullInt($post['thread_length']) > 0) ? true : false),
 
                                      'title'    => ((NoNull($post['title']) == '') ? false : NoNull($post['title'])),
                                      'content'  => $post_text,
@@ -2186,6 +2235,7 @@ class Posts {
                                      'meta'     => $poMeta,
                                      'tags'     => $poTags,
                                      'mentions' => $mentions,
+                                     'points'   => nullInt($post['total_points']),
 
                                      'persona'  => array( 'guid'        => NoNull($post['persona_guid']),
                                                           'as'          => '@' . NoNull($post['persona_name']),

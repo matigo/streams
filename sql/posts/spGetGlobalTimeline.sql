@@ -123,7 +123,10 @@ BEGIN
                              LEFT OUTER JOIN `PersonaMeta` zpm ON zpa.`id` = zpm.`persona_id` AND zpm.`is_deleted` = 'N' and zpm.`key` = 'avatar.gravatar'
              WHERE zacct.`is_deleted` = 'N' and zpa.`is_deleted` = 'N' and zpa.`id` = pa.`id`) as `avatar_url`,
            CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, '/', pa.`guid`, '/profile') as `profile_url`,
-           po.`id` as `post_id`, po.`thread_id`, po.`parent_id`, po.`title`, po.`value`,
+           po.`id` as `post_id`, po.`parent_id`, po.`thread_id`,
+           (SELECT COUNT(z.`id`) FROM `Post` z
+             WHERE z.`is_deleted` = 'N' and z.`thread_id` = IFNULL(po.`thread_id`, po.`id`) and z.`id` >= IFNULL(po.`thread_id`, po.`id`)) as `thread_length`,
+           po.`title`, po.`value`,
            (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
            CASE WHEN po.`type` IN ('post.location')
                 THEN (SELECT CASE WHEN COUNT(DISTINCT z.`seq_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMarker` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1)
@@ -140,18 +143,12 @@ BEGIN
            CASE WHEN ch.`privacy_type` IN ('visibility.private', 'visibility.password') THEN 'visibility.none' ELSE po.`privacy_type` END as `privacy_type`,
            po.`publish_at`, po.`expires_at`, po.`updated_at`,
 
-           IFNULL((SELECT pp.`pin_type` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
-                    WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
-                    ORDER BY pp.`updated_at` DESC LIMIT 1), 'pin.none') as `pin_type`,
-           IFNULL((SELECT pp.`is_starred` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
-                    WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
-                    ORDER BY pp.`updated_at` DESC LIMIT 1), 'N') as `is_starred`,
-           IFNULL((SELECT pp.`is_muted` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
-                    WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
-                    ORDER BY pp.`updated_at` DESC LIMIT 1), 'N') as `is_muted`,
-           IFNULL((SELECT pp.`points` FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
-                    WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pp.`post_id` = po.`id` and pz.`account_id` = `in_account_id`
-                    ORDER BY pp.`updated_at` DESC LIMIT 1), 0) as `points`,
+           IFNULL(pp.`pin_type`, 'pin.none') as `pin_type`,
+           IFNULL(pp.`is_starred`, 'N') as `is_starred`,
+           IFNULL(pp.`is_muted`, 'N') as `is_muted`,
+           IFNULL(pp.`points`, 0) as `points`,
+           (SELECT SUM(pts.`points`) as `total` FROM `PostAction` pts
+             WHERE pts.`is_deleted` = 'N' and pts.`points` <> 0 and pts.`post_id` = po.`id`) as `total_points`,
 
            IFNULL(pr.`follows`, 'N') as `persona_follow`,
            IFNULL(pr.`is_muted`, 'N') as `persona_muted`,
@@ -173,6 +170,9 @@ BEGIN
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
+                   LEFT OUTER JOIN (SELECT pp.`post_id`, pp.`pin_type`, pp.`is_starred`, pp.`is_muted`, pp.`points`
+                                      FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
+                                     WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pz.`account_id` = `in_account_id`) pp ON po.`id` = pp.`post_id`
                    LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
      WHERE su.`is_deleted` = 'N' and si.`is_deleted` = 'N' and ch.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
        and ch.`type` = 'channel.site' and su.`is_active` = 'Y'

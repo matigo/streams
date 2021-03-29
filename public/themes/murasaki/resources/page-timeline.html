@@ -40,10 +40,9 @@
                     <button class="btn btn-publish btn-primary" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
                     <label for="pv-list-file" class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></label>
                     <button class="btn btn-getgeo btn-primary hidden" data-action="getgeotag"><i class="fas fa-map-marker-alt"></i></button>
-                    <ul class="hidden" data-highlight="N">
-                        <li>[lblComposeChooseChannel]</li>
-                        <li>[lblComposeAttachFile]</li>
-                    </ul>
+
+                    <button class="btn btn-visibility btn-primary" data-action="showvisibility" data-value="visibility.public"><i class="fas fa-globe"></i></button>
+
                     <span class="content-length">&nbsp;</span>
                     <section class="upload-log hidden">
                         <ul class="upload-list"></ul>
@@ -115,11 +114,18 @@
                                 <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="150">[lblSetPosts150]</button>
                                 <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="200">[lblSetPosts200]</button>
                             </p>
-                            <p>
+                            <p class="mobile-only">
                                 <label>[lblSetShowLabels]</label>
                                 <button class="btn btn-showlabels btn-primary" data-action="setpreference" data-class="showlabels" data-value="y">[btnYes]</button>
                                 <button class="btn btn-showlabels" data-action="setpreference" data-class="showlabels" data-value="n">[btnNo]</button>
                             </p>
+                            <p>
+                                <label>[lblSetPopoversPersist]</label>
+                                <button class="btn btn-showpersistpo" data-action="setpreference" data-class="persistpopover" data-value="y">[btnYes]</button>
+                                <button class="btn btn-showpersistpo btn-primary" data-action="setpreference" data-class="persistpopover" data-value="n">[btnNo]</button>
+                                <span class="explain">If set to "Yes", popovers are visible until an action takes place. If set to "No", popovers auto-hide after 7 seconds.</span>
+                            </p>
+
                         </div>
                         <div class="modal-footer settings-footer">
                             <button class="btn btn-secondary" data-dismiss="modal">[btnClose]</button>

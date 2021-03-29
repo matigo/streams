@@ -103,7 +103,9 @@ hr { border-top: 1px solid #e7e3ed; }
 blockquote { font-size: 16px; }
 button.btn {
     border-radius: 3px !important;
+    border: 1px solid #ccc;
     font-size: 1em;
+    min-width: 48px;
 }
 audio {
     border: none;
@@ -120,6 +122,20 @@ audio {
     -o-transition: all 0.5s linear;
     transition: all 0.5s linear;
     -moz-box-shadow: 2px 2px 4px 0px #006773;
+}
+label.post-points {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    line-height: 0.9em;
+    text-align: center;
+    padding: 5px 5px 3px;
+    margin: 0 0 0 -64px;
+    float: left;
+
+    max-width: 54px;
+    min-width: 54px;
 }
 
 section { margin: 0; }
@@ -521,7 +537,7 @@ section.main-content .composer textarea {
     width: calc(100% - 5px);
 }
 section.main-content .composer .btn-publish {
-    border: 1px solid #e7e3ed;
+    border: 1px solid #ccc;
     display: inline-block;
     width: 125px;
 }
@@ -548,9 +564,10 @@ section.main-content .composer label {
 }
 section.main-content .composer label.btn {
     display: inline-block;
+    text-align: center;
     vertical-align: middle;
-    padding: 7px 12px;
-    min-width: 2.25em;
+    padding: 7px 3px;
+    min-width: 48px;
 }
 section.main-content .composer progress {
     border-radius: 5px;
@@ -1104,6 +1121,12 @@ section.main-content .timeline .post-notify-block span {
     max-width: 190px;
     min-width: 190px;
 }
+#viewSettings .modal-content span.explain {
+    display: block;
+    font-size: 0.9em;
+    font-style: italic;
+    margin: 0 0 0 200px;
+}
 @media (max-width: 1024px)  {
     #viewSettings .modal-content button.btn {
         background: transparent;
@@ -1114,6 +1137,9 @@ section.main-content .timeline .post-notify-block span {
         border: 1px solid #5a3b86;
         color: #fff;
     }
+}
+@media (min-width: 425px) {
+    #viewSettings .modal-content p.mobile-only { display: none; }
 }
 @media (max-width: 425px) {
     #viewSettings .modal-content button { min-width: 40px; }
@@ -1451,6 +1477,7 @@ section.main-content .timeline .post-notify-block span {
 /** ************************************************************************ *
  *  Popover Overrides
  ** ************************************************************************ */
+.popover { max-width: 450px; }
 .popover .top, .popover.top { position: fixed !important; }
 .popover-content { padding: 0 !important; }
 .popover-content ul li {
@@ -1502,3 +1529,27 @@ section.main-content .timeline .post-notify-block span {
 .popover-content .word-results table tr:last-child { border-bottom: none; }
 .popover-content .word-results table td { padding: 3px 5px; }
 .popover-content .word-results table td.cell-label { font-weight: bold; }
+
+.popover-content p.explain {
+    display: block;
+    white-space: nowrap;
+    padding: 3px 5px;
+    margin: 0;
+}
+.popover-content p.explain button {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 1em;
+    padding: 6px 12px;
+    max-height: none;
+    min-height: 30px;
+    max-width: 115px;
+    min-width: 95px;
+}
+.popover-content p.explain span {
+    display: inline-block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 3px 5px;
+}
