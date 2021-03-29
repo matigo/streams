@@ -166,7 +166,7 @@ function handleSpanClick(el) {
         $(el).popover('show');
 
         var _autohide = readStorage('persistpopover').toLowerCase();
-        if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(el).popover('hide'); }, 7500); }
+        if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(el).popover('hide'); }, 7500); }
     }
 }
 function getWordStatistics( _word ) {
@@ -2220,7 +2220,7 @@ function toggleVisibilityPopover(el) {
     $(tObj).popover('show');
 
     var _autohide = readStorage('persistpopover').toLowerCase();
-    if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
+    if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
 
     setTimeout( function () {
         var els = document.getElementsByClassName('btn-visible-opt');
@@ -2254,7 +2254,7 @@ function handlePopover(el) {
     $(tObj).popover('show');
 
     var _autohide = readStorage('persistpopover').toLowerCase();
-    if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
+    if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
 }
 function hidePopovers( _group ) {
     var _grp = NoNull(_group);
