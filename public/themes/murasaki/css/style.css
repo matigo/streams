@@ -1138,9 +1138,6 @@ section.main-content .timeline .post-notify-block span {
         color: #fff;
     }
 }
-@media (min-width: 425px) {
-    #viewSettings .modal-content p.mobile-only { display: none; }
-}
 @media (max-width: 425px) {
     #viewSettings .modal-content button { min-width: 40px; }
     #viewSettings .modal-content button.btn { padding: 6px 12px; }
@@ -1473,6 +1470,55 @@ section.main-content .timeline .post-notify-block span {
 .profile-detail .profile-posts .main-content .timeline .post-item .pubtime {
     font-size: 0.9em;
 }
+
+@media (max-width: 1024px) {
+    .profile-overview {
+        padding: 0 0 0 10px;
+        max-width: 250px;
+        min-width: 250px;
+        width: 250px;
+    }
+    .profile-overview p.avatar {
+        max-height: 175px;
+        min-height: 175px;
+        max-width: 175px;
+        min-width: 175px;
+        height: 175px;
+        width: 175px;
+    }
+    .profile-overview p.avatar span.avatar-image {
+        max-height: 175px;
+        min-height: 175px;
+        max-width: 175px;
+        min-width: 175px;
+        height: 175px;
+        width: 175px;
+    }
+    .profile-overview p.counts {
+        display: block;
+        border-bottom: 1px dotted #ccc;
+        padding: 0 0 8px;
+    }
+    .profile-overview p.counts i {
+        display: inline-block;
+        text-align: right;
+        min-width: 25px;
+    }
+    .profile-detail {
+        padding: 0 5px;
+        max-width: calc(100% - 255px);
+        min-width: calc(100% - 255px);
+        width: calc(100% - 255px);
+    }
+    .profile-detail .profile-posts .post-types {
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .profile-detail .profile-posts .main-content { margin: 0; }
+    .profile-detail .profile-posts .post-chronology { padding: 10px 0; }
+}
+
 
 /** ************************************************************************ *
  *  Popover Overrides

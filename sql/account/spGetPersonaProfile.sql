@@ -7,7 +7,7 @@ BEGIN
     /** ********************************************************************** **
      *  Function collects the public profile information for a given persona.
      *
-     *  Usage: CALL GetPersonaProfile( 'matigo' );
+     *  Usage: CALL GetPersonaProfile( 'matigo', 1 );
      ** ********************************************************************** **/
 
     /* If the Persona Name is bad, Exit */
@@ -44,8 +44,10 @@ BEGIN
         `quotations`    int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
         `photos`        int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
         `pins`          int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
-        `stars`         int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
-        `points`        int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
+        `stars_given`   int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
+        `stars_earned`  int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
+        `points_given`  int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
+        `points_earned` int(11)        UNSIGNED     NOT NULL    DEFAULT 0,
 
         `years_active`  varchar(4096)                   NULL    ,
 
@@ -120,8 +122,20 @@ BEGIN
                                       WHERE act.`is_deleted` = 'N' and act.`persona_id` = `x_persona_id`
                                       GROUP BY act.`persona_id`) tmp ON src.`persona_id` = tmp.`persona_id`
        SET src.`pins` = tmp.`pins`,
-           src.`stars` = tmp.`stars`,
-           src.`points` = tmp.`points`
+           src.`stars_given` = tmp.`stars`,
+           src.`points_given` = tmp.`points`
+     WHERE src.`persona_id` = `x_persona_id`;
+
+    UPDATE `summary` src INNER JOIN (SELECT po.`persona_id`,
+                                            COUNT(CASE WHEN act.`is_starred` = 'Y' THEN act.`post_id` ELSE NULL END) as `stars`,
+                                            SUM(act.`points`) as `points`
+                                       FROM `PostAction` act INNER JOIN `Post` po ON act.`post_id` = po.`id`
+                                                             INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
+                                      WHERE act.`is_deleted` = 'N' and po.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
+                                        and act.`persona_id` <> pa.`id` and pa.`id` = `x_persona_id`
+                                      GROUP BY po.`persona_id`) tmp ON src.`persona_id` = tmp.`persona_id`
+       SET src.`stars_earned` = tmp.`stars`,
+           src.`points_earned` = tmp.`points`
      WHERE src.`persona_id` = `x_persona_id`;
 
     /* Update the Temporary table for the Follow counts */
@@ -165,7 +179,8 @@ BEGIN
     /* Now let's return the summarized data */
     SELECT `account_id`, `persona_id`, `name`, `last_name`, `first_name`, `display_name`, `bio`, `site_url`, `avatar_url`, `avatar_img`,
            `guid`, `created_at`, `you_follow`, `you_muted`, `you_blocked`, `you_starred`, `you_pinned`, `follows_you`,
-           `posts`, `notes`, `articles`, `bookmarks`, `locations`, `quotations`, `photos`, `pins`, `stars`, `points`, `following`, `followers`,
+           `posts`, `notes`, `articles`, `bookmarks`, `locations`, `quotations`, `photos`, `pins`,
+           `stars_given`, `stars_earned`, `points_given`, `points_earned`, `following`, `followers`,
            CONCAT('{', `years_active`, '}') as `years_active`, `first_at`, `recent_at`
       FROM `summary` src
      WHERE src.`persona_id` = `x_persona_id`

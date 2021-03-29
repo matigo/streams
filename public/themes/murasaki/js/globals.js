@@ -40,15 +40,21 @@ function easyFileSize(bytes) {
 function formatDate( UTCString, shortIfRecent ) {
     if ( shortIfRecent === undefined || shortIfRecent === null || shortIfRecent !== true ) { shortIfRecent = false; }
     if ( NoNull(UTCString) == '' ) { return ''; }
+    var _utc = new Date(UTCString);
+    var _now = new Date();
+
     if ( shortIfRecent ) {
-        var t1 = new Date(UTCString);
-        var t2 = new Date();
-        var diff = (t2.getTime() - t1.getTime()) / 1000;
+        var diff = (_now.getTime() - _utc.getTime()) / 1000;
         if ( diff < 86400 ) {
-            return Intl.DateTimeFormat(navigator.language, { hour: 'numeric', minute: 'numeric', hour12: true }).format(t1);
+            return Intl.DateTimeFormat(navigator.language, { hour: 'numeric', minute: 'numeric', hour12: true }).format(_utc);
         }
     }
-    return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(UTCString));
+    if ( _utc.getFullYear() == _now.getFullYear() ) {
+        return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(_utc);
+    } else {
+        return Intl.DateTimeFormat(navigator.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}).format(_utc);
+    }
+
 }
 function formatShortDate( UTCString ) {
     if ( NoNull(UTCString) == '' ) { return ''; }

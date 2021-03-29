@@ -177,9 +177,10 @@ class Murasaki {
                                   '[QUOTATIONS]'    => nullInt($Row['quotations']),
                                   '[PHOTOS]'        => nullInt($Row['photos']),
                                   '[PINS]'          => nullInt($Row['pins']),
-                                  '[STARS]'         => nullInt($Row['stars']),
-                                  '[POINTS_RCVD]'   => nullInt($Row['points']),
-                                  '[POINTS_SENT]'   => nullInt($Row['points']),
+                                  '[STARS_RCVD]'    => nullInt($Row['stars_earned']),
+                                  '[STARS_SENT]'    => nullInt($Row['stars_given']),
+                                  '[POINTS_RCVD]'   => nullInt($Row['points_earned']),
+                                  '[POINTS_SENT]'   => nullInt($Row['points_given']),
 
                                   '[YEARS_ACTIVE]'  => NoNull($Row['years_active'], 'false'),
 

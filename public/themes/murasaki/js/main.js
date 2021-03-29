@@ -164,6 +164,9 @@ function handleSpanClick(el) {
             content:function(){ return _html; }
         });
         $(el).popover('show');
+
+        var _autohide = readStorage('persistpopover').toLowerCase();
+        if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(el).popover('hide'); }, 7500); }
     }
 }
 function getWordStatistics( _word ) {
@@ -1907,7 +1910,7 @@ function clearPostActives() {
  *  Preferences Functions
  ** ************************************************************************* */
 function applyPreferences() {
-    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
@@ -1929,7 +1932,7 @@ function applyPreferences() {
     showVisibilityType();
 }
 function showSettingsModal() {
-    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
@@ -1968,6 +1971,10 @@ function togglePreference(btn) {
             applyRefreshTime(_val);
             break;
 
+        case 'persistpopover':
+            applyPersistPopover(_val);
+            break;
+
         case 'postcount':
             applyPostCount(_val);
             break;
@@ -1985,6 +1992,7 @@ function togglePreference(btn) {
 }
 
 function applyShowLabels( _val ) {
+    var _valids = ['y', 'n'];
     _val = NoNull(_val, 'N').toLowerCase();
     switch ( _val ) {
         case 'n':
@@ -1994,7 +2002,7 @@ function applyShowLabels( _val ) {
         default:
             showByClass('label');
     }
-    saveStorage('showlabels', _val);
+    if ( _valids.indexOf(_val) >= 0 ) { saveStorage('showlabels', _val); }
 }
 function applyFontSize( _val ) {
     var _valids = ['xs', 's', 'm', 'l', 'xl'];
@@ -2014,6 +2022,11 @@ function applyRefreshTime( _val ) {
 function applyPostCount( _val ) {
     var _cnt = nullInt(_val);
     if ( _cnt >= 15 ) { saveStorage('postcount', _cnt); }
+}
+function applyPersistPopover( _val ) {
+    var _valids = ['y', 'n'];
+    _val = NoNull(_val, 'N').toLowerCase();
+    if ( _valids.indexOf(_val) >= 0 ) { saveStorage('persistpopover', _val); }
 }
 
 /** ************************************************************************* *
@@ -2180,17 +2193,21 @@ function toggleVisibilityPopover(el) {
     if ( el.tagName !== undefined && el.tagName !== null && el.tagName.toLowerCase() == 'button' ) { tObj = el; }
     if ( tObj === false && el.parentElement.tagName.toLowerCase() == 'button' ) { tObj = el.parentElement; }
     if ( splitSecondCheck(tObj) === false ) { return; }
+    if ( NoNull(tObj.getAttribute('aria-describedby')) != '' ) { return; }
+
+    var _mode = readStorage('privacy');
+    if ( _mode == '' ) { _mode = 'public'; }
 
     var _html = '<p class="explain">' +
-                    '<button data-action="setvisibility" data-value="visibility.public"><i class="fas fa-globe"></i> Public</button>' +
+                    '<button class="btn btn-visible-opt' + ((_mode == 'public') ? ' btn-primary' : '') + '" data-action="setvisibility" data-value="visibility.public"><i class="fas fa-globe"></i> Public</button>' +
                     '<span>Visible to everybody</span>' +
                 '</p>' +
                 '<p class="explain">' +
-                    '<button data-action="setvisibility" data-value="visibility.private"><i class="fas fa-eye-slash"></i> Private</button>' +
+                    '<button class="btn btn-visible-opt' + ((_mode == 'private') ? ' btn-primary' : '') + '" data-action="setvisibility" data-value="visibility.private"><i class="fas fa-eye-slash"></i> Private</button>' +
                     '<span>Visible to people <em>you</em> follow</span>' +
                 '</p>' +
                 '<p class="explain">' +
-                    '<button data-action="setvisibility" data-value="visibility.none"><i class="fas fa-lock"></i> Invisible</button>' +
+                    '<button class="btn btn-visible-opt' + ((_mode == 'none') ? ' btn-primary' : '') + '" data-action="setvisibility" data-value="visibility.none"><i class="fas fa-lock"></i> Invisible</button>' +
                     '<span>Visible <em>only</em> to you</span>' +
                 '</p>';
 
@@ -2201,6 +2218,21 @@ function toggleVisibilityPopover(el) {
         content: _html
     });
     $(tObj).popover('show');
+
+    var _autohide = readStorage('persistpopover').toLowerCase();
+    if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
+
+    setTimeout( function () {
+        var els = document.getElementsByClassName('btn-visible-opt');
+        for ( var i = 0; i < els.length; i++ ) {
+            var _val = NoNull(els[i].getAttribute('data-value')).toLowerCase();
+            if ( _val == 'visibility.' + _mode ) {
+                if ( els[i].classList.contains('btn-primary') === false ) { els[i].classList.add('btn-primary'); }
+            } else {
+                if ( els[i].classList.contains('btn-primary') ) { els[i].classList.remove('btn-primary'); }
+            }
+        }
+    }, 100);
 }
 function handlePopover(el) {
     if ( el === undefined || el === false || el === null ) { return; }
@@ -2216,10 +2248,13 @@ function handlePopover(el) {
         container: 'body',
         html: true,
         placement: 'top',
+        trigger: 'focus',
         content:function(){ return getPopoverContent(tObj); }
     });
     $(tObj).popover('show');
-    setTimeout(function () { $(tObj).popover('hide'); }, 7500);
+
+    var _autohide = readStorage('persistpopover').toLowerCase();
+    if ( NoNull(_autohide, 'N') == 'y' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
 }
 function hidePopovers( _group ) {
     var _grp = NoNull(_group);

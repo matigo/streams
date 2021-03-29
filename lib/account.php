@@ -1072,8 +1072,8 @@ class Account {
                                'recent_at'      => (($recent_at !== false) ? date("Y-m-d\TH:i:s\Z", $recent_at) : false),
                                'recent_unix'    => (($recent_at !== false) ? $recent_at : false),
 
-                               'counts'         => array( 'posts'   => nullInt($Row['posts']),
-                                                          'notes'   => nullInt($Row['notes']),
+                               'counts'         => array( 'posts'       => nullInt($Row['posts']),
+                                                          'notes'       => nullInt($Row['notes']),
                                                           'articles'    => nullInt($Row['articles']),
                                                           'bookmarks'   => nullInt($Row['bookmarks']),
                                                           'locations'   => nullInt($Row['locations']),

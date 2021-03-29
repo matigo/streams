@@ -1437,10 +1437,7 @@ function buildHTML( post ) {
     }
 
     /* Construct the full output */
-    var _html = '<div class="content-header">' +
-
-                '</div>' +
-                '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
+    var _html = '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
                     _ttxt +
                     post.content +
                     ((_audio_block != '') ? _audio_block : '') +
