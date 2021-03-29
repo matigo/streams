@@ -310,6 +310,10 @@ function handleButtonClick(el) {
             editPost(tObj);
             break;
 
+        case 'getgeotag':
+            togglePostGeo(tObj);
+            break;
+
         case 'image-toggle':
             toggleImageIncludes(tObj);
             break;
@@ -318,8 +322,17 @@ function handleButtonClick(el) {
             replyToPost(tObj);
             break;
 
+        case 'setpreference':
+            togglePreference(tObj);
+            break;
+
         case 'star':
             togglePostStar(tObj);
+            break;
+
+        case 'read-source':
+        case 'readsource':
+            getSourceData(tObj);
             break;
 
         case 'playpause':
@@ -1008,6 +1021,7 @@ function handlePostType(el) {
     var _val = NoNull(tObj.value).toLowerCase();
     switch ( _val ) {
         case 'post.quotation':
+        case 'post.bookmark':
             showByClass('show-quotation');
             hideByClass('show-article');
             setComposeRequirement('source-title', 'Y');
@@ -1256,6 +1270,7 @@ function clearWrite() {
             case 'select':
                 els[i].value = els[i].options[0].value;
                 els[i].selectedIndex = 0;
+                handlePostType(els[i]);
                 break;
 
             default:
@@ -1889,16 +1904,16 @@ function getGeoLocation( _active ) {
     if ( _active === undefined || _active === null || _active !== true ) { _active = false; }
     var el = document.getElementById('post-geo');
     if ( el === undefined || el === false || el === null ) { return; }
+    var _val = NoNull(el.value);
 
     if ( window.location.protocol == 'https:' && (_active || navigator.geolocation) ) {
         var current_ts = Math.floor(Date.now());
         var start_ts = parseInt(el.getAttribute('data-start'));
 
         var geo = navigator.geolocation;
-        if ( (current_ts - start_ts) < 5000 ) {
+        if ( _val == '' || (current_ts - start_ts) < 5000 ) {
             if ( window.geoId === false ) { window.geoId = geo.watchPosition(showPosition); }
             setTimeout(function () { getGeoLocation(true); }, 500);
-            console.log("GeoTag Obtained");
 
         } else {
             geo.clearWatch(window.geoId);
@@ -1918,9 +1933,6 @@ function showPosition( position ) {
     if ( position.coords.altitude !== undefined && position.coords.altitude !== false && position.coords.altitude !== null && position.coords.altitude != 0 ) {
         pos += ', ' + Math.round(position.coords.altitude * _aprec) / _aprec;
     }
-
-    console.log(position.coords);
-
     var el = document.getElementById('post-geo');
     if ( el !== undefined && el !== false && el !== null ) { el.value = NoNull(pos); }
 }

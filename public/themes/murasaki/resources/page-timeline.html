@@ -25,7 +25,7 @@
                     </select>
                     <label for="post-source" class="show-quotation hidden">[lblPostSource]:</label>
                     <input class="form-element show-quotation short hidden" id="post-source" name="fdata" data-name="source-url" data-required="N" placeholder="[lblPostSourcePH]" value="" autocomplete="off" />
-                    <button class="btn btn-fetch-source show-quotation short hidden" data-label="[btnGoFetch]" onclick="getSourceData(this);" disabled>[btnGoFetch]</button>
+                    <button class="btn btn-fetch-source show-quotation short hidden" data-action="readsource" data-label="[btnGoFetch]" disabled>[btnGoFetch]</button>
                     <label for="post-srctitle" class="show-quotation hidden">[lblPostSrcTitle]:</label>
                     <input class="form-element show-quotation hidden" id="post-srctitle" name="fdata" data-name="source-title" data-required="N" placeholder="[lblPostSrcTitlePH]" value="" autocomplete="off" />
                     <label for="post-title" class="show-article hidden">[lblPostTitle]:</label>
@@ -37,9 +37,9 @@
                     <progress class="progress pv-file-upload pu-prog hidden" value="0" min="0" max="100">&nbsp;</progress>
                     <input id="pv-list-file" type="file" name="udata" class="form-control" accept="image/*" multiple>
 
-                    <button class="btn btn-publish btn-primary" onclick="publishPost(this);" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
+                    <button class="btn btn-publish btn-primary" data-form="fdata" data-action="publish" data-label="[btnPublish]">[btnPublish]</button>
                     <label for="pv-list-file" class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i></label>
-                    <button class="btn btn-getgeo btn-primary hidden" onclick="togglePostGeo(this);"><i class="fas fa-map-marker-alt"></i></button>
+                    <button class="btn btn-getgeo btn-primary hidden" data-action="getgeotag"><i class="fas fa-map-marker-alt"></i></button>
                     <ul class="hidden" data-highlight="N">
                         <li>[lblComposeChooseChannel]</li>
                         <li>[lblComposeAttachFile]</li>
@@ -93,32 +93,32 @@
                         <div class="modal-body settings-body" dir="auto">
                             <p>
                                 <label>[lblSetFontsize]</label>
-                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="xs">[lblSetFontSizeXS]</button>
-                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="s">[lblSetFontSizeS]</button>
-                                <button class="btn btn-fontsize btn-primary" onclick="togglePreference(this);" data-class="fontsize" data-value="m">[lblSetFontSizeM]</button>
-                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="l">[lblSetFontSizeL]</button>
-                                <button class="btn btn-fontsize" onclick="togglePreference(this);" data-class="fontsize" data-value="xl">[lblSetFontSizeXL]</button>
+                                <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="xs">[lblSetFontSizeXS]</button>
+                                <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="s">[lblSetFontSizeS]</button>
+                                <button class="btn btn-fontsize btn-primary" data-action="setpreference" data-class="fontsize" data-value="m">[lblSetFontSizeM]</button>
+                                <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="l">[lblSetFontSizeL]</button>
+                                <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="xl">[lblSetFontSizeXL]</button>
                             </p>
                             <p>
                                 <label>[lblSetRefreshTime]</label>
-                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="15">[lblSetRefresh15]</button>
-                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="30">[lblSetRefresh30]</button>
-                                <button class="btn btn-refreshtime btn-primary" onclick="togglePreference(this);" data-class="refreshtime" data-value="45">[lblSetRefresh45]</button>
-                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="60">[lblSetRefresh60]</button>
-                                <button class="btn btn-refreshtime" onclick="togglePreference(this);" data-class="refreshtime" data-value="9999999">[lblSetRefresh00]</button>
+                                <button class="btn btn-refreshtime" data-action="setpreference" data-class="refreshtime" data-value="15">[lblSetRefresh15]</button>
+                                <button class="btn btn-refreshtime" data-action="setpreference" data-class="refreshtime" data-value="30">[lblSetRefresh30]</button>
+                                <button class="btn btn-refreshtime btn-primary" data-action="setpreference" data-class="refreshtime" data-value="45">[lblSetRefresh45]</button>
+                                <button class="btn btn-refreshtime" data-action="setpreference" data-class="refreshtime" data-value="60">[lblSetRefresh60]</button>
+                                <button class="btn btn-refreshtime" data-action="setpreference" data-class="refreshtime" data-value="9999999">[lblSetRefresh00]</button>
                             </p>
                             <p>
                                 <label>[lblSetPostCount]</label>
-                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="50">[lblSetPosts50]</button>
-                                <button class="btn btn-postcount btn-primary" onclick="togglePreference(this);" data-class="postcount" data-value="75">[lblSetPosts75]</button>
-                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="100">[lblSetPosts100]</button>
-                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="150">[lblSetPosts150]</button>
-                                <button class="btn btn-postcount" onclick="togglePreference(this);" data-class="postcount" data-value="200">[lblSetPosts200]</button>
+                                <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="50">[lblSetPosts50]</button>
+                                <button class="btn btn-postcount btn-primary" data-action="setpreference" data-class="postcount" data-value="75">[lblSetPosts75]</button>
+                                <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="100">[lblSetPosts100]</button>
+                                <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="150">[lblSetPosts150]</button>
+                                <button class="btn btn-postcount" data-action="setpreference" data-class="postcount" data-value="200">[lblSetPosts200]</button>
                             </p>
                             <p>
                                 <label>[lblSetShowLabels]</label>
-                                <button class="btn btn-showlabels btn-primary" onclick="togglePreference(this);" data-class="showlabels" data-value="y">[btnYes]</button>
-                                <button class="btn btn-showlabels" onclick="togglePreference(this);" data-class="showlabels" data-value="n">[btnNo]</button>
+                                <button class="btn btn-showlabels btn-primary" data-action="setpreference" data-class="showlabels" data-value="y">[btnYes]</button>
+                                <button class="btn btn-showlabels" data-action="setpreference" data-class="showlabels" data-value="n">[btnNo]</button>
                             </p>
                         </div>
                         <div class="modal-footer settings-footer">
