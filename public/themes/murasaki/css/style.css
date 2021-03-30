@@ -1537,6 +1537,8 @@ section.main-content .timeline .post-notify-block span {
 .popover { max-width: 450px; }
 .popover .top, .popover.top { position: fixed !important; }
 .popover-content { padding: 0 !important; }
+.popover-content button .btn-full,
+.popover-content button.btn-full { width: 100%; }
 .popover-content ul li {
     border-bottom: 1px solid #e7e3ed;
     border-radius: 0;
@@ -1567,6 +1569,15 @@ section.main-content .timeline .post-notify-block span {
     padding: 5px 10px;
     margin: 0;
 }
+.popover-content .profile-body {
+    border-top: 1px solid #00f;
+    display: block;
+    padding: 15px 0 5px;
+    margin: 0;
+    max-height: 500px;
+    min-height: 100px;
+    min-width: 250px;
+}
 .popover-content .word-results {
     border-top: 1px solid #00f;
     display: block;
@@ -1578,16 +1589,26 @@ section.main-content .timeline .post-notify-block span {
     min-width: 250px;
     width: 250px;
 }
+.popover-content .profile-body table,
 .popover-content .word-results table {
     max-width: 100%;
     min-width: 100%;
     width: 100%;
 }
+.popover-content .profile-body table tr,
 .popover-content .word-results table tr { border-bottom: 1px dotted #ccc; }
+.popover-content .profile-body table tr:last-child,
 .popover-content .word-results table tr:last-child { border-bottom: none; }
+.popover-content .profile-body table td,
 .popover-content .word-results table td { padding: 3px 5px; }
+.popover-content .profile-body table td.cell-label,
 .popover-content .word-results table td.cell-label { font-weight: bold; }
-
+.popover-content .profile-body p { margin: 0; }
+.popover-content .profile-body p.actions { padding: 0 5px 15px; }
+.popover-content .profile-footer {
+    font-size: 0.9em;
+    text-align: center;
+}
 .popover-content p.explain {
     display: block;
     white-space: nowrap;

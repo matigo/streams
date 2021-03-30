@@ -330,6 +330,25 @@ function getPersonaGUID() {
 }
 
 /** ************************************************************************* *
+ *  Post Formatting & Iconography
+ ** ************************************************************************* */
+function getVisibilityIcon( privacy ) {
+    if ( privacy === undefined || privacy === false || privacy === null ) { return ''; }
+    switch ( privacy ) {
+        case 'visibility.none':
+            return '<i class="fas fa-lock"></i>';
+            break;
+
+        case 'visibility.private':
+            return '<i class="fas fa-eye-slash"></i>';
+            break;
+
+        default:
+            return '';
+    }
+}
+
+/** ************************************************************************* *
  *  Copy/Pasta
  ** ************************************************************************* */
 function copyInnerHTMLToClipboard( obj ) {

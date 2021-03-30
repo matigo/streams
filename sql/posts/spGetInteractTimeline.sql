@@ -80,8 +80,7 @@ BEGIN
        and act.`is_deleted` = 'N' and pap.`is_deleted` = 'N' and pap.`account_id` = `in_account_id`
        and pa.`is_deleted` = 'N' and po.`publish_at` <= Now()
        and 'Y' = CASE WHEN act.`pin_type` NOT IN ('pin.none') THEN 'Y'
-                 WHEN act.`points` > 0 THEN 'Y'
-                 ELSE act.`is_starred` END;
+                      ELSE act.`is_starred` END;
 
     /* If there aren't enough posts, reach back farther to look for some */
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
@@ -90,14 +89,13 @@ BEGIN
                LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
-                    CASE WHEN po.`expires_at` IS NULL THEN 'Y'
-                         WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                         WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                         ELSE 'Y' END,
-                    CASE WHEN act.`pin_type` <> 'pin.none' THEN 'Y'
-                         WHEN act.`is_starred` <> 'N' THEN 'Y'
-                         WHEN act.`points` > 0 THEN 'Y'
-                         ELSE 'N' END) as `is_visible`
+                     CASE WHEN po.`expires_at` IS NULL THEN 'Y'
+                          WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
+                          WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                          ELSE 'Y' END,
+                     CASE WHEN act.`pin_type` <> 'pin.none' THEN 'Y'
+                          WHEN act.`is_starred` <> 'N' THEN 'Y'
+                          ELSE 'N' END) as `is_visible`
           FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                             INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                             INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
