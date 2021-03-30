@@ -950,6 +950,37 @@ section.main-content .timeline .post-item .metaline.post-actions button.btn-acti
     color: #ccc;
     cursor: not-allowed;
 }
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .yellow,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.yellow {
+    background-color: #ffff00;
+    color: #000;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .orange,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.orange {
+    background-color: #ffa500;
+    color: #fff;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .black,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.black {
+    background-color: #000000;
+    color: #fff;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .green,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.green {
+    background-color: #00b400;
+    color: #fff;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .blue,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.blue {
+    background-color: #0000b4;
+    color: #fff;
+}
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action .red,
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.red {
+    background-color: #b40000;
+    color: #fff;
+}
+
 
 section.main-content .timeline .post-item .metaline.post-reply {
     display: block;
@@ -1631,4 +1662,56 @@ section.main-content .timeline .post-notify-block span {
     white-space: nowrap;
     text-overflow: ellipsis;
     padding: 3px 5px;
+}
+
+.popover-content p.pin-list {
+    text-align: center;
+    padding: 3px 5px;
+    margin: 0;
+}
+.popover-content p.pin-list button .btn-pin,
+.popover-content p.pin-list button.btn-pin {
+    background-color: transparent;
+    border: 0 !important;
+}
+.popover-content p.pin-list button .btn-pin.yellow,
+.popover-content p.pin-list button.btn-pin.yellow { color: #ffff00; }
+.popover-content p.pin-list button .btn-pin.orange,
+.popover-content p.pin-list button.btn-pin.orange { color: #ffa500; }
+.popover-content p.pin-list button .btn-pin.green,
+.popover-content p.pin-list button.btn-pin.green { color: #00b400; }
+.popover-content p.pin-list button .btn-pin.blue,
+.popover-content p.pin-list button.btn-pin.blue { color: #0000b4; }
+.popover-content p.pin-list button .btn-pin.red,
+.popover-content p.pin-list button.btn-pin.red { color: #b40000; }
+
+.popover-content p.pin-list button .btn-pin.yellow.btn-primary,
+.popover-content p.pin-list button.btn-pin.yellow.btn-primary {
+    background-color: #ffff00;
+    color: #000;
+}
+.popover-content p.pin-list button .btn-pin.orange.btn-primary,
+.popover-content p.pin-list button.btn-pin.orange.btn-primary {
+    background-color: #ffa500;
+    color: #fff;
+}
+.popover-content p.pin-list button .btn-pin.black.btn-primary,
+.popover-content p.pin-list button.btn-pin.black.btn-primary {
+    background-color: #b40000;
+    color: #fff;
+}
+.popover-content p.pin-list button .btn-pin.green.btn-primary,
+.popover-content p.pin-list button.btn-pin.green.btn-primary {
+    background-color: #00b400;
+    color: #fff;
+}
+.popover-content p.pin-list button .btn-pin.blue.btn-primary,
+.popover-content p.pin-list button.btn-pin.blue.btn-primary {
+    background-color: #0000b4;
+    color: #fff;
+}
+.popover-content p.pin-list button .btn-pin.red.btn-primary,
+.popover-content p.pin-list button.btn-pin.red.btn-primary {
+    background-color: #b40000;
+    color: #fff;
 }

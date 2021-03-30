@@ -474,10 +474,12 @@ function buildHTML( post ) {
     }
 
     var _starred = false;
+    var _points = 0;
+    var _pin = 'pin.none';
     if ( post.attributes !== undefined && post.attributes !== false ) {
-        if ( post.attributes.starred !== undefined && post.attributes.starred !== null ) {
-            _starred = post.attributes.starred;
-        }
+        if ( post.attributes.starred !== undefined && post.attributes.starred !== null ) { _starred = post.attributes.starred; }
+        if ( post.attributes.points !== undefined && post.attributes.points !== null ) { _points = post.attributes.points; }
+        if ( post.attributes.pin !== undefined && post.attributes.pin !== null ) { _pin = post.attributes.pin; }
     }
 
     /* Construct the full output */
@@ -493,8 +495,10 @@ function buildHTML( post ) {
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
                         ((post.persona.is_you && post.type != 'post.article' ) ? '<button class="btn btn-action" data-action="edit"><i class="fas fa-edit"></i></button>' : '') +
                         '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
-                        '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' +
-                        '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' +
+                        '<button class="btn btn-action' + ((post.persona.is_you) ? ' hidden' : '') + '" data-action="points" data-value="' + _points + '" data-points="' + nullInt(post.points) + '"><i class="' + ((_points > 0) ? 'fas' : 'far') + ' fa-arrow-alt-circle-up"></i>' + ((_points > 1) ? ' ' + numberWithCommas(_points) : '') + '</button>' +
+                        '<button class="btn btn-action ' + _pin.replace('pin.', '') + '" data-action="pin" data-value="' + _pin + '"><i class="fas fa-map-pin"></i></button>' +
+                        ((post.persona.is_you === false) ? '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' : '') +
+                        ((post.has_thread) ? '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' : '') +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
                     '</div>' : '') +
                     '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
@@ -502,38 +506,3 @@ function buildHTML( post ) {
                 '</div>';
     return _html;
 }
-function getVisibilityIcon( privacy ) {
-    if ( privacy === undefined || privacy === false || privacy === null ) { return ''; }
-    switch ( privacy ) {
-        case 'visibility.none':
-            return '<i class="fas fa-lock"></i>';
-            break;
-
-        case 'visibility.private':
-            return '<i class="fas fa-eye-slash"></i>';
-            break;
-
-        default:
-            return '';
-    }
-}
-function setPostActive(el) {
-    if ( el === undefined || el === false || el === null ) { return; }
-    for ( var i = 0; i < 5; i++ ) {
-        if ( el.classList.contains('post-item') === false ) {
-            el = el.parentElement;
-        } else {
-            i = 999;
-        }
-    }
-    clearPostActives();
-
-    el.classList.add('active');
-}
-function clearPostActives() {
-    var els = document.getElementsByClassName('post-item');
-    for ( var i = 0; i < els.length; i++ ) {
-        if ( els[i].classList.contains('active') ) { els[i].classList.remove('active'); }
-    }
-}
-

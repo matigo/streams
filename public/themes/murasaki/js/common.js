@@ -1,6 +1,41 @@
 /** ************************************************************************ *
  *  Common functions used by several pages across Murasaki
  ** ************************************************************************ */
+function handleDocumentKeyPress(e) {
+    if ( e === undefined || e === false || e === null ) { return; }
+    if ( e.charCode !== undefined && e.charCode !== null ) {
+        if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) {
+            var form = e.target.form || e.target.parentElement;
+            var idx = Array.prototype.indexOf.call(form, e.target);
+            var el = false;
+            if ( idx >= 0 ) { el = form.elements[idx]; } else { el = e.target; }
+            var tag = NoNull(el.tagName).toLowerCase();
+            e.preventDefault();
+
+            if ( el !== false ) {
+                switch ( tag ) {
+                    case 'button':
+                        handleButtonClick(el);
+                        break;
+
+                    case 'textarea':
+                        var _name = NoNull(el.getAttribute('data-name')).toLowerCase();
+                        if ( _name == 'content' ) { publishPost(el); }
+                        break;
+
+                    default:
+                        idx++;
+                        if ( idx > 0 && idx >= form.elements.length ) { idx = 0; }
+                        if ( idx >= 0 ) {
+                            form.elements[idx].focus();
+                            if ( NoNull(form.elements[idx].tagName).toLowerCase() == 'button' ) { handleButtonClick(form.elements[idx]); }
+                        }
+                }
+            }
+            return;
+        }
+    }
+}
 function handleDocumentClick(e) {
     if ( e === undefined || e === false || e === null ) { return; }
     var valids = ['span', 'button'];
@@ -85,78 +120,6 @@ function handleSpanClick(el) {
         if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(el).popover('hide'); }, 7500); }
     }
 }
-function handleDocumentKeyPress(e) {
-    if ( e === undefined || e === false || e === null ) { return; }
-    if ( e.charCode !== undefined && e.charCode !== null ) {
-        if ( (e.metaKey || e.ctrlKey) && e.keyCode === KEY_ENTER ) {
-            var form = e.target.form || e.target.parentElement;
-            var idx = Array.prototype.indexOf.call(form, e.target);
-            var el = false;
-            if ( idx >= 0 ) { el = form.elements[idx]; } else { el = e.target; }
-            var tag = NoNull(el.tagName).toLowerCase();
-            e.preventDefault();
-
-            if ( el !== false ) {
-                switch ( tag ) {
-                    case 'button':
-                        handleButtonClick(el);
-                        break;
-
-                    case 'textarea':
-                        var _name = NoNull(el.getAttribute('data-name')).toLowerCase();
-                        if ( _name == 'content' ) { publishPost(el); }
-                        break;
-
-                    default:
-                        idx++;
-                        if ( idx > 0 && idx >= form.elements.length ) { idx = 0; }
-                        if ( idx >= 0 ) {
-                            form.elements[idx].focus();
-                            if ( NoNull(form.elements[idx].tagName).toLowerCase() == 'button' ) { handleButtonClick(form.elements[idx]); }
-                        }
-                }
-            }
-            return;
-        }
-    }
-}
-function countCharacters() {
-    var els = document.getElementsByClassName('content-area');
-
-    for ( var i = 0; i < els.length; i++ ) {
-        var _btnCls = NoNull(els[i].getAttribute('data-button'), 'btn-publish');
-        var _cntCls = NoNull(els[i].getAttribute('data-counter'));
-
-        /* No Point Continuing Without a Class */
-        if ( _cntCls != '' ) {
-            var _val = NoNull(els[i].value);
-            var pEl = els[i].parentElement;
-
-            var _ch = 0;
-            if ( _val != '' ) { _ch = els[i].value.length; }
-
-            /* Set the Counter */
-            var ccs = pEl.getElementsByClassName(_cntCls);
-            for ( var e = 0; e < ccs.length; e++ ) {
-                ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
-            }
-
-            /* Do not let the Button Appear as Active if an Upload is in Progress */
-            if ( window.upload_pct > 0 ) { _ch = 0; }
-
-            var ccs = pEl.getElementsByClassName(_btnCls);
-            for ( var e = 0; e < ccs.length; e++ ) {
-                if ( _ch > 0 ) {
-                    if ( ccs[e].classList.contains('btn-primary') === false ) { ccs[e].classList.add('btn-primary'); }
-                    ccs[e].disabled = false;
-                } else {
-                    if ( ccs[e].classList.contains('btn-primary') ) { ccs[e].classList.remove('btn-primary'); }
-                    ccs[e].disabled = true;
-                }
-            }
-        }
-    }
-}
 function handleButtonClick(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     var tObj = el;
@@ -214,6 +177,14 @@ function handleButtonClick(el) {
 
         case 'pa-mute':
             togglePersonaAction(tObj, 'mute');
+            break;
+
+        case 'pin':
+            togglePostPin(tObj);
+            break;
+
+        case 'pin-post':
+            setPinPost(tObj);
             break;
 
         case 'points':
@@ -724,6 +695,118 @@ function replyToPost(el) {
         }
     }
 }
+function togglePostPin(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+    var _colors = ['blue', 'green', 'red', 'orange', 'yellow', 'black'];
+
+    var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
+    var _val = NoNull(el.getAttribute('data-value'), 'pin.none');
+
+    var _html = '<div class="pins-body"><p class="pin-list" data-guid="' + _guid + '">';
+
+    for ( cc in _colors ) {
+        _html += '<button class="btn btn-pin ' + _colors[cc] + (('pin.' + _colors[cc] == _val) ? ' btn-primary' : '') + '" data-action="pin-post" data-value="pin.' + _colors[cc] + '"><i class="fas fa-map-pin"></i></button>';
+    }
+
+    _html += '<button class="btn btn-pin" data-action="pin-post" data-value="pin.none"><i class="far fa-times-circle"></i></button>' +
+             '</p></div>';
+
+    if ( NoNull(_html) != '' ) {
+        $(el).popover({
+            container: 'body',
+            html: true,
+            placement: 'bottom',
+            trigger: 'focus',
+            content:function(){ return _html; }
+        });
+        $(el).popover('show');
+
+        var _autohide = readStorage('persistpopover').toLowerCase();
+        if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(el).popover('hide'); }, 7500); }
+    }
+}
+function setPinPost(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    if ( window.personas === false ) { return; }
+    var _colors = ['blue', 'green', 'red', 'orange', 'yellow', 'black'];
+    var _req = 'POST';
+
+    var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
+    var _val = NoNull(el.getAttribute('data-value'), 'pin.none').toLowerCase();
+    if ( _val == 'pin.none') { _req = 'DELETE'; }
+
+    var els = document.getElementsByClassName('post-actions');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _gg = NoNull(els[e].getAttribute('data-guid'));
+        if ( _gg == _guid ) {
+            var btns = els[e].getElementsByTagName('BUTTON');
+            for ( b = 0; b < btns.length; b++ ) {
+                var _action = NoNull(btns[b].getAttribute('data-action'));
+                if ( _action == 'pin' ) {
+                    for ( cc in _colors ) {
+                        btns[b].classList.remove(_colors[cc]);
+                    }
+                    btns[b].classList.add(_val.replace('pin.', ''));
+                    btns[b].setAttribute('data-value', _val);
+                    $(btns[b]).popover('destroy');
+                    b = btns.length;
+                    e = els.length;
+                }
+            }
+        }
+    }
+
+    /* Record the Update to the API */
+    var _myGuid = readHeadMeta('persona_guid');
+    var params = { 'persona_guid': _myGuid,
+                   'post_guid': _guid,
+                   'pin_value': _val
+                  };
+    setTimeout(function () { doJSONQuery('posts/pin', _req, params, parsePinPost); }, 250);
+}
+function parsePinPost( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var _colors = ['blue', 'green', 'red', 'orange', 'yellow', 'black'];
+        var ds = data.data;
+
+        if ( ds.length > 0 ) {
+            for ( var i = 0; i < ds.length; i++ ) {
+                var _pin = 'pin.none';
+                var _guid = '';
+
+                /* Determine the Post.Guid and Star status */
+                if ( ds[i].attributes !== undefined && ds[i].attributes !== false ) {
+                    _pin = NoNull(ds[i].attributes.pin, 'pin.none');
+                }
+                _guid = NoNull(ds[i].guid);
+
+                /* If we have a Post.guid, Confirm the Pin on the DOM is correctly coloured */
+                if ( _guid != '' ) {
+                    var els = document.getElementsByClassName('post-actions');
+                    for ( var e = 0; e < els.length; e++ ) {
+                        var _uid = NoNull(els[e].getAttribute('data-guid'));
+                        if ( _uid == _guid ) {
+                            var btns = els[e].getElementsByClassName('btn-action');
+                            for ( var b = 0; b < btns.length; b++ ) {
+                                var _act = NoNull(btns[b].getAttribute('data-action'));
+                                if ( _act == 'pin' ) {
+                                    for ( cc in _colors ) {
+                                        btns[b].classList.remove(_colors[cc]);
+                                    }
+                                    btns[b].classList.add(_pin.replace('pin.', ''));
+                                    btns[b].setAttribute('data-value', _pin);
+                                    b = btns.length;
+                                    e = els.length;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 function togglePostStar(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     if ( window.personas === false ) { return; }
@@ -1042,7 +1125,54 @@ function clearEditPost() {
         els[i].innerHTML = '';
     }
 }
+function checkCanDisplayPost( _view, post, pop = false ) {
+    if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
+    if ( post === undefined || post === false || post === null ) { return false; }
+    if ( pop === undefined || pop === null || pop !== true ) { pop = false; }
 
+    var tl = document.getElementsByClassName('timeline');
+    for ( var t = 0; t < tl.length; t++ ) {
+        var _tlName = NoNull(tl[t].getAttribute('data-view'));
+        if ( _tlName == _view ) {
+            var els = tl[t].getElementsByClassName('post-item');
+            if ( els.length > 0 ) {
+                for ( var i = 0; i < els.length; i++ ) {
+                    var _unix = nullInt(els[i].getAttribute('data-updx'));
+                    var _guid = NoNull(els[i].getAttribute('data-guid'));
+
+                    if ( _guid == NoNull(post.guid) ) {
+                        if ( pop ) {
+                            els[i].parentElement.removeChild(els[i]);
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+
+            /* If we're here, a match was not found */
+            return true;
+        }
+    }
+}
+function setPostActive(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    for ( var i = 0; i < 5; i++ ) {
+        if ( el.classList.contains('post-item') === false ) {
+            el = el.parentElement;
+        } else {
+            i = 999;
+        }
+    }
+    clearPostActives();
+    el.classList.add('active');
+}
+function clearPostActives() {
+    var els = document.getElementsByClassName('post-item');
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].classList.contains('active') ) { els[i].classList.remove('active'); }
+    }
+}
 
 /** ************************************************************************* *
  *  Image Carousel Functions
@@ -1749,6 +1879,43 @@ function toggleComposerPop( _reset ) {
         } else {
             if ( els[i].classList.contains('active') === false ) { els[i].classList.add('active'); }
             els[i].innerHTML = '<i class="far fa-times-circle"></i>';
+        }
+    }
+}
+function countCharacters() {
+    var els = document.getElementsByClassName('content-area');
+
+    for ( var i = 0; i < els.length; i++ ) {
+        var _btnCls = NoNull(els[i].getAttribute('data-button'), 'btn-publish');
+        var _cntCls = NoNull(els[i].getAttribute('data-counter'));
+
+        /* No Point Continuing Without a Class */
+        if ( _cntCls != '' ) {
+            var _val = NoNull(els[i].value);
+            var pEl = els[i].parentElement;
+
+            var _ch = 0;
+            if ( _val != '' ) { _ch = els[i].value.length; }
+
+            /* Set the Counter */
+            var ccs = pEl.getElementsByClassName(_cntCls);
+            for ( var e = 0; e < ccs.length; e++ ) {
+                ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
+            }
+
+            /* Do not let the Button Appear as Active if an Upload is in Progress */
+            if ( window.upload_pct > 0 ) { _ch = 0; }
+
+            var ccs = pEl.getElementsByClassName(_btnCls);
+            for ( var e = 0; e < ccs.length; e++ ) {
+                if ( _ch > 0 ) {
+                    if ( ccs[e].classList.contains('btn-primary') === false ) { ccs[e].classList.add('btn-primary'); }
+                    ccs[e].disabled = false;
+                } else {
+                    if ( ccs[e].classList.contains('btn-primary') ) { ccs[e].classList.remove('btn-primary'); }
+                    ccs[e].disabled = true;
+                }
+            }
         }
     }
 }
