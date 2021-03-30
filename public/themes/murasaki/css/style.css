@@ -1177,6 +1177,12 @@ section.main-content .timeline .post-notify-block span {
         width: 66%;
         margin: 0 0 5px;
     }
+    section.main-content .timeline .post-item.active .metaline.post-actions,
+    .modal-content .modal-body.timeline .post-item.active .metaline.post-actions {
+        white-space: nowrap;
+        text-align: center;
+        margin-left: -30px;
+    }
 }
 
 /** ************************************************************************ *
@@ -1228,9 +1234,17 @@ section.main-content .timeline .post-notify-block span {
 #viewThread .modal-content .modal-header h4 { margin: 0; }
 #viewThread .modal-content .modal-header h4 i { float: right; }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     #viewThread .modal-dialog {
+        max-width: 100%;
         width: 830px;
+        margin: 30px auto;
+    }
+}
+@media (max-width: 768px) {
+    #viewThread .modal-dialog {
+        max-width: calc(100% - 25px);
+        width: 750px;
         margin: 30px auto;
     }
 }
@@ -1686,6 +1700,7 @@ section.main-content .timeline .post-notify-block span {
     padding: 5px 10px;
     margin: 0;
 }
+.popover-content h3 i { float: right; }
 .popover-content .profile-body {
     border-top: 1px solid #00f;
     display: block;

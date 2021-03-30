@@ -312,33 +312,24 @@ function appendTimeline(data) {
                 _div.innerHTML = '<ul class="post-notify-count rows-' + _rows + '" onclick="updateTimeline(this);">' + _html + '</ul>' +
                                  '<span class="post-notify-count" data-label="{num} New Post(s)">' + _label + '</span>';
 
-            // Apply the Event Listeners
-            /*
-            var ee = _div.getElementsByClassName('toggle-action-bar');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
-            }
-            var ee = _div.getElementsByClassName('account');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleProfile(e); });
-            }
-            */
-
             var els = document.getElementsByClassName('timeline');
             for ( var e = 0; e < els.length; e++ ) {
-                // Ensure the Minimum Nodes Exist
-                if ( els[e].childNodes.length <= 0 ) {
-                    els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
-                }
+                var _view = NoNull(els[e].getAttribute('data-view'));
+                if ( _view != 'thread' ) {
+                    // Ensure the Minimum Nodes Exist
+                    if ( els[e].childNodes.length <= 0 ) {
+                        els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+                    }
 
-                // Add the Element
-                var pe = els[e].getElementsByClassName('post-item');
-                for ( var p = 0; p < pe.length; p++ ) {
-                    var _at = nullInt(pe[p].getAttribute('data-unix'));
-                    if ( _at <= 0 || 9999999999 >= _at ) {
-                        els[e].insertBefore(_div, pe[p]);
-                        p = pe.length;
-                        break;
+                    // Add the Element
+                    var pe = els[e].getElementsByClassName('post-item');
+                    for ( var p = 0; p < pe.length; p++ ) {
+                        var _at = nullInt(pe[p].getAttribute('data-unix'));
+                        if ( _at <= 0 || 9999999999 >= _at ) {
+                            els[e].insertBefore(_div, pe[p]);
+                            p = pe.length;
+                            break;
+                        }
                     }
                 }
             }

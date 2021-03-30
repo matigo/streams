@@ -76,7 +76,7 @@ function handleSpanClick(el) {
             var _guid = NoNull(el.getAttribute('data-guid'));
             if ( _guid.length == 36 ) {
                 var _nick = NoNull(el.getAttribute('data-nick'));
-                _html = '<h3 class="profile-title" onclick="dismissPopover(this);">@' + _nick + '</h3>' +
+                _html = '<h3 class="profile-title" onclick="dismissPopover(this);">@' + _nick + ' <i class="far fa-times-circle"></i></h3>' +
                         '<div class="profile-body" onclick="dismissPopover(this);" data-guid="' + _guid +'">' +
                             '<p class="text-center"><i class="fas fa-spin fa-spinner"></i> Reading Profile ...</p>' +
                         '</div>' +
@@ -708,6 +708,7 @@ function setThreadHeader( _msg ) {
             els[e].classList.remove('hidden');
         } else {
             els[e].classList.add('hidden');
+            els[e].innerHTML = '';
         }
     }
 }
