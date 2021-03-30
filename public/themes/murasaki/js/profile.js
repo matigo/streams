@@ -72,6 +72,9 @@ document.onreadystatechange = function () {
             /* Parse and Process the Years */
             setYearsActive();
 
+            /* Collect the Usage History for the last 12 months */
+            getHistoChart();
+
             /* Check the AuthToken and Grab the Timeline */
             checkAuthToken();
         }
@@ -111,14 +114,16 @@ function parseHistoChart( data ) {
                 _count += ds.detail[i].posts;
             }
 
-            /* Update the Counts */
-            var lbl = getElementLabel('history-chart-title');
-            lbl = lbl.replaceAll('{num}', numberWithCommas(_count)).replaceAll('{date}', moment(_since * 1000).format('MMMM Do YYYY'));
-            setElementValue('history-chart-title', lbl);
-            setElementValue('history-chart-max', numberWithCommas(_max));
-            setElementValue('history-chart-min', numberWithCommas(_min));
-            showByClass('history-chart-detail');
-            showByClass('history-chart-data');
+            /* Update the Counts (if necessary) */
+            if ( _count > 0 ) {
+                var lbl = getElementLabel('history-chart-title');
+                lbl = lbl.replaceAll('{num}', numberWithCommas(_count)).replaceAll('{date}', moment(_since * 1000).format('MMMM Do YYYY'));
+                setElementValue('history-chart-title', lbl);
+                setElementValue('history-chart-max', numberWithCommas(_max));
+                setElementValue('history-chart-min', numberWithCommas(_min));
+                showByClass('history-chart-detail');
+                showByClass('history-chart-data');
+            }
         }
     }
 
