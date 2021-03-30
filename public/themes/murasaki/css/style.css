@@ -716,23 +716,28 @@ body.fontsize-xl section.main-content .composer label {
 }
 
 
-section.main-content .timeline {
+section.main-content .timeline,
+.modal-content .modal-body.timeline {
     display: block;
     padding: 10px 0 25px;
     margin: 0;
 }
-section.main-content .timeline .post-item {
+.modal-content .modal-body.timeline { padding: 15px 15px 0; }
+section.main-content .timeline .post-item,
+.modal-content .modal-body.timeline .post-item {
     background: transparent;
     display: block;
     padding: 0;
     margin: 0;
 }
-section.main-content .timeline .post-item.deletion {
+section.main-content .timeline .post-item.deletion,
+.modal-content .modal-body.timeline .post-item.deletion {
     background-color: rgba(255, 0, 0, 0.5);
     opacity: 1;
 }
 
-section.main-content .timeline .post-item .content-author {
+section.main-content .timeline .post-item .content-author,
+.modal-content .modal-body.timeline .post-item .content-author {
     background: transparent;
     border: 1px solid #5a3b86;
     display: inline-block;
@@ -741,7 +746,8 @@ section.main-content .timeline .post-item .content-author {
     min-width: 54px;
     width: 54px;
 }
-section.main-content .timeline .post-item .content-author .avatar {
+section.main-content .timeline .post-item .content-author .avatar,
+.modal-content .modal-body.timeline .post-item .content-author .avatar {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -753,70 +759,82 @@ section.main-content .timeline .post-item .content-author .avatar {
     min-width: 50px;
     max-width: 50px;
 }
-section.main-content .timeline .post-item .content-header {
+section.main-content .timeline .post-item .content-header,
+.modal-content .modal-body.timeline .post-item .content-header {
     display: inline-block;
     vertical-align: text-top;
     max-width: calc(100% - 60px);
     min-width: calc(100% - 60px);
     width: 100%;
 }
-section.main-content .timeline .post-item .content-header p {
+section.main-content .timeline .post-item .content-header p,
+.modal-content .modal-body.timeline .post-item .content-header p {
     color: #5a3b86;
     padding: 0 10px;
     margin: 0;
 }
-section.main-content .timeline .post-item .content-header p.persona {
+section.main-content .timeline .post-item .content-header p.persona,
+.modal-content .modal-body.timeline .post-item .content-header p.persona {
     color: #5a3b86;
     cursor: pointer;
     font-size: 0.95em;
     font-weight: bold;
 }
-section.main-content .timeline .post-item .content-header p.pubtime { font-size: 0.9em; }
+section.main-content .timeline .post-item .content-header p.pubtime,
+.modal-content .modal-body.timeline .post-item .content-header p.pubtime { font-size: 0.9em; }
 
 section.main-content .timeline .post-item .content-editor,
-section.main-content .timeline .post-item .content-area {
+section.main-content .timeline .post-item .content-area,
+.modal-content .modal-body.timeline .post-item .content-area {
     border-left: 2px solid #e7e3ed;
     display: block;
     padding: 10px 15px 5px 36px;
     margin: 0 0 0 26px;
 }
-section.main-content .timeline .post-item .content-area p span.account {
+section.main-content .timeline .post-item .content-area p span.account,
+.modal-content .modal-body.timeline .post-item .content-area p span.account {
     color: #5a3b86;
     cursor: pointer;
     font-size: 0.95em;
     font-weight: bold;
 }
-section.main-content .timeline .post-item .content-area p span.hash {
+section.main-content .timeline .post-item .content-area p span.hash,
+.modal-content .modal-body.timeline .post-item .content-area p span.hash {
     color: #5a3b86;
     cursor: pointer;
     font-size: 0.95em;
     font-weight: bold;
 }
-section.main-content .timeline .post-item .content-area p img {
+section.main-content .timeline .post-item .content-area p img,
+.modal-content .modal-body.timeline .post-item .content-area p img {
     border: 1px solid #e7e3ed;
     border-radius: 15px;
     max-height: 20vh;
     max-width: 100%;
 }
-section.main-content .timeline .post-item .content-area ul {
+section.main-content .timeline .post-item .content-area ul,
+.modal-content .modal-body.timeline .post-item .content-area ul {
     display: block;
     list-style: disc;
     padding: 0 0 0 25px;
     margin: 0 0 10px;
 }
-section.main-content .timeline .post-item .content-area ul li {
+section.main-content .timeline .post-item .content-area ul li,
+.modal-content .modal-body.timeline .post-item .content-area ul li {
     border: 0;
     border-radius: 0;
     cursor: auto;
     padding: 0 10px 0 0;
     margin: 0;
 }
-section.main-content .timeline .post-item .content-area ul.tag-list {
+section.main-content .timeline .post-item .content-area ul.tag-list,
+.modal-content .modal-body.timeline .post-item .content-area ul.tag-list {
     list-style: none !important;
     padding: 0 !important;
     margin: 0 0 5px !important;
 }
-section.main-content .timeline .post-item .content-area ul.tag-list li {
+section.main-content .timeline .post-item .content-area ul.tag-list li,
+.modal-content .modal-body.timeline .post-item .content-area ul.tag-list li {
     border: 1px dotted #ccc;
     border-radius: 3px;
     display: inline-block;
@@ -825,13 +843,15 @@ section.main-content .timeline .post-item .content-area ul.tag-list li {
     margin: 0 3px 3px 0;
 }
 section.main-content .timeline .post-item .content-editor .bottom-spacer,
-section.main-content .timeline .post-item .content-area .bottom-spacer {
+section.main-content .timeline .post-item .content-area .bottom-spacer,
+.modal-content .modal-body.timeline .post-item .content-area .bottom-spacer {
     border-bottom: 1px solid #e7e3ed;
     max-width: 250px;
     width: 33%;
     margin: 0 0 5px;
 }
-section.main-content .timeline .post-item .content-editor textarea {
+section.main-content .timeline .post-item .content-editor textarea,
+.modal-content .modal-body.timeline .post-item .content-editor textarea {
     border: 2px solid #e7e3ed;
     border-radius: 3px;
     display: block;
@@ -844,20 +864,24 @@ section.main-content .timeline .post-item .content-editor textarea {
     height: 125px;
     width: 100%;
 }
-section.main-content .timeline .post-item .content-editor span.edit-length {
+section.main-content .timeline .post-item .content-editor span.edit-length,
+.modal-content .modal-body.timeline .post-item .content-editor span.edit-length {
     padding: 6px 25px 0 0;
     font-style: italic;
     float: right;
 }
-section.main-content .timeline .post-item .content-area .metaline { display: block; }
-section.main-content .timeline .post-item .content-area .metaline.images span {
+section.main-content .timeline .post-item .content-area .metaline,
+.modal-content .modal-body.timeline .post-item .content-area .metaline { display: block; }
+section.main-content .timeline .post-item .content-area .metaline.images span,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.images span {
     display: inline-block;
     overflow: hidden;
     vertical-align: text-top;
     margin: 0 5px 5px 0;
     max-height: 150px;
 }
-section.main-content .timeline .post-item .content-area .metaline.images span .post-image {
+section.main-content .timeline .post-item .content-area .metaline.images span .post-image,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.images span .post-image {
     border: 1px solid #e7e3ed;
     border-radius: 5px;
     display: block;
@@ -867,7 +891,8 @@ section.main-content .timeline .post-item .content-area .metaline.images span .p
     min-height: 75px;
     max-width: 100%;
 }
-section.main-content .timeline .post-item .content-area .metaline.images span .toggle {
+section.main-content .timeline .post-item .content-area .metaline.images span .toggle,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.images span .toggle {
     background: rgba(0, 0, 0, 0.25);
     border-top-left-radius: 50px;
     color: #e7e3ed;
@@ -881,15 +906,18 @@ section.main-content .timeline .post-item .content-area .metaline.images span .t
     max-height: 65px;
     max-width: 65px;
 }
-section.main-content .timeline .post-item .content-area .metaline.images span .toggle i {
+section.main-content .timeline .post-item .content-area .metaline.images span .toggle i,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.images span .toggle i {
     cursor: pointer;
     padding: 15px;
 }
-section.main-content .timeline .post-item .content-area .metaline.geo span.location {
+section.main-content .timeline .post-item .content-area .metaline.geo span.location,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.geo span.location {
     color: #5a3b86;
     cursor: pointer;
 }
-section.main-content .timeline .post-item .content-area .metaline.geo img.geo-map {
+section.main-content .timeline .post-item .content-area .metaline.geo img.geo-map,
+.modal-content .modal-body.timeline .post-item .content-area .metaline.geo img.geo-map {
     border: 1px solid #5a3b86;
     display: block;
     padding: 3px;
@@ -898,28 +926,43 @@ section.main-content .timeline .post-item .content-area .metaline.geo img.geo-ma
 
 section.main-content .timeline .post-item.post-quotation .content-area,
 section.main-content .timeline .post-item.post-bookmark .content-area,
-section.main-content .timeline .post-item.post-article .content-area {
+section.main-content .timeline .post-item.post-article .content-area,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area,
+.modal-content .modal-body.timeline .post-item.post-article .content-area {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", Times, serif;
 }
 section.main-content .timeline .post-item.post-quotation .content-area ul,
 section.main-content .timeline .post-item.post-bookmark .content-area ul,
-section.main-content .timeline .post-item.post-article .content-area ul {
+section.main-content .timeline .post-item.post-article .content-area ul,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area ul,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area ul,
+.modal-content .modal-body.timeline .post-item.post-article .content-area ul {
     list-style: outside;
     padding: 0 10px 0 40px;
     margin: 0 0 10px;
 }
 section.main-content .timeline .post-item.post-quotation .content-area ul li,
 section.main-content .timeline .post-item.post-bookmark .content-area ul li,
-section.main-content .timeline .post-item.post-article .content-area ul li { padding: 0; }
+section.main-content .timeline .post-item.post-article .content-area ul li,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area ul li,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area ul li,
+.modal-content .modal-body.timeline .post-item.post-article .content-area ul li { padding: 0; }
 section.main-content .timeline .post-item.post-quotation .content-area .content-title,
 section.main-content .timeline .post-item.post-bookmark .content-area .content-title,
-section.main-content .timeline .post-item.post-article .content-area .content-title {
+section.main-content .timeline .post-item.post-article .content-area .content-title,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area .content-title,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area .content-title,
+.modal-content .modal-body.timeline .post-item.post-article .content-area .content-title {
     font-weight: bold;
     margin: 0;
 }
 section.main-content .timeline .post-item.post-quotation .content-area .content-source-url,
 section.main-content .timeline .post-item.post-bookmark .content-area .content-source-url,
-section.main-content .timeline .post-item.post-article .content-area .content-source-url {
+section.main-content .timeline .post-item.post-article .content-area .content-source-url,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area .content-source-url,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area .content-source-url,
+.modal-content .modal-body.timeline .post-item.post-article .content-area .content-source-url {
     display: block;
     font-family: monospace;
     font-size: 0.9em;
@@ -932,64 +975,86 @@ section.main-content .timeline .post-item.post-article .content-area .content-so
 }
 section.main-content .timeline .post-item.post-quotation .content-area span.account,
 section.main-content .timeline .post-item.post-bookmark .content-area span.account,
-section.main-content .timeline .post-item.post-article .content-area span.account { font-weight: bold; }
+section.main-content .timeline .post-item.post-article .content-area span.account,
+.modal-content .modal-body.timeline .post-item.post-quotation .content-area span.account,
+.modal-content .modal-body.timeline .post-item.post-bookmark .content-area span.account,
+.modal-content .modal-body.timeline .post-item.post-article .content-area span.account { font-weight: bold; }
 
-section.main-content .timeline .post-item .content-area.confirmation p { display: none; }
-section.main-content .timeline .post-item .content-area.confirmation p.action-confirm { display: block; }
+section.main-content .timeline .post-item .content-area.confirmation p,
+.modal-content .modal-body.timeline .post-item .content-area.confirmation p { display: none; }
+section.main-content .timeline .post-item .content-area.confirmation p.action-confirm,
+.modal-content .modal-body.timeline .post-item .content-area.confirmation p.action-confirm { display: block; }
 
-section.main-content .timeline .post-item .metaline.post-actions { display: none; }
-section.main-content .timeline .post-item.active .metaline.post-actions { display: block; }
+section.main-content .timeline .post-item .metaline.post-actions,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions { display: none; }
+section.main-content .timeline .post-item.active .metaline.post-actions,
+.modal-content .modal-body.timeline .post-item.active .metaline.post-actions { display: block; }
 
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action {
     background-color: transparent;
     border: 1px solid transparent;
     padding: 5px 15px;
     margin: 0 5px 0 0;
 }
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action:disabled {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action:disabled,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action:disabled {
     color: #ccc;
     cursor: not-allowed;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .yellow,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.yellow {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.yellow,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .yellow,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.yellow {
     background-color: #ffff00;
     color: #000;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .orange,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.orange {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.orange,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .orange,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.orange {
     background-color: #ffa500;
     color: #fff;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .black,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.black {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.black,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .black,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.black {
     background-color: #000000;
     color: #fff;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .green,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.green {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.green,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .green,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.green {
     background-color: #00b400;
     color: #fff;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .blue,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.blue {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.blue,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .blue,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.blue {
     background-color: #0000b4;
     color: #fff;
 }
 section.main-content .timeline .post-item .metaline.post-actions button.btn-action .red,
-section.main-content .timeline .post-item .metaline.post-actions button.btn-action.red {
+section.main-content .timeline .post-item .metaline.post-actions button.btn-action.red,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action .red,
+.modal-content .modal-body.timeline .post-item .metaline.post-actions button.btn-action.red {
     background-color: #b40000;
     color: #fff;
 }
 
-
-section.main-content .timeline .post-item .metaline.post-reply {
+section.main-content .timeline .post-item .metaline.post-reply,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply {
     display: block;
     font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
     padding: 0 5px;
     max-width: 600px;
     width: 100%;
 }
-section.main-content .timeline .post-item .metaline.post-reply button {
+section.main-content .timeline .post-item .metaline.post-reply button,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply button {
     display: inline-block;
     margin: 0 5px 0 0;
     padding: 3px 0;
@@ -997,21 +1062,25 @@ section.main-content .timeline .post-item .metaline.post-reply button {
     min-width: 75px;
     width: 75px;
 }
-section.main-content .timeline .post-item .metaline.post-reply button.btn-delete {
+section.main-content .timeline .post-item .metaline.post-reply button.btn-delete,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply button.btn-delete {
     margin: 0 10px 0 0;
     padding: 3px 15px;
     max-width: 150px;
     width: auto;
 }
-section.main-content .timeline .post-item .metaline.post-reply button:disabled { border: 1px solid #e7e3ed; }
-section.main-content .timeline .post-item .metaline.post-reply span {
+section.main-content .timeline .post-item .metaline.post-reply button:disabled,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply button:disabled { border: 1px solid #e7e3ed; }
+section.main-content .timeline .post-item .metaline.post-reply span,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply span {
     display: inline-block;
     font-style: italic;
     text-align: right;
     max-width: calc(100% - 170px);
     min-width: calc(100% - 170px);
 }
-section.main-content .timeline .post-item .metaline.post-reply textarea {
+section.main-content .timeline .post-item .metaline.post-reply textarea,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply textarea {
     border: 2px solid #e7e3ed;
     display: block;
     font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
@@ -1023,9 +1092,12 @@ section.main-content .timeline .post-item .metaline.post-reply textarea {
     min-width: 100%;
     width: 100%;
 }
-section.main-content .timeline .post-item .metaline.post-reply textarea::placeholder { padding: 5px 0 0; text-align: center; }
-section.main-content .timeline .post-item .metaline.post-reply textarea::-ms-input-placeholder { padding: 5px 0 0; text-align: center; }
-section.main-content .timeline .post-item .metaline.post-reply .reply-success {
+section.main-content .timeline .post-item .metaline.post-reply textarea::placeholder,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply textarea::placeholder { padding: 5px 0 0; text-align: center; }
+section.main-content .timeline .post-item .metaline.post-reply textarea::-ms-input-placeholder,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply textarea::-ms-input-placeholder { padding: 5px 0 0; text-align: center; }
+section.main-content .timeline .post-item .metaline.post-reply .reply-success,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply .reply-success {
     background-color: #dcedc8;
     border: 1px solid #000;
     display: block;
@@ -1146,6 +1218,20 @@ section.main-content .timeline .post-notify-block span {
         margin: 30px auto;
         max-width: calc(100% - 50px);
         width: 100%;
+    }
+}
+
+/** ************************************************************************ *
+ *  Thread Modal
+ ** ************************************************************************ */
+#viewThread .modal-content { background-color: #fff; }
+#viewThread .modal-content .modal-header h4 { margin: 0; }
+#viewThread .modal-content .modal-header h4 i { float: right; }
+
+@media (min-width: 768px) {
+    #viewThread .modal-dialog {
+        width: 830px;
+        margin: 30px auto;
     }
 }
 

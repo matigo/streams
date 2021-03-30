@@ -269,9 +269,7 @@ function parseTimeline(data) {
 
         var ds = data.data;
         for ( var i = 0; i < ds.length; i++ ) {
-            if ( checkCanDisplayPost('global', ds[i]) ) {
-                writePostToTL('global', ds[i]);
-            }
+            if ( checkCanDisplayPost('global', ds[i], true) ) { writePostToTL('global', ds[i]); }
         }
         checkPostPointDisplay();
 
@@ -431,18 +429,6 @@ function writePostToTL( _view, post ) {
                 _div.setAttribute('data-owner', ((post.persona.is_you === true) ? 'Y' : 'N'));
                 _div.innerHTML = buildHTML(post);
 
-            // Apply the Event Listeners
-            /*
-            var ee = _div.getElementsByClassName('toggle-action-bar');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleActionBar(e); });
-            }
-            var ee = _div.getElementsByClassName('account');
-            for ( var o = 0; o < ee.length; o++ ) {
-                ee[o].addEventListener('click', function(e) { toggleProfile(e); });
-            }
-            */
-
             // Handle any Audio Elements
             if ( post.meta !== undefined && post.meta.episode !== undefined && post.meta.episode !== false ) {
                 processAudio(_div);
@@ -573,7 +559,7 @@ function buildHTML( post ) {
                         '<button class="btn btn-action' + ((post.persona.is_you) ? ' hidden' : '') + '" data-action="points" data-value="' + _points + '" data-points="' + nullInt(post.points) + '"><i class="' + ((_points > 0) ? 'fas' : 'far') + ' fa-arrow-alt-circle-up"></i>' + ((_points > 1) ? ' ' + numberWithCommas(_points) : '') + '</button>' +
                         '<button class="btn btn-action ' + _pin.replace('pin.', '') + '" data-action="pin" data-value="' + _pin + '"><i class="fas fa-map-pin"></i></button>' +
                         ((post.persona.is_you === false) ? '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' : '') +
-                        ((post.has_thread) ? '<button class="btn btn-action" data-action="thread" disabled><i class="fas fa-comments"></i></button>' : '') +
+                        ((post.has_thread) ? '<button class="btn btn-action" data-action="thread"><i class="fas fa-comments"></i></button>' : '') +
                         ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
                     '</div>' : '') +
                     '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
@@ -813,20 +799,6 @@ function handlePopover(el) {
 
     var _autohide = readStorage('persistpopover').toLowerCase();
     if ( NoNull(_autohide, 'N') == 'n' ) { setTimeout(function () { $(tObj).popover('hide'); }, 7500); }
-}
-function hidePopovers( _group ) {
-    var _grp = NoNull(_group);
-
-    var els = document.getElementsByClassName('navmenu-popover');
-    for ( var e = 0; e < els.length; e++ ) {
-        var _gg = NoNull(els[e].getAttribute('data-group'));
-        if ( _gg != _grp ) { $(els[e]).popover('destroy'); }
-    }
-    var els = document.getElementsByClassName('btn-popover');
-    for ( var e = 0; e < els.length; e++ ) {
-        var _ddby = NoNull(els[e].getAttribute('aria-describedby'));
-        if ( _ddby != '' ) { $(els[e]).popover('destroy'); }
-    }
 }
 function getPopoverContent(el) {
     if ( el === undefined || el === false || el === null ) { return; }

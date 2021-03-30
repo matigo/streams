@@ -211,6 +211,10 @@ function handleButtonClick(el) {
             togglePostStar(tObj);
             break;
 
+        case 'thread':
+            showThread(tObj);
+            break;
+
         case 'read-source':
         case 'readsource':
             getSourceData(tObj);
@@ -510,6 +514,20 @@ function showVisibilityType() {
     }
     hidePopovers('');
 }
+function hidePopovers( _group ) {
+    var _grp = NoNull(_group);
+
+    var els = document.getElementsByClassName('navmenu-popover');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _gg = NoNull(els[e].getAttribute('data-group'));
+        if ( _gg != _grp ) { $(els[e]).popover('destroy'); }
+    }
+    var els = document.getElementsByClassName('btn-popover');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _ddby = NoNull(els[e].getAttribute('aria-describedby'));
+        if ( _ddby != '' ) { $(els[e]).popover('destroy'); }
+    }
+}
 
 /** ************************************************************************ *
  *  Persona Activities
@@ -635,6 +653,64 @@ function parseWordStatistics(data) {
 /** ************************************************************************ *
  *  Post Interactions
  ** ************************************************************************ */
+function showThread(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    hidePopovers('');
+
+    var _guid = NoNull(el.parentElement.getAttribute('data-guid'));
+    var _html = '';
+
+    if ( _guid !== undefined && _guid.length > 30 ) {
+        var params = { 'simple': 'Y' };
+        setTimeout(function () { doJSONQuery('posts/' + _guid + '/thread', 'GET', params, parseThreadView); }, 250);
+        _html = '<p class="text-center"><i class="fas fa-spin fa-spinner"></i> Collecting Conversation ...</p>';
+    }
+
+    /* Some Basic Error Messaging */
+    if ( _html.length < 10 ) { _html = '<p class="text-center">Invalid Thread ID Found</p>'; }
+
+    var els = document.getElementsByClassName('thread-body');
+    for ( var e = 0; e < els.length; e++ ) {
+        els[e].innerHTML = '<p class="text-center"><i class="fas fa-spin fa-spinner"></i> Collecting Conversation ...</p>';
+    }
+
+    $('#viewThread').modal('show');
+}
+function parseThreadView(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var els = document.getElementsByClassName('thread-body');
+        for ( var e = 0; e < els.length; e++ ) {
+            els[e].innerHTML = '';
+        }
+
+        var ds = data.data;
+        for ( var i = 0; i < ds.length; i++ ) {
+            if ( checkCanDisplayPost('thread', ds[i], true) ) { writePostToTL('thread', ds[i]); }
+        }
+
+        /* Determine the Header */
+        var _header = '';
+        if ( ds.length !== undefined && ds.length > 0 ) {
+            _header = 'Conversation View &mdash; {num} Posts'.replaceAll('{num}', numberWithCommas(ds.length));
+        }
+        setThreadHeader(_header);
+
+        /* Ensure the Post Points are Reflected Properly */
+        checkPostPointDisplay();
+    }
+}
+function setThreadHeader( _msg ) {
+    if ( _msg === undefined || _msg === false || _msg === null ) { _msg = ''; }
+    var els = document.getElementsByClassName('thread-header');
+    for ( var e = 0; e < els.length; e++ ) {
+        if ( NoNull(_msg) != '' ) {
+            els[e].innerHTML = '<h4>' + NoNull(_msg) + '<i class="far fa-times-circle"></i></h4>';
+            els[e].classList.remove('hidden');
+        } else {
+            els[e].classList.add('hidden');
+        }
+    }
+}
 function replyToPost(el) {
     if ( el === undefined || el === false || el === null ) { return; }
     if ( window.personas === false ) { return; }
@@ -750,8 +826,6 @@ function setPinPost(el) {
                     btns[b].classList.add(_val.replace('pin.', ''));
                     btns[b].setAttribute('data-value', _val);
                     $(btns[b]).popover('destroy');
-                    b = btns.length;
-                    e = els.length;
                 }
             }
         }
@@ -796,8 +870,6 @@ function parsePinPost( data ) {
                                     }
                                     btns[b].classList.add(_pin.replace('pin.', ''));
                                     btns[b].setAttribute('data-value', _pin);
-                                    b = btns.length;
-                                    e = els.length;
                                 }
                             }
                         }
@@ -1139,7 +1211,6 @@ function checkCanDisplayPost( _view, post, pop = false ) {
                 for ( var i = 0; i < els.length; i++ ) {
                     var _unix = nullInt(els[i].getAttribute('data-updx'));
                     var _guid = NoNull(els[i].getAttribute('data-guid'));
-
                     if ( _guid == NoNull(post.guid) ) {
                         if ( pop ) {
                             els[i].parentElement.removeChild(els[i]);
