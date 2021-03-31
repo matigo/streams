@@ -4,7 +4,7 @@
  *  This is the main SQL DataTable Definition for Streams
  * ************************************************************************* */
 CREATE DATABASE `streams` DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE USER 'sapi'@'localhost' IDENTIFIED WITH mysql_native_password BY 'JlM94sK0';
+CREATE USER 'sapi'@'localhost' IDENTIFIED WITH mysql_native_password BY 'superSecretPassword!123';
 GRANT ALL ON `streams`.* TO 'sapi'@'localhost';
 
 /** ************************************************************************* *
@@ -1274,21 +1274,24 @@ CREATE TABLE IF NOT EXISTS `PayPalTXN` (
     `id`            int(11)        UNSIGNED NOT NULL    AUTO_INCREMENT,
     `subject`       varchar(64)             NOT NULL    DEFAULT '',
     `received_at`   datetime                NOT NULL    ,
-    `type`          varchar(64)             NOT NULL    DEFAULT '',
-    `status`        varchar(64)             NOT NULL    DEFAULT '',
-    `ipn_track_id`  varchar(64)             NOT NULL    DEFAULT '',
+    `source_ip`     varchar(64)                 NULL    ,
+    `ip_valid`      enum('N','Y')           NOT NULL    DEFAULT 'N'
+
+    `type`          varchar(64)                 NULL    ,
+    `status`        varchar(64)                 NULL    ,
+    `ipn_track_id`  varchar(64)                 NULL    ,
 
     `account_id`    int(11)        UNSIGNED     NULL    ,
-    `subscr_id`     varchar(64)             NOT NULL    DEFAULT '',
-    `first_name`    varchar(80)             NOT NULL    DEFAULT '',
-    `last_name`     varchar(80)             NOT NULL    DEFAULT '',
-    `payer_id`      varchar(64)             NOT NULL    DEFAULT '',
-    `payer_email`   varchar(120)            NOT NULL    DEFAULT '',
-    `payer_status`  varchar(64)             NOT NULL    DEFAULT '',
-    `res_country`   varchar(64)                 NULL    DEFAULT '',
+    `subscr_id`     varchar(64)                 NULL    ,
+    `first_name`    varchar(80)                 NULL    ,
+    `last_name`     varchar(80)                 NULL    ,
+    `payer_id`      varchar(64)                 NULL    ,
+    `payer_email`   varchar(120)                NULL    ,
+    `payer_status`  varchar(64)                 NULL    ,
+    `res_country`   varchar(64)                 NULL    ,
 
-    `verify_sign`   varchar(80)             NOT NULL    DEFAULT '',
-    `txn_id`        varchar(80)             NOT NULL    DEFAULT '',
+    `verify_sign`   varchar(80)                 NULL    ,
+    `txn_id`        varchar(80)                 NULL    ,
 
     `site_id`       int(11)        UNSIGNED     NULL    ,
     `guid`          char(36)                NOT NULL    ,

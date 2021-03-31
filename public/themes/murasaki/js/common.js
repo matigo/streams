@@ -652,6 +652,175 @@ function parseWordStatistics(data) {
 }
 
 /** ************************************************************************ *
+ *  Timeline Functions
+ ** ************************************************************************ */
+function writePostToTL( _view, post ) {
+    if ( _view === undefined || _view === false || _view === null || NoNull(_view) == '' ) { return false; }
+    if ( post === undefined || post === false || post === null ) { return false; }
+
+    var els = document.getElementsByClassName('timeline');
+    for ( var e = 0; e < els.length; e++ ) {
+        var _tlName = NoNull(els[e].getAttribute('data-view')).toLowerCase();
+        if ( _tlName == _view ) {
+            var _div = document.createElement("div");
+                _div.className = 'post-item ' + post.type.replace('.', '-');
+                _div.setAttribute('data-unix', post.publish_unix);
+                _div.setAttribute('data-updx', post.updated_unix);
+                _div.setAttribute('data-guid', post.guid);
+                _div.setAttribute('data-type', post.type);
+                _div.setAttribute('data-url', post.canonical_url);
+                _div.setAttribute('data-pin', post.attributes.pin);
+                _div.setAttribute('data-starred', ((post.attributes.starred) ? 'Y' : 'N'));
+                _div.setAttribute('data-threaded', ((post.reply_to !== false) ? 'Y' : 'N'));
+                _div.setAttribute('data-owner', ((post.persona.is_you === true) ? 'Y' : 'N'));
+                if ( post.is_selected !== undefined && post.is_selected ) { _div.classList.add('selected'); }
+                _div.innerHTML = buildHTML(post);
+
+            // Handle any Audio Elements
+            if ( post.meta !== undefined && post.meta.episode !== undefined && post.meta.episode !== false ) {
+                processAudio(_div);
+            }
+
+            // Ensure the Minimum Nodes Exist
+            if ( els[e].childNodes.length <= 0 ) {
+                els[e].innerHTML = '<div class="post-item hidden" data-unix="0" data-owner="N"><div class="readmore">&nbsp;</div></div>';
+            }
+
+            // Add the Element
+            var pe = els[e].getElementsByClassName('post-item');
+            for ( var p = 0; p < pe.length; p++ ) {
+                var _at = parseInt(pe[p].getAttribute('data-unix'));
+                if ( _at <= 0 || post.publish_unix >= _at ) {
+                    els[e].insertBefore(_div, pe[p]);
+
+                    /* Scroll Into View If Required */
+                    if ( post.is_selected !== undefined && post.is_selected ) {
+                        setTimeout(function () { _div.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' }); }, 150);
+                    }
+                    p = pe.length;
+                    break;
+                }
+            }
+        }
+    }
+}
+function buildHTML( post ) {
+    if ( post === undefined || post === false || post === null ) { return ''; }
+    var _src_title = '';
+    var _src_url = NoNull(post.canonical_url);
+    if ( post.meta !== false && post.meta.source !== undefined ) {
+        _src_title = post.meta.source.title;
+        _src_url = NoNull(post.meta.source.url, post.canonical_url);
+    }
+    var _geo_title = '';
+    var _geo_url = '';
+    if ( post.meta !== false && post.meta.geo !== undefined ) {
+        _geo_title = (Math.round(post.meta.geo.latitude * 100000) / 100000) + ', ' + (Math.round(post.meta.geo.longitude * 100000) / 100000);
+        if ( post.meta.geo.description !== false ) { _geo_title = NoNull(post.meta.geo.description); }
+        if ( post.meta.geo.staticmap !== false ) { _geo_url = post.meta.geo.staticmap; }
+    }
+    var _images = '';
+    var _title = NoNull(post.title, _src_title);
+    var _icon = getVisibilityIcon( post.privacy );
+    var _tags = '';
+    if ( post.tags !== undefined && post.tags !== false && post.tags.length > 0 ) {
+        if ( post.type != 'post.note' ) {
+            for ( var i = 0; i < post.tags.length; i++ ) {
+                _tags += '<li class="post-tag">' + NoNull(post.tags[i].name) + '</li>';
+            }
+        }
+    }
+
+    var _audio_block = '';
+    if ( post.meta !== false && post.meta.episode !== undefined ) {
+        _audio_block = '<div class="metaline audio pad" data-file="' + post.meta.episode.file + '">' +
+                       '<audio class="audioplayer" preload="auto" controlslist="nodownload">' +
+                            '<source type="' + NoNull(post.meta.episode.mime, 'audio/mp3') + '" src="' + post.meta.episode.file + '">' +
+                            'Your browser does not support HTML5 audio, but you can still <a target="_blank" href="' + post.meta.episode.file + '" title="">download the file</a>.' +
+                       '</audio>' +
+                       '</div>';
+    }
+
+    var _ttxt = (_title != '') ? '<h3 class="content-title">' + _title + '</h3>' : '';
+    if ( _ttxt != '' && _src_url != '' ) { _ttxt += '<a target="_blank" href="' + _src_url + '" class="content-source-url full-wide">' + _src_url + '</a>'; }
+
+    var _dispName = NoNull(post.persona.name, post.persona.as);
+    if ( _dispName.toLowerCase() != post.persona.as.replace('@', '').toLowerCase() ) {
+        _dispName += ' (' + NoNull(post.persona.as) + ')';
+    } else {
+        _dispName = NoNull(post.persona.as);
+    }
+
+    /* Are there any images that need parsing? */
+    if ( post.type == 'post.note' ) {
+        var _div = document.createElement("div");
+            _div.innerHTML = post.content;
+
+        var imgs = _div.getElementsByTagName('IMG');
+        if ( imgs.length > 0 ) {
+            for ( var i = (imgs.length - 1); i >= 0; i-- ) {
+                var _src = NoNull(imgs[i].src);
+                var _alt = NoNull(imgs[i].alt);
+
+                if ( imgs[i].parentElement.tagName == 'A' ) {
+                    imgs[i].parentElement.parentElement.removeChild(imgs[i].parentElement);
+                } else {
+                    imgs[i].parentElement.removeChild(imgs[i]);
+                }
+
+                if ( _src != '' ) {
+                    _images = '<span>' +
+                                '<img class="post-image" src="' + _src + '" alt="' + _alt + '" />' +
+                                '<span class="toggle" onclick="openCarousel(this);" data-src="' + _src + '"><i class="fas fa-search"></i></span>' +
+                              '</span>' +
+                              _images;
+                }
+            }
+            post.content = _div.innerHTML;
+            _div = null;
+        }
+    }
+
+    var _starred = false;
+    var _points = 0;
+    var _pin = 'pin.none';
+    if ( post.attributes !== undefined && post.attributes !== false ) {
+        if ( post.attributes.starred !== undefined && post.attributes.starred !== null ) { _starred = post.attributes.starred; }
+        if ( post.attributes.points !== undefined && post.attributes.points !== null ) { _points = post.attributes.points; }
+        if ( post.attributes.pin !== undefined && post.attributes.pin !== null ) { _pin = post.attributes.pin; }
+    }
+
+    /* Construct the full output */
+    var _html = '<div class="content-author"><span class="avatar account" style="background-image: url(' + post.persona.avatar + ');" data-action="profile" data-nick="' + NoNull(post.persona.as.replaceAll('@', '')) + '" data-guid="' + post.persona.guid + '">&nbsp;</span></div>' +
+                '<div class="content-header">' +
+                    '<p class="persona">' + _dispName + '</p>' +
+                    '<p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p>' +
+                '</div>' +
+                '<div class="content-area' + ((post.rtl) ? ' rtl' : '') + '" onClick="setPostActive(this);" data-guid="' + post.guid + '">' +
+                    '<label class="post-points hidden" data-guid="' + post.guid + '" data-value="' + nullInt(post.points) + '">' + numberWithCommas(post.points) + '</label>' +
+                    _ttxt +
+                    post.content +
+                    ((_audio_block != '') ? _audio_block : '') +
+                    ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
+                    ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
+                    ((_tags != '') ? '<ul class="tag-list">' + _tags + '</ul>' : '') +
+                    ((window.personas !== false) ?
+                    '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
+                        ((post.persona.is_you && post.type != 'post.article' ) ? '<button class="btn btn-action" data-action="edit"><i class="fas fa-edit"></i></button>' : '') +
+                        '<button class="btn btn-action" data-action="reply"><i class="fas fa-reply-all"></i></button>' +
+                        '<button class="btn btn-action' + ((post.persona.is_you) ? ' hidden' : '') + '" data-action="points" data-value="' + _points + '" data-points="' + nullInt(post.points) + '"><i class="' + ((_points > 0) ? 'fas' : 'far') + ' fa-arrow-alt-circle-up"></i>' + ((_points > 1) ? ' ' + numberWithCommas(_points) : '') + '</button>' +
+                        '<button class="btn btn-action ' + _pin.replace('pin.', '') + '" data-action="pin" data-value="' + _pin + '"><i class="fas fa-map-pin"></i></button>' +
+                        ((post.persona.is_you === false) ? '<button class="btn btn-action" data-action="star" data-value="' + ((_starred) ? 'Y' : 'N') + '"><i class="' + ((_starred) ? 'fas' : 'far') + ' fa-star"></i></button>' : '') +
+                        ((post.has_thread) ? '<button class="btn btn-action" data-action="thread"><i class="fas fa-comments"></i></button>' : '') +
+                        ((post.persona.is_you) ? '<button class="btn btn-action" data-action="delete"><i class="fas fa-trash-alt"></i></button>' : '') +
+                    '</div>' : '') +
+                    '<div class="metaline pad post-reply" data-guid="' + post.guid + '"></div>' +
+                    '<div class="bottom-spacer">&nbsp;</div>' +
+                '</div>';
+    return _html;
+}
+
+/** ************************************************************************ *
  *  Post Interactions
  ** ************************************************************************ */
 function showThread(el) {
@@ -665,6 +834,7 @@ function showThread(el) {
         var params = { 'simple': 'Y' };
         setTimeout(function () { doJSONQuery('posts/' + _guid + '/thread', 'GET', params, parseThreadView); }, 250);
         _html = '<p class="text-center"><i class="fas fa-spin fa-spinner"></i> Collecting Conversation ...</p>';
+        setThreadHeader('');
     }
 
     /* Some Basic Error Messaging */

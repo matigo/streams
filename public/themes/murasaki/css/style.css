@@ -730,6 +730,13 @@ section.main-content .timeline .post-item,
     padding: 0;
     margin: 0;
 }
+.modal-content .modal-body.timeline .post-item .selected,
+.modal-content .modal-body.timeline .post-item.selected {
+    background: #ffffc0;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 15px;
+    border-top-right-radius: 5px;
+}
 section.main-content .timeline .post-item.deletion,
 .modal-content .modal-body.timeline .post-item.deletion {
     background-color: rgba(255, 0, 0, 0.5);
@@ -1230,8 +1237,17 @@ section.main-content .timeline .post-notify-block span {
 /** ************************************************************************ *
  *  Thread Modal
  ** ************************************************************************ */
-#viewThread .modal-content { background-color: #fff; }
-#viewThread .modal-content .modal-header h4 { margin: 0; }
+#viewThread .modal-content {
+    background-color: #fff;
+    scroll-behavior: smooth;
+}
+#viewThread .modal-content .modal-header h4 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 15px 0 0;
+    margin: 0;
+}
 #viewThread .modal-content .modal-header h4 i { float: right; }
 
 @media (min-width: 769px) {
@@ -1246,6 +1262,12 @@ section.main-content .timeline .post-notify-block span {
         max-width: calc(100% - 25px);
         width: 750px;
         margin: 30px auto;
+    }
+}
+@media (max-width: 425px) {
+    #viewThread .modal-content .modal-header h4 i {
+        position: absolute;
+        right: 10px;
     }
 }
 
@@ -1529,8 +1551,8 @@ section.main-content .timeline .post-notify-block span {
     height: 10px;
 
     max-width: 20px;
-    min-width: 10px;
-    width: calc(100% / 53);
+    min-width: calc(100% / 52);
+    width: calc(100% / 52);
 }
 .profile-detail .history-chart span.history-chart-max,
 .profile-detail .history-chart span.history-chart-min {
@@ -1660,7 +1682,33 @@ section.main-content .timeline .post-notify-block span {
     .profile-detail .profile-posts .main-content { margin: 0; }
     .profile-detail .profile-posts .post-chronology { padding: 10px 0; }
 }
-
+@media (max-width: 425px) {
+    .profile-overview {
+        display: block;
+        padding: 0 10px;
+        min-height: auto;
+        max-width: 100%;
+        min-width: 100%;
+        width: 100%;
+    }
+    .profile-overview h2,
+    .profile-overview h3,
+    .profile-overview h4,
+    .profile-overview p.counts { text-align: center; }
+    .profile-detail {
+        max-width: 100%;
+        min-width: 100%;
+        width: 100%;
+    }
+    .profile-detail h4.history-chart-title { display: none; }
+    .profile-detail .profile-posts .main-content {
+        display: block;
+        max-width: 100%;
+        min-width: 100%;
+        width: 100%;
+    }
+    .profile-detail .profile-posts .post-chronology { display: none; }
+}
 
 /** ************************************************************************ *
  *  Popover Overrides
