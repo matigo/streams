@@ -136,9 +136,6 @@ function parseHistoChart( data ) {
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _html;
     }
-
-    /* Collect the Posts */
-    getTimeline();
 }
 function setYearsActive() {
     if ( window.years === undefined || window.years === false || window.years === null ) { return; }

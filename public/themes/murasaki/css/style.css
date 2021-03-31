@@ -1551,8 +1551,8 @@ section.main-content .timeline .post-notify-block span {
     height: 10px;
 
     max-width: 20px;
-    min-width: calc(100% / 52);
-    width: calc(100% / 52);
+    min-width: calc(100% / 53);
+    width: calc(100% / 53);
 }
 .profile-detail .history-chart span.history-chart-max,
 .profile-detail .history-chart span.history-chart-min {

@@ -318,7 +318,7 @@ function checkAuthToken() {
         showByClass('isguest');
     }
 
-    /* Ensure the Puck Items are Correctly Aligned */
+    /* Collect the Timeline and Clear the Authoring Section */
     getTimeline();
     clearWrite();
 }
