@@ -1,0 +1,178 @@
+@font-face {
+  font-family: 'Font Awesome 5 Brands';
+  font-style: normal;
+  font-weight: normal;
+  src: url("../fonts/fa-brands-400.eot");
+  src: url("../fonts/fa-brands-400.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-brands-400.woff2") format("woff2"),
+       url("../fonts/fa-brands-400.woff") format("woff"),
+       url("../fonts/fa-brands-400.ttf") format("truetype"),
+       url("../fonts/fa-brands-400.svg#fontawesome") format("svg");
+}
+
+@font-face {
+  font-family: 'Font Awesome 5 Free';
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/fa-regular-400.eot");
+  src: url("../fonts/fa-regular-400.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-regular-400.woff2") format("woff2"),
+       url("../fonts/fa-regular-400.woff") format("woff"),
+       url("../fonts/fa-regular-400.ttf") format("truetype"),
+       url("../fonts/fa-regular-400.svg#fontawesome") format("svg"); }
+
+@font-face {
+  font-family: 'Font Awesome 5 Free';
+  font-style: normal;
+  font-weight: 900;
+  src: url("../fonts/fa-solid-900.eot");
+  src: url("../fonts/fa-solid-900.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-solid-900.woff2") format("woff2"),
+       url("../fonts/fa-solid-900.woff") format("woff"),
+       url("../fonts/fa-solid-900.ttf") format("truetype"),
+       url("../fonts/fa-solid-900.svg#fontawesome") format("svg");
+}
+
+.fab { font-family: 'Font Awesome 5 Brands'; }
+.far {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 400;
+}
+.fa,
+.fas {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+}
+
+html {
+    height: 100vh;
+    overflow: -moz-scrollbars-none;
+}
+body {
+    color: #000;
+    font-family: -apple-system, 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    overflow-x: hidden;
+    overflow-y: auto;
+    word-break: break-word;
+    word-wrap: break-word;
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+body .fontsize-xs, body.fontsize-xs { font-size: 10px; }
+body .fontsize-s, body.fontsize-s { font-size: 13px; }
+body .fontsize-m, body.fontsize-m { font-size: 16px; }
+body .fontsize-l, body.fontsize-l { font-size: 19px; }
+body .fontsize-xl, body.fontsize-xl { font-size: 22px; }
+
+header {
+    background: #fff;
+    border-bottom: 1px solid #ccc;
+    color: #000;
+    display: block;
+    overflow: hidden;
+    max-height: 50px;
+    min-height: 50px;
+    height: 50px;
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+header h1 {
+    border-right: 2px dotted #ccc;
+    display: inline-block;
+    font-size: 1.75em;
+    padding: 0 10px;
+    margin: 10px 0;
+}
+header h2 {
+    display: inline-block;
+    font-size: 1.25em;
+    padding: 0 10px;
+    margin: 10px 0;
+}
+header section.title {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+
+    max-width: 400px;
+    min-width: 400px;
+    width: 400px;
+}
+header nav {
+    display: inline-block;
+    text-align: right;
+    max-width: calc(100% - 415px);
+    min-width: calc(100% - 415px);
+    width: calc(100% - 415px);
+}
+header nav ul {
+    list-style: none;
+}
+header nav ul li {
+    color: #333;
+    display: inline-block;
+    padding: 0 5px;
+}
+
+footer {
+    background: #fff;
+    border-top: 1px solid #ccc;
+    display: block;
+    max-height: 50px;
+    min-height: 50px;
+    height: 50px;
+    width: 100%;
+}
+footer p {
+    display: block;
+    font-size: 0.8em;
+    text-align: center;
+    padding: 5px 0;
+    margin: 0;
+}
+
+section.main-content {
+    background: #eee;
+    display: block;
+    min-height: calc(100vh - 110px);
+    height: 100%;
+    width: 100%;
+}
+section.main-content p {
+    text-align: center;
+    padding: 5em 0 0;
+}
+
+section.main-content .gallery {
+    align-content: stretch;
+    display: block;
+    margin: 0 auto;
+    min-height: calc(100vh - 110px);
+    height: 100%;
+    width: 100%;
+}
+section.main-content .gallery .grid-item {
+    align-content: stretch;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    color: #000;
+    display: inline-flex;
+    vertical-align: text-top;
+    padding: 5px 5px 50px;
+    margin: 0 5px 5px 0;
+}
+section.main-content .gallery .grid-item img {
+    border-radius: 3px;
+    display: block;
+    object-fit: cover;
+    max-width: 350px;
+    width: 100%;
+}
+section.main-content .gallery .grid-item.wide img { max-width: 722px; }
