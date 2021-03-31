@@ -32,7 +32,7 @@ class Route extends Streams {
      *      in an array.
      */
     public function getResponseData() {
-        $Action = strtolower(NoNull($this->settings['PgRoot']));
+        $Action = strtolower(NoNull($this->settings['PgSub1'], $this->settings['PgRoot']));
         $data = false;
 
         // Let's use some Debug to Understand the Webhooks Coming In
@@ -95,6 +95,7 @@ class Route extends Streams {
                          'subscr_id', 'last_name', 'first_name', 'payer_email', 'payer_status',
                          'residence_country', 'item_name', 'payment_gross', 'mc_currency',
                          'ipn_track_id' );
+        $srcOK = false;
         $cnt = 0;
 
         /* Check to see that we have enough data */
@@ -106,15 +107,25 @@ class Route extends Streams {
             return false;
         }
 
-        // Get the Site Data and Transaction Date/Time
+        /* Validate the IP Address to confirm the hook is being called by PayPal itself */
+        $valids = array( '66.211.170.66', '173.0.81.1', '173.0.81.0/24', '173.0.81.33', '173.0.81.65',
+                         '173.0.81.140', '64.4.240.0/21', '64.4.248.0/22', '66.211.168.0/22',
+                         '173.0.80.0/20', '91.243.72.0/23' );
+        $ip = getVisitorIPv4();
+        foreach ( $valids as $cidr ) {
+            $range = cidrToRange($cidr);
+            if ( $srcOK === false ) { $srcOK = in_array($ip, $range); }
+        }
+
+        /* Get the Site Data and Transaction Date/Time */
         $siteData = $this->site->getSiteData();
         $PayDate = date("Y-m-d H:i:s");
 
-        // Record the Transaction to the PayPal Table
         if ( array_key_exists('payment_date', $this->settings) ) {
             $PayDate = date("Y-m-d H:i:s", strtotime($this->settings['payment_date']));
         }
 
+        /* Record the Transaction to the PayPal Table */
         $ReplStr = array( '[SUBJECT]'       => sqlScrub(NoNull($this->settings['transaction_subject'])),
                           '[PAYDATE]'       => sqlScrub($PayDate),
                           '[TXNTYPE]'       => sqlScrub(NoNull($this->settings['txn_type'])),
@@ -135,11 +146,14 @@ class Route extends Streams {
                           '[MC_GROSS]'      => nullInt($this->settings['mc_gross']),
                           '[RECURRING]'     => BoolYN(YNBool($this->settings['recurring'])),
                           '[SITE_ID]'       => nullInt($siteData['site_id']),
+                          '[FROM_IP]'       => sqlScrub($ip),
+                          '[VALID_IP]'      => BoolYN($srcOK),
                          );
         $sqlStr = prepSQLQuery("CALL SetPayPalTXN('[SUBJECT]', '[PAYDATE]', '[TXNTYPE]', '[PAYSTATUS]', '[TRACK_ID]', " .
                                                  "'[SUBSCRID]', '[FIRSTNAME]', '[LASTNAME]', '[PAYER_ID]', '[PAYER_MAIL]', " .
                                                  "'[PAYER_STATUS]', '[PAYER_COUNTRY]', '[VERIFYSIGN]', '[TXN_ID]', " .
-                                                 " [PAYGROSS], [PAYFEE], [MC_FEE], [MC_GROSS], '[RECURRING]', [SITE_ID]);", $ReplStr);
+                                                 " [PAYGROSS], [PAYFEE], [MC_FEE], [MC_GROSS], '[RECURRING]', [SITE_ID]," .
+                                                 "'[FROM_IP]', '[VALID_IP]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {

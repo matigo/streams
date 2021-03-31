@@ -789,7 +789,32 @@
         }
 
         // Return the Visitor's IPv4 Address
-        return trim($rVal);
+        return NoNull($rVal);
+    }
+
+    /**
+     *  Function returns an array of IPv4 addresses that are within a given CIDR
+     */
+    function cidrToRange($cidr) {
+        if ( strpos($cidr, '/') === false ) { $cidr .= '/32'; }
+        $cidr = explode('/', $cidr);
+        $out = array();
+
+        /* Get the First IP address and the "run" */
+        $base = ip2long($cidr[0]) & ((-1 << (32 - (int)$cidr[1])));
+        $run = ip2long($range[0]) + pow(2, (32 - (int)$cidr[1])) - 1;
+
+        /* Don't let the run get out of hand, as that'll kill the memory */
+        if ( $run > 4096 ) { $run = 4096; }
+
+        /* Construct an Array of Addresses */
+        for ( $i = 0; $i <= $run; $i++ ) {
+            $ip = long2ip($base + $i);
+            if ( in_array($ip, $out) === false ) { $out[] = $ip; }
+        }
+
+        /* Return an array of valid IP addresses */
+        return $out;
     }
 
     function getApiUrl() {
@@ -1131,23 +1156,13 @@
         return in_array($FileType, $valids);
     }
 
-    function recordFileUpload( $AccountID, $FileName, $Hash, $Size, $Type ) {
-        $cleanFile = sqlScrub($FileName);
-        $cleanType = sqlScrub($Type);
-        $sqlStr = "INSERT INTO `AccountFile` (`user_id`, `name`, `hash`, `size`, `type`, `uploaded_at`)" .
-                  "SELECT $UserID, '$cleanFile', '$Hash', $Size, '$cleanType', Now();";
-        $rslt = doSQLExecute($sqlStr);
-
-        return true;
-    }
-
     /***********************************************************************
      *  Cache Functions
      ***********************************************************************/
     /**
      *  Function Records an array of information to a cache location
      */
-    function saveCacheObject( $fileName, $data ) {
+    function setCacheObject( $fileName, $data ) {
         if ( strlen(NoNull($fileName)) < 3 ) { return false; }
         if ( is_array($data) ) {
             $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
@@ -1163,7 +1178,7 @@
      *  Function Reads a Cached JSON file based on the name passed.
      *      If the data does not exist, an unhappy boolean is returned.
      */
-    function readCacheObject( $fileName ) {
+    function getCacheObject( $fileName ) {
         if ( strlen(NoNull($fileName)) < 3 ) { return false; }
         if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
             $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
@@ -1172,9 +1187,38 @@
                 if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
 
                 $json = file_get_contents( $cacheFile );
-                return json_decode($json);
+                return json_decode($json, true);
             }
         }
+        return false;
+    }
+
+    /**
+     *  Function Records any sort of ephemeral data to $GLOBALS['cache']
+     */
+    function setGlobalObject( $key, $data ) {
+        if ( strlen(NoNull($key)) < 3 ) { return false; }
+        if ( is_array($GLOBALS) === false ) { $GLOBALS = array(); }
+        if ( array_key_exists('cache', $GLOBALS) === false ) {
+            $GLOBALS['cache'] = array();
+        }
+
+        /* Set the Cache Key->Value */
+        $GLOBALS['cache'][$key] = $data;
+    }
+
+    /**
+     *  Function Reads any sort of ephemeral data from $GLOBALS['cache']
+     */
+    function getGlobalObject( $key ) {
+        if ( strlen(NoNull($key)) < 3 ) { return false; }
+        if ( is_array($GLOBALS) && array_key_exists('cache', $GLOBALS) ) {
+            if ( array_key_exists($key, $GLOBALS['cache']) ) {
+                return $GLOBALS['cache'][$key];
+            }
+        }
+
+        /* Return an unhappy boolean if nothing exists */
         return false;
     }
 
@@ -1339,6 +1383,11 @@
     function doSQLQuery( $sqlStr, $params = array(), $dbname = DB_NAME ) {
         // If We Have Nothing, Return Nothing
         if ( NoNull($sqlStr) == '' ) { return false; }
+        $hash = sha1($sqlStr);
+
+        /* Check to see if this query has been run once before and, if so, return the cached result */
+        $rVal = getGlobalObject($hash);
+        if ( $rVal !== false ) { return $rVal; }
 
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $GLOBALS['Perf']['queries']++;
@@ -1410,6 +1459,9 @@
             writeNote("doSQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
             writeNote("doSQLQuery Query :: $sqlStr", true );
         }
+
+        /* Save the Query Results Ephemerally */
+        setGlobalObject($hash, $rVal);
 
         // Return the Array of Details
         return $rVal;
@@ -1993,7 +2045,6 @@
                           '[REQ_URI]'    => sqlScrub($data['ReqURI']),
                           '[REFERER]'    => sqlScrub($Referer),
                           '[IP_ADDR]'    => getVisitorIPv4(),
-                          '[DEVICE_ID]'  => sqlScrub($data['_device_id']),
                           '[AGENT]'      => sqlScrub($_SERVER['HTTP_USER_AGENT']),
                           '[UAPLATFORM]' => sqlScrub($Agent['platform']),
                           '[UABROWSER]'  => sqlScrub($Agent['browser']),

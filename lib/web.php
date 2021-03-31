@@ -14,11 +14,15 @@ require_once( LIB_DIR . '/site.php');
 class Route extends Streams {
     var $settings;
     var $strings;
+    var $custom;
+    var $posts;
     var $site;
 
     function __construct( $settings, $strings ) {
         $this->settings = $settings;
         $this->strings = $strings;
+        $this->custom = false;
+        $this->posts = false;
 
         $this->site = new Site($this->settings);
 
@@ -408,7 +412,7 @@ class Route extends Streams {
     private function _isCacheable() {
         $Excludes = array( 'write', 'settings', 'syndication', 'account' );
         $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
-        $data = readCacheObject($cacheFile);
+        $data = getCacheObject($cacheFile);
 
         // Get the Theme-specific List of Non-Cacheable Pages (if applicable)
         if ( is_array($data) === false || $data === false ) {
@@ -425,7 +429,7 @@ class Route extends Streams {
                     }
                 }
             }
-            saveCacheObject($cacheFile, $Excludes);
+            setCacheObject($cacheFile, $Excludes);
 
         } else {
             $Excludes = $data;
@@ -462,12 +466,13 @@ class Route extends Streams {
                     break;
 
                 default:
-                    require_once(LIB_DIR . '/posts.php');
-                    $post = new Posts( $this->settings, $this->strings );
-                    $data = $post->getPageJSON( $site );
-                    $meta = $post->getResponseMeta();
-                    $code = $post->getResponseCode();
-                    unset($post);
+                    if ( $this->posts === false ) {
+                        require_once( LIB_DIR . '/posts.php' );
+                        $this->posts = new Posts( $this->settings, $this->strings );
+                    }
+                    $data = $this->posts->getPageJSON( $site );
+                    $meta = $this->posts->getResponseMeta();
+                    $code = $this->posts->getResponseCode();
             }
         }
 
@@ -485,26 +490,26 @@ class Route extends Streams {
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ResDIR = $ThemeLocation . "/resources";
         if ( file_exists("$ThemeLocation/custom.php") ) {
-            require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($this->settings['_theme']);
-
-            $res = new $ClassName( $this->settings, $this->strings );
-            $html = $res->getPageHTML($data);
-            $this->settings['errors'] = $res->getResponseMeta();
-            $this->settings['status'] = $res->getResponseCode();
-            unset($res);
+            if ( $this->custom === false ) {
+                require_once("$ThemeLocation/custom.php");
+                $ClassName = ucfirst($this->settings['_theme']);
+                $this->custom = new $ClassName( $this->settings, $this->strings );
+            }
+            $html = $this->custom->getPageHTML($data);
+            $this->settings['errors'] = $this->custom->getResponseMeta();
+            $this->settings['status'] = $this->custom->getResponseCode();
 
             // Return the Completed HTML
             return $html;
 
         } else {
-            require_once( LIB_DIR . '/posts.php' );
-            $post = new Posts( $this->settings, $this->strings );
-            $html = $post->getPageHTML($data);
-
-            $this->settings['status'] = $post->getResponseCode();
-            $this->settings['errors'] = $post->getResponseMeta();
-            unset($post);
+            if ( $this->posts === false ) {
+                require_once( LIB_DIR . '/posts.php' );
+                $this->posts = new Posts( $this->settings, $this->strings );
+            }
+            $html = $this->posts->getPageHTML($data);
+            $this->settings['status'] = $this->posts->getResponseCode();
+            $this->settings['errors'] = $this->posts->getResponseMeta();
 
             // Return the Completed HTML
             return $html;
@@ -529,38 +534,43 @@ class Route extends Streams {
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
         if ( file_exists("$ThemeLocation/custom.php") ) {
-            require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($this->settings['_theme']);
-            $res = new $ClassName( $this->settings, $this->strings );
-            if ( method_exists($res, 'getPagination') ) {
-                $this->settings['errors'] = $res->getResponseMeta();
-                $this->settings['status'] = $res->getResponseCode();
-                return $res->getPagination($data);
+            if ( $this->custom === false ) {
+                require_once("$ThemeLocation/custom.php");
+                $ClassName = ucfirst($this->settings['_theme']);
+                $this->custom = new $ClassName( $this->settings, $this->strings );
             }
-            unset($res);
+            if ( method_exists($this->custom, 'getPagination') ) {
+                $this->settings['errors'] = $this->custom->getResponseMeta();
+                $this->settings['status'] = $this->custom->getResponseCode();
+                return $this->custom->getPagination($data);
+            }
         }
 
         /* If we're here, let's keep going */
-        $rslt = getPaginationSets();
-        if ( is_array($rslt) === false && in_array($PgRoot, $Excludes) === false ) {
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                              '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
-                              '[SITE_GUID]'  => sqlScrub($data['site_guid']),
-                              '[CANON_URL]'  => sqlScrub($CanonURL),
-                              '[PGROOT]'     => sqlScrub($PgRoot),
-                              '[OBJECT]'     => sqlScrub($tObj),
-                              '[PGSUB1]'     => sqlScrub($this->settings['PgSub1']),
+        if ( in_array($PgRoot, $Excludes) === false ) {
+            $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                              '[SITE_TOKEN]'   => sqlScrub(NoNull($this->settings['site_token'])),
+                              '[SITE_GUID]'    => sqlScrub($data['site_guid']),
+                              '[CANON_URL]'    => sqlScrub($CanonURL),
+                              '[PGROOT]'       => sqlScrub($PgRoot),
+                              '[OBJECT]'       => sqlScrub($tObj),
+                              '[PGSUB1]'       => sqlScrub($this->settings['PgSub1']),
+                              '[SITE_VERSION]' => nullInt($data['updated_unix']),
+                              '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
-            $rslt = doSQLQuery($sqlStr);
-        }
+            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $rslt = getCacheObject($cacheFile);
+            if ( is_array($rslt) === false ) {
+                $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+                setCacheObject($cacheFile, $rslt);
+            }
 
-        // Let's build some Pagination
-        if ( is_array($rslt) ) {
-            setPaginationSets($rslt);
-            foreach ( $rslt as $Row ) {
-                $posts = nullInt($Row['post_count']);
-                $pages = nullInt($Row['page_count']);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    $posts = nullInt($Row['post_count']);
+                    $pages = nullInt($Row['page_count']);
+                }
             }
         }
 
@@ -729,20 +739,29 @@ class Route extends Streams {
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ResDIR = $ThemeLocation . "/resources";
         if ( file_exists("$ThemeLocation/custom.php") ) {
-            require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($this->settings['_theme']);
-            $res = new $ClassName( $this->settings, $this->strings );
-            if ( method_exists($res, 'getSiteNav') ) {
-                $this->settings['errors'] = $res->getResponseMeta();
-                $this->settings['status'] = $res->getResponseCode();
-                $html = $res->getSiteNav($data);
+            if ( $this->custom === false ) {
+                require_once("$ThemeLocation/custom.php");
+                $ClassName = ucfirst($this->settings['_theme']);
+                $this->custom = new $ClassName( $this->settings, $this->strings );
             }
-            unset($res);
+            if ( method_exists($this->custom, 'getSiteNav') ) {
+                $this->settings['errors'] = $this->custom->getResponseMeta();
+                $this->settings['status'] = $this->custom->getResponseCode();
+                $html = $this->custom->getSiteNav($data);
+            }
 
         } else {
-            $ReplStr = array( '[SITE_ID]' => nullInt($data['site_id']) );
-            $sqlStr = prepSQLQuery("CALL GetSiteNav([SITE_ID]);", $ReplStr);
-            $rslt = doSQLQuery($sqlStr);
+            $ReplStr = array( '[SITE_ID]'      => nullInt($data['site_id']),
+                              '[SITE_VERSION]' => nullInt($data['updated_unix']),
+                              '[APP_VERSION]'  => sqlScrub(APP_VER),
+                             );
+            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $rslt = getCacheObject($cacheFile);
+            if ( is_array($rslt) === false ) {
+                $sqlStr = prepSQLQuery("CALL GetSiteNav([SITE_ID]);", $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+                setCacheObject($cacheFile, $rslt);
+            }
             if ( is_array($rslt) ) {
                 $SiteUrl = $data['protocol'] . '://' . $data['HomeURL'];
                 foreach ( $rslt as $Row ) {
@@ -1088,21 +1107,23 @@ class Route extends Streams {
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
         if ( file_exists("$ThemeLocation/custom.php") ) {
-            require_once("$ThemeLocation/custom.php");
-            $ClassName = ucfirst($this->settings['_theme']);
-            $res = new $ClassName( $this->settings, $this->strings );
-            if ( method_exists($res, 'getPopularPosts') ) {
-                $this->settings['errors'] = $res->getResponseMeta();
-                $this->settings['status'] = $res->getResponseCode();
-                return $res->getPopularPosts($data);
+            if ( $this->custom === false ) {
+                require_once("$ThemeLocation/custom.php");
+                $ClassName = ucfirst($this->settings['_theme']);
+                $this->custom = new $ClassName( $this->settings, $this->strings );
             }
-            unset($res);
+            if ( method_exists($this->custom, 'getPopularPosts') ) {
+                $this->settings['errors'] = $this->custom->getResponseMeta();
+                $this->settings['status'] = $this->custom->getResponseCode();
+                return $this->custom->getPopularPosts($data);
+            }
         }
 
-        require_once( LIB_DIR . '/posts.php' );
-        $post = new Posts( $this->settings, $this->strings );
-        $html = $post->getPopularPosts();
-        unset($post);
+        if ( $this->posts === false ) {
+            require_once( LIB_DIR . '/posts.php' );
+            $this->posts = new Posts( $this->settings, $this->strings );
+        }
+        $html = $this->posts->getPopularPosts();
 
         return $html;
     }
@@ -1513,12 +1534,13 @@ class Route extends Streams {
         $lastSeg = NoNull($fullPath[(count($fullPath) - 1)]);
         $format = ( strpos($lastSeg, 'json') ) ? 'json' : 'xml';
         if ( in_array($lastSeg, $valids) ) {
-            require_once( LIB_DIR . '/posts.php' );
-            $post = new Posts( $this->settings, $this->strings );
-            $feed = $post->getRSSFeed($site, $format);
-            $this->settings['status'] = $post->getResponseCode();
-            $this->settings['errors'] = $post->getResponseMeta();
-            unset($post);
+            if ( $this->posts === false ) {
+                require_once( LIB_DIR . '/posts.php' );
+                $this->posts = new Posts( $this->settings, $this->strings );
+            }
+            $feed = $this->posts->getRSSFeed($site, $format);
+            $this->settings['status'] = $this->posts->getResponseCode();
+            $this->settings['errors'] = $this->posts->getResponseMeta();
 
             switch ( $format ) {
                 case 'json':

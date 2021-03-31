@@ -4,7 +4,7 @@ CREATE PROCEDURE SetPayPalTXN( IN `in_subject` varchar(64), IN `in_received_at` 
                                IN `in_subscr_id` varchar(64), IN `in_first_name` varchar(80), IN `in_last_name` varchar(80), IN `in_payer_id` varchar(64), IN `in_payer_email` varchar(120),
                                IN `in_payer_status` varchar(64), IN `in_res_country` varchar(64), IN `in_verify_sign` varchar(80), IN `in_txn_id` varchar(80),
                                IN `in_payment_gross` decimal(12,4), IN `in_payment_fee` decimal(12,4), IN `in_mc_fee` decimal(12,4), IN `in_mc_gross` decimal(12,4),
-                               IN `in_recurring` char(1), IN `in_site_id` int(11) )
+                               IN `in_recurring` char(1), IN `in_site_id` int(11), IN `in_src_ip` varchar(64), IN `in_src_ok` char(1) )
 BEGIN
     DECLARE `x_account_id`  int(11);
     DECLARE `x_txn_id`      int(11);
@@ -16,7 +16,8 @@ BEGIN
      *  Usage: CALL SetPayPalTXN( 'Test Subscription', '2019-03-23 00:00:00', 'subscr_payment', 'Completed', '0000000000000',
                                   'A-123456789ABC', 'Tester', 'Testington', '1234567890ABC', 'none@noaddy.com',
                                   'unverified', 'US', 'CorrectHorseBatteryStaple', '123456789ABCDEFGH',
-                                  999, 15.15, 15.15, 999, 'N', 1 );
+                                  999, 15.15, 15.15, 999, 'N', 1,
+                                  '1.1.1.1', 'Y' );
      ** ********************************************************************** **/
 
     /* Check to see if this is a duplicate transaction */
@@ -25,6 +26,15 @@ BEGIN
      WHERE txn.`is_deleted` = 'N' and txn.`txn_id` = `in_txn_id` and txn.`verify_sign` = `in_verify_sign`
      ORDER BY txn.`id` DESC
      LIMIT 1;
+
+    /* Validate the Source IP Values */
+    IF LENGTH(IFNULL(`in_src_ip`, '')) < 7 THEN
+        SET `in_src_ok` = 'N';
+    END IF;
+
+    IF IFNULL(`in_src_ok`, '') NOT IN ('N', 'Y') THEN
+        SET `in_src_ok` = 'N';
+    END IF;
 
     /* Determine the Account ID (Including Deleted Accounts) */
     SELECT tmp.`account_id` INTO `x_account_id`
@@ -61,15 +71,12 @@ BEGIN
 
     /* Write the Transaction to the PayPalTXN Table */
     IF IFNULL(`x_txn_id`, 0) <= 0 THEN
-        INSERT INTO `PayPalTXN` (`subject`, `received_at`,
-                                 `type`, `status`, `ipn_track_id`,
+        INSERT INTO `PayPalTXN` (`subject`, `received_at`, `source_ip`, `ip_valid`, `type`, `status`, `ipn_track_id`,
                                  `subscr_id`, `first_name`, `last_name`, `payer_id`, `payer_email`, `payer_status`,
-                                 `res_country`,
-                                 `verify_sign`, `txn_id`,
-                                 `account_id`,
-                                 `site_id`,
-                                 `payment_gross`, `payment_fee`, `mc_fee`, `mc_gross`, `is_recurring`)
+                                 `res_country`, `verify_sign`, `txn_id`,
+                                 `account_id`, `site_id`, `payment_gross`, `payment_fee`, `mc_fee`, `mc_gross`, `is_recurring`)
         SELECT LEFT(IFNULL(`in_subject`, ''), 64) as `subject`, DATE_FORMAT(`in_received_at`, '%Y-%m-%d %H:%i:%s') as `received_at`,
+               LEFT(IFNULL(`in_src_ip`, ''), 64) as `source_ip`, CASE WHEN TRIM(IFNULL(`in_src_ip`, '')) <> '' THEN `in_src_ok` ELSE 'N' END as `ip_valid`,
                LEFT(IFNULL(`in_type`, ''), 64) as `type`, LEFT(IFNULL(`in_status`, ''), 64) as `payer_status`, LEFT(IFNULL(`in_ipn_track_id`, ''), 64) as `ipn_track_id`,
                LEFT(IFNULL(`in_subscr_id`, ''), 64) as `subscr_id`, LEFT(IFNULL(`in_first_name`, ''), 80) as `first_name`, LEFT(IFNULL(`in_last_name`, ''), 80) as `last_name`,
                LEFT(IFNULL(`in_payer_id`, ''), 64) as `payer_id`, LOWER(LEFT(IFNULL(`in_payer_email`, ''), 120)) as `payer_email`, LEFT(IFNULL(`in_payer_status`, ''), 64) as `payer_status`,

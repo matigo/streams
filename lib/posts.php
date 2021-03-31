@@ -1626,24 +1626,31 @@ class Posts {
         if ( nullInt(ENABLE_CACHING) == 1 ) { $html = readCache($this->settings['site_id'], $CacheFile); }
         if ( $html !== false && $html != '' ) { return $html; }
         $tObj = strtolower(str_replace('/', '', $CanonURL));
+        $rslt = false;
 
-        $rslt = getPaginationSets();
-        if ( is_array($rslt) === false && in_array($PgRoot, $Excludes) === false ) {
-            // Construct the SQL Query
-            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                              '[SITE_TOKEN]' => sqlScrub(NoNull($this->settings['site_token'])),
-                              '[SITE_GUID]'  => sqlScrub($data['site_guid']),
-                              '[CANON_URL]'  => sqlScrub($CanonURL),
-                              '[PGROOT]'     => sqlScrub($PgRoot),
-                              '[OBJECT]'     => sqlScrub($tObj),
+        /* Collect the Pagination Info */
+        if ( in_array($PgRoot, $Excludes) === false ) {
+            $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                              '[SITE_TOKEN]'   => sqlScrub(NoNull($this->settings['site_token'])),
+                              '[SITE_GUID]'    => sqlScrub($data['site_guid']),
+                              '[CANON_URL]'    => sqlScrub($CanonURL),
+                              '[PGROOT]'       => sqlScrub($PgRoot),
+                              '[OBJECT]'       => sqlScrub($tObj),
+                              '[PGSUB1]'       => sqlScrub($this->settings['PgSub1']),
+                              '[SITE_VERSION]' => nullInt($data['updated_unix']),
+                              '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '');", $ReplStr);
-            $rslt = doSQLQuery($sqlStr);
+            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $rslt = getCacheObject($cacheFile);
+            if ( is_array($rslt) === false ) {
+                $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+                setCacheObject($cacheFile, $rslt);
+            }
         }
 
         // At this point, we should have data. Let's build some pagination
         if ( is_array($rslt) ) {
-            setPaginationSets($rslt);
             $max = 0;
             $cnt = 0;
 

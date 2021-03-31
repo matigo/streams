@@ -132,18 +132,8 @@ class cookies {
                 case 'pgsub6':
                     $rVal[ $Key ] = $this->_stripQueries( $Val );
                     break;
-
-                case '_device_id':
-                case '__cfduid':
-                    if ( NoNull($Val) != '' ) {
-                        $rVal['_device_id'] = NoNull($Val);
-                    }
-                    break;
             }
         }
-
-        // Ensure there is a Device ID
-        if ( NoNull($rVal['_device_id']) == '' ) { $rVal['_device_id'] = NoNull($rVal['__cfduid'], getRandomString(32)); }
 
         // Get the Appropriate Account Data
         if ( NoNull($rVal['token']) != '' ) {
@@ -332,7 +322,7 @@ class cookies {
     private function _readURL() {
         $ReqURI = substr($_SERVER['REQUEST_URI'], 1);
         if ( strpos($ReqURI, "?") ) { $ReqURI = substr($ReqURI, 0, strpos($ReqURI, "?")); }
-        $filters = array('api', 'cdn', 'files');
+        $filters = array('api', 'cdn', 'hooks', 'files');
 
         // Change the ReqURI if an old pattern is found
         $oldNew = array( 'api/content/blurbs/global' => 'api/posts/global',
@@ -420,8 +410,8 @@ class cookies {
     private function _saveCookies( $cookieVals ) {
         if (!headers_sent()) {
             $cookieVals['remember'] = BoolYN(YNBool(NoNull($cookieVals['remember'], 'N')));
-            $valids = array( 'token', 'DispLang', 'remember', 'invite', '_device_id' );
-            $longer = array( 'DispLang', '_device_id' );
+            $valids = array( 'token', 'DispLang', 'remember', 'invite' );
+            $longer = array( 'DispLang' );
             $domain = strtolower($_SERVER['SERVER_NAME']);
 
             $isHTTPS = false;

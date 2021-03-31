@@ -563,7 +563,8 @@ function parsePersonaProfile(data) {
                                          ((ds.counts.bookmarks > 0) ? '<tr><td class="cell-label">Bookmarks:</td><td class="text-right">' + numberWithCommas(ds.counts.bookmarks) + '</td></tr>' : '') +
                                          ((ds.counts.quotations > 0) ? '<tr><td class="cell-label">Quotations:</td><td class="text-right">' + numberWithCommas(ds.counts.quotations) + '</td></tr>' : '') +
                                          ((ds.counts.photos > 0) ? '<tr><td class="cell-label">Photos:</td><td class="text-right">' + numberWithCommas(ds.counts.photos) + '</td></tr>' : '') +
-                                         '<tr><td colspan="2"><strong>First Post:</strong><p class="text-right">' + formatDate(ds.first_at) + '</p></tr>' +
+                                         '<tr><td colspan="2"><strong>Join Date:</strong><p class="text-right">' + formatDate(ds.created_at) + '</p></tr>' +
+                                         '<tr><td colspan="2"><strong>Earliest Post:</strong><p class="text-right">' + formatDate(ds.first_at) + '</p></tr>' +
                                          '<tr><td colspan="2"><strong>Most Recent:</strong><p class="text-right">' + formatDate(ds.recent_at) + '</p></tr>'
                                        : '<tr><td colspan="2"><p class="text-center">There are no statistics to show.</p></tr>') +
 
