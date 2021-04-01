@@ -151,11 +151,18 @@ section.main-content p {
 
 section.main-content .gallery {
     align-content: stretch;
-    display: block;
-    margin: 0 auto;
-    min-height: calc(100vh - 110px);
+    display: flex;
+    flex-wrap: wrap;
     height: 100%;
     width: 100%;
+    padding: 5px;
+    margin: 0 auto;
+    min-height: calc(100vh - 110px);
+}
+section.main-content .gallery .grid-sizer {
+    max-width: calc(25vw - 5px);
+    min-width: calc(25vw - 5px);
+    width: 25%;
 }
 section.main-content .gallery .grid-item {
     align-content: stretch;
@@ -163,16 +170,58 @@ section.main-content .gallery .grid-item {
     border: 1px solid #ccc;
     border-radius: 3px;
     color: #000;
-    display: inline-flex;
+    display: inline-block;
     vertical-align: text-top;
-    padding: 5px 5px 50px;
-    margin: 0 5px 5px 0;
+    padding: 5px;
+    margin: 0 0 7.5px;
+
+    max-width: calc(25vw - 15px);
+    min-width: calc(25vw - 15px);
+    width: 25%;
 }
-section.main-content .gallery .grid-item img {
-    border-radius: 3px;
-    display: block;
-    object-fit: cover;
-    max-width: 350px;
+section.main-content .gallery .grid-item.half {
+    max-width: calc(50vw - 20px);
+    min-width: calc(50vw - 20px);
+    width: 50%;
+}
+section.main-content .gallery .grid-item.wide {
+    max-width: calc(100vw - 30px);
+    min-width: calc(100vw - 30px);
     width: 100%;
 }
-section.main-content .gallery .grid-item.wide img { max-width: 722px; }
+section.main-content .gallery .grid-item img {
+    border: 1px solid #999;
+    border-radius: 3px;
+    cursor: pointer;
+    display: block;
+    object-fit: cover;
+    vertical-align: middle;
+    width: 100%;
+}
+section.main-content .gallery .grid-item p {
+    display: inline-block;
+    text-align: justify;
+    text-overflow: ellipsis;
+    vertical-align: text-top;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 10px 0 0 5px;
+    margin: 0;
+    max-height: 45px;
+    min-height: 45px;
+    max-width: calc(100% - 150px);
+    min-width: calc(100% - 150px);
+    width: 100%;
+}
+section.main-content .gallery .grid-item button {
+    background-color: transparent;
+    border-color: transparent;
+    display: inline-block;
+    font-size: 1.25em;
+    text-align: right;
+    vertical-align: text-top;
+    margin: 0 0 0 5px;
+    max-width: 40px;
+    min-width: 40px;
+    width: 40px;
+}
