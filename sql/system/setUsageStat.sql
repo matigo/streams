@@ -1,7 +1,5 @@
-INSERT INTO `UsageStats` (`site_id`, `token_id`, `http_code`, `request_type`, `request_uri`, `referrer`,
-                          `event_at`, `event_on`, `from_ip`, `device_id`,
-                          `agent`, `platform`, `browser`, `version`,
-                          `seconds`, `sqlops`, `message`)
+INSERT INTO `UsageStats` (`site_id`, `token_id`, `http_code`, `request_type`, `request_uri`, `referrer`, `event_at`, `event_on`, `from_ip`,
+                          `agent`, `platform`, `browser`, `version`, `seconds`, `sqlops`, `message`)
 SELECT CASE WHEN [SITE_ID] <= 0 THEN NULL ELSE [SITE_ID] END,
        CASE WHEN [TOKEN_ID] <= 0 THEN NULL ELSE [TOKEN_ID] END,
        CASE WHEN [HTTP_CODE] <= 0 THEN 200 ELSE [HTTP_CODE] END,

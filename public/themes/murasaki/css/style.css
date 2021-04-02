@@ -109,6 +109,15 @@ button.btn {
 }
 button .btn-primary,
 button.btn-primary { border: 1px solid #5a3b86 !important; }
+button.btn-danger {
+    background-color: #d9534f !important;
+    border-color: #d43f3a !important;
+}
+button .btn-auto,
+button.btn-auto {
+    min-width: 50px !important;
+    width: auto !important;
+}
 audio {
     border: none;
     border-radius: 2em;
@@ -931,6 +940,14 @@ section.main-content .timeline .post-item .content-area .metaline.geo img.geo-ma
     max-width: 100%;
 }
 
+section.main-content .timeline .post-item .content-area .compact-view { display: none; }
+section.main-content .timeline.compact .post-item .content-area .compact-view { display: block; }
+section.main-content .timeline.compact .post-item .content-area .compact-view p {
+    font-size: 0.9em;
+    font-style: italic;
+    text-align: right;
+}
+
 section.main-content .timeline .post-item.post-quotation .content-area,
 section.main-content .timeline .post-item.post-bookmark .content-area,
 section.main-content .timeline .post-item.post-article .content-area,
@@ -1060,6 +1077,8 @@ section.main-content .timeline .post-item .metaline.post-reply,
     max-width: 600px;
     width: 100%;
 }
+section.main-content .timeline .post-item .content-editor button,
+.modal-content .modal-body.timeline .post-item .content-editor button,
 section.main-content .timeline .post-item .metaline.post-reply button,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply button {
     display: inline-block;
@@ -1078,13 +1097,13 @@ section.main-content .timeline .post-item .metaline.post-reply button.btn-delete
 }
 section.main-content .timeline .post-item .metaline.post-reply button:disabled,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply button:disabled { border: 1px solid #e7e3ed; }
-section.main-content .timeline .post-item .metaline.post-reply span,
-.modal-content .modal-body.timeline .post-item .metaline.post-reply span {
+section.main-content .timeline .post-item .metaline.post-reply span.reply-length,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply span.reply-length {
     display: inline-block;
     font-style: italic;
     text-align: right;
-    max-width: calc(100% - 170px);
-    min-width: calc(100% - 170px);
+    max-width: calc(100% - 275px);
+    min-width: calc(100% - 275px);
 }
 section.main-content .timeline .post-item .metaline.post-reply textarea,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply textarea {
@@ -1111,6 +1130,17 @@ section.main-content .timeline .post-item .metaline.post-reply .reply-success,
     padding: 15px 25px;
     margin: 0;
     max-width: 400px;
+}
+
+section.main-content .timeline.compact .post-item .content-author,
+section.main-content .timeline.compact .post-item .content-header,
+.modal-content .modal-body.timeline.compact .post-item .content-author,
+.modal-content .modal-body.timeline.compact .post-item .content-header { display: none; }
+
+section.main-content .timeline.compact .post-item .content-editor {
+    border: none;
+    padding: 0 0 0 10px;
+    margin: 0;
 }
 
 section.main-content .timeline .post-notify-block {
@@ -1190,6 +1220,17 @@ section.main-content .timeline .post-notify-block span {
         text-align: center;
         margin-left: -30px;
     }
+}
+
+span.button-group,
+span.button-group {
+    display: inline-block;
+    margin: 0 5px 0 0;
+}
+span.button-group.spacer-left,
+span.button-group.spacer-left {
+    border-left: 1px dotted #ccc;
+    padding: 0 0 0 10px;
 }
 
 /** ************************************************************************ *
@@ -1581,11 +1622,13 @@ section.main-content .timeline .post-notify-block span {
     border-radius: 3px;
     padding: 6px 12px;
 }
+.profile-detail .profile-posts button { background-color: #eee; }
 .profile-detail .profile-posts button.btn-primary { background-color: #5a3b86; }
 .profile-detail .profile-posts button.btn-white {
     background-color: transparent;
     border: 1px solid #ccc;
 }
+.profile-detail .profile-posts button.btn-white:disabled { color: #999; }
 
 .profile-detail .profile-posts .post-types {
     border-bottom: 1px solid #ccc;
@@ -1631,7 +1674,7 @@ section.main-content .timeline .post-notify-block span {
     padding: 3em 0 0;
     margin: 0;
 }
-.profile-detail .profile-posts .main-content .timeline .post-item .content-area {
+.profile-detail .profile-posts .main-content .timeline .post-item div.content-area {
     border-left: none;
     padding: 10px 10px 5px 0;
     margin: 0 0 0 10px;

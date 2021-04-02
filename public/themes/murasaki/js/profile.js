@@ -332,8 +332,6 @@ function parseTimeline(data) {
         } else {
             resetTimeline('<p class="reset-msg"><em>There are no posts of this type to show.</em></p>');
         }
-
-
     } else {
         resetTimeline('<p class="reset-msg">Error! Could not read posts ...</p>');
     }

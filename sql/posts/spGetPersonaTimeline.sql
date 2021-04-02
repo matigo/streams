@@ -143,7 +143,7 @@ BEGIN
                                      WHERE `is_visible` = 'Y'
                                        and `posted_at` BETWEEN FROM_UNIXTIME(`in_since_unix`) AND
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
-                                     ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
+                                     ORDER BY tmpPosts.`posted_at` DESC
                                      LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
                    LEFT OUTER JOIN (SELECT pp.`post_id`, pp.`pin_type`, pp.`is_starred`, pp.`is_muted`, pp.`points`
                                       FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
@@ -156,7 +156,7 @@ BEGIN
        and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END
-     ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
+     ORDER BY tmp.`posted_at` DESC;
 
 END ;;
 DELIMITER ;

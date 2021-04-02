@@ -30,7 +30,6 @@ BEGIN
         `event_at`      timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
         `event_on`      varchar(10)             CHARACTER SET utf8  NOT NULL    ,
         `from_ip`       varchar(64)             CHARACTER SET utf8  NOT NULL    ,
-        `device_id`     varchar(64)             CHARACTER SET utf8      NULL    ,
 
         `agent`         varchar(2048)                                   NULL    ,
         `platform`      varchar(64)                                     NULL    ,

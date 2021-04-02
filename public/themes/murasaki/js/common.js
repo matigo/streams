@@ -138,6 +138,10 @@ function handleButtonClick(el) {
             clearReplyToPost();
             break;
 
+        case 'cycle-privacy':
+            toggleReplyPrivacy(tObj);
+            break;
+
         case 'delete':
             confirmDeletePost(tObj);
             break;
@@ -487,10 +491,36 @@ function setVisibility(el) {
     hidePopovers('');
 }
 function setVisibilityValue(mode) {
+    var valids = ['visibility.public', 'public', 'visibility.private', 'private', 'visibility.none', 'none'];
     if ( mode === undefined || mode === false || mode === null ) { mode = 'public'; }
+    if ( valids.indexOf(mode) < 0 ) { mode = 'public'; }
+
     saveStorage('privacy', mode.replaceAll('visibility.', ''));
     showVisibilityType();
     return false;
+}
+function getVisibilityIcon(mode, hidePublic = false) {
+    var valids = ['visibility.public', 'public', 'visibility.private', 'private', 'visibility.none', 'none'];
+    if ( hidePublic === undefined || hidePublic === null || hidePublic !== true ) { hidePublic = false; }
+    if ( mode === undefined || mode === false || mode === null ) { mode = 'public'; }
+    if ( valids.indexOf(mode) < 0 ) { mode = 'public'; }
+    switch ( mode ) {
+        case 'visibility.private':
+        case 'private':
+            return '<i class="fas fa-eye-slash"></i>';
+            break;
+
+        case 'visibility.none':
+        case 'none':
+            return '<i class="fas fa-lock"></i>';
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+
+    /* By default, return the globe */
+    return ((hidePublic) ? '' : '<i class="fas fa-globe"></i>');
 }
 function showVisibilityType() {
     var mode = readStorage('privacy');
@@ -498,18 +528,7 @@ function showVisibilityType() {
     for ( var i = 0; i < els.length; i++ ) {
         var _tag = NoNull(els[i].tagName).toLowerCase();
         if ( _tag == 'button' ) {
-            switch ( mode ) {
-                case 'private':
-                    els[i].innerHTML = '<i class="fas fa-eye-slash"></i>';
-                    break;
-
-                case 'none':
-                    els[i].innerHTML = '<i class="fas fa-lock"></i>';
-                    break;
-
-                default:
-                    els[i].innerHTML = '<i class="fas fa-globe"></i>';
-            }
+            els[i].innerHTML = getVisibilityIcon(mode);
         }
     }
     hidePopovers('');
@@ -666,6 +685,7 @@ function writePostToTL( _view, post ) {
                 _div.className = 'post-item ' + post.type.replace('.', '-');
                 _div.setAttribute('data-unix', post.publish_unix);
                 _div.setAttribute('data-updx', post.updated_unix);
+                _div.setAttribute('data-privacy', post.privacy);
                 _div.setAttribute('data-guid', post.guid);
                 _div.setAttribute('data-type', post.type);
                 _div.setAttribute('data-url', post.canonical_url);
@@ -721,7 +741,7 @@ function buildHTML( post ) {
     }
     var _images = '';
     var _title = NoNull(post.title, _src_title);
-    var _icon = getVisibilityIcon( post.privacy );
+    var _icon = getVisibilityIcon( post.privacy, true );
     var _tags = '';
     if ( post.tags !== undefined && post.tags !== false && post.tags.length > 0 ) {
         if ( post.type != 'post.note' ) {
@@ -803,6 +823,7 @@ function buildHTML( post ) {
                     ((_audio_block != '') ? _audio_block : '') +
                     ((_images != '') ? '<div class="metaline images">' + _images + '</div>' : '') +
                     ((_geo_title != '') ? '<div class="metaline geo pad text-right"><span class="location" onclick="openGeoLocation(this);" data-value="' + _geo_url + '"><i class="fa fas fa-map-marker"></i> ' + _geo_title + '</span></div>' : '') +
+                    '<div class="compact-view"><p class="pubtime" data-utc="' + post.publish_at + '">' + ((_icon != '') ? _icon + ' ' : '') + formatDate(post.publish_at, true) + '</p></div>' +
                     ((_tags != '') ? '<ul class="tag-list">' + _tags + '</ul>' : '') +
                     ((window.personas !== false) ?
                     '<div class="metaline pad post-actions" data-guid="' + post.guid + '">' +
@@ -924,15 +945,22 @@ function replyToPost(el) {
         }
     }
 
+    var _priv = NoNull(el.getAttribute('data-privacy'));
     var _guid = NoNull(el.getAttribute('data-guid'));
     if ( _guid.length == 36 ) {
         var els = el.getElementsByClassName('post-reply');
         for ( var i = 0; i < els.length; i++ ) {
             if ( NoNull(els[i].innerHTML).length < 10 ) {
                 els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-name="content" placeholder="(Your Reply)">' + _replyTxt + '</textarea>' +
+                                   '<input type="hidden" name="rpy-data" data-name="post_privacy" value="' + _priv + '">' +
                                    '<input type="hidden" name="rpy-data" data-name="reply_to" value="' + _guid + '">' +
+                                   '<span class="button-group">' +
                                    '<button class="btn reply-post" data-form="rpy-data" data-action="post-reply" disabled>Reply</button>' +
                                    '<button class="btn btn-danger" data-action="cancel-reply">Cancel</button>' +
+                                   '</span>' +
+                                   '<span class="button-group spacer-left">' +
+                                   '<button class="btn btn-auto btn-primary" data-action="cycle-privacy" data-value="' + _priv + '">' + getVisibilityIcon(_priv) + '</button>' +
+                                   '</span>' +
                                    '<span class="reply-length">&nbsp;</span>';
                 var ccs = els[i].getElementsByClassName('reply-content');
                 for ( var e = 0; e < ccs.length; e++ ) {
@@ -941,6 +969,29 @@ function replyToPost(el) {
                 }
             }
         }
+    }
+}
+function toggleReplyPrivacy(el) {
+    if ( el === undefined || el === false || el === null ) { return; }
+    var opts = ['visibility.public', 'visibility.private', 'visibility.none'];
+    var val = NoNull(el.getAttribute('data-value'));
+    var idx = opts.indexOf(val);
+    if ( isNaN(idx) ) { idx = -1; }
+    idx++;
+
+    /* Ensure the idx is logical */
+    if ( idx < 0 || idx >= opts.length ) { idx = 0; }
+
+    /* Set the Next Privacy Value */
+    var _priv = NoNull(opts[idx], 'visibility.public');
+    el.innerHTML = getVisibilityIcon(_priv);
+    el.setAttribute('data-value', _priv);
+
+    var iName = NoNull(el.getAttribute('data-input'), 'rpy-data');
+    var els = document.getElementsByName(iName);
+    for ( var i = 0; i < els.length; i++ ) {
+        var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
+        if ( _name == 'post_privacy' ) { els[i].value = _priv; }
     }
 }
 function togglePostPin(el) {
@@ -1242,10 +1293,17 @@ function parseEditPost( data ) {
                         /* Construct the Editor */
                         var _name = 'edit-data';
                         var _html = '<textarea class="content-area edit-content" onkeyup="countCharacters();" name="' + _name + '" data-name="content" data-button="edit-post" data-counter="edit-length">' + post.text + '</textarea>' +
-                                    '<input type="hidden" name="' + _name + '" data-name="post_guid" value="' + post.guid + '">' +
                                     '<input type="hidden" name="' + _name + '" data-name="publish_unix" value="' + post.publish_unix + '">' +
+                                    '<input type="hidden" name="' + _name + '" data-name="post_privacy" value="' + post.privacy + '">' +
+                                    '<input type="hidden" name="' + _name + '" data-name="post_type" value="' + post.type + '">' +
+                                    '<input type="hidden" name="' + _name + '" data-name="post_guid" value="' + post.guid + '">' +
+                                    '<span class="button-group">' +
                                     '<button class="btn edit-post" data-form="' + _name + '" data-action="publish" data-label="Update" disabled>Update</button> ' +
                                     '<button class="btn btn-danger" data-action="edit-cancel" data-label="Cancel">Cancel</button>' +
+                                    '</span>' +
+                                    '<span class="button-group spacer-left">' +
+                                    '<button class="btn btn-auto btn-primary" data-action="cycle-privacy" data-input="' + _name + '" data-value="' + post.privacy + '">' + getVisibilityIcon(post.privacy) + '</button>' +
+                                    '</span>' +
                                     '<span class="edit-length">&nbsp;</span>' +
                                     '<div class="bottom-spacer">&nbsp;</div>';
                         el.innerHTML = _html;
@@ -2161,4 +2219,149 @@ function countCharacters() {
             }
         }
     }
+}
+/** ************************************************************************ *
+ *  Uploads
+ ** ************************************************************************ */
+function addUploadLog( ds ) {
+    if ( ds === undefined || ds === false || ds === null || ds == '' ) { return; }
+    var obj = false;
+    if ( ds.files !== undefined && ds.files.length > 0 ) {
+        for ( var i = 0; i < ds.files.length; i++ ) {
+            if ( obj === false ) {
+                obj = ds.files[i];
+                i = ds.files.length + 1;
+            }
+        }
+    }
+
+    /* If we have a proper file object, do something with it */
+    if ( obj !== false ) {
+        if ( obj.is_image === undefined || obj.is_image === false ) { return; }
+        var _thumb = obj.cdn_url;
+        var _src = obj.cdn_url;
+
+        if ( obj.medium !== false ) {
+            _thumb = obj.medium;
+            _src = obj.medium;
+        }
+        if ( obj.thumb !== false ) {
+            _thumb = obj.thumb;
+        }
+        showByClass('upload-log');
+
+        var els = document.getElementsByClassName('upload-list');
+        for ( var i = 0; i < els.length; i++ ) {
+            if ( obj.thumb !== undefined && obj.thumb !== false ) {
+                var li = document.createElement('li');
+                    li.innerHTML = '<button class="btn btn-preview" style="background-image: url(' + _thumb + ');" data-action="image-toggle" data-guid="' + obj.guid + '" data-src="' + _src + '">&nbsp;</button>';
+                els[i].appendChild(li);
+            }
+        }
+    }
+}
+function getUploadProgress( cls ) {
+    var touch_ts = nullInt(Math.floor(Date.now()));
+    var last_ts = 0;
+    var prog = 0;
+
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].tagName.toLowerCase() == 'progress' ) {
+            if ( els[i].classList.contains('hidden') === false ) {
+                last_ts = nullInt(els[i].getAttribute('data-lasttouch'));
+                prog = nullInt(els[i].value);
+            }
+        }
+    }
+
+    /* If the progress value is complete or not yet started, set to zero */
+    if ( prog >= 100 ) { prog = 0; }
+    if ( prog < 0 ) { prog = 0; }
+
+    /* If more than 15 seconds have passed since the last update, consider this "stalled" and unlock */
+    if ( (touch_ts - last_ts) <= 15000 ) { prog = 0; }
+
+    /* Return the Completion Percentage */
+    return prog;
+}
+function setPublishButtonState( _disable = false ) {
+    var els = document.getElementsByClassName('btn-publish');
+    for ( var e = 0; e < els.length; e++ ) {
+        if ( _disable ) {
+            if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+            els[e].disabled = true;
+        } else {
+            countCharacters();
+        }
+    }
+}
+function showUploadProgress( cls, msg = '', val = 0 ) {
+    if ( cls === undefined || cls === false || cls === null || cls == '' ) { return; }
+    if ( msg === undefined || msg === false || msg === null || msg == '' ) { msg = '&nbsp;'; }
+    if ( val === undefined || val === false || val === null || isNaN(val) ) { val = 0; }
+    if ( val > 100 ) { val = 100; }
+    if ( val < 0 ) { val = 0; }
+
+    var touch_ts = nullInt(Math.floor(Date.now()));
+    var els = document.getElementsByClassName(cls);
+    for ( var i = 0; i < els.length; i++ ) {
+        if ( els[i].tagName.toLowerCase() == 'progress' ) { els[i].value = val; }
+        if ( els[i].tagName.toLowerCase() == 'p' ) { els[i].innerHTML = msg; }
+        els[i].setAttribute('data-lasttouch', touch_ts);
+    }
+    if ( msg != '&nbsp;' || val > 0 ) { showByClass(cls); } else { hideByClass(cls); }
+}
+
+function uploadBatchFile( idx ) {
+    var el = document.getElementById('pv-list-file');
+    if ( idx === undefined || idx === false || idx === null || isNaN(idx) ) { return false; }
+    if ( idx >= el.files.length ) { return false; }
+    var _apiUrl = getApiURL() + 'files/upload';
+    setPublishButtonState(true);
+
+    // Upload the Specific File
+    var data = new FormData();
+    data.append('SelectedFile', el.files[idx]);
+
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function(){
+        if ( request.readyState == 4 ) {
+            try {
+                var resp = false;
+                if ( request.responseText != '' ) { resp = JSON.parse(request.responseText); }
+                if ( resp.meta !== undefined && resp.meta.code == 200 ) {
+                    var ds = resp.data;
+                    if ( (idx + 1) >= el.files.length ) {
+                        showUploadProgress('pv-file-upload', '', 100);
+                        fadeFileUploadProgress(true);
+                        setPublishButtonState();
+                        window.upload_pct = 0;
+                    }
+                    addUploadLog(ds);
+                }
+
+            } catch (e){
+                console.log( request.responseText );
+                fadeFileUploadProgress(true);
+                setPublishButtonState();
+            }
+            uploadBatchFile(idx + 1);
+        }
+    };
+    request.upload.addEventListener('progress', function(e) {
+        if ( e.total > 0 && el.files.length > 1 ) {
+            var _blk = 1 / parseFloat(el.files.length);
+            var _cur = parseFloat(e.loaded) / parseFloat(e.total);
+            var _prg = Math.round(((_blk * _cur) + (_blk * idx)) * 100);
+            if ( _prg < 1 ) { _prg = 1; }
+            window.upload_pct = _prg;
+
+            showUploadProgress('pv-file-upload', '', _prg);
+            setPublishButtonState(true);
+        }
+    }, false);
+
+    request.open('POST', _apiUrl, true);
+    request.send(data);
 }
