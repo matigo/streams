@@ -2048,10 +2048,12 @@ function publishPost(el) {
     }
 }
 function parsePublish( data ) {
-    var els = document.getElementsByClassName('btn-publish');
-    for ( var i = 0; i < els.length; i++ ) {
-        spinButton(els[i], true);
-    }
+    setTimeout(function () {
+        var els = document.getElementsByClassName('btn-publish');
+        for ( var i = 0; i < els.length; i++ ) {
+            spinButton(els[i], true);
+        }
+    }, 150);
 
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
@@ -2068,7 +2070,11 @@ function parsePublish( data ) {
         clearWrite();
 
     } else {
-        alert('Error: ' + NoNull(data.meta.text, 'Could not publish your post'));
+        var _msg = '';
+        if ( data !== undefined && data !== null ) {
+            if ( data.meta !== undefined && data.meta !== null ) { _msg = NoNull(data.meta.text); }
+        }
+        alert('Error: ' + NoNull(_msg, 'Could not publish your post'));
     }
 }
 function setReplySuccessful() {

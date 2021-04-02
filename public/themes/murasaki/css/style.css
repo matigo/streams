@@ -1220,6 +1220,18 @@ section.main-content .timeline .post-notify-block span {
         text-align: center;
         margin-left: -30px;
     }
+    section.main-content .timeline .post-item.active .metaline.post-reply {
+        margin-left: -30px;
+        width: calc(100vw - 55px);
+    }
+    section.main-content .timeline .post-item.active .metaline.post-reply span.reply-length { display: none; }
+    section.main-content .timeline .post-item .content-editor { padding: 10px 15px 5px 10px; }
+    section.main-content .timeline .post-item .content-editor textarea {
+        max-width: 100%;
+        min-width: 100%;
+        width: 100%;
+     }
+     section.main-content .timeline .post-item .content-editor span.edit-length { display: none; }
 }
 
 span.button-group,
