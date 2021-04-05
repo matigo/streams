@@ -580,6 +580,8 @@ section.main-content .composer label.btn {
     padding: 7px 3px;
     min-width: 48px;
 }
+section.main-content .composer label.btn .btn-primary,
+section.main-content .composer label.btn.btn-primary { border: 1px solid #5a3b86; }
 section.main-content .composer progress {
     border-radius: 5px;
     color: #5a3b86;
@@ -723,7 +725,6 @@ body.fontsize-xl section.main-content .composer label {
         width: 100px;
     }
 }
-
 
 section.main-content .timeline,
 .modal-content .modal-body.timeline {
