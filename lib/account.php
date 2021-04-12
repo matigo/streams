@@ -341,7 +341,7 @@ class Account {
         $Redirect = NoNull($this->settings['redirect'], $this->settings['is_web']);
 
         /* Ensure there are no bad characters in the account name */
-        $CleanName = preg_replace("/[^a-zA-Z0-9]+/", '', $CleanName);
+        $CleanName = NoNull(strip_tags(preg_replace("/[^a-zA-Z0-9]+/", '', $CleanName)));
 
         /* Now let's do some basic validation */
         if ( mb_strlen($CleanPass) <= 6 ) {
@@ -350,7 +350,11 @@ class Account {
         }
 
         if ( mb_strlen($CleanName) < 2 ) {
-            $this->_setMetaMessage( "Nickname is too short. Please choose a longer one.", 400 );
+            $this->_setMetaMessage( "Account name is too short. Please choose a longer one.", 400 );
+            return false;
+        }
+        if ( mb_strlen($CleanName) > 40 ) {
+            $this->_setMetaMessage( "Account name is too long. Please choose a shorter one.", 400 );
             return false;
         }
 
