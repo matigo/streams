@@ -1,0 +1,224 @@
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 300;
+    src: url("../fonts/ubuntu-l-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-l-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 400;
+    src: url("../fonts/ubuntu-r-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-r-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: normal;
+    font-weight: 700;
+    src: url("../fonts/ubuntu-b-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-b-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: italic;
+    font-weight: 300;
+    src: url("../fonts/ubuntu-li-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-li-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: italic;
+    font-weight: 400;
+    src: url("../fonts/ubuntu-ri-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-ri-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu';
+    font-style: italic;
+    font-weight: 700;
+    src: url("../fonts/ubuntu-bi-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntu-bi-webfont.woff") format("woff")
+}
+@font-face {
+    font-family: 'Ubuntu Mono';
+    font-style: normal;
+    font-weight: 400;
+    src: url("../fonts/ubuntumono-r-webfont.woff2") format("woff2"),
+         url("../fonts/ubuntumono-r-webfont.woff") format("woff")
+}
+
+@font-face {
+  font-family: 'Font Awesome 5 Brands';
+  font-style: normal;
+  font-weight: normal;
+  src: url("../fonts/fa-brands-400.eot");
+  src: url("../fonts/fa-brands-400.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-brands-400.woff2") format("woff2"),
+       url("../fonts/fa-brands-400.woff") format("woff"),
+       url("../fonts/fa-brands-400.ttf") format("truetype"),
+       url("../fonts/fa-brands-400.svg#fontawesome") format("svg");
+}
+
+@font-face {
+  font-family: 'Font Awesome 5 Free';
+  font-style: normal;
+  font-weight: 400;
+  src: url("../fonts/fa-regular-400.eot");
+  src: url("../fonts/fa-regular-400.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-regular-400.woff2") format("woff2"),
+       url("../fonts/fa-regular-400.woff") format("woff"),
+       url("../fonts/fa-regular-400.ttf") format("truetype"),
+       url("../fonts/fa-regular-400.svg#fontawesome") format("svg"); }
+
+@font-face {
+  font-family: 'Font Awesome 5 Free';
+  font-style: normal;
+  font-weight: 900;
+  src: url("../fonts/fa-solid-900.eot");
+  src: url("../fonts/fa-solid-900.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/fa-solid-900.woff2") format("woff2"),
+       url("../fonts/fa-solid-900.woff") format("woff"),
+       url("../fonts/fa-solid-900.ttf") format("truetype"),
+       url("../fonts/fa-solid-900.svg#fontawesome") format("svg");
+}
+
+.fab { font-family: 'Font Awesome 5 Brands'; }
+.far {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 400;
+}
+.fa,
+.fas {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+}
+
+html { height: 100%; }
+body {
+    color: #000;
+    font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    overflow: hidden;
+    word-break: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+    min-height: 100%;
+    margin: 0;
+}
+a,
+a:hover,
+a:active,
+a:focus {
+    color: #393836;
+    font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    text-decoration: none;
+    font-weight: bold;
+    outline: none;
+}
+b, strong { font-weight: bold; }
+button { font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+code,
+kbd,
+pre,
+samp {
+    font-family: 'Ubuntu Mono', 'Lucida Console', Monaco, monospace;
+    font-size: 0.95em;
+    color: #333;
+    white-space: pre-wrap;
+}
+blockquote {
+    padding: 0.5em 0 1em 1em;
+    margin: 0 0 2em;
+    font-size: 1em;
+    border-left: 5px solid #eee;
+    color: #333;
+}
+
+body.four-hundred {
+    overflow: hidden;
+    background: #004f83;
+    background-color: #004f83;
+    background-image: linear-gradient(155deg, #004f83, #004f83, #004f83, #005e9d, #006eb6, #007dd0);
+}
+
+body.font-xs { font-size: 9px; }
+body.font-sm { font-size: 11px; }
+body.font-lg { font-size: 17px; }
+body.font-xl { font-size: 21px; }
+
+body.nolabels label { display: none !important; }
+
+body.font-mono,
+body.font-mono a, body.font-mono a:hover, body.font-mono a:active, body.font-mono a:focus,
+body.font-mono button { font-family: 'Ubuntu Mono', 'Lucida Console', Monaco, monospace; }
+body.font-sans,
+body.font-sans a, body.font-sans a:hover, body.font-sans a:active, body.font-sans a:focus,
+body.font-sans button { font-family: -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+body.font-serif,
+body.font-serif a, body.font-serif a:hover, body.font-serif a:active, body.font-serif a:focus,
+body.font-serif button { font-family: 'Garamond', 'Georgia', 'Times New Roman', serif; }
+
+.hidden { display: none !important; }
+.nopadding { padding: 0 !important; }
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.footer {
+    color: #ccc;
+    font-size: 0.75em;
+    padding: 5px 0 3px;
+    text-align: center;
+}
+
+::-webkit-input-placeholder { font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+::-moz-placeholder { font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+:-ms-input-placeholder { font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+:-moz-placeholder { font-family: 'Ubuntu', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif; }
+
+a.quiet { font-weight: normal !important; }
+button {
+    border-radius: 5px;
+    border-style: solid;
+}
+button.btn { font-size: 1em !important; }
+button.btn-success {
+    background-color: #5ba525;
+    border-color: #5ba525;
+    color: #fff !important;
+    font-weight: bold;
+}
+button.btn-primary {
+    color: #fff !important;
+    background-color: #337ab7 !important;
+    border-color: #2e6da4 !important;
+}
+ul li.nav-item { cursor: pointer; }
+
+section.header {
+    background-color: #5ba525;
+    border-bottom: 2px solid #40751a;
+    color: #fff;
+    display: block;
+    padding: 10px 10px 5px;
+    width: 100%;
+}
+section.header h3 {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    width: 250px;
+}
+section.header div.actions {
+    display: inline-block;
+    text-align: right;
+    width: calc(100% - 265px);
+}
+section.header div.actions button {
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: #fff;
+    cursor: pointer;
+    padding: 3px 5px;
+}

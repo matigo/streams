@@ -1,0 +1,15 @@
+{
+    "lblSiteName": "Memos 4U",
+
+    "btnSignIn": "Sign in",
+    "btnSignOut": "Log out",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optJaJP": "日本語",
+    "optEsES": "Español",
+
+    "msgMissingValue": "This Is Missing",
+    "msgLoginFailed": "Could Not Sign In",
+    "msgWMThanks": "Thank You! Your webmention should appear here shortly."
+}

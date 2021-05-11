@@ -40,14 +40,19 @@ class Route extends Streams {
     public function getResponseData() {
         $ReplStr = $this->_getReplStrArray();
         $this->settings['status'] = 200;
-
         $html = readResource(FLATS_DIR . '/templates/500.html', $ReplStr);
-        $ThemeFile = THEME_DIR . '/error.html';
-        $LoggedIn = false;
-
-        // Collect the Site Data - Redirect if Invalid
         $data = $this->site->getSiteData();
+
         $this->settings['_theme'] = NoNull($data['location'], 'default');
+
+        /* Validate the Theme Location and load the site data if required */
+        $baseFile = THEME_DIR . '/' . $this->settings['_theme'] . '/base.html';
+        if ( file_exists($baseFile) === false ) {
+            $html = readResource(FLATS_DIR . '/templates/900.html', $ReplStr);
+            $this->settings['status'] = 500;
+            $data = false;
+        }
+
         if ( is_array($data) ) {
             $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
             $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
@@ -232,7 +237,7 @@ class Route extends Streams {
 
         // If We're Here, We Need to Build the File
         $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
-        if ( checkDIRExists($ThemeLocation) === false ) {
+        if ( file_exists($ThemeLocation) === false ) {
             $this->settings['_theme'] = 'default';
             $data['location'] = 'default';
         }
@@ -620,7 +625,7 @@ class Route extends Streams {
      */
     private function _getLanguageStrings( $Location ) {
         $ThemeLocation = THEME_DIR . '/' . $Location;
-        if ( checkDIRExists($ThemeLocation) === false ) { $ThemeLocation = THEME_DIR . '/default'; }
+        if ( file_exists($ThemeLocation) === false ) { $ThemeLocation = THEME_DIR . '/default'; }
         $rVal = array();
 
         // Collect the Default Langauge Strings
@@ -1357,7 +1362,7 @@ class Route extends Streams {
      */
     private function _getContentPage( $data ) {
         $ResDIR = THEME_DIR . "/" . NoNull($data['location'], getRandomString(6));
-        if ( checkDIRExists($ResDIR) === false ) { $data['location'] = 'default'; }
+        if ( file_exists($ResDIR) === false ) { $data['location'] = 'default'; }
         $valids = array('', 'forgot', 'register', 'rights', 'terms', 'tos');
 
         $ResDIR = THEME_DIR . "/" . $data['location'] . "/resources/";
