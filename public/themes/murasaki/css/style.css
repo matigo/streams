@@ -1181,8 +1181,10 @@ section.main-content .timeline .post-notify-block span {
     border-radius: 15px;
     cursor: pointer;
     display: block;
+    text-align: center;
     padding: 0 5px;
     margin: -25px auto 10px;
+    width: -moz-fit-content;
     width: fit-content;
 }
 
