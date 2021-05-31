@@ -34,7 +34,7 @@ BEGIN
     /* Create the Site Record */
     INSERT INTO `Site` (`account_id`, `name`, `description`, `keywords`, `https`, `theme`)
     SELECT acct.`id` as `account_id`, LEFT(TRIM(`in_site_name`), 80) as `name`, LEFT(TRIM(`in_site_descr`), 255) as `description`,
-           LEFT(TRIM(`in_site_keys`), 255) as `keywords`, 'Y' as `https`, 'anri' as `theme`
+           LEFT(TRIM(`in_site_keys`), 255) as `keywords`, 'N' as `https`, 'anri' as `theme`
       FROM `Account` acct
      WHERE acct.`is_deleted` = 'N' and acct.`id` = `in_account_id`
      LIMIT 1;
