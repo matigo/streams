@@ -582,13 +582,12 @@ section.main-content .composer label.btn {
 }
 section.main-content .composer label.btn .btn-primary,
 section.main-content .composer label.btn.btn-primary { border: 1px solid #5a3b86; }
-section.main-content .composer progress {
+section.main-content progress {
     border-radius: 5px;
     color: #5a3b86;
     display: block;
     padding: 0;
-    margin: 0 0 5px;
-
+    margin: 0 auto 5px;
     max-height: 5px;
     min-height: 5px;
     height: 5px;
@@ -596,8 +595,8 @@ section.main-content .composer progress {
     min-width: calc(100% - 5px);
     width: 100%;
 }
-section.main-content .composer progress::-moz-progress-bar { background: #5a3b86; }
-section.main-content .composer progress::-webkit-progress-value { background: #5a3b86; }
+section.main-content progress::-moz-progress-bar { background: #5a3b86; }
+section.main-content progress::-webkit-progress-value { background: #5a3b86; }
 
 section.main-content .composer select {
     background: url(data:image/gif;base64,R0lGODlhCwALAJEAAAAAAP///xUVFf///yH5BAEAAAMALAAAAAALAAsAAAIPnI+py+0/hJzz0IruwjsVADs=);
@@ -648,22 +647,25 @@ section.main-content .composer .content-length {
     width: 75px;
 }
 section.main-content .composer .error { border: 2px solid #f00; }
-section.main-content .composer .upload-log ul {
+section.main-content .composer .upload-log ul,
+section.main-content .reply-upload-log ul {
     display: block;
     white-space: nowrap;
     overflow-y: hidden;
     overflow-x: auto;
-    padding: 0;
-    margin: 5px 0 0;
+    padding: 0 !important;
+    margin: 5px 0 0 !important;
     max-height: 80px;
     width: 100%;
 }
+section.main-content .reply-upload-log ul.reply-upload-list li,
 section.main-content .composer .upload-log ul.upload-list li {
     display: inline-block;
     padding: 0 5px 5px 0;
     margin: 0;
 }
-section.main-content .composer .upload-log button.btn-preview {
+section.main-content .composer .upload-log button.btn-preview,
+section.main-content .reply-upload-log button.btn-preview {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -680,11 +682,27 @@ section.main-content .composer .upload-log button.btn-preview {
     width: 75px;
 }
 section.main-content .composer .upload-log button.btn-preview .exclude,
-section.main-content .composer .upload-log button.btn-preview.exclude {
+section.main-content .composer .upload-log button.btn-preview.exclude,
+section.main-content .reply-upload-log button.btn-preview .exclude,
+section.main-content .reply-upload-log button.btn-preview.exclude {
     color: #999;
     font-size: 50px;
     background-blend-mode: overlay;
 }
+section.main-content .reply-upload-log button.btn-preview {
+    max-height: 50px !important;
+    min-height: 50px !important;
+    max-width: 50px !important;
+    min-width: 50px !important;
+    height: 50px !important;
+    width: 50px !important;
+}
+section.main-content .reply-upload-log button.btn-preview .exclude,
+section.main-content .reply-upload-log button.btn-preview.exclude {
+    font-size: 35px;
+    padding: 0 !important;
+}
+
 
 body.fontsize-xl section.main-content .composer .form-element {
     max-width: calc(100% - 120px);
@@ -1089,6 +1107,20 @@ section.main-content .timeline .post-item .metaline.post-reply button,
     min-width: 75px;
     width: 75px;
 }
+section.main-content .timeline .post-item .content-editor label.btn-auto,
+.modal-content .modal-body.timeline .post-item .content-editor label.btn-auto,
+section.main-content .timeline .post-item .metaline.post-reply label.btn-auto,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply label.btn-auto {
+    border: 1px solid #5a3b86 !important;
+    display: inline-block;
+    padding: 3px 0;
+    margin: 0 5px 0 0;
+    max-height: 30px;
+    height: 30px;
+    max-width: 75px;
+    min-width: 50px !important;
+    width: auto !important;
+}
 section.main-content .timeline .post-item .metaline.post-reply button.btn-delete,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply button.btn-delete {
     margin: 0 10px 0 0;
@@ -1103,8 +1135,9 @@ section.main-content .timeline .post-item .metaline.post-reply span.reply-length
     display: inline-block;
     font-style: italic;
     text-align: right;
-    max-width: calc(100% - 275px);
-    min-width: calc(100% - 275px);
+    vertical-align: middle;
+    max-width: calc(100% - 305px);
+    min-width: calc(100% - 305px);
 }
 section.main-content .timeline .post-item .metaline.post-reply textarea,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply textarea {
@@ -1188,6 +1221,15 @@ section.main-content .timeline .post-notify-block span {
     width: fit-content;
 }
 
+span.button-group {
+    display: inline-block;
+    margin: 0 5px 0 0;
+}
+span.button-group.spacer-left {
+    border-left: 1px dotted #ccc;
+    padding: 0 0 0 10px;
+}
+
 @media (max-width: 425px) {
     section.main-content .composer.hidden-pop { display: none !important; }
     section.main-content .composer {
@@ -1225,7 +1267,7 @@ section.main-content .timeline .post-notify-block span {
     }
     section.main-content .timeline .post-item.active .metaline.post-reply {
         margin-left: -30px;
-        width: calc(100vw - 55px);
+        width: calc(100vw - 40px);
     }
     section.main-content .timeline .post-item.active .metaline.post-reply span.reply-length { display: none; }
     section.main-content .timeline .post-item .content-editor { padding: 10px 15px 5px 10px; }
@@ -1234,18 +1276,16 @@ section.main-content .timeline .post-notify-block span {
         min-width: 100%;
         width: 100%;
      }
-     section.main-content .timeline .post-item .content-editor span.edit-length { display: none; }
-}
+    section.main-content .timeline .post-item .content-editor span.edit-length { display: none; }
+    span.button-group { margin: 0; }
 
-span.button-group,
-span.button-group {
-    display: inline-block;
-    margin: 0 5px 0 0;
-}
-span.button-group.spacer-left,
-span.button-group.spacer-left {
-    border-left: 1px dotted #ccc;
-    padding: 0 0 0 10px;
+    section.main-content .timeline .post-item .content-editor button,
+    .modal-content .modal-body.timeline .post-item .content-editor button,
+    section.main-content .timeline .post-item .metaline.post-reply button,
+    .modal-content .modal-body.timeline .post-item .metaline.post-reply button {
+        min-width: 60px;
+        width: auto;
+    }
 }
 
 /** ************************************************************************ *

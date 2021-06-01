@@ -945,23 +945,42 @@ function replyToPost(el) {
         }
     }
 
+    var _pvID = randName(12);
+    var _pvProg = 'pv-file-upload-' + _pvID;
+    var _pvList = 'pv-list-file-' + _pvID;
+    var pvCnt = document.getElementById(_pvList);
+
     var _priv = NoNull(el.getAttribute('data-privacy'));
     var _guid = NoNull(el.getAttribute('data-guid'));
     if ( _guid.length == 36 ) {
         var els = el.getElementsByClassName('post-reply');
         for ( var i = 0; i < els.length; i++ ) {
             if ( NoNull(els[i].innerHTML).length < 10 ) {
-                els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-name="content" placeholder="(Your Reply)">' + _replyTxt + '</textarea>' +
+                els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-pvid="' + _pvID + '" data-name="content" placeholder="(Your Reply)">' + _replyTxt + '</textarea>' +
                                    '<input type="hidden" name="rpy-data" data-name="post_privacy" value="' + _priv + '">' +
                                    '<input type="hidden" name="rpy-data" data-name="reply_to" value="' + _guid + '">' +
+                                   '<progress class="progress ' + _pvProg + ' pu-prog hidden" value="0" min="0" max="100" style="opacity: 1;">&nbsp;</progress>' +
                                    '<span class="button-group">' +
+                                   '<input id="' + _pvList + '" type="file" name="rpy-data" class="form-control hidden" accept="image/*" multiple="">' +
                                    '<button class="btn reply-post" data-form="rpy-data" data-action="post-reply" disabled>Reply</button>' +
                                    '<button class="btn btn-danger" data-action="cancel-reply">Cancel</button>' +
                                    '</span>' +
                                    '<span class="button-group spacer-left">' +
                                    '<button class="btn btn-auto btn-primary" data-action="cycle-privacy" data-value="' + _priv + '">' + getVisibilityIcon(_priv) + '</button>' +
+                                   '<label for="' + _pvList + '" class="btn btn-auto btn-primary"><i class="fas fa-cloud-upload-alt"></i></label>' +
                                    '</span>' +
-                                   '<span class="reply-length">&nbsp;</span>';
+                                   '<span class="reply-length">&nbsp;</span>' +
+                                   '<section class="reply-upload-log upload-log-' + _pvID + '"><ul class="reply-upload-list upload-list-' + _pvID + '"></ul></section>';
+
+                /* Ensure the "Upload Button" is Listening */
+                document.getElementById(_pvList).addEventListener('change', function(e) {
+                    if ( this.files.length === 0 ) { return false; }
+                    showByClass(_pvProg);
+
+                    /* Upload the Files One by One */
+                    uploadBatchFile(0, _pvList);
+                }, false);
+
                 var ccs = els[i].getElementsByClassName('reply-content');
                 for ( var e = 0; e < ccs.length; e++ ) {
                     ccs[e].focus();
@@ -1977,23 +1996,28 @@ function validatePublish( fname ) {
     }
     return true;
 }
-function getContent() {
-    var _txt = '',
+function getContent( fname ) {
+    if ( fname === undefined || fname === false || fname === null ) { fname = 'fdata'; }
+    var _pvId = '',
+        _txt = '',
         _img = '';
 
     /* First let's get the content */
-    var els = document.getElementsByName('fdata');
+    var els = document.getElementsByName(fname);
     for ( var i = 0; i < els.length; i++ ) {
         var _name = NoNull(els[i].getAttribute('data-name')).toLowerCase();
         if ( _name == 'content' ) {
-            if ( NoNull(els[i].value) != '' ) {
-                _txt = els[i].value;
+            if ( NoNull(els[i].value) != '' ) { _txt = els[i].value; }
+            if ( els[i].hasAttribute('data-pvid') ) {
+                _pvId = NoNull(els[i].getAttribute('data-pvid'));
             }
         }
     }
 
     /* Now let's check for image attachments */
-    var els = document.getElementsByClassName('btn-preview');
+    var _ppName = 'btn-preview';
+    if ( _pvId != '' ) { _ppName = 'pvid-' + _pvId; }
+    var els = document.getElementsByClassName(_ppName);
     for ( var i = 0; i < els.length; i++ ) {
         if ( els[i].classList.contains('exclude') === false ) {
             var _guid = NoNull(els[i].getAttribute('data-guid'));
@@ -2037,12 +2061,13 @@ function publishPost(el) {
         var els = document.getElementsByName(fname);
         for ( var i = 0; i < els.length; i++ ) {
             var _name = NoNull(els[i].getAttribute('data-name'));
-            if ( NoNull(els[i].value) != '' ) { params[_name] = els[i].value; }
+            if ( _name.length >= 2 && NoNull(els[i].value) != '' ) { params[_name] = els[i].value; }
         }
 
-        /* Ensure the full content is grabbed if this is not a reply */
-        if ( fname == 'fdata' ) { params['content'] = getContent(); }
+        /* Ensure the full content is grabbed */
+        params['content'] = getContent(fname);
 
+        /* Publish the Post */
         setTimeout(function () { doJSONQuery('posts', 'POST', params, parsePublish); }, 150);
         spinButton(el);
     }
@@ -2229,7 +2254,8 @@ function countCharacters() {
 /** ************************************************************************ *
  *  Uploads
  ** ************************************************************************ */
-function addUploadLog( ds ) {
+function addUploadLog( ds, elID ) {
+    if ( elID === undefined || elID === false || elID === null || elID.length <= 1 ) { elID = 'upload-log'; }
     if ( ds === undefined || ds === false || ds === null || ds == '' ) { return; }
     var obj = false;
     if ( ds.files !== undefined && ds.files.length > 0 ) {
@@ -2254,13 +2280,17 @@ function addUploadLog( ds ) {
         if ( obj.thumb !== false ) {
             _thumb = obj.thumb;
         }
-        showByClass('upload-log');
 
-        var els = document.getElementsByClassName('upload-list');
+        var _btnId = elID.replaceAll('pv-list-file', 'pvid');
+        var _uList = elID.replaceAll('pv-list-file', 'upload-list');
+        var _uLog = elID.replaceAll('pv-list-file', 'upload-log');
+        showByClass(_uLog);
+
+        var els = document.getElementsByClassName(_uList);
         for ( var i = 0; i < els.length; i++ ) {
             if ( obj.thumb !== undefined && obj.thumb !== false ) {
                 var li = document.createElement('li');
-                    li.innerHTML = '<button class="btn btn-preview" style="background-image: url(' + _thumb + ');" data-action="image-toggle" data-guid="' + obj.guid + '" data-src="' + _src + '">&nbsp;</button>';
+                    li.innerHTML = '<button class="btn btn-preview ' + _btnId + '" style="background-image: url(' + _thumb + ');" data-action="image-toggle" data-guid="' + obj.guid + '" data-src="' + _src + '">&nbsp;</button>';
                 els[i].appendChild(li);
             }
         }
@@ -2319,14 +2349,19 @@ function showUploadProgress( cls, msg = '', val = 0 ) {
     if ( msg != '&nbsp;' || val > 0 ) { showByClass(cls); } else { hideByClass(cls); }
 }
 
-function uploadBatchFile( idx ) {
-    var el = document.getElementById('pv-list-file');
+function uploadBatchFile( idx, elId ) {
+    if ( elId === undefined || elId === null || elId === false || elId.length <= 1 ) { elId = 'pv-list-file'; }
+    var el = document.getElementById(elId);
+
     if ( idx === undefined || idx === false || idx === null || isNaN(idx) ) { return false; }
     if ( idx >= el.files.length ) { return false; }
     var _apiUrl = getApiURL() + 'files/upload';
     setPublishButtonState(true);
 
-    // Upload the Specific File
+    /* Set the ProgressId */
+    var progId = elId.replaceAll('pv-list-file', 'pv-file-upload');
+
+    /* Upload the Specific File */
     var data = new FormData();
     data.append('SelectedFile', el.files[idx]);
 
@@ -2339,20 +2374,19 @@ function uploadBatchFile( idx ) {
                 if ( resp.meta !== undefined && resp.meta.code == 200 ) {
                     var ds = resp.data;
                     if ( (idx + 1) >= el.files.length ) {
-                        showUploadProgress('pv-file-upload', '', 100);
+                        showUploadProgress(progId, '', 100);
                         fadeFileUploadProgress(true);
                         setPublishButtonState();
                         window.upload_pct = 0;
                     }
-                    addUploadLog(ds);
+                    addUploadLog(ds, elId);
                 }
 
             } catch (e){
-                console.log( request.responseText );
                 fadeFileUploadProgress(true);
                 setPublishButtonState();
             }
-            uploadBatchFile(idx + 1);
+            uploadBatchFile(idx + 1, elId);
         }
     };
     request.upload.addEventListener('progress', function(e) {
@@ -2363,7 +2397,7 @@ function uploadBatchFile( idx ) {
             if ( _prg < 1 ) { _prg = 1; }
             window.upload_pct = _prg;
 
-            showUploadProgress('pv-file-upload', '', _prg);
+            showUploadProgress(progId, '', _prg);
             setPublishButtonState(true);
         }
     }, false);
