@@ -276,10 +276,10 @@ section.nav-left ul li.has-notify span.notify {
     color: #fff;
     display: inline-block;
     font-size: 0.75em;
-    padding: 0 5px 0 5px;
+    padding: 3px 5px 0 5px;
     text-align: center;
-    vertical-align: text-top;
-    min-width: 1.5em;
+    vertical-align: text-bottom;
+    min-width: 25px;
 }
 section.nav-left ul li span.label { display: none; }
 section.nav-left ul.post-types { display: none; }
@@ -611,7 +611,7 @@ section.main-content .composer .form-element {
     border-radius: 3px;
     display: inline-block;
     vertical-align: text-top;
-    padding: 0 5px;
+    padding: 5px 5px 0 5px;
     margin: 0 0 3px;
     max-height: 30px;
     min-height: 30px;
@@ -619,7 +619,10 @@ section.main-content .composer .form-element {
     width: calc(100% - 90px);
 }
 section.main-content .composer .form-element.short {
-    padding: 0 5px;
+    overflow: hidden;
+    padding: 5px 5px 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     max-height: 30px;
     min-height: 30px;
     max-width: calc(100% - 165px);
