@@ -41,7 +41,8 @@ BEGIN
       FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
                         INNER JOIN `SiteUrl` su ON si.`id` = su.`site_id`
                         INNER JOIN `SiteUrl` lu ON su.`site_id` = lu.`site_id`
-     WHERE si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y' and lu.`url` IN (`site_url`, CONCAT('www.', `site_url`))
+     WHERE si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
+       and lu.`is_deleted` = 'N' and lu.`url` IN (`site_url`, CONCAT('www.', `site_url`))
      UNION ALL
     SELECT su.`site_id`, si.`guid` as `site_guid`, su.`id` as `url_id`, su.`url` as `site_url`,
            si.`name` as `site_name`, si.`description`, si.`keywords`, si.`https`, si.`theme`, si.`is_default`,
