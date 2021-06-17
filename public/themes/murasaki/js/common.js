@@ -87,6 +87,11 @@ function handleSpanClick(el) {
             }
             break;
 
+        case 'clear-editor':
+            var _ch = nullInt(el.getAttribute('data-count'));
+            if ( _ch > 0 ) { clearWrite(); }
+            break;
+
         case 'hash':
             var _word = NoNull(el.getAttribute('data-hash'));
             if ( _word != '' ) {
@@ -2163,6 +2168,12 @@ function fadeFileUploadProgress( _init = false ) {
     }
 }
 function clearWrite() {
+    fadeFileUploadProgress(true);
+    togglePostGeo(null, true);
+    toggleComposerPop(true);
+    blankWritingArea();
+}
+function blankWritingArea() {
     var els = document.getElementsByName('fdata');
     for ( var i = 0; i < els.length; i++ ) {
         var _tag = NoNull(els[i].tagName).toLowerCase();
@@ -2186,9 +2197,6 @@ function clearWrite() {
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = '';
     }
-    fadeFileUploadProgress(true);
-    toggleComposerPop(true);
-    togglePostGeo(null, true);
     countCharacters();
 }
 function toggleComposerPop( _reset ) {
@@ -2197,6 +2205,7 @@ function toggleComposerPop( _reset ) {
     for ( var i = 0; i < els.length; i++ ) {
         if ( _reset || els[i].classList.contains('hidden-pop') === false ) {
             els[i].classList.add('hidden-pop');
+            blankWritingArea();
             _reset = true;
 
         } else {
@@ -2229,10 +2238,21 @@ function countCharacters() {
             var _ch = 0;
             if ( _val != '' ) { _ch = els[i].value.length; }
 
+            /* Are there files to upload? */
+            var fup = document.getElementsByClassName('pvid');
+
+            /* Determine the String Value */
+            var _html = '&nbsp;';
+            if (_ch > 0 || fup.length > 0) {
+                _html = ((_ch > 0) ? numberWithCommas(_ch) : '') +
+                        '<span class="clear-editor" data-count="' + (_ch + fup.length) + '"><i class="fas fa-times-circle"></i></span>';
+            }
+
             /* Set the Counter */
             var ccs = pEl.getElementsByClassName(_cntCls);
             for ( var e = 0; e < ccs.length; e++ ) {
-                ccs[e].innerHTML = (_ch > 0) ? numberWithCommas(_ch) : '&nbsp;';
+                ccs[e].innerHTML = NoNull(_html, '&nbsp;');
+                ccs[e].setAttribute('data-count', _ch);
             }
 
             /* Do not let the Button Appear as Active if an Upload is in Progress */
@@ -2288,12 +2308,13 @@ function addUploadLog( ds, elID ) {
 
         var els = document.getElementsByClassName(_uList);
         for ( var i = 0; i < els.length; i++ ) {
-            if ( obj.thumb !== undefined && obj.thumb !== false ) {
+            if ( _thumb !== undefined && _thumb !== false && _thumb.length > 10 ) {
                 var li = document.createElement('li');
                     li.innerHTML = '<button class="btn btn-preview ' + _btnId + '" style="background-image: url(' + _thumb + ');" data-action="image-toggle" data-guid="' + obj.guid + '" data-src="' + _src + '">&nbsp;</button>';
                 els[i].appendChild(li);
             }
         }
+        countCharacters();
     }
 }
 function getUploadProgress( cls ) {
@@ -2321,17 +2342,6 @@ function getUploadProgress( cls ) {
     /* Return the Completion Percentage */
     return prog;
 }
-function setPublishButtonState( _disable = false ) {
-    var els = document.getElementsByClassName('btn-publish');
-    for ( var e = 0; e < els.length; e++ ) {
-        if ( _disable ) {
-            if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
-            els[e].disabled = true;
-        } else {
-            countCharacters();
-        }
-    }
-}
 function showUploadProgress( cls, msg = '', val = 0 ) {
     if ( cls === undefined || cls === false || cls === null || cls == '' ) { return; }
     if ( msg === undefined || msg === false || msg === null || msg == '' ) { msg = '&nbsp;'; }
@@ -2356,7 +2366,6 @@ function uploadBatchFile( idx, elId ) {
     if ( idx === undefined || idx === false || idx === null || isNaN(idx) ) { return false; }
     if ( idx >= el.files.length ) { return false; }
     var _apiUrl = getApiURL() + 'files/upload';
-    setPublishButtonState(true);
 
     /* Set the ProgressId */
     var progId = elId.replaceAll('pv-list-file', 'pv-file-upload');
@@ -2376,21 +2385,21 @@ function uploadBatchFile( idx, elId ) {
                     if ( (idx + 1) >= el.files.length ) {
                         showUploadProgress(progId, '', 100);
                         fadeFileUploadProgress(true);
-                        setPublishButtonState();
                         window.upload_pct = 0;
+                        countCharacters();
                     }
                     addUploadLog(ds, elId);
                 }
 
             } catch (e){
                 fadeFileUploadProgress(true);
-                setPublishButtonState();
+                countCharacters();
             }
             uploadBatchFile(idx + 1, elId);
         }
     };
     request.upload.addEventListener('progress', function(e) {
-        if ( e.total > 0 && el.files.length > 1 ) {
+        if ( e.total > 0 && el.files.length >= 1 ) {
             var _blk = 1 / parseFloat(el.files.length);
             var _cur = parseFloat(e.loaded) / parseFloat(e.total);
             var _prg = Math.round(((_blk * _cur) + (_blk * idx)) * 100);
@@ -2398,7 +2407,7 @@ function uploadBatchFile( idx, elId ) {
             window.upload_pct = _prg;
 
             showUploadProgress(progId, '', _prg);
-            setPublishButtonState(true);
+            countCharacters();
         }
     }, false);
 

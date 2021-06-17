@@ -611,7 +611,7 @@ section.main-content .composer .form-element {
     border-radius: 3px;
     display: inline-block;
     vertical-align: text-top;
-    padding: 5px 5px 0 5px;
+    padding: 2.5px 5px 0 5px;
     margin: 0 0 3px;
     max-height: 30px;
     min-height: 30px;
@@ -648,6 +648,11 @@ section.main-content .composer .content-length {
     float: right;
     max-width: 75px;
     width: 75px;
+}
+section.main-content .composer .content-length .clear-editor {
+    color: #f00;
+    padding: 0 0 0 10px;
+    margin: 0;
 }
 section.main-content .composer .error { border: 2px solid #f00; }
 section.main-content .composer .upload-log ul,
@@ -745,6 +750,7 @@ body.fontsize-xl section.main-content .composer label {
         margin-right: 5px;
         width: 100px;
     }
+    section.main-content .composer .content-length .clear-editor { display: none; }
 }
 
 section.main-content .timeline,
