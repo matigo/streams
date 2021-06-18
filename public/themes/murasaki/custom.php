@@ -78,6 +78,7 @@ class Murasaki {
                           '[APP_VER]'       => APP_VER,
                           '[LANG_CD]'       => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
                           '[PGSUB_1]'       => NoNull($this->settings['PgSub1']),
+                          '[YEAR]'          => date('Y'),
 
                           '[CHANNEL_GUID]'  => NoNull($data['channel_guid']),
                           '[CLIENT_GUID]'   => NoNull($data['client_guid']),

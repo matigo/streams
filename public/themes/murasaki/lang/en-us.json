@@ -92,8 +92,8 @@
     "lblAcctNamePH": "(Your Email Address)",
     "lblAcctPassPH": "(Your Password)",
 
-    "404Header": "404!",
-    "404Message": "Not quite sure what you're looking for, but click on one of the links at the top of the page to find something else.",
+    "404Header": "404",
+    "404Message": "Not quite sure what you're looking for, but this message clearly isn't it.",
 
     "msgOfflineMode": "There does not seem to be a working network connection. Now operating in offline mode.",
     "msgCollectingData": "Reading data from the database ..."

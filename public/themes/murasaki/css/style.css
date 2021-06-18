@@ -276,10 +276,10 @@ section.nav-left ul li.has-notify span.notify {
     color: #fff;
     display: inline-block;
     font-size: 0.75em;
-    padding: 3px 5px 0 5px;
+    padding: 3px 3px 0 5px;
     text-align: center;
     vertical-align: text-bottom;
-    min-width: 25px;
+    min-width: 30px;
 }
 section.nav-left ul li span.label { display: none; }
 section.nav-left ul.post-types { display: none; }
@@ -417,7 +417,7 @@ section.fourhundred-box {
     display: block;
     text-align: center;
     margin: 0 auto;
-    min-height: calc(100vh - 400px);
+    min-height: calc(100vh - 145px);
     height: 100%;
     max-width: 800px;
     min-width: 350px;
@@ -433,6 +433,15 @@ section.fourhundred-box p {
     color: #5a3b86;
     font-family: monospace;
     font-size: 1em;
+}
+
+@media (max-width: 425px) {
+    section.fourhundred-box { min-height: calc(100vh - 130px); }
+    section.fourhundred-box h1 { font-size: 8em; }
+    section.fourhundred-box p {
+        padding: 0 10px;
+        margin: 0;
+    }
 }
 
 /** ************************************************************************ *
@@ -603,7 +612,7 @@ section.main-content .composer select {
     background-repeat: no-repeat;
     background-position: 98% 35%;
     display: inline-block;
-    padding: 5px 25px 3px 5px;
+    padding: 2px 25px 3px 5px;
     -webkit-appearance: none;
 }
 section.main-content .composer .form-element {
@@ -611,7 +620,7 @@ section.main-content .composer .form-element {
     border-radius: 3px;
     display: inline-block;
     vertical-align: text-top;
-    padding: 2.5px 5px 0 5px;
+    padding: 2px 5px 0 5px;
     margin: 0 0 3px;
     max-height: 30px;
     min-height: 30px;
@@ -620,7 +629,7 @@ section.main-content .composer .form-element {
 }
 section.main-content .composer .form-element.short {
     overflow: hidden;
-    padding: 5px 5px 0;
+    padding: 0 5px 0;
     text-overflow: ellipsis;
     white-space: nowrap;
     max-height: 30px;
@@ -629,7 +638,7 @@ section.main-content .composer .form-element.short {
     width: calc(100% - 165px);
 }
 section.main-content .composer button.short {
-    padding: 5px 0 3px;
+    padding: 4px 0 3px;
     vertical-align: text-top;
     max-height: 30px;
     min-height: 30px;
@@ -1147,6 +1156,10 @@ section.main-content .timeline .post-item .metaline.post-reply span.reply-length
     vertical-align: middle;
     max-width: calc(100% - 305px);
     min-width: calc(100% - 305px);
+}
+section.main-content .timeline .post-item .metaline.post-reply span.reply-length span,
+.modal-content .modal-body.timeline .post-item .metaline.post-reply span.reply-length span {
+    display: none;
 }
 section.main-content .timeline .post-item .metaline.post-reply textarea,
 .modal-content .modal-body.timeline .post-item .metaline.post-reply textarea {
@@ -1815,6 +1828,54 @@ span.button-group.spacer-left {
         width: 100%;
     }
     .profile-detail .profile-posts .post-chronology { display: none; }
+}
+
+/** ************************************************************************ *
+ *  Footer sections
+ ** ************************************************************************ */
+section.footer {
+    border-top: 1px solid #5a3b86;
+    display: block;
+    font-size: 0.75em;
+    padding: 5px 0;
+    margin: 25px 0 0;
+}
+section.footer p {
+    font-weight: normal;
+    font-style: italic;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+}
+
+/** ************************************************************************ *
+ *  "Other" Content sections
+ ** ************************************************************************ */
+section.other-content {
+    display: block;
+    padding: 0 75px;
+    margin: 0;
+}
+section.other-content h3 {
+    border-bottom: 1px solid #5a3b86;
+    color: #5a3b86;
+    display: inline-block;
+    padding: 0 50px 0 0;
+}
+section.other-content p {
+    padding: 0 0 0 10px;
+}
+
+@media (max-width: 768px) {
+    section.other-content { padding: 0 25px; }
+}
+
+@media (max-width: 425px) {
+    section.other-content { padding: 0 15px 0 10px; }
+    section.other-content h3 {
+        display: block;
+        padding: 0;
+    }
 }
 
 /** ************************************************************************ *
