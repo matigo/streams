@@ -77,6 +77,10 @@ class Files {
         $rVal = false;
 
         switch ( $Activity ) {
+            case 'item':
+                return $this->_getFileByID();
+                break;
+
             case 'list':
             case '':
                 return $this->_getFilesList();
@@ -410,25 +414,36 @@ class Files {
 
                                 $isAnimated = $img->is_animated();
                                 if ( $isAnimated !== true ) {
+                                    /* Is there a medium-sized image to create? */
                                     if ( $imgWidth > 960 ) {
-                                        $img->reduceToWidth(960);
-                                        $isGood = $img->save($propPath);
-                                        $hasProp = $img->is_reduced();
+                                        $img_mid = new Images();
+                                        $img_mid->load($origPath);
+                                        $img_mid->reduceToWidth(960);
+
+                                        $isGood = $img_mid->save($propPath);
+                                        $hasProp = $img_mid->is_reduced();
 
                                         if ( USE_S3 == 1 ) {
                                             $s3Path = intToAlpha($this->settings['_account_id']) . strtolower("/$propName");
                                             $s3->putObject($s3->inputFile($propPath, false), CDN_DOMAIN, $s3Path, S3::ACL_PUBLIC_READ);
                                         }
+                                        unset($img_mid);
                                     }
+
+                                    /* Is there a thumbnail to create? */
                                     if ( $imgWidth > 480 ) {
-                                        $img->reduceToWidth(480);
-                                        $isGood = $img->save($thumbPath);
-                                        $hasThumb = $img->is_reduced();
+                                        $img_thumb = new Images();
+                                        $img_thumb->load($origPath);
+                                        $img_thumb->reduceToWidth(480);
+
+                                        $isGood = $img_thumb->save($thumbPath);
+                                        $hasThumb = $img_thumb->is_reduced();
 
                                         if ( USE_S3 == 1 ) {
                                             $s3Path = intToAlpha($this->settings['_account_id']) . strtolower("/$thumbName");
                                             $s3->putObject($s3->inputFile($thumbPath, false), CDN_DOMAIN, $s3Path, S3::ACL_PUBLIC_READ);
                                         }
+                                        unset($img_thumb);
                                     }
                                 }
                                 unset($img);
@@ -633,9 +648,9 @@ class Files {
     /**
      *  Function Returns a File Object for a Given ID, or an Unhappy Boolean
      */
-    private function _getFileByID( $FileID ) {
+    private function _getFileByID( $FileID = 0 ) {
         $CleanID = nullInt($FileID, $this->settings['file_id']);
-        if ( $FileID <= 0 ) { return false; }
+        if ( $CleanID <= 0 ) { return false; }
 
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
                           '[FILE_ID]'    => nullInt($CleanID),
@@ -671,7 +686,7 @@ class Files {
                                   );
                 }
 
-                // Add the Meta Value if Applicable
+                /* Add the Meta Value if Applicable */
                 if ( $is_deleted === false && NoNull($Row['key']) != '' && YNBool($Row['is_visible']) ) {
                     if ( is_array($meta) === false ) { $meta = array(); }
 
@@ -684,9 +699,25 @@ class Files {
                         if ( array_key_exists($kk[0], $meta) === false ) { $meta[$kk[0]] = array(); }
                         $meta[$kk[0]][$kk[1]] = $Val;
 
-                        // Do We Have Smaller Versions of the File?
-                        if ( $kk[1] == 'has_medium' && $Val === true ) { $data['medium'] = $cdn_prefix . str_replace($Row['hash'], $Row['hash'] . '_medium', $Row['cdn_path']); }
-                        if ( $kk[1] == 'has_thumb' && $Val === true ) { $data['thumb'] = $cdn_prefix . str_replace($Row['hash'], $Row['hash'] . '_thumb', $Row['cdn_path']); }
+                        /* Do We Have Smaller Versions of the File? */
+                        if ( in_array($kk[1], array('has_medium', 'has_thumb')) && $Val === true ) {
+                            $localFile = NoNull($Row['local_name']);
+                            $ext = getFileExtension($localFile);
+                            $propFile = str_replace('.' . $ext, '', $localFile);
+
+                            switch ( $kk[1] ) {
+                                case 'has_medium':
+                                    $data['medium'] = $cdn_prefix . str_replace($propFile, $propFile . '_medium', $Row['cdn_path']);
+                                    break;
+
+                                case 'has_thumb':
+                                    $data['thumb'] = $cdn_prefix . str_replace($propFile, $propFile . '_thumb', $Row['cdn_path']);
+                                    break;
+
+                                default:
+                                    /* Do Nothing */
+                            }
+                        }
 
                     } else {
                         $meta[$Key] = $Val;
@@ -694,21 +725,21 @@ class Files {
                 }
             }
 
-            // Add the Meta to the Object if it's Applicable
+            /* Add the Meta to the Object if it's Applicable */
             if ( is_array($meta) ) { $data['meta'] = $meta; }
 
-            // Do We Need to add a Specific Data Thumbnail?
+            /* Do We Need to add a Specific Data Thumbnail? */
             if ( $data['is_image'] === false ) {
                 $data['medium'] = $this->settings['HomeURL'] . '/images/file_binary.png';
                 $data['thumb'] = $this->settings['HomeURL'] . '/images/file_binary.png';
 
             }
 
-            // Return the File Object
+            /* Return the File Object */
             return $data;
         }
 
-        // If We're Here, There's No File
+        /* If We're Here, There's No File */
         return false;
     }
 
