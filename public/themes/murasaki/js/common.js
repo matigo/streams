@@ -2271,6 +2271,149 @@ function countCharacters() {
         }
     }
 }
+
+/** ************************************************************************* *
+ *  Preferences Functions
+ ** ************************************************************************* */
+function applyPreferences() {
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover', 'vistheme'];
+    for ( var i = 0; i < _items.length; i++ ) {
+        _val = readStorage(_items[i]);
+        if ( _val !== false ) {
+            switch ( _items[i] ) {
+                case 'vistheme':
+                    applyVisTheme(_val);
+                    break;
+
+                case 'fontsize':
+                    applyFontSize(_val);
+                    break;
+
+                case 'showlabels':
+                    applyShowLabels(_val);
+                    break;
+
+                default:
+                    /* Do Nothing ... probably because the setting is non-visual */
+            }
+        }
+    }
+    /* Ensure the Rest of the Page is Displaying Appropriately */
+    showVisibilityType();
+}
+function showSettingsModal() {
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover', 'vistheme'];
+    for ( var i = 0; i < _items.length; i++ ) {
+        _val = readStorage(_items[i]);
+        if ( _val !== false ) {
+            var els = document.getElementsByClassName('btn-' + _items[i]);
+            for ( var e = 0; e < els.length; e++ ) {
+                var _vv = NoNull(els[e].getAttribute('data-value')).toLowerCase();
+                if ( _vv == _val ) {
+                    if ( els[e].classList.contains('btn-primary') === false ) { els[e].classList.add('btn-primary'); }
+                } else {
+                    if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+                }
+            }
+        }
+    }
+    $('#viewSettings').modal('show');
+    hidePopovers('');
+}
+function togglePreference(btn) {
+    if ( btn === undefined || btn === false || btn === null ) { return; }
+    if ( btn.classList.contains('btn-primary') ) { return; }
+    var _key = NoNull(btn.getAttribute('data-class')).toLowerCase();
+    var _val = NoNull(btn.getAttribute('data-value')).toLowerCase();
+
+    /* Ensure Other Buttons in the Set are Reset */
+    var btns = btn.parentElement.getElementsByTagName('BUTTON');
+    for ( var i = 0; i < btns.length; i++ ) {
+        if ( btns[i].classList.contains('btn-primary') ) { btns[i].classList.remove('btn-primary'); }
+    }
+
+    switch ( _key ) {
+        case 'vistheme':
+            applyVisTheme(_val);
+            break;
+
+        case 'fontsize':
+            applyFontSize(_val);
+            break;
+
+        case 'refreshtime':
+            applyRefreshTime(_val);
+            break;
+
+        case 'persistpopover':
+            applyPersistPopover(_val);
+            break;
+
+        case 'postcount':
+            applyPostCount(_val);
+            break;
+
+        case 'showlabels':
+            applyShowLabels(_val);
+            break;
+
+        default:
+            /* Do Nothing */
+    }
+
+    /* Ensure the Button is Properly Highlighted */
+    btn.classList.add('btn-primary');
+}
+
+function applyShowLabels( _val ) {
+    var _valids = ['y', 'n'];
+    _val = NoNull(_val, 'N').toLowerCase();
+    switch ( _val ) {
+        case 'n':
+            hideByClass('label');
+            break;
+
+        default:
+            showByClass('label');
+    }
+    if ( _valids.indexOf(_val) >= 0 ) { saveStorage('showlabels', _val); }
+}
+function applyVisTheme( _val ) {
+    var _valids = ['light', 'dark', 'solar'];
+    if ( _valids.indexOf(_val) >= 0 ) {
+        for ( var i = 0; i < _valids.length; i++ ) {
+            _cls = _valids[i];
+            if ( document.body.classList.contains(_cls) ) { document.body.classList.remove(_cls); }
+        }
+        document.body.classList.add(_val);
+        saveStorage('vistheme', _val);
+    }
+}
+function applyFontSize( _val ) {
+    var _valids = ['xs', 's', 'm', 'l', 'xl'];
+    if ( _valids.indexOf(_val) >= 0 ) {
+        for ( var i = 0; i < _valids.length; i++ ) {
+            _cls = 'fontsize-' + _valids[i];
+            if ( document.body.classList.contains(_cls) ) { document.body.classList.remove(_cls); }
+        }
+        document.body.classList.add('fontsize-' + _val);
+        saveStorage('fontsize', _val);
+    }
+}
+function applyRefreshTime( _val ) {
+    var _secs = nullInt(_val);
+    if ( _secs >= 15 ) { saveStorage('refreshtime', _secs); }
+}
+function applyPostCount( _val ) {
+    var _cnt = nullInt(_val);
+    if ( _cnt >= 15 ) { saveStorage('postcount', _cnt); }
+}
+function applyPersistPopover( _val ) {
+    var _valids = ['y', 'n'];
+    _val = NoNull(_val, 'N').toLowerCase();
+    if ( _valids.indexOf(_val) >= 0 ) { saveStorage('persistpopover', _val); }
+}
+
 /** ************************************************************************ *
  *  Uploads
  ** ************************************************************************ */

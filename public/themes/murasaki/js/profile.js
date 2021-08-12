@@ -18,6 +18,9 @@ window.KEY_N = 78;
 document.onreadystatechange = function () {
     if (document.readyState == "interactive") {
         if ( isBrowserCompatible() ) {
+            /* Ensure the Preferences are Loaded */
+            applyPreferences();
+
             /* Add the various Event Listeners that make the site come alive */
             document.addEventListener('keydown', function(e) { handleDocumentKeyPress(e); });
             document.addEventListener('click', function(e) { handleDocumentClick(e); });
