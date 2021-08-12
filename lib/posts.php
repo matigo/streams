@@ -2166,6 +2166,10 @@ class Posts {
      *  Timeline / Stream Functions
      ** ********************************************************************* */
     private function _processTimeline( $posts ) {
+        $PostLimit = nullInt($this->settings['count'], 100);
+        if ( $PostLimit > 250 ) { $PostLimit = 250; }
+        if ( $PostLimit <= 0 ) { $PostLimit = 100; }
+
         if ( is_array($posts) ) {
             $default_avatar = $this->settings['HomeURL'] . '/avatars/default.png';
             $data = array();
@@ -2226,62 +2230,62 @@ class Posts {
                         $post_text = $this->_parsePostMentions($post_text, $mentions);
                     }
 
-                    $data[] = array( 'guid'     => NoNull($post['post_guid']),
-                                     'type'     => NoNull($post['type']),
-                                     'privacy'  => NoNull($post['privacy_type']),
+                    if ( count($data) < $PostLimit ) {
+                        $data[] = array( 'guid'     => NoNull($post['post_guid']),
+                                         'type'     => NoNull($post['type']),
+                                         'privacy'  => NoNull($post['privacy_type']),
 
-                                     'canonical_url' => NoNull($post['canonical_url']),
-                                     'reply_to'      => ((NoNull($post['reply_to']) == '') ? false : NoNull($post['reply_to'])),
-                                     'has_thread'    => ((nullInt($post['thread_length']) > 0) ? true : false),
+                                         'canonical_url' => NoNull($post['canonical_url']),
+                                         'reply_to'      => ((NoNull($post['reply_to']) == '') ? false : NoNull($post['reply_to'])),
+                                         'has_thread'    => ((nullInt($post['thread_length']) > 0) ? true : false),
 
-                                     'title'    => ((NoNull($post['title']) == '') ? false : NoNull($post['title'])),
-                                     'content'  => $post_text,
-                                     'text'     => NoNull($post['value']),
-                                     'rtl'      => $this->_isRTL(NoNull($post['value'])),
+                                         'title'    => ((NoNull($post['title']) == '') ? false : NoNull($post['title'])),
+                                         'content'  => $post_text,
+                                         'text'     => NoNull($post['value']),
+                                         'rtl'      => $this->_isRTL(NoNull($post['value'])),
 
-                                     'meta'     => $poMeta,
-                                     'tags'     => $poTags,
-                                     'mentions' => $mentions,
-                                     'points'   => nullInt($post['total_points']),
+                                         'meta'     => $poMeta,
+                                         'tags'     => $poTags,
+                                         'mentions' => $mentions,
+                                         'points'   => nullInt($post['total_points']),
 
-                                     'persona'  => array( 'guid'        => NoNull($post['persona_guid']),
-                                                          'as'          => '@' . NoNull($post['persona_name']),
-                                                          'name'        => NoNull($post['display_name']),
-                                                          'avatar'      => NoNull($post['avatar_url']),
+                                         'persona'  => array( 'guid'        => NoNull($post['persona_guid']),
+                                                              'as'          => '@' . NoNull($post['persona_name']),
+                                                              'name'        => NoNull($post['display_name']),
+                                                              'avatar'      => NoNull($post['avatar_url']),
 
-                                                          'pin'         => NoNull($post['persona_pin'], 'pin.none'),
-                                                          'you_follow'  => YNBool($post['persona_follow']),
-                                                          'is_muted'    => YNBool($post['persona_muted']),
-                                                          'is_starred'  => YNBool($post['persona_starred']),
-                                                          'is_blocked'  => YNBool($post['persona_blocked']),
-                                                          'is_you'      => YNBool($post['is_you']),
+                                                              'pin'         => NoNull($post['persona_pin'], 'pin.none'),
+                                                              'you_follow'  => YNBool($post['persona_follow']),
+                                                              'is_muted'    => YNBool($post['persona_muted']),
+                                                              'is_starred'  => YNBool($post['persona_starred']),
+                                                              'is_blocked'  => YNBool($post['persona_blocked']),
+                                                              'is_you'      => YNBool($post['is_you']),
 
-                                                          'profile_url' => NoNull($post['profile_url']),
-                                                         ),
+                                                              'profile_url' => NoNull($post['profile_url']),
+                                                             ),
 
-                                     'attributes'       => array( 'pin'     => NoNull($post['pin_type'], 'pin.none'),
-                                                                  'starred' => YNBool($post['is_starred']),
-                                                                  'muted'   => YNBool($post['is_muted']),
-                                                                  'points'  => nullInt($post['points']),
-                                                                 ),
+                                         'attributes'       => array( 'pin'     => NoNull($post['pin_type'], 'pin.none'),
+                                                                      'starred' => YNBool($post['is_starred']),
+                                                                      'muted'   => YNBool($post['is_muted']),
+                                                                      'points'  => nullInt($post['points']),
+                                                                     ),
 
-                                     'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['publish_at'])),
-                                     'publish_unix' => strtotime($post['publish_at']),
-                                     'expires_at'   => ((NoNull($post['expires_at']) == '') ? false : date("Y-m-d\TH:i:s\Z", strtotime($post['expires_at']))),
-                                     'expires_unix' => ((NoNull($post['expires_at']) == '') ? false : strtotime($post['expires_at'])),
-                                     'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['updated_at'])),
-                                     'updated_unix' => strtotime($post['updated_at']),
-                                    );
+                                         'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['publish_at'])),
+                                         'publish_unix' => strtotime($post['publish_at']),
+                                         'expires_at'   => ((NoNull($post['expires_at']) == '') ? false : date("Y-m-d\TH:i:s\Z", strtotime($post['expires_at']))),
+                                         'expires_unix' => ((NoNull($post['expires_at']) == '') ? false : strtotime($post['expires_at'])),
+                                         'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['updated_at'])),
+                                         'updated_unix' => strtotime($post['updated_at']),
+                                        );
+
+                    } else {
+                        /* If the array count is greater than the limit, then we clearly have more */
+                        $this->settings['has_more'] = true;
+                    }
                 }
             }
 
-            // Set the "HasMore" Meta value
-            $CleanCount = nullInt($this->settings['count'], 100);
-            if ( $CleanCount > 250 ) { $CleanCount = 250; }
-            if ( $CleanCount <= 0 ) { $CleanCount = 100; }
-            if ( $CleanCount == count($data) ) { $this->settings['has_more'] = true; }
-
-            // Return the Data If We Have Some
+            /* Return the Data If We Have Some */
             if ( is_array($data) && count($data) > 0 ) { return $data; }
         }
 
@@ -2331,6 +2335,7 @@ class Posts {
         $CleanCount = nullInt($this->settings['count'], 100);
         if ( $CleanCount > 250 ) { $CleanCount = 250; }
         if ( $CleanCount <= 0 ) { $CleanCount = 100; }
+        $CleanCount++;
 
         // Get the Posts
         $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
@@ -2348,8 +2353,8 @@ class Posts {
 
         } else {
             // If there are no results, and the Since/Until is set as 0, expand the criteria
-            if ( nullInt($this->settings['since']) <= 0 ) {
-                $this->settings['before'] = 0;
+            if ( nullInt($this->settings['since']) <= 0 && nullInt($this->settings['until']) <= 0 ) {
+                $this->settings['until'] = 0;
                 $this->settings['since'] = 1;
 
                 // Run the Query One More Time
