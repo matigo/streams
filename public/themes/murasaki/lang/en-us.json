@@ -55,6 +55,11 @@
     "lblSetFontSizeL": "L",
     "lblSetFontSizeXL": "XL",
 
+    "lblSetVisTheme": "Colour Scheme",
+    "lblSetVisThemeLight": "Light",
+    "lblSetVisThemeDark": "Dark",
+    "lblSetVisThemeSolar": "Solarized",
+
     "lblSetRefreshTime": "Refresh Time (Seconds)",
     "lblSetRefresh00": "Never",
     "lblSetRefresh15": "15",
