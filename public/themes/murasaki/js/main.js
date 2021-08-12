@@ -404,11 +404,15 @@ function setNewCount( _count ) {
  *  Preferences Functions
  ** ************************************************************************* */
 function applyPreferences() {
-    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover', 'vistheme'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
             switch ( _items[i] ) {
+                case 'vistheme':
+                    applyVisTheme(_val);
+                    break;
+
                 case 'fontsize':
                     applyFontSize(_val);
                     break;
@@ -426,7 +430,7 @@ function applyPreferences() {
     showVisibilityType();
 }
 function showSettingsModal() {
-    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover'];
+    var _items = ['fontsize', 'refreshtime', 'postcount', 'showlabels', 'persistpopover', 'vistheme'];
     for ( var i = 0; i < _items.length; i++ ) {
         _val = readStorage(_items[i]);
         if ( _val !== false ) {
@@ -457,6 +461,10 @@ function togglePreference(btn) {
     }
 
     switch ( _key ) {
+        case 'vistheme':
+            applyVisTheme(_val);
+            break;
+
         case 'fontsize':
             applyFontSize(_val);
             break;
@@ -497,6 +505,17 @@ function applyShowLabels( _val ) {
             showByClass('label');
     }
     if ( _valids.indexOf(_val) >= 0 ) { saveStorage('showlabels', _val); }
+}
+function applyVisTheme( _val ) {
+    var _valids = ['light', 'dark', 'solar'];
+    if ( _valids.indexOf(_val) >= 0 ) {
+        for ( var i = 0; i < _valids.length; i++ ) {
+            _cls = _valids[i];
+            if ( document.body.classList.contains(_cls) ) { document.body.classList.remove(_cls); }
+        }
+        document.body.classList.add(_val);
+        saveStorage('vistheme', _val);
+    }
 }
 function applyFontSize( _val ) {
     var _valids = ['xs', 's', 'm', 'l', 'xl'];
