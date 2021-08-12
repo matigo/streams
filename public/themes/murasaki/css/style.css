@@ -742,6 +742,7 @@ section.main-content .composer select {
     -webkit-appearance: none;
 }
 section.main-content .composer .form-element {
+    background-color: transparent;
     border: 1px solid #676767;
     border-radius: 3px;
     display: inline-block;
@@ -758,6 +759,7 @@ section.main-content .composer .form-element.short {
     padding: 0 5px 0;
     text-overflow: ellipsis;
     white-space: nowrap;
+    word-wrap: normal;
     max-height: 30px;
     min-height: 30px;
     max-width: calc(100% - 165px);
@@ -776,13 +778,16 @@ section.main-content .composer .content-length {
     display: inline-block;
     font-size: 1.1em;
     font-style: italic;
+    overflow: visible;
     text-align: right;
     vertical-align: middle;
+    white-space: nowrap;
+    word-wrap: normal;
     padding: 0 5px 0 0;
     margin: 0;
     float: right;
-    max-width: 75px;
-    width: 75px;
+    max-width: 95px;
+    width: 95px;
 }
 section.main-content .composer .content-length .clear-editor {
     color: var(--button-danger, #d9534f);
