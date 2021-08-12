@@ -195,6 +195,7 @@ button .btn:focus, button.btn:focus {
 button.btn.disabled,
 button.btn[disabled],
 fieldset[disabled] .btn {
+    background-color: var(--background-color, #fff);
     cursor: not-allowed;
     color: #ccc;
 }
@@ -384,10 +385,10 @@ section.nav-left ul li.has-notify span.notify {
     color: #fff;
     display: inline-block;
     font-size: 0.75em;
-    padding: 3px 3px 0 5px;
+    padding: 1px;
     text-align: center;
     vertical-align: text-bottom;
-    min-width: 30px;
+    min-width: 25px;
 }
 section.nav-left ul li span.label { display: none; }
 section.nav-left ul.post-types { display: none; }
@@ -1391,7 +1392,7 @@ section.main-content .timeline .post-notify-block ul {
     min-height: 30px;
 }
 section.main-content .timeline .post-notify-block ul li {
-    background: #fff;
+    background: var(--background-color, #fff);
     border-bottom: 1px dotted #ccc;
     border-radius: 0;
     display: block;
@@ -1409,7 +1410,7 @@ section.main-content .timeline .post-notify-block ul.rows-7 li { height: 4.25px;
 section.main-content .timeline .post-notify-block ul.rows-8 li { height: 3.75px; }
 section.main-content .timeline .post-notify-block ul.rows-9 li { height: 3.33px; }
 section.main-content .timeline .post-notify-block span {
-    background: #fff;
+    background: var(--background-color, #fff);
     border-radius: 15px;
     cursor: pointer;
     display: block;
