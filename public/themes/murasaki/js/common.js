@@ -176,6 +176,10 @@ function handleButtonClick(el) {
             toggleImageIncludes(tObj);
             break;
 
+        case 'readmore':
+            getMore();
+            break;
+
         case 'pa-block':
             togglePersonaAction(tObj, 'block');
             break;

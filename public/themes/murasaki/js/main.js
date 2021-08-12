@@ -218,11 +218,26 @@ function getSinceUnixTS() {
     /* If we're here, there's nothing */
     return 0;
 }
+function getUntilUnixTS() {
+    var els = document.getElementsByClassName('post-item');
+    var _ts = 0;
+
+    for ( var i = 0; i < els.length; i++ ) {
+        var _unix = nullInt(els[i].getAttribute('data-updx'), els[i].getAttribute('data-unix'));
+        if ( _unix > 0 ) {
+            if ( _unix < _ts || _ts <= 0 ) { _ts = _unix; }
+        }
+    }
+
+    /* Return the earliest timestamp */
+    return _ts;
+}
 function resetTimeline( _msg ) {
     var els = document.getElementsByClassName('timeline');
     for ( var i = 0; i < els.length; i++ ) {
         els[i].innerHTML = _msg;
     }
+    clearReadMore();
     setNewCount(0);
 }
 function updateTimeline(el) {
@@ -230,7 +245,7 @@ function updateTimeline(el) {
     if ( splitSecondCheck(el) === false ) { return; }
     getTimeline();
 }
-function getTimeline( _tl, _append ) {
+function getTimeline( _tl = '', _append = false ) {
     if ( _append === undefined || _append === null || _append !== true ) { _append = false; }
     if ( window.navigator.onLine ) {
         var _selected = getSelectedTimeline();
@@ -263,15 +278,55 @@ function getTimeline( _tl, _append ) {
         console.log("Offline ...");
     }
 }
+function getMore( _tl = '' ) {
+    if ( window.navigator.onLine ) {
+        var _selected = getSelectedTimeline();
+        if ( NoNull(_tl) == '' ) { _tl = _selected; }
+        setTouchTimelineTS();
+
+        /* Get the Post Count */
+        var _posts = nullInt(readStorage('postcount'), 75);
+        if ( _posts === undefined || _posts === false || _posts === null || _posts <= 0 ) { _posts = 75; }
+
+        /* Now let's query the API */
+        var params = { 'types': getVisibleTypes(),
+                       'until': getUntilUnixTS(),
+                       'count': _posts
+                      };
+        setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', params, addToTimeline); }, 150);
+        setTimeout(function () { showReadMoreMessage(); }, 50);
+
+        /* Ensure the Timer is Running */
+        checkUpdateSchedule();
+
+    } else {
+        console.log("Offline ...");
+    }
+}
 function parseTimeline(data) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         resetTimeline('');
+        addToTimeline(data);
 
+    } else {
+        resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center">Error! Could not read posts ...</p></div>');
+    }
+}
+function addToTimeline(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        clearReadMore();
+
+        /* Loop through the results to determine which items should be displayed */
         var ds = data.data;
         for ( var i = 0; i < ds.length; i++ ) {
             if ( checkCanDisplayPost('global', ds[i], true) ) { writePostToTL('global', ds[i]); }
         }
         checkPostPointDisplay();
+
+        /* Check the Meta for "more" */
+        if ( data.meta.more !== undefined && data.meta.more === true ) {
+            showReadMore();
+        }
 
     } else {
         resetTimeline('<div style="padding: 50px 0 0;"><p class="text-center">Error! Could not read posts ...</p></div>');
@@ -369,6 +424,34 @@ function appendTimeline(data) {
 
     } else {
         console.log('Could not appendTimeline');
+    }
+}
+function clearReadMore() {
+    var els = document.getElementsByClassName('readmore');
+    for ( var e = 0; e < els.length; e++ ) {
+        if ( els[e].parentElement.classList.contains('hidden') === false ) { els[e].parentElement.classList.add('hidden'); }
+    }
+}
+function showReadMore() {
+    var els = document.getElementsByClassName('readmore');
+    for ( var e = 0; e < els.length; e++ ) {
+        els[e].innerHTML = '';
+
+        if ( els[e].children.length <= 0 ) {
+            var _btn = document.createElement("button");
+                _btn.className = 'btn btn-readmore btn-primary';
+                _btn.setAttribute('data-action', 'readmore');
+                _btn.innerHTML = 'Read Older Posts';
+            els[e].appendChild(_btn);
+        }
+        if ( els[e].parentElement.classList.contains('hidden') ) { els[e].parentElement.classList.remove('hidden'); }
+    }
+}
+function showReadMoreMessage() {
+    var els = document.getElementsByClassName('readmore');
+    for ( var e = 0; e < els.length; e++ ) {
+        els[e].innerHTML = '<span><i class="fas fa-spin fa-spinner"></i> Collecting Posts ...</span>';
+        if ( els[e].parentElement.classList.contains('hidden') ) { els[e].parentElement.classList.remove('hidden'); }
     }
 }
 function clearNotifyBlocks() {

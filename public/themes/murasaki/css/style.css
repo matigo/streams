@@ -1350,6 +1350,16 @@ section.main-content .timeline .post-item .metaline.post-reply .reply-success,
     max-width: 400px;
 }
 
+section.main-content .timeline .post-item .readmore {
+    display: block;
+    text-align: center;
+    padding: 15px 0;
+}
+section.main-content .timeline .post-item .readmore button {
+    max-width: calc(100% - 50px);
+    width: 400px;
+}
+
 section.main-content .timeline.compact .post-item .content-author,
 section.main-content .timeline.compact .post-item .content-header,
 .modal-content .modal-body.timeline.compact .post-item .content-author,
