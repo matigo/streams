@@ -236,47 +236,57 @@ class Posts {
         $PostGUID = strtolower(NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $SimpleHtml = YNBool(NoNull($this->settings['simple']));
 
+        /* Ensure we have a valid Post.guid */
         if ( mb_strlen($PostGUID) != 36 ) { $this->_setMetaMessage("Invalid Thread Identifier Supplied (1)", 400); return false; }
 
-        $ReplStr = array( '[POST_GUID]' => sqlScrub($PostGUID) );
-        $sqlStr = readResource(SQL_DIR . '/posts/getThreadPostIDs.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            $PostIDs = array();
-            foreach ( $rslt as $Row ) {
-                $PostIDs[] = nullInt($Row['post_id']);
+        /* Get the Types Requested (Default is Everything) */
+        $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location', 'post.photo' );
+        $CleanTypes = '';
+        $rTypes = explode(',', NoNull($this->settings['types'], $this->settings['post_types']));
+        if ( is_array($rTypes) ) {
+            foreach ( $rTypes as $rType ) {
+                $rType = strtolower($rType);
+                if ( in_array($rType, $validTypes) ) {
+                    if ( $CleanTypes != '' ) { $CleanTypes .= ','; }
+                    $CleanTypes .=  sqlScrub($rType);
+                }
             }
-
-            if ( count($PostIDs) > 0 ) {
-                $posts = $this->_getPostsByIDs(implode(',', $PostIDs));
-                if ( is_array($posts) ) {
-                    $data = array();
-                    $reply_url = false;
-
-                    foreach ( $posts as $post ) {
-                        if ( $SimpleHtml === false ) {
-                            $html = $this->_buildHTMLElement(array(), $post);
-                            $ReplStr = array( '  ' => ' ', "\n <" => "\n<" );
-                            for ( $i = 0; $i < 100; $i++ ) {
-                                $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
-                            }
-                            $post['html'] = NoNull($html);
-                        }
-
-                        if ( $post['guid'] == $PostGUID ) { $reply_url = $post['reply_to']; }
-                        $post['is_selected'] = (($post['guid'] == $PostGUID) ? true : false);
-                        $post['is_reply_to'] = (($reply_url !== false && $reply_url == $post['canonical_url']) ? true : false);
-
-                        $data[] = $post;
-                    }
-
-                    // Return the Data If We Have It
-                    if ( count($data) > 0 ) { return $data; }
+        } else {
+            if ( is_string($rTypes) ) {
+                $rType = strtolower($rTypes);
+                if ( in_array($rType, $validTypes) ) {
+                    if ( $CleanTypes != '' ) { $CleanTypes .= ','; }
+                    $CleanTypes .= sqlScrub($rType);
                 }
             }
         }
+        if ( $CleanTypes == '' ) { $CleanTypes = "post.article,post.note,post.quotation,post.bookmark,post.location,post.photo"; }
 
-        // If We're Here, the Post.guid Was Not Found (or is Inaccessible)
+        /* Get the Time Range */
+        $SinceUnix = nullInt($this->settings['since']);
+        $UntilUnix = nullInt($this->settings['until']);
+
+        /* How Many Posts? */
+        $CleanCount = nullInt($this->settings['count'], 250);
+        if ( $CleanCount > 250 ) { $CleanCount = 250; }
+        if ( $CleanCount <= 0 ) { $CleanCount = 100; }
+        $CleanCount++;
+
+        // Get the Posts
+        $ReplStr = array( '[ACCOUNT_ID]'  => nullInt($this->settings['_account_id']),
+                          '[SINCE_UNIX]'  => nullInt($SinceUnix),
+                          '[UNTIL_UNIX]'  => nullInt($UntilUnix),
+                          '[POST_TYPES]'  => NoNull($CleanTypes),
+                          '[THREAD_GUID]' => sqlScrub($PostGUID),
+                          '[COUNT]'       => nullInt($CleanCount),
+                         );
+        $sqlStr = prepSQLQuery("CALL GetThreadPosts([ACCOUNT_ID], '[THREAD_GUID]', '[POST_TYPES]', [SINCE_UNIX], [UNTIL_UNIX], [COUNT]);", $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            return $this->_processTimeline($rslt);
+        }
+
+        /* If We're Here, the Post.guid Was Not Found (or is Inaccessible) */
         $this->_setMetaMessage("Invalid Thread Identifier Supplied (2)", 400);
         return false;
     }
@@ -2301,7 +2311,7 @@ class Posts {
         $validTLs = array( 'global', 'mentions', 'home', 'persona', 'interact' );
         if ( in_array($path, $validTLs) === false ) { $this->_setMetaMessage("Invalid Timeline Path Requested", 400); return false; }
 
-        // Get the Types Requested (Default is Social Posts Only)
+        /* Get the Types Requested (Default is Social Posts Only) */
         $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location', 'post.photo' );
         $CleanTypes = '';
         $rTypes = explode(',', NoNull($this->settings['types'], $this->settings['post_types']));
@@ -2352,7 +2362,7 @@ class Posts {
             return $this->_processTimeline($rslt);
 
         } else {
-            // If there are no results, and the Since/Until is set as 0, expand the criteria
+            /* If there are no results, and the Since/Until is set as 0, expand the criteria */
             if ( nullInt($this->settings['since']) <= 0 && nullInt($this->settings['until']) <= 0 ) {
                 $this->settings['until'] = 0;
                 $this->settings['since'] = 1;
@@ -2362,7 +2372,7 @@ class Posts {
             }
         }
 
-        // If We're Here, No Posts Could Be Retrieved
+        /* If We're Here, No Posts Could Be Retrieved */
         return array();
     }
 
