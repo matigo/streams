@@ -2,7 +2,6 @@
 
 /**
  * @author Jason F. Irwin
- * @copyright 2016
  *
  * Class contains the rules and methods called to manage files
  */
@@ -20,20 +19,12 @@ class Files {
      *  Function Populates the Initial Values Required by the Class
      */
     private function _populateClass() {
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
-        $sqlStr = readResource(SQL_DIR . '/files/getLimits.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            foreach ( $rslt as $Row ) {
-                $this->settings['bucket_files'] = nullInt($Row['files']);
-                $this->settings['bucket_size'] = nullInt($Row['size']);
-                $this->settings['bucket_used'] = nullInt($Row['used']);
+        if ( nullInt($this->settings['_storage_total']) < 0 ) { $this->settings['_storage_total'] = 0; }
+        if ( nullInt($this->settings['_storage_files']) < 0 ) { $this->settings['_storage_files'] = 0; }
+        if ( nullInt($this->settings['_storage_used']) < 0 ) { $this->settings['_storage_used'] = 0; }
 
-                // Let's also set the amount remaining
-                $this->settings['bucket_remain'] = nullInt($Row['size']) - nullInt($Row['used']);
-                if ( nullInt($this->settings['bucket_remain']) < 0 ) { $this->settings['bucket_remain'] = 0; }
-            }
-        }
+        /* Determine the Amount of Storage that is Available */
+        $this->settings['_storage_remain'] = nullInt($this->settings['_storage_total']) - nullInt($this->settings['_storage_used']);
     }
 
     /** ********************************************************************* *
@@ -165,7 +156,7 @@ class Files {
     private function _prepareAvatar() {
         if ( !defined('CDN_UPLOAD_LIMIT') ) { define('CDN_UPLOAD_LIMIT', 5); }
         if ( !defined('USE_S3') ) { define('USE_S3', 0); }
-        if ( $this->settings['bucket_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
+        if ( $this->settings['_storage_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
         $list = false;
         $errs = false;
 
@@ -224,8 +215,8 @@ class Files {
                 $ValidType = $this->_isValidUploadType($FileType, $this->_getFileExtension($FileName, $FileType));
 
                 // Process the File if we have Space in the Bucket, otherwise Record a Size Error
-                if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['bucket_remain']) ) {
-                    $this->settings['bucket_remain'] -= $FileSize;
+                if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['_storage_remain']) ) {
+                    $this->settings['_storage_remain'] -= $FileSize;
                     $now = time();
 
                     if ( isset($_FILES[ $FileID ]) ) {
@@ -317,7 +308,7 @@ class Files {
     private function _createNewFile() {
         if ( !defined('CDN_UPLOAD_LIMIT') ) { define('CDN_UPLOAD_LIMIT', 5); }
         if ( !defined('USE_S3') ) { define('USE_S3', 0); }
-        if ( $this->settings['bucket_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
+        if ( $this->settings['_storage_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
         $list = false;
         $errs = false;
 
@@ -370,8 +361,8 @@ class Files {
                 $ValidType = $this->_isValidUploadType($FileType, $this->_getFileExtension($FileName, $FileType));
 
                 // Process the File if we have Space in the Bucket, otherwise Record a Size Error
-                if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['bucket_remain']) ) {
-                    $this->settings['bucket_remain'] -= $FileSize;
+                if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['_storage_remain']) ) {
+                    $this->settings['_storage_remain'] -= $FileSize;
                     $now = time();
 
                     if ( isset($_FILES[ $FileID ]) ) {
@@ -497,9 +488,9 @@ class Files {
 
             // Return a Files Object Array
             return array( 'files'  => $list,
-                          'bucket' => array( 'files' => $this->settings['bucket_files'],
-                                             'limit' => $this->settings['bucket_size'],
-                                             'used'  => $this->settings['bucket_used'],
+                          'bucket' => array( 'files' => $this->settings['_storage_used'],
+                                             'limit' => $this->settings['_storage_total'],
+                                             'used'  => $this->settings['_storage_used'],
                                             ),
                           'errors' => $errs,
                          );
@@ -616,6 +607,13 @@ class Files {
             foreach ( $rslt as $Row ) {
                 $is_deleted = YNBool($Row['is_deleted']);
 
+                /* If the file does not exist in the file system, report it as deleted ... which it probably is */
+                if ( $is_deleted === false ) {
+                    $filename = CDN_PATH . NoNull($Row['hash']);
+                    if ( file_exists($filename) === false ) { $is_deleted = true; }
+                }
+
+                /* Construct the Array */
                 $data[] = array( 'file' => array( 'id'         => nullInt($Row['id']),
                                                   'name'       => (($is_deleted) ? false : NoNull($Row['name'])),
                                                   'size'       => (($is_deleted) ? false : nullInt($Row['size'])),
@@ -664,6 +662,12 @@ class Files {
 
             foreach ( $rslt as $Row ) {
                 $is_deleted = YNBool($Row['is_deleted']);
+
+                /* If the file does not exist in the file system, report it as deleted ... which it probably is */
+                if ( $is_deleted === false ) {
+                    $filename = CDN_PATH . NoNull($Row['cdn_path']);
+                    if ( file_exists($filename) === false ) { $is_deleted = true; }
+                }
 
                 if ( $data === false ) {
                     $data = array( 'id'         => nullInt($Row['file_id']),
