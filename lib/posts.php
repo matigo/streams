@@ -1310,19 +1310,19 @@ class Posts {
             $AudioEpNo = '';
         }
 
-        // Check the Post Text for Additionals
+        /* Check the Post Text for Additionals */
         $hash_list = $this->_extractPostTags($Value);
         if ( $hash_list != '' ) {
             if ( $PostTags != '' ) { $PostTags .= ','; }
             $PostTags .= $hash_list;
         }
 
-        // Token Definition
+        /* Token Definition */
         $TokenGUID = '';
         $TokenID = 0;
         $isValid = true;
 
-        // Get the Token Information
+        /* Get the Token Information */
         if ( NoNull($this->settings['token']) != '' ) {
             $data = explode('_', NoNull($this->settings['token']));
             if ( count($data) == 3 ) {
@@ -1333,25 +1333,25 @@ class Posts {
             }
         }
 
-        // Validate the Requisite Data
+        /* Validate the Requisite Data */
         if ( mb_strlen($ChannelGUID) != 36 ) { $this->_setMetaMessage("Invalid Channel GUID Supplied", 400); $isValid = false; }
         if ( mb_strlen($PersonaGUID) != 36 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); $isValid = false; }
         if ( $PostType == '' ) { $PostType = 'post.draft'; }
         if ( $Privacy == '' ) { $Privacy = 'visibility.public'; }
 
-        // Ensure the Dates are Set to UTC
+        /* Ensure the Dates are Set to UTC */
         if ( strtotime($PublishAt) === false ) { $PublishAt = ''; }
         if ( strtotime($ExpiresAt) === false ) { $ExpiresAt = ''; }
         if ( $PublishAt != '' ) { $PublishAt = $this->_convertTimeToUTC($PublishAt); }
         if ( $ExpiresAt != '' ) { $ExpiresAt = $this->_convertTimeToUTC($ExpiresAt); }
         if ( $PublishAt == '' && $PublishUnix > 1000 ) { $PublishAt = date("Y-m-d H:i:s", $PublishUnix); }
+        if ( $PublishAt != '' && $PublishUnix <= 1000 ) { $PublishUnix = strtotime($PublishAt); }
 
-        // Ensure the Expiration Is Valid (If It Exists)
+        /* Ensure the Expiration Is Valid (If It Exists) */
         if ( strtotime($ExpiresAt) !== false && strtotime($ExpiresAt) > time() ) {
             if ( strtotime($ExpiresAt) < strtotime($PublishAt) ) {
                 $this->_setMetaMessage("The Post Object Cannot Expire Before it is Published", 400); $isValid = false;
             }
-
         } else {
             $ExpiresAt = '';
         }
@@ -1370,18 +1370,18 @@ class Posts {
                 if ( $PostSlug == '' ) {
                     $SafeSlug = $this->_getSafeTagSlug($Title);
 
-                    // Check if the Slug is Unique
+                    /* Check if the Slug is Unique */
                     $PostSlug = $this->_checkUniqueSlug($ChannelGUID, $PostGUID, $SafeSlug);
 
-                    // If the Slug is Not Empty, Set the Canonical URL Value
+                    /* If the Slug is Not Empty, Set the Canonical URL Value */
                     if ( $PostSlug != '' ) {
                         $SlugPrefix = '';
                         if ( nullInt($PublishUnix) >= strtotime('1975-01-01 00:00:00') ) {
                             $SlugPrefix = date('Y/m/d', $PublishUnix);
                         }
+
                         $SafeURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$SafeSlug");
                         $CanonURL = $this->_checkUniqueCanonUrl($ChannelGUID, $PostGUID, $SafeURL);
-
                         if ( $CanonURL == '' ) { $CanonURL = NoNull('/' . NoNull($SlugPrefix, 'article') . "/$PostSlug"); }
                     }
                 }
@@ -1417,10 +1417,10 @@ class Posts {
                 $isValid = false;
         }
 
-        // If Something Is Wrong, Return an Unhappy Boolean
+        /* If Something Is Wrong, Return an Unhappy Boolean */
         if ( $isValid !== true ) { return false; }
 
-        // Can we Identify a ParentID and a Thread Based on the ReplyTo? (If Applicable)
+        /* Can we Identify a ParentID and a Thread Based on the ReplyTo? (If Applicable) */
         if ( mb_strlen($ReplyTo) >= 10 ) {
             $guid = '';
             if ( strpos($ReplyTo, '/') >= 0 ) {
