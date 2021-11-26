@@ -1513,6 +1513,8 @@ class Posts {
                           '&lt;h4' => '<h4', '&lt;h5' => '<h5', '&lt;h6' => '<h6',
                           '&lt;ol' => '<ol', '&lt;ul' => '<ul', '&lt;li' => '<li',
                           '&lt;b' => '<b', '&lt;i' => '<i', '&lt;u' => '<u',
+                          '&lt;kbd' => '<kbd', '&lt;/kbd' => '</kbd', '<kbd> ' => '&lt;kbd> ',
+                          '`<kbd>`' => '`&lt;kbd>`', '`<kbd></kbd>`' => '`&lt;kbd>&lt;/kbd>`',
                          );
         $text = NoNull(str_replace(array_keys($ReplStr), array_values($ReplStr), $text));
 
