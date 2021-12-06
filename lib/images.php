@@ -111,8 +111,40 @@ class Images {
     public function returnExifData() { return $this->exif; }
     public function is_animated() { return $this->is_animated; }
     public function is_reduced() { return $this->is_reduced; }
-    public function getHeight() { return nullInt($this->exif['ExifImageLength'], imagesy($this->image)); }
-    public function getWidth() { return nullInt($this->exif['ExifImageWidth'], imagesx($this->image)); }
+    public function getHeight() {
+        $px = imagesy($this->image);
+        if ( $this->exif ) {
+            if (!empty($this->exif['Orientation'])) {
+                switch ($this->exif['Orientation']) {
+                    case 8:
+                    case 6:
+                        $px = nullInt($this->exif['ExifImageWidth'], imagesy($this->image));
+                        break;
+
+                    default:
+                        $px = nullInt($this->exif['ExifImageLength'], imagesy($this->image));
+                }
+            }
+        }
+        return nullInt($px, imagesy($this->image));
+    }
+    public function getWidth() {
+        $px = imagesx($this->image);
+        if ( $this->exif ) {
+            if (!empty($this->exif['Orientation'])) {
+                switch ($this->exif['Orientation']) {
+                    case 8:
+                    case 6:
+                        $px = nullInt($this->exif['ExifImageLength'], imagesx($this->image));
+                        break;
+
+                    default:
+                        $px = nullInt($this->exif['ExifImageWidth'], imagesx($this->image));
+                }
+            }
+        }
+        return nullInt($px, imagesx($this->image));
+    }
     public function reduceToHeight($height = 480) {
         $propHeight = $this->getHeight();
         $propWidth = $this->getWidth();

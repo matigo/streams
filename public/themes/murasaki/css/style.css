@@ -48,6 +48,7 @@
     --background-yellow: #ffffc0;
     --background-color: #fff;
     --border-color: #e7e3ed;
+    --border-input: #676767;
     --text-color: #000;
     --button-primary: #337ab7;
     --button-danger: #ff4e00;
@@ -60,6 +61,7 @@
     --highlight-text: #5a3b86;
     --selected-back: #5a3b86;
     --selected-text: #fff;
+    --progress-prog: #5a3b86;
     --code-back: #f9f2f4;
     --code-text: #c7254e;
     --link-text: #337ab7;
@@ -76,6 +78,7 @@
     --background-yellow: #333;
     --background-color: #000;
     --border-color: #f9f2f4;
+    --border-input: #676767;
     --text-color: #bebebe;
     --button-primary: #5f6265;
     --button-text-dark: #000;
@@ -84,6 +87,7 @@
     --highlight-back: #686868;
     --highlight-text: #686868;
     --selected-back: #686868;
+    --progress-prog: #686868;
     --code-back: #bebebe;
     --code-text: #000;
     --link-text: #ff4e00;
@@ -94,6 +98,7 @@
     --background-color: #fdf6e3;
     --text-color: #586e75;
     --border-color: #839496;
+    --border-input: #676767;
     --button-primary: #839496;
     --button-danger: #dc322f;
     --button-danger-text: #fff;
@@ -104,6 +109,7 @@
     --highlight-back: #657b83;
     --highlight-text: #657b83;
     --selected-back: #657b83;
+    --progress-prog: #586e75;
     --code-back: #586e75;
     --code-text: #fdf6e3;
     --link-text: #268bd2;
@@ -371,7 +377,7 @@ section.nav-left {
 }
 section.nav-left ul {
     list-style: none;
-    padding: 10px 25px 0 5px;
+    padding: 0 25px 0 5px;
     font-size: 1.15em;
     font-weight: normal;
     text-align: right;
@@ -459,7 +465,7 @@ section.nav-right {
     min-width: 155px;
     width: 155px;
 }
-section.nav-right ul { margin: 15px 0 60px; }
+section.nav-right ul { margin: 10px 0 60px; }
 
 body.fontsize-xl section.nav-right i { display: none; }
 
@@ -677,7 +683,7 @@ section.main-content {
     width: calc(100% - 303px);
 }
 section.main-content .composer {
-    border: 1px solid var(--border-color, #e7e3ed);
+    border: 1px solid var(--border-input, #676767);
     border-radius: 7.5px;
     display: block;
     padding: 10px;
@@ -688,6 +694,8 @@ section.main-content .composer {
 section.main-content .composer input[type="file"] { display: none; }
 section.main-content .composer textarea {
     background-color: transparent;
+    border: 1px solid var(--border-input, #676767);
+    border-radius: 3px;
     display: block;
     padding: 5px 7px;
     margin: 2px 0 5px;
@@ -723,6 +731,7 @@ section.main-content .composer label {
 }
 section.main-content .composer label.btn {
     display: inline-block;
+    line-height: 1.5em;
     text-align: center;
     vertical-align: middle;
     padding: 7px 3px;
@@ -734,20 +743,28 @@ section.main-content .composer label.btn.btn-primary {
     border: 1px solid var(--highlight-back, #5a3b86);
 }
 section.main-content progress {
-    border-radius: 5px;
-    color: var(--highlight-text, #5a3b86);
+    border: 1px solid var(--border-input, #676767);
+    border-radius: 3px;
+    color: var(--progress-prog, #5a3b86);
     display: block;
     padding: 0;
-    margin: 0 auto 5px;
-    max-height: 5px;
+    margin: 0 0 5px;
+    max-height: 10px;
     min-height: 5px;
-    height: 5px;
+    height: 10px;
     max-width: calc(100% - 5px);
     min-width: calc(100% - 5px);
     width: 100%;
 }
-section.main-content progress::-moz-progress-bar { background: var(--selected-back, #5a3b86); }
-section.main-content progress::-webkit-progress-value { background: var(--selected-back, #5a3b86); }
+section.main-content progress::-moz-progress-bar {
+    background-color: var(--progress-prog, #5a3b86);
+    background: var(--progress-prog, #5a3b86);
+}
+section.main-content progress::-webkit-progress-value {
+    background-color: var(--progress-prog, #5a3b86);
+    background: var(--progress-prog, #5a3b86);
+}
+progress::-webkit-progress-bar { background-color: var(--background-color, #fff); }
 
 section.main-content .composer select {
     background: url(data:image/gif;base64,R0lGODlhCwALAJEAAAAAAP///xUVFf///yH5BAEAAAMALAAAAAALAAsAAAIPnI+py+0/hJzz0IruwjsVADs=);
@@ -759,7 +776,7 @@ section.main-content .composer select {
 }
 section.main-content .composer .form-element {
     background-color: transparent;
-    border: 1px solid #676767;
+    border: 1px solid var(--border-input, #676767);
     border-radius: 3px;
     display: inline-block;
     vertical-align: text-top;
@@ -867,7 +884,19 @@ section.main-content .reply-upload-log button.btn-preview.exclude {
     padding: 0 !important;
 }
 
-
+body.fontsize-xs section.main-content .composer label.btn {
+    line-height: 0.9em;
+    font-size: 1.2em;
+}
+body.fontsize-xs section.main-content .composer select {
+    padding: 0 5px;
+    min-height: 25px;
+}
+body.fontsize-s section.main-content .composer label.btn { line-height: 1.2em; }
+body.fontsize-l section.main-content .composer label.btn {
+    line-height: 1.3em;
+    font-size: 1em;
+}
 body.fontsize-xl section.main-content .composer .form-element {
     max-width: calc(100% - 120px);
     width: calc(100% - 120px);
@@ -877,6 +906,13 @@ body.fontsize-xl section.main-content .composer label {
     max-width: 110px;
     min-width: 110px;
 }
+body.fontsize-xl section.main-content .composer label.btn {
+    line-height: 2.75em;
+    padding: 5px 0 0;
+    min-width: 65px;
+}
+body.fontsize-xl section.main-content .composer label.btn i { font-size: 1.5em; }
+body.fontsize-xl section.main-content .composer select { padding: 0 5px; }
 
 @media (max-width: 1200px) {
     section.main-content {
@@ -1132,6 +1168,16 @@ section.main-content .timeline .post-item .content-area .metaline.images span .t
     margin-bottom: -60px;
     max-height: 65px;
     max-width: 65px;
+}
+body.fontsize-l section.main-content .timeline .post-item .content-area .metaline.images span .toggle,
+body.fontsize-l .modal-content .modal-body.timeline .post-item .content-area .metaline.images span .toggle {
+    border-bottom-right-radius: 5px;
+    right: -5px;
+}
+body.fontsize-xl section.main-content .timeline .post-item .content-area .metaline.images span .toggle,
+body.fontsize-xl .modal-content .modal-body.timeline .post-item .content-area .metaline.images span .toggle {
+    border-bottom-right-radius: 10px;
+    right: -5px;
 }
 section.main-content .timeline .post-item .content-area .metaline.images span .toggle i,
 .modal-content .modal-body.timeline .post-item .content-area .metaline.images span .toggle i {
