@@ -773,23 +773,29 @@
     }
 
     /**
-     * Function returns a person's IPv4 address
+     * Function returns a person's IPv4 or IPv6 address
      */
     function getVisitorIPv4() {
-        $rVal = "";
+        $opts = array('HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR');
+        $max = 0;
+        $ip = false;
 
-        if ( isset($_SERVER["HTTP_CF_CONNECTING_IP"]) ) {
-            $rVal = $_SERVER["HTTP_CF_CONNECTING_IP"];
-        } else {
-            if (getenv('HTTP_X_FORWARDED_FOR')) {
-                $rVal = getenv('HTTP_X_FORWARDED_FOR');
-            } else {
-                $rVal = getenv('REMOTE_ADDR');
+        foreach ( $opts as $opt ) {
+            if ( $ip === false && array_key_exists($opt, $_SERVER) ) {
+                $ip = filter_var($_SERVER[$opt], FILTER_VALIDATE_IP);
+
+                /* How long is the string? */
+                if ( $ip === false ) {
+                    $iplen = mb_strlen(NoNull($_SERVER[$opt]));
+                    if ( $iplen > $max ) { $max = $iplen; }
+                }
             }
         }
 
-        // Return the Visitor's IPv4 Address
-        return NoNull($rVal);
+        if ( $ip === false ) { $ip = "Invalid IP ($max Characters)"; }
+
+        /* Return the Visitor's IP Address */
+        return NoNull($ip);
     }
 
     /**
@@ -2036,6 +2042,7 @@
         $SqlOps = nullInt( $GLOBALS['Perf']['queries'] ) + 1;
         $Referer = str_replace($data['HomeURL'], '', NoNull($_SERVER['HTTP_REFERER']));
         $Agent = parse_user_agent();
+        $ip = getVisitorIPv4();
 
         // Set the Values and Run the SQL Query
         $ReplStr = array( '[SITE_ID]'    => nullInt($GLOBALS['site_id'], $data['site_id']),
@@ -2044,7 +2051,7 @@
                           '[REQ_TYPE]'   => sqlScrub($data['ReqType']),
                           '[REQ_URI]'    => sqlScrub($data['ReqURI']),
                           '[REFERER]'    => sqlScrub($Referer),
-                          '[IP_ADDR]'    => getVisitorIPv4(),
+                          '[IP_ADDR]'    => sqlScrub($ip),
                           '[AGENT]'      => sqlScrub($_SERVER['HTTP_USER_AGENT']),
                           '[UAPLATFORM]' => sqlScrub($Agent['platform']),
                           '[UABROWSER]'  => sqlScrub($Agent['browser']),
