@@ -250,7 +250,7 @@ class cookies {
         $rVal = DEFAULT_LANG;
 
         if ( ENABLE_MULTILANG == 1 ) {
-            $rVal = ( substr( NoNull($_SERVER["HTTP_ACCEPT_LANGUAGE"]) ) == '' ) ? NoNull($langcd, DEFAULT_LANG)
+            $rVal = ( NoNull($_SERVER["HTTP_ACCEPT_LANGUAGE"]) == '' ) ? NoNull($langcd, DEFAULT_LANG)
                                                                                  : substr( $_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 5);
         } else {
             $rVal = DEFAULT_LANG;

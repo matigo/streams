@@ -1204,7 +1204,6 @@
      */
     function setGlobalObject( $key, $data ) {
         if ( strlen(NoNull($key)) < 3 ) { return false; }
-        if ( is_array($GLOBALS) === false ) { $GLOBALS = array(); }
         if ( array_key_exists('cache', $GLOBALS) === false ) {
             $GLOBALS['cache'] = array();
         }
@@ -1905,8 +1904,10 @@
             $rVal = $settings;
         } else {
             // Check to see if the Key Exists
-            if ( array_key_exists($key, $settings) ) {
-                $rVal = NoNull( $settings[ $key ] );
+            if ( is_array($settings) ) {
+                if ( array_key_exists($key, $settings) ) {
+                    $rVal = NoNull( $settings[ $key ] );
+                }
             }
         }
 
