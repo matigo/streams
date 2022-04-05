@@ -172,7 +172,7 @@ class Streams {
         $excludes = array( 'ahrefsbot', 'mj12bot', 'mb2345browser', 'semrushbot', 'mmb29p', 'mbcrawler', 'blexbot', 'sogou web spider',
                            'serpstatbot', 'semanticscholarbot', 'yandexbot', 'yandeximages', 'gwene', 'barkrowler', 'yeti',
                            'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler', 'iccrawler',
-                           'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate',
+                           'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate', 'dataforseo',
                            'thither.direct', 'liebaofast', 'micromessenger', 'youdaobot', 'theworld', 'qqbrowser',
                            'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation', 'searchatlas.com',
                            'bingbot/2.0', 'aspiegelbot', 'baiduspider', 'ruby', 'LanaiBotmarch',
