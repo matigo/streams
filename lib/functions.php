@@ -763,6 +763,10 @@
      *  Updated to resolve a problem when running behind a load balancer
      */
     function getServerProtocol() {
+        if ( array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER) === false ) { $_SERVER['HTTP_X_FORWARDED_PROTO'] = ''; }
+        if ( array_key_exists('HTTP_CF_VISITOR', $_SERVER) === false ) { $_SERVER['HTTP_CF_VISITOR'] = ''; }
+        if ( array_key_exists('REQUEST_SCHEME', $_SERVER) === false ) { $_SERVER['REQUEST_SCHEME'] = ''; }
+
         $rVal = strtolower(NoNull($_SERVER['REQUEST_SCHEME'], $_SERVER['HTTP_X_FORWARDED_PROTO']));
         if ( NoNull($_SERVER['HTTP_CF_VISITOR']) != '' ) {
             $cf_proto = json_decode($_SERVER['HTTP_CF_VISITOR']);

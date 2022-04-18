@@ -80,7 +80,8 @@ class Route extends Streams {
             if ( $this->_isSyndicationRequest($data) ) { exit; }
 
             // Is this a JSON Request?
-            $CType = NoNull($_SERVER["CONTENT_TYPE"], 'text/html');
+            if ( array_key_exists('CONTENT_TYPE', $_SERVER) === false ) { $_SERVER['CONTENT_TYPE'] = ''; }
+            $CType = NoNull($_SERVER['CONTENT_TYPE'], 'text/html');
             if ( strtolower($CType) == 'application/json' ) { $this->_handleJSONRequest($data); }
 
             // Are We Signing In?

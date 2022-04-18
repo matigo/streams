@@ -87,6 +87,7 @@ class cookies {
         }
 
         // Determine the Type
+        if ( array_key_exists('HTTP_ACCESS_CONTROL_REQUEST_METHOD', $_SERVER) === false ) { $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] = ''; }
         $rVal['ReqType'] = strtoupper( NoNull($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'], NoNull($_SERVER['REQUEST_METHOD'], 'GET')) );
         if ( $rVal['ReqType'] == 'OPTIONS' ) { $rVal['ReqType'] = 'DELETE'; }
 
@@ -242,6 +243,9 @@ class cookies {
      *  Function Returns the Appropriate Display Language
      */
     private function _getDisplayLanguage( $AccountLang = '' ) {
+        if ( array_key_exists('DispLang', $_COOKIE) === false ) { $_COOKIE['DispLang'] = ''; }
+        if ( array_key_exists('DispLang', $_GET) === false ) { $_GET['DispLang'] = ''; }
+
         $langcd = NoNull($_GET['DispLang'], $_COOKIE['DispLang']);
         if ( defined('ENABLE_MULTILANG') === false ) { define('ENABLE_MULTILANG', 0); }
         if ( defined('DEFAULT_LANG') === false ) { define('DEFAULT_LANG', 'en'); }
@@ -250,8 +254,8 @@ class cookies {
         $rVal = DEFAULT_LANG;
 
         if ( ENABLE_MULTILANG == 1 ) {
-            $rVal = ( NoNull($_SERVER["HTTP_ACCEPT_LANGUAGE"]) == '' ) ? NoNull($langcd, DEFAULT_LANG)
-                                                                                 : substr( $_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 5);
+            if ( array_key_exists('HTTP_ACCEPT_LANGUAGE', $_SERVER) === false ) { $_SERVER['HTTP_ACCEPT_LANGUAGE'] = ''; }
+            $rVal = ( NoNull($_SERVER['HTTP_ACCEPT_LANGUAGE']) == '' ) ? NoNull($langcd, DEFAULT_LANG) : mb_substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 5);
         } else {
             $rVal = DEFAULT_LANG;
         }
