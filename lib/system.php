@@ -184,8 +184,8 @@ class System {
         if ( strlen(CLOUDFLARE_API_KEY) <= 35 ) { return false; }
 
         // Collect the IP Addresses
-        $ipv4 = $this->_queryURL('https://ipv4bot.whatismyipaddress.com');
-        $ipv6 = $this->_queryURL('https://ipv6bot.whatismyipaddress.com');
+        $ipv4 = NoNull(file_get_contents('https://api.ipify.org'));
+        $ipv6 = NoNull(file_get_contents('https://api64.ipify.org'));
         $has_change = false;
 
         // Validate the Data
