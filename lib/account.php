@@ -332,6 +332,8 @@ class Account {
         if ( !defined('SHA_SALT') ) { define('SHA_SALT', ''); }
         if ( !defined('TIMEZONE') ) { define('TIMEZONE', ''); }
 
+        return false;
+
         $CleanPass = NoNull($this->settings['pass'], $this->settings['password']);
         $CleanName = NoNull($this->settings['name'], $this->settings['persona']);
         $CleanMail = NoNull($this->settings['mail'], $this->settings['email']);
