@@ -1,8 +1,8 @@
-     <body class="[BODY_CLASSLIST]">
+     <body class="[BODY_CLASS]">
         <section class="titlebar">
             <div class="inner">
-                <h1><a href="[HOMEURL]" alt="[navHome]">v6</a></h1>
-                <ul class="nav-top" data-highlight="N">
+                <h1>[SITE_NAME]</h1>
+                <ul class="nav-top no-auth">
                     <li><a href="[HOMEURL]/join" title="">[navJoin]</a></li>
                     <li><a href="[HOMEURL]/about" title="">[navAbout]</a></li>
                     <li><a href="[HOMEURL]/signin" title="">[navSignIn]</a></li>
@@ -23,22 +23,28 @@
         </section>
         <section class="content">
             <div class="left-menu">
-                <ul>
-                    <li><i class="fas fa-globe"></i> [navGlobal]</li>
-                    <li><i class="fas fa-comments"></i> [navMentions]</li>
-                    <li><i class="fas fa-shield-halved"></i> [navPrivate]</li>
-                    <li><i class="fas fa-highlighter"></i> [navHighlights]</li>
+                <ul class="req-auth hidden">
+                    <li class="tl-item selected" data-timeline="global"><i class="fas fa-globe"></i><span>[navGlobal]</span></li>
+                    <li class="tl-item" data-timeline="home"><i class="fas fa-home"></i><span>[navHome]</span></li>
+                    <li class="tl-item" data-timeline="mention"><i class="fas fa-comments"></i><span>[navMentions]</span></li>
+                    <li class="tl-item" data-timeline="private"><i class="fas fa-shield-halved"></i><span>[navPrivate]</span></li>
+                    <li class="tl-item" data-timeline="interactions"><i class="fas fa-highlighter"></i><span>[navHighlights]</span></li>
                 </ul>
                 <ul>
-                    <li><i class="fas fa-water"></i> Everything</li>
-                    <li><i class="far fa-comment"></i> Socials</li>
-                    <li><i class="far fa-newspaper"></i> Articles</li>
-                    <li><i class="fas fa-quote-left"></i> Quotations</li>
-                    <li><i class="fas fa-bookmark"></i> Bookmarks</li>
+                    <li class="filter-item selected" data-filter="all"><i class="fas fa-water"></i><span>Everything</span></li>
+                    <li class="filter-item" data-filter="post.note"><i class="far fa-comment"></i><span>Socials</span></li>
+                    <li class="filter-item" data-filter="post.article"><i class="far fa-newspaper"></i><span>Articles</span></li>
+                    <li class="filter-item" data-filter="post.quotation"><i class="fas fa-quote-left"></i><span>Quotations</span></li>
+                    <li class="filter-item" data-filter="post.bookmark"><i class="fas fa-bookmark"></i><span>Bookmarks</span></li>
+                    <li class="filter-item" data-filter="post.location"><i class="fas fa-map-location"></i><span>Locations</span></li>
+                    <li class="filter-item" data-filter="post.photo"><i class="fas fa-panorama"></i><span>Photos</span></li>
+                </ul>
+                <ul class="req-auth hidden">
+                    <li><i class="fas fa-cogs"></i><span>Settings</span></li>
                 </ul>
             </div>
             <div class="main">
-                <div class="post-form">
+                <div class="post-form hidden">
                     <div class="row">
                         <label>[lblPostType]</label>
                         <select class="form-input" name="fdata" data-name="post_type">
@@ -67,8 +73,8 @@
                         <span class="character-count">&nbsp;</span>
                     </div>
                 </div>
-                <div class="timeline">
-                    <p>This is where the timeline will go ...</p>
+                <div class="timeline primary-stream">
+                    <div class="status-message"><i class="fas fa-spin fa-spinner"></i> Reading Posts from 10Centuries ...</div>
                 </div>
             </div>
         </section>
@@ -77,3 +83,7 @@
     <script type="text/javascript" src="[SHARED_JS]/network.js?ver=[CSS_VER]"></script>
     <script type="text/javascript" src="[SHARED_JS]/common.js?ver=[CSS_VER]"></script>
     <script type="text/javascript" src="[SITE_JS]/main.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript">
+        window.strings = { 'msgReadTL': 'Reading Posts from 10Centuries ...'
+                          };
+    </script>

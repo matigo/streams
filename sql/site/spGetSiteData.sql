@@ -128,6 +128,7 @@ BEGIN
            MAX(zz.`site_license`) as `license`,
            MAX(zz.`rss_items`) as `rss_items`,
 
+           MAX(zz.`cacheable`) as `cacheable`,
            MAX(zz.`explicit`) as `explicit`,
            MAX(zz.`cover_img`) as `cover_img`,
            MAX(zz.`rss_author`) as `rss_author`,
@@ -152,6 +153,8 @@ BEGIN
                    CASE WHEN sm.`key` = 'site_font-size' THEN sm.`value` ELSE '' END as `font_size`,
                    CASE WHEN sm.`key` = 'site.license' THEN sm.`value` ELSE '' END as `site_license`,
                    CASE WHEN sm.`key` = 'site.rss-items' THEN sm.`value` ELSE '' END as `rss_items`,
+
+                   CASE WHEN sm.`key` = 'site.cacheable' THEN sm.`value` ELSE '' END as `cacheable`,
 
                    CASE WHEN sm.`key` = 'site.explicit' THEN sm.`value` ELSE 'c' END as `explicit`,
                    CASE WHEN sm.`key` = 'site.cover-img' THEN sm.`value` ELSE '' END as `cover_img`,
@@ -183,7 +186,7 @@ BEGIN
            IFNULL(meta.`show_location`, tmp.`show_location`) as `show_location`,
            IFNULL(meta.`show_photo`, tmp.`show_photo`) as `show_photo`,
            IFNULL(meta.`show_quotation`, tmp.`show_quotation`) as `show_quotation`,
-           tmp.`site_version`, tmp.`site_updated_at`, `has_content` as `has_content`,
+           tmp.`site_version`, tmp.`site_updated_at`, `has_content` as `has_content`, meta.`cacheable`,
            CASE WHEN tmp.`can_edit` = 'Y' THEN 'N'
                 WHEN tmp.`site_locked` = 'Y' AND IFNULL(`x_pass_valid`, 'N') = 'Y' THEN 'N'
                 ELSE tmp.`site_locked` END as `site_locked`,

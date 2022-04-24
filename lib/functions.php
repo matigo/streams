@@ -1332,32 +1332,32 @@
      *          already supported by the app, but not the inverse.
      */
     function listThemeLangs() {
+        if ( defined('LANG_DIR') === false ) { return false; }
         $rVal = array();
 
         if ( $handle = opendir( LANG_DIR ) ) {
-            //For each file; open, instantiate, read, close
+            $excludes = array('.', '..');
+
+            /* Check the Langauge Definitions */
             while ( false !== ($FileName = readdir($handle)) ) {
-                $LangFile = LANG_DIR . "/" . $FileName;
+                if ( in_array($FileName, $excludes) === false ) {
+                    $LangFile = LANG_DIR . "/" . $FileName;
+                    $ctxt = readResource($LangFile);
+                    $json = json_decode($ctxt, true);
 
-                $ClassStr = explode( '.', $FileName );
-                if ( $ClassStr[0] != "" ) {
-                    if ( $FileName != 'langs.php' && file_exists($LangFile) ) {
-                        require_once( $LangFile );
-                        $ClassName = "lang_" . $ClassStr[0];
-                        $LangClass = new $ClassName();
-
-                        $rVal[ strtoupper( $LangClass->getLangCd() ) ] = NoNull( $LangClass->getLangName() );     // Set the Array Key=>Value
-                        unset( $LangClass );
+                    if ( is_array($json) ) {
+                        $rVal[] = array( 'locale'    => NoNull($json['lang_culture']),
+                                         'iso-639-1' => strtolower(NoNull($json['iso-639-1'], mb_substr($json['lang_culture'], 0, 2))),
+                                        );
                     }
                 }
-
             }
 
-            //Close the Directory Handle
+            /* Close the Directory Handle */
             closedir($handle);
         }
 
-        // Return the Array of Language Files
+        /* Return the Array of Valid Languages */
         return $rVal;
     }
 
@@ -1370,15 +1370,16 @@
      */
     function validateLanguage( $LangCd ) {
         $LangList = listThemeLangs();
+        $prop = DEFAULT_LANG;
 
-        foreach ( $LangList as $key=>$val ) {
-            if ( $key = $LangCd ) {
-                return $key;
+        if ( is_array($LangList) ) {
+            foreach ( $LangList as $key=>$val ) {
+                if ( mb_strtolower($val['locale']) == mb_strtolower($LangCd) ) { $prop = $val['locale']; }
             }
         }
 
-        // Return the Default Application Language
-        return DEFAULT_LANG;
+        /* Return the Default Application Language */
+        return mb_strtolower(NoNull($prop));
     }
 
     /***********************************************************************

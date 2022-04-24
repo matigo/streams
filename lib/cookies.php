@@ -146,13 +146,10 @@ class cookies {
             if ( is_array($data) ) {
                 foreach ( $data as $Key=>$Value ) { $rVal[ $Key ] = $Value; }
             }
-
-            // Set the Display Language
-            $rVal['DispLang'] = $this->_getDisplayLanguage($rVal['_language_code']);
         }
 
         // Ensure the DispLang value is Logical, as an illogical value can break HTML
-        $rVal['DispLang'] = $this->_validateLanguage($rVal['DispLang']);
+        $rVal['DispLang'] = validateLanguage($rVal['DispLang']);
 
         // Don't Keep an Empty Array Object with the Request URI
         unset($rVal[substr($rVal['ReqURI'], 1)]);
@@ -195,7 +192,8 @@ class cookies {
      */
     private function _getCookieDefaults() {
         $SiteURL = strtolower( NoNull($_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']) );
-        $LangCd = $this->_getDisplayLanguage();
+        $Locale = $this->_getDisplayLanguage();
+        $LangCd = validateLanguage($Locale);
 
         // Return the Array of Defaults
         $Protocol = getServerProtocol();
@@ -261,34 +259,6 @@ class cookies {
         }
 
         return strtolower($rVal);
-    }
-
-    /**
-     *  Function validates the provided display language against the default langauge packages found
-     *      in /lang to ensure that invalid results are not passed around the system.
-     */
-    private function _validateLanguage( $LangCd ) {
-        if ( defined('LANG_DIR') === false ) { define('LANG_DIR', BASE_DIR . '/../lang'); }
-        if ( defined('DEFAULT_LANG') === false ) { define('DEFAULT_LANG', 'en'); }
-        $Default = $this->_getDisplayLanguage();
-        $valids = array( strtolower(DEFAULT_LANG) );
-        $LangCd = strtolower($LangCd);
-
-        /* Collect the List of Languages Available */
-        if ( file_exists(LANG_DIR) ) {
-            foreach ( glob(LANG_DIR . "/*.json") as $filename) {
-                $filename = substr(strrchr($filename, '/'), 1);
-                $ext = getFileExtension( $filename );
-                $code = strtolower(str_replace(array($ext, '.'), '', $filename));
-                if ( in_array($code, $valids) === false ) { $valids[] = $code; }
-            }
-
-            /* If the code is valid, return the code */
-            if ( in_array($LangCd, $valids) ) { return $LangCd; }
-        }
-
-        /* If we're here, we were given something invalid. Return the Default. */
-        return $Default;
     }
 
     /**

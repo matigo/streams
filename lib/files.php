@@ -748,6 +748,112 @@ class Files {
     }
 
     /**
+     *  Function Returns a File Object for a Given ID, or an Unhappy Boolean
+     */
+    private function _getFileByGUID( $FileGuid = '' ) {
+        $CleanGUID = nullInt($FileGuid, NoNull($this->settings['file_guid'], $this->settings['guid']));
+        if ( mb_strlen($CleanGUID) != 36 ) {
+            $this->_setMetaMessage("Invalid File.Guid Provided", 400);
+            return false;
+        }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[FILE_GUID]'  => sqlScrub($CleanGUID),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/files/getFileDataByGUID.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $cdn_prefix = getCdnUrl();
+            $data = false;
+            $meta = false;
+
+            foreach ( $rslt as $Row ) {
+                $is_deleted = YNBool($Row['is_deleted']);
+
+                /* If the file does not exist in the file system, report it as deleted ... which it probably is */
+                if ( $is_deleted === false ) {
+                    $filename = CDN_PATH . NoNull($Row['cdn_path']);
+                    if ( file_exists($filename) === false ) { $is_deleted = true; }
+                }
+
+                if ( $data === false ) {
+                    $data = array( 'guid'       => (($is_deleted) ? false : NoNull($Row['guid'])),
+                                   'name'       => (($is_deleted) ? false : NoNull($Row['public_name'])),
+                                   'size'       => (($is_deleted) ? false : nullInt($Row['bytes'])),
+                                   'type'       => (($is_deleted) ? false : NoNull($Row['type'])),
+                                   'hash'       => (($is_deleted) ? false : NoNull($Row['hash'])),
+
+                                   'cdn_url'    => (($is_deleted) ? false : $cdn_prefix . NoNull($Row['cdn_path'])),
+                                   'medium'     => false,
+                                   'thumb'      => false,
+                                   'meta'       => false,
+                                   'is_image'   => YNBool($Row['is_image']),
+
+                                   'created_at'   => (($is_deleted) ? false : date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at']))),
+                                   'created_unix' => (($is_deleted) ? false : strtotime($Row['created_at'])),
+                                   'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
+                                   'updated_unix' => strtotime($Row['updated_at']),
+                                  );
+                }
+
+                /* Add the Meta Value if Applicable */
+                if ( $is_deleted === false && NoNull($Row['key']) != '' && YNBool($Row['is_visible']) ) {
+                    if ( is_array($meta) === false ) { $meta = array(); }
+
+                    $Key = NoNull($Row['key']);
+                    $Val = (is_numeric($Row['value'])) ? nullInt($Row['value']) : NoNull($Row['value']);
+                    if ( is_string($Val) && in_array($Val, array('N', 'Y')) ) { $Val = YNBool($Val); }
+
+                    if ( strpos($Key, '.') ) {
+                        $kk = explode('.', $Key);
+                        if ( array_key_exists($kk[0], $meta) === false ) { $meta[$kk[0]] = array(); }
+                        $meta[$kk[0]][$kk[1]] = $Val;
+
+                        /* Do We Have Smaller Versions of the File? */
+                        if ( in_array($kk[1], array('has_medium', 'has_thumb')) && $Val === true ) {
+                            $localFile = NoNull($Row['local_name']);
+                            $ext = getFileExtension($localFile);
+                            $propFile = str_replace('.' . $ext, '', $localFile);
+
+                            switch ( $kk[1] ) {
+                                case 'has_medium':
+                                    $data['medium'] = $cdn_prefix . str_replace($propFile, $propFile . '_medium', $Row['cdn_path']);
+                                    break;
+
+                                case 'has_thumb':
+                                    $data['thumb'] = $cdn_prefix . str_replace($propFile, $propFile . '_thumb', $Row['cdn_path']);
+                                    break;
+
+                                default:
+                                    /* Do Nothing */
+                            }
+                        }
+
+                    } else {
+                        $meta[$Key] = $Val;
+                    }
+                }
+            }
+
+            /* Add the Meta to the Object if it's Applicable */
+            if ( is_array($meta) ) { $data['meta'] = $meta; }
+
+            /* Do We Need to add a Specific Data Thumbnail? */
+            if ( $data['is_image'] === false ) {
+                $data['medium'] = $this->settings['HomeURL'] . '/images/file_binary.png';
+                $data['thumb'] = $this->settings['HomeURL'] . '/images/file_binary.png';
+
+            }
+
+            /* Return the File Object */
+            return $data;
+        }
+
+        /* If We're Here, There's No File */
+        return false;
+    }
+
+    /**
      *  Function Marks a File as Deleted After Scrubbing it from S3
      */
     private function _deleteFile() {
