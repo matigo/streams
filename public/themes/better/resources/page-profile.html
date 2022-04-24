@@ -1,0 +1,142 @@
+    <body class="[BODY_CLASSLIST]">
+        <section class="system-message hidden">
+            <div class="offline">
+                <p>There does not seem to be a working network connection. Now operating in offline mode.</p>
+            </div>
+        </section>
+        <section class="compat hidden">
+            <div class="message">
+                <p class="compat-msg head" data-msg="[compatMsgHead]">[compatMsgHead]</p>
+                <p class="compat-msg" data-msg="[compatMsgVersion]">&nbsp;</p>
+                <p class="compat-msg" data-msg="[compatMsgReq]">[compatMsgDefault]</p>
+            </div>
+        </section>
+        <section class="sidenav">
+            <h3 class="logo">v5</h3>
+            <nav>
+                <ul>
+[SIDE_NAV]
+                </ul>
+            </nav>
+        </section>
+        <section class="header">
+[SECTION_HEADER]
+        </section>
+        <section class="main-content profile">
+            <h2>[ttlProfileAboutYou]</h2>
+            <div class="profile-block profile-list">
+                <span class="label">[lblProfileLastName]</span>
+                <input class="form-input" type="text" data-name="last_name" autocomplete="off" autocorrect="off" value="[LAST_NAME]" readonly>
+                <span class="label">[lblProfileFirstName]</span>
+                <input class="form-input" type="text" data-name="first_name" autocomplete="off" autocorrect="off" value="[FIRST_NAME]" readonly>
+                <span class="label">[lblProfileDisplayName]</span>
+                <input class="form-input" type="text" name="pdata" data-name="display_name" autocomplete="off" autocorrect="off" value="[DISPLAY_NAME]">
+                <span class="label">[lblProfileEmail]</span>
+                <input class="form-input" type="email" name="pdata" data-name="email" autocomplete="off" autocorrect="off" value="[MAIL_ADDR]">
+                <span class="label">[lblProfilePronoun]</span>
+                <p class="p-input">
+                    <button class="btn btn-pronoun" data-value="F">[lblProfileSheHer]</button>
+                    <button class="btn btn-pronoun" data-value="Hi">[lblProfileZeHir]</button>
+                    <button class="btn btn-pronoun" data-value="M">[lblProfileHeHim]</button>
+                    <button class="btn btn-pronoun" data-value="N">[FIRST_NAME] / [FIRST_NAME]</button>
+                    <button class="btn btn-pronoun" data-value="T">[lblProfileTheyThem]</button>
+                    <button class="btn btn-pronoun" data-value="Zi">[lblProfileZeZir]</button>
+                </p>
+                <p class="text-right">
+                    <button class="btn btn-account-save btn-primary" onclick="setAccountData();">[btnSave]</button>
+                </p>
+            </div>
+
+            <hr>
+            <h2>[ttlProfileVisual]</h2>
+            <div class="profile-block visual-list">
+                <span class="label">[lblSetFontFamily]</span>
+                <p class="p-input">
+                    <button class="btn btn-fontfamily btn-primary" data-action="setpreference" data-class="fontfamily" data-value="auto">[lblSetFontAuto]</button>
+                    <button class="btn btn-fontfamily" data-action="setpreference" data-class="fontfamily" data-value="sans">[lblSetFontSans]</button>
+                    <button class="btn btn-fontfamily" data-action="setpreference" data-class="fontfamily" data-value="serif">[lblSetFontSerif]</button>
+                    <button class="btn btn-fontfamily" data-action="setpreference" data-class="fontfamily" data-value="mono">[lblSetFontMono]</button>
+                </p>
+                <span class="label">[lblSetFontSize]</span>
+                <p class="p-input">
+                    <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="xs">[lblSetFontSizeXS]</button>
+                    <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="sm">[lblSetFontSizeS]</button>
+                    <button class="btn btn-fontsize btn-primary" data-action="setpreference" data-class="fontsize" data-value="md">[lblSetFontSizeM]</button>
+                    <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="lg">[lblSetFontSizeL]</button>
+                    <button class="btn btn-fontsize" data-action="setpreference" data-class="fontsize" data-value="xl">[lblSetFontSizeXL]</button>
+                </p>
+                <span class="label">[lblSetTheme]</span>
+                <p class="p-input">
+                    <button class="btn btn-theme btn-primary" data-action="setpreference" data-class="theme" data-value="auto">[btnThemeAuto]</button>
+                    <button class="btn btn-theme" data-action="setpreference" data-class="theme" data-value="light">[btnThemeLight]</button>
+                    <button class="btn btn-theme" data-action="setpreference" data-class="theme" data-value="dark">[btnThemeDark]</button>
+                    <button class="btn btn-theme" data-action="setpreference" data-class="theme" data-value="solar-light">[btnThemeSolarLight]</button>
+                    <button class="btn btn-theme" data-action="setpreference" data-class="theme" data-value="solar-dark">[btnThemeSolarDark]</button>
+                </p>
+                <span class="label">[lblSetShowLabels]</span>
+                <p class="p-input">
+                    <button class="btn btn-showlabels btn-primary" data-action="setpreference" data-class="showlabels" data-value="auto">[btnYes]</button>
+                    <button class="btn btn-showlabels" data-action="setpreference" data-class="showlabels" data-value="n">[btnNo]</button>
+                </p>
+                <span class="label">&nbsp;</span>
+                <p class="p-input explain">[lblSetShowLabelsDescr]</p>
+            </div>
+
+            <hr>
+            <h2>[ttlProfileAvatars]</h2>
+            <div class="profile-block avatar-list">&nbsp;</div>
+
+            <hr>
+            <h2>[ttlProfileTimeZone]</h2>
+            <div class="profile-block timezone-list">
+                <select class="form-input tz-select" name="pdata" data-name="timezone">
+                    <option value="">[optSelectOne]</option>
+                </select>
+                <p class="p-detail timezone" data-label="[lblProfileTimezone]">&nbsp;</p>
+            </div>
+
+            <hr>
+            <h2>[ttlProfileLanguages]</h2>
+            <p>Choose which language you would like to see Midori in:</p>
+            <p>
+                <button class="btn btn-displang" data-value="en-us">[lblLangEN]</button>
+                <button class="btn btn-displang" data-value="eo-us">[lblLangEO]</button>
+                <button class="btn btn-displang" data-value="es-es">[lblLangES]</button>
+                <button class="btn btn-displang" data-value="fr-fr">[lblLangFR]</button>
+                <button class="btn btn-displang" data-value="ja-jp">[lblLangJA]</button>
+                <button class="btn btn-displang" data-value="ko-kr">[lblLangKO]</button>
+                <button class="btn btn-displang" data-value="ru-ru">[lblLangRU]</button>
+            </p>
+            <p>Choose which languages you would like to see materials and resources for:</p>
+            <p>
+                <button class="btn btn-primary" data-value="en">[lblLangEN]</button>
+                <button class="btn" data-value="de">[lblLangDE]</button>
+                <button class="btn" data-value="es">[lblLangES]</button>
+                <button class="btn" data-value="fr">[lblLangFR]</button>
+                <button class="btn btn-primary" data-value="ja">[lblLangJA]</button>
+                <button class="btn btn-primary" data-value="ko">[lblLangKO]</button>
+                <button class="btn" data-value="ru">[lblLangRU]</button>
+            </p>
+
+            <hr>
+            <h2>[ttlProfileSecurity]</h2>
+            <p>SSO Only? Set a password? See recent account logins? Yep ... right here.</p>
+        </section>
+    </body>
+    <script type="text/javascript" src="[SHARED_JS]/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="[SHARED_JS]/bootstrap.min.js"></script>
+    <script type="text/javascript" src="[SHARED_JS]/moment-with-locales.js"></script>
+    <script type="text/javascript" src="[SHARED_JS]/globals.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SHARED_JS]/network.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SHARED_JS]/common.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SITE_JS]/profile.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript">
+        window.settings = { 'pronoun': '[PRONOUN]',
+                            'timezone': '[TIMEZONE]',
+                            'displang': '[LANGUAGE]',
+                            'showlabels': '[PREF_LABELS]',
+                            'fontfamily': '[PREF_FONTFAMILY]',
+                            'fontsize': '[PREF_FONTSIZE]',
+                            'theme': '[PREF_COLOUR]'
+                           };
+    </script>

@@ -1,0 +1,79 @@
+     <body class="[BODY_CLASSLIST]">
+        <section class="titlebar">
+            <div class="inner">
+                <h1><a href="[HOMEURL]" alt="[navHome]">v6</a></h1>
+                <ul class="nav-top" data-highlight="N">
+                    <li><a href="[HOMEURL]/join" title="">[navJoin]</a></li>
+                    <li><a href="[HOMEURL]/about" title="">[navAbout]</a></li>
+                    <li><a href="[HOMEURL]/signin" title="">[navSignIn]</a></li>
+                </ul>
+            </div>
+        </section>
+        <section class="system-message hidden">
+            <div class="offline hidden">
+                <p>[msgOfflineMode]</p>
+            </div>
+        </section>
+        <section class="compat hidden">
+            <div class="message">
+                <p class="compat-msg head" data-msg="[compatMsgHead]">[compatMsgHead]</p>
+                <p class="compat-msg" data-msg="[compatMsgVersion]">&nbsp;</p>
+                <p class="compat-msg" data-msg="[compatMsgReq]">[compatMsgDefault]</p>
+            </div>
+        </section>
+        <section class="content">
+            <div class="left-menu">
+                <ul>
+                    <li><i class="fas fa-globe"></i> [navGlobal]</li>
+                    <li><i class="fas fa-comments"></i> [navMentions]</li>
+                    <li><i class="fas fa-shield-halved"></i> [navPrivate]</li>
+                    <li><i class="fas fa-highlighter"></i> [navHighlights]</li>
+                </ul>
+                <ul>
+                    <li><i class="fas fa-water"></i> Everything</li>
+                    <li><i class="far fa-comment"></i> Socials</li>
+                    <li><i class="far fa-newspaper"></i> Articles</li>
+                    <li><i class="fas fa-quote-left"></i> Quotations</li>
+                    <li><i class="fas fa-bookmark"></i> Bookmarks</li>
+                </ul>
+            </div>
+            <div class="main">
+                <div class="post-form">
+                    <div class="row">
+                        <label>[lblPostType]</label>
+                        <select class="form-input" name="fdata" data-name="post_type">
+                            <option value="post.social" selected>[optPostSocial]</option>
+                            <option value="post.quotation">[optPostQuotation]</option>
+                            <option value="post.location">[optPostLocation]</option>
+                        </select>
+                    </div>
+                    <div class="row post-quotation hidden">
+                        <label>[lblPostSource]</label>
+                        <input type="text" name="fdata" data-name="source-url" autocomplete="off" spellcheck="off" placeholder="[lblPostSourcePH]" />
+                        <button class="read-source" disabled>[btnGo]</button>
+                    </div>
+                    <div class="row post-quotation hidden">
+                        <label>[lblPostTitle]</label>
+                        <input type="text" name="fdata" data-name="source-title" autocomplete="off" spellcheck="off" placeholder="[lblPostTitlePH]" />
+                    </div>
+                    <pre class="form-input" name="fdata" data-name="content" data-placeholder="[lblPostContentPH]" contenteditable="plaintext-only"></pre>
+                    <div class="action-line">
+                        <label class="publish-post disabled">[btnPublish]</label>
+                        <label><i class="fas fa-globe"></i></label>
+                        <label for="action-upload"><i class="fas fa-cloud-upload"></i></label>
+                        <input id="action-upload" type="file" name="udata" class="form-control" accept="image/*" multiple="">
+                        <label><i class="fas fa-location-dot"></i></label>
+                        <input type="text" name="fdata" data-name="geolocation" autocomplete="off" spellcheck="off" value="" />
+                        <span class="character-count">&nbsp;</span>
+                    </div>
+                </div>
+                <div class="timeline">
+                    <p>This is where the timeline will go ...</p>
+                </div>
+            </div>
+        </section>
+    </body>
+    <script type="text/javascript" src="[SHARED_JS]/globals.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SHARED_JS]/network.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SHARED_JS]/common.js?ver=[CSS_VER]"></script>
+    <script type="text/javascript" src="[SITE_JS]/main.js?ver=[CSS_VER]"></script>

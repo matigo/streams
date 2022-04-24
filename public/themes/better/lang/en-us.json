@@ -1,0 +1,58 @@
+{
+    "navHome": "Home",
+    "navAbout": "About",
+    "navJoin": "Join",
+    "navMyProfile": "My Profile",
+    "navPreferences": "Preferences",
+    "navSignIn": "Sign In",
+    "navSignOut": "Sign Out",
+
+    "navGlobal": "Global",
+    "navMentions": "Mentions",
+    "navPrivate": "Private",
+    "navHighlights": "Highlights",
+    "navSettings": "Preferences",
+
+    "btnSignIn": "Sign In",
+    "btnCancel": "Cancel",
+    "btnClose": "Close",
+    "btnAuto": "Auto",
+    "btnSave": "Save",
+    "btnYes": "Yes",
+    "btnNo": "No",
+
+    "btnPublish": "Publish",
+    "btnGo": "Go!",
+
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optRuRU": "Русский",
+
+    "pageLogin": "Login to Nice.Social",
+
+    "lblPostType": "Post Type",
+    "lblPostSource": "Source URL",
+    "lblPostSourcePH": "(Paste a web page URL here)",
+    "lblPostTitle": "Title",
+    "lblPostTitlePH": "(What is the title of the page?)",
+    "lblPostContentPH": "(What's on your mind?)",
+
+    "optPostSocial": "Social",
+    "optPostQuotation": "Quotation",
+    "optPostLocation": "Location Marker",
+
+    "compatMsgHead": "This browser is not compatible with Nice.Social",
+    "compatMsgVersion": "The device is running {browser} version {version}.",
+    "compatMsgReq": "Please upgrade to at least 10.3.3 to use this site.",
+    "compatMsgDefault": "Please update your software to use this site.",
+
+    "msgOfflineMode": "There does not seem to be a working Internet connection. Operating in offline mode.",
+    "msg403Detail": "You do not have access to this resource. This could mean you've been signed out, or you are accessing a page that is outside of scope.",
+    "msg404Detail": "Uh oh. Cannot find the requested resource.",
+    "msgMissingValue": "This Is Missing",
+    "msgLoginFailed": "Could Not Sign In",
+    "copyMsg": "&nbsp;&mdash;&nbsp;Jason F. Irwin"
+}

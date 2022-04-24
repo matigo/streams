@@ -1,0 +1,14 @@
+{
+    "optEnUS": "English",
+    "optEoUS": "Esperanto",
+    "optEsES": "Español",
+    "optJaJP": "日本語",
+    "optKoKR": "한국어",
+    "optRuRU": "Русский",
+
+    "msg403Detail": "You do not have access to this resource. This could mean you've been signed out, or you are accessing a page that is outside of scope.",
+    "msg404Detail": "Uh oh. Cannot find the requested resource.",
+    "msgMissingValue": "This Is Missing",
+    "msgLoginFailed": "Could Not Sign In",
+    "copyMsg": "&nbsp;&mdash;&nbsp;Jason F. Irwin"
+}
