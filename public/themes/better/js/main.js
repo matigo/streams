@@ -35,15 +35,24 @@ document.onreadystatechange = function () {
  *  Population Functions
  ** ************************************************************************* */
 function prepScreen() {
-    prepPostForm();
-    setHeader();
-}
-function setHeader() {
+    resetTimeline();
+
+    /* Check the Auth Token (if exists) */
     var access_token = getMetaValue('authorization');
-    if ( access_token.length > 30 ) {
-        hideByClass('nav-top');
+    if ( access_token.length >= 30 ) {
+        /* Validate the Access Token */
+
     } else {
-        showByClass('no-auth');
+        getTimeline();
+    }
+}
+function parseTokenValidation(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        /* If everything is good, structure the UI accordingly */
+        showByClass('req-auth');
+        hideByClass('no-auth');
     }
 }
 
@@ -163,6 +172,86 @@ function handleContentKeyDown(e) {
             return;
         }
     }
+}
+
+/** ************************************************************************* *
+ *  Post Collection & Rendering Functions
+ ** ************************************************************************* */
+function verifyTimelineReady() {
+    var els = document.getElementsByClassName('status-message');
+    if ( els.length > 0 ) {
+        for ( let e = (els.length - 1); e >= 0; e-- ) {
+            els[e].parentElement.removeChild(els[e]);
+        }
+    }
+}
+function resetTimeline() {
+    var els = document.getElementsByClassName('timeline');
+    for ( let e = 0; e < els.length; e++ ) {
+        els[e].innerHTML = '';
+        els[e].appendChild(buildElement({ 'tag': 'div', 'classes': ['status-message'], 'text': '<i class="fas fa-spin fa-spinner"></i> ' + NoNull(window.strings['msgReadTL'], "Reading posts ...") }));
+    }
+}
+function getSelectedTimeline() {
+    var _valids = ['global', 'home', 'mentions', 'interactions', 'private'];
+    var els = document.getElementsByClassName('tl-item');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('selected') ) {
+            var _tl = NoNull(els[e].getAttribute('data-timeline')).toLowerCase();
+            if ( _valids.indexOf(_tl) >= 0 ) { return _tl; }
+        }
+    }
+    return _valids.join(',');
+}
+function getSelectedFilter() {
+    var _valids = ['post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location', 'post.photo'];
+    var els = document.getElementsByClassName('filter-item');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('selected') ) {
+            var _tl = NoNull(els[e].getAttribute('data-timeline')).toLowerCase();
+            if ( _valids.indexOf(_tl) >= 0 ) { return _tl; }
+        }
+    }
+    return _valids.join(',');
+}
+function getTimeline() {
+    var params = { 'types': getSelectedFilter() };
+    var _tl = getSelectedTimeline();
+    if ( _tl !== undefined && _tl !== false ) {
+        setTimeout(function () { doJSONQuery('posts/' + _tl, 'GET', {}, parseTimeline); }, 75);
+    }
+}
+function parseTimeline(data) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        verifyTimelineReady();
+
+        var ds = data.data;
+        if ( ds.length === undefined || ds.length === null || ds.length === false ) {
+            alert("Something is pretty wrong here ...");
+        }
+
+        /* Build the Timeline */
+        var els = document.getElementsByClassName('primary-stream');
+        for ( let e = 0; e < els.length; e++ ) {
+            for ( let i = 0; i < ds.length; i++ ) {
+                var _pp = buildTLObject(ds[i]);
+                if ( _pp !== undefined && _pp !== null && _pp !== false ) {
+                    els[e].appendChild(_pp);
+                }
+            }
+        }
+    }
+}
+function buildTLObject(post) {
+    if ( post === undefined || post === null || post === false ) { return false; }
+    if ( post.guid === undefined || post.guid === null || post.guid === false ) { return false; }
+
+    /* Construct the Element */
+    var _div = buildElement({ 'tag': 'div', 'classes': ['post-item', post.type.replaceAll('post.', '')], 'text': post.content })
+
+
+    /* Return the Completed Element */
+    return _div;
 }
 
 /** ************************************************************************* *

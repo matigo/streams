@@ -202,15 +202,14 @@ class Route extends Streams {
      */
     private function _getPageHTML( $data ) {
         $isCacheable = $this->_isCacheable();
-
         $LockPrefix = '';
         if ( $data['site_locked'] ) { $LockPrefix = getRandomString(18); }
 
-        // If Caching Is Enabled, Check If We Have a Valid Cached Version
+        /* If Caching Is Enabled, Check If We Have a Valid Cached Version */
         $cache_file = md5($data['site_version'] . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
                           nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
                           NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
-        if ( defined('ENABLE_CACHING') ) {
+        if ( $isCacheable && defined('ENABLE_CACHING') ) {
             if ( nullInt(ENABLE_CACHING) == 1 ) {
                 $html = readCache($data['site_id'], $cache_file);
                 if ( $html !== false ) {
@@ -240,7 +239,12 @@ class Route extends Streams {
 
         if ( $data['site_locked'] ) {
             $HomeUrl = NoNull($this->settings['HomeURL']);
-            $ReplStr =  array( '[FONT_DIR]'     => $HomeUrl . '/templates/fonts',
+            $ReplStr =  array( '[SHARED_FONT]'  => $HomeUrl . '/shared/fonts',
+                               '[SHARED_CSS]'   => $HomeUrl . '/shared/css',
+                               '[SHARED_IMG]'   => $HomeUrl . '/shared/img',
+                               '[SHARED_JS]'    => $HomeUrl . '/shared/js',
+
+                               '[FONT_DIR]'     => $HomeUrl . '/templates/fonts',
                                '[CSS_DIR]'      => $HomeUrl . '/templates/css',
                                '[IMG_DIR]'      => $HomeUrl . '/templates/img',
                                '[JS_DIR]'       => $HomeUrl . '/templates/js',
@@ -250,7 +254,7 @@ class Route extends Streams {
                                '[GENERATOR]'    => GENERATOR . " (" . APP_VER . ")",
                                '[APP_NAME]'     => APP_NAME,
                                '[APP_VER]'      => APP_VER,
-                               '[LANG_CD]'      => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
+                               '[LANG_CD]'      => validateLanguage(NoNull($this->settings['_language_code'], $this->settings['DispLang'])),
                                '[YEAR]'         => date('Y'),
 
                                '[CHANNEL_GUID]' => NoNull($data['channel_guid']),
@@ -410,15 +414,22 @@ class Route extends Streams {
         exit();
     }
 
+    /**
+     *  Function determines whether the cache should be read or not to load the site/page/resource
+     */
     private function _isCacheable() {
         $Excludes = array( 'write', 'settings', 'syndication', 'account' );
-        $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
+        $cacheFile = 'site-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
         $data = getCacheObject($cacheFile);
 
-        // Get the Theme-specific List of Non-Cacheable Pages (if applicable)
+        /* Get the Theme-specific List of Non-Cacheable Pages (if applicable) */
         if ( is_array($data) === false || $data === false ) {
             if ( is_array($this->site->cache) ) {
                 foreach ( $this->site->cache as $site ) {
+                    /* Is the Site marked as uncacheable? */
+                    if ( $site['cacheable'] === false ) { return false; }
+
+                    /* Build the Excludes */
                     $Location = THEME_DIR . '/' . NoNull($site['location']);
                     if ( file_exists($Location) ) {
                         foreach ( glob($Location . "/resources/content-*.html") as $filename) {
@@ -559,7 +570,7 @@ class Route extends Streams {
                               '[SITE_VERSION]' => nullInt($data['updated_unix']),
                               '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $cacheFile = 'pagination-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
             $rslt = getCacheObject($cacheFile);
             if ( is_array($rslt) === false ) {
                 $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
@@ -756,7 +767,7 @@ class Route extends Streams {
                               '[SITE_VERSION]' => nullInt($data['updated_unix']),
                               '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $cacheFile = 'nav-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
             $rslt = getCacheObject($cacheFile);
             if ( is_array($rslt) === false ) {
                 $sqlStr = prepSQLQuery("CALL GetSiteNav([SITE_ID]);", $ReplStr);
@@ -803,7 +814,12 @@ class Route extends Streams {
         $ico_mime = getMimeFromExtension($ico_type);
 
         // Construct the Core Array
-        $rVal = array( '[FONT_DIR]'     => $SiteUrl . '/fonts',
+        $rVal = array( '[SHARED_FONT]'  => $HomeUrl . '/shared/fonts',
+                       '[SHARED_CSS]'   => $HomeUrl . '/shared/css',
+                       '[SHARED_IMG]'   => $HomeUrl . '/shared/img',
+                       '[SHARED_JS]'    => $HomeUrl . '/shared/js',
+
+                       '[FONT_DIR]'     => $SiteUrl . '/fonts',
                        '[CSS_DIR]'      => $SiteUrl . '/css',
                        '[IMG_DIR]'      => $SiteUrl . '/img',
                        '[JS_DIR]'       => $SiteUrl . '/js',
@@ -815,7 +831,7 @@ class Route extends Streams {
                        '[GENERATOR]'    => GENERATOR . " (" . APP_VER . ")",
                        '[APP_NAME]'     => APP_NAME,
                        '[APP_VER]'      => APP_VER,
-                       '[LANG_CD]'      => NoNull($this->settings['_language_code'], $this->settings['DispLang']),
+                       '[LANG_CD]'      => validateLanguage(NoNull($this->settings['_language_code'], $this->settings['DispLang'])),
                        '[AVATAR_URL]'   => NoNull($this->settings['HomeURL']) . '/avatars/' . $this->settings['_avatar_file'],
                        '[UPDATED_AT]'   => NoNull($data['updated_at']),
                        '[SHORT_ICO]'    => NoNull($short_ico),
@@ -924,7 +940,7 @@ class Route extends Streams {
                                       '[FIRST_NAME]'   => NoNull($Row['first_name']),
                                       '[LAST_NAME]'    => NoNull($Row['last_name']),
                                       '[DISPLAY_NAME]' => NoNull($Row['display_name']),
-                                      '[LANG_CODE]'    => NoNull($Row['language_code']),
+                                      '[LANG_CODE]'    => validateLanguage(NoNull($this->settings['_language_code'], $this->settings['DispLang'])),
                                       '[CREATED_AT]'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
                                       '[CREATED_UNIX]' => strtotime($Row['created_at']),
 

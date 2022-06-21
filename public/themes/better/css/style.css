@@ -92,6 +92,7 @@
 }
 
 :root {
+    --background-selected: #586e75;
     --background-yellow: #eee8d5;
     --background-white: #fff;
     --background-color: #fdf6e3;
@@ -100,6 +101,7 @@
     --border-input: #676767;
     --placeholder-color: #93a1a1;
     --line-color: #93a1a1;
+    --text-selected: #eee8d5;
     --text-color: #586e75;
     --text-white: #fff;
     --nav-color: #657b83;
@@ -379,17 +381,34 @@ section.content div.left-menu ul {
     display: block;
     list-style: none;
     overflow: hidden;
-    padding: 0 0 10px;
-    margin: 0 0 10px;
+    padding: 10px 0;
+    margin: 0;
     width: 100%;
 }
 section.content div.left-menu ul:last-child { border: none !important; }
 section.content div.left-menu ul li {
     cursor: pointer;
     display: block;
-    padding: 0.25em 10px;
+    padding: 0.5em 10px;
     margin: 0;
     width: calc(100% - 20px);
+}
+section.content div.left-menu ul li.selected {
+    background-color: var(--background-selected, #586e75);
+    border-radius: 5px;
+    color: var(--text-selected, #eee8d5);
+    cursor: unset;
+}
+section.content div.left-menu ul li i {
+    font-size: 1.25em;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 1.5em;
+}
+section.content div.left-menu ul li span {
+    font-size: 1.15em;
+    vertical-align: middle;
+    padding: 0 0.5em;
 }
 
 section.content div.main {
@@ -498,4 +517,24 @@ section.content div.main .post-form .action-line span {
     padding: 0.1em 0 0;
     margin: 0;
     min-width: 4.5em;
+}
+
+/**
+ *
+ **/
+.timeline {
+    display: block;
+    vertical-align: text-top;
+    width: 100%;
+}
+
+.timeline .status-message {
+    display: block;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+    padding: 2em 0;
+    margin: 0;
+    width: 100%;
 }

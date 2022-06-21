@@ -1652,7 +1652,7 @@ class Posts {
                               '[SITE_VERSION]' => nullInt($data['updated_unix']),
                               '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $cacheFile = 'site-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
             $rslt = getCacheObject($cacheFile);
             if ( is_array($rslt) === false ) {
                 $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
@@ -2187,63 +2187,73 @@ class Posts {
             $data = array();
 
             foreach ( $posts as $post ) {
+                /* Only show posts that are permissible */
                 if ( YNBool($post['is_visible']) ) {
-                    // Is there Meta-Data? If So, Grab It
-                    $poMeta = false;
-                    if ( YNBool($post['has_meta']) ) { $poMeta = $this->_getPostMeta($post['post_guid']); }
-                    if ( NoNull($this->settings['nom']) != '' ) {
-                        if ( is_array($poMeta) === false ) { $poMeta = array(); }
-                        $poMeta['nom'] = NoNull($this->settings['nom']);
-                    }
-
-                    // Process any Tags
-                    $poTags = false;
-                    if ( NoNull($post['post_tags']) != '' ) {
-                        $poTags = array();
-                        $tgs = explode(',', NoNull($post['post_tags']));
-                        foreach ( $tgs as $tag ) {
-                            $key = $this->_getSafeTagSlug(NoNull($tag));
-                            $poTags[] = array( 'url'  => NoNull($post['site_url']) . '/tag/' . $key,
-                                               'name' => NoNull($tag),
-                                              );
-                        }
-                    }
-
-                    // Do We Have Mentions? Grab the List
-                    $mentions = false;
-                    if ( NoNull($post['mentions']) != '' ) {
-                        $json = json_decode('[' . $post['mentions'] . ']');
-                        $jArr = objectToArray($json);
-                        if ( is_array($jArr) && count($jArr) > 0 ) {
-                            $mentions = array();
-                            foreach ( $jArr as $pa ) {
-                                $mentions[] = array( 'guid'   => NoNull($pa['guid']),
-                                                     'name'   => NoNull($pa['as']),
-                                                     'is_you' => YNBool($pa['is_you']),
-                                                    );
-                            }
-                        }
-                    }
-
-                    // Do We Have Geo-Markers? Grab the History
-                    $markers = false;
-                    if ( YNBool($Row['has_markers']) ) {
-                        $markers = $this->_getPostMarkers($Row['post_guid']);
-                        if ( is_array($markers) ) {
-                            $poMeta['markers'] = $markers;
-                        }
-                    }
-
-                    // Prep the Post-Text
-                    $IsNote = true;
-                    if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
-                    $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], $IsNote, true);
-                    if ( is_array($mentions) ) {
-                        $post_text = $this->_parsePostMentions($post_text, $mentions);
-                    }
-
+                    /* So long as we're not beyond the post limit, add the record to the array */
                     if ( count($data) < $PostLimit ) {
-                        $data[] = array( 'guid'     => NoNull($post['post_guid']),
+
+                        /* Determine the Record Cache Index */
+                        $CacheFile = 'posts-' . substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . sha1(NoNull($post['post_guid']) . strtotime($post['updated_at']));
+                        $pd = getCacheObject($CacheFile);
+
+                        /* Build the Post Object if it is not already cached */
+                        if ( is_array($pd) === false ) {
+                            /* Is there Meta-Data? If So, Grab It */
+                            $poMeta = false;
+                            if ( YNBool($post['has_meta']) ) { $poMeta = $this->_getPostMeta($post['post_guid']); }
+                            if ( NoNull($this->settings['nom']) != '' ) {
+                                if ( is_array($poMeta) === false ) { $poMeta = array(); }
+                                $poMeta['nom'] = NoNull($this->settings['nom']);
+                            }
+
+                            /* Process any Tags */
+                            $poTags = false;
+                            if ( NoNull($post['post_tags']) != '' ) {
+                                $poTags = array();
+                                $tgs = explode(',', NoNull($post['post_tags']));
+                                foreach ( $tgs as $tag ) {
+                                    $key = $this->_getSafeTagSlug(NoNull($tag));
+                                    $poTags[] = array( 'url'  => NoNull($post['site_url']) . '/tag/' . $key,
+                                                       'name' => NoNull($tag),
+                                                      );
+                                }
+                            }
+
+                            /* Do We Have Mentions? Grab the List */
+                            $mentions = false;
+                            if ( NoNull($post['mentions']) != '' ) {
+                                $json = json_decode('[' . $post['mentions'] . ']');
+                                $jArr = objectToArray($json);
+                                if ( is_array($jArr) && count($jArr) > 0 ) {
+                                    $mentions = array();
+                                    foreach ( $jArr as $pa ) {
+                                        $mentions[] = array( 'guid'   => NoNull($pa['guid']),
+                                                             'name'   => NoNull($pa['as']),
+                                                             'is_you' => YNBool($pa['is_you']),
+                                                            );
+                                    }
+                                }
+                            }
+
+                            /* Do We Have Geo-Markers? Grab the History */
+                            $markers = false;
+                            if ( YNBool($Row['has_markers']) ) {
+                                $markers = $this->_getPostMarkers($Row['post_guid']);
+                                if ( is_array($markers) ) {
+                                    $poMeta['markers'] = $markers;
+                                }
+                            }
+
+                            /* Prep the Post-Text */
+                            $IsNote = true;
+                            if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                            $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], $IsNote, true);
+                            if ( is_array($mentions) ) {
+                                $post_text = $this->_parsePostMentions($post_text, $mentions);
+                            }
+
+                            /* Construct the Core array */
+                            $pd = array( 'guid'     => NoNull($post['post_guid']),
                                          'type'     => NoNull($post['type']),
                                          'privacy'  => NoNull($post['privacy_type']),
 
@@ -2264,7 +2274,7 @@ class Posts {
                                          'persona'  => array( 'guid'        => NoNull($post['persona_guid']),
                                                               'as'          => '@' . NoNull($post['persona_name']),
                                                               'name'        => NoNull($post['display_name']),
-                                                              'avatar'      => NoNull($post['avatar_url']),
+                                                              'avatar'      => NoNull($post['avatar_url'], $default_avatar),
 
                                                               'pin'         => NoNull($post['persona_pin'], 'pin.none'),
                                                               'you_follow'  => YNBool($post['persona_follow']),
@@ -2289,6 +2299,13 @@ class Posts {
                                          'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['updated_at'])),
                                          'updated_unix' => strtotime($post['updated_at']),
                                         );
+
+                            /* Save the array to the cache */
+                            setCacheObject($CacheFile, $pd);
+                        }
+
+                        /* Add the Post Data to the output array */
+                        if ( is_array($pd) ) { $data[] = $pd; }
 
                     } else {
                         /* If the array count is greater than the limit, then we clearly have more */
