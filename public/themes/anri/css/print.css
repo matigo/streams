@@ -1,0 +1,79 @@
+body {
+    background-color: #fff;
+    color: #fff;
+    font-family: 'Seravek', -apple-system, 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    font-size: 16px;
+    padding: 0;
+    margin: 0 auto;
+    max-width: calc(100% - 50px);
+    width: 100%;
+}
+
+/** **************************************************** *
+    Body Font Size
+ ** **************************************************** */
+body.font-xs, body .font-xs { font-size: 16px; }
+body.font-sm, body .font-sm { font-size: 16px; }
+body.font-md, body .font-md { font-size: 16px; }
+body.font-lg, body .font-lg { font-size: 16px; }
+body.font-xl, body .font-xl { font-size: 16px; }
+body.font-xx, body .font-xx { font-size: 16px; }
+
+/** **************************************************** *
+    Navigation
+ ** **************************************************** */
+.blog-pagination, .nav-toggle, .main-nav { display: none !important; }
+
+/** **************************************************** *
+    Sections
+ ** **************************************************** */
+footer { display: none !important; }
+
+/** **************************************************** *
+    Attributes
+ ** **************************************************** */
+a[href]:after { content: none !important; }
+p a {
+    font-weight: normal !important;
+    text-decoration: underline !important;
+}
+
+/** **************************************************** *
+    Posts
+ ** **************************************************** */
+.single-post { margin-right: 0 auto; }
+.single-post__comments,
+.single-post__footer,
+.u-author { display: none !important; }
+.single-post__title h1,
+.single-post__title h2,
+.single-post__title h3,
+.single-post__title {
+    padding: 0;
+    margin: 0;
+}
+.single-post__info {
+    display: block;
+    font-size: 14px;
+    font-style: italic;
+    padding: 0 0 10px;
+    margin: 0 auto;
+}
+.single-post__info span:first-child { display: none; }
+.single-post__info i { display: none; }
+.audio-controls { display: none !important; }
+
+p img,
+img {
+    display: block !important;
+    max-width: calc(100% - 75px) !important;
+    padding: 4px;
+    margin: 0 auto !important;
+}
+
+li.footnote {
+    font-size: 12px;
+    line-height: 16px;
+    padding: 0;
+    margin: 0;
+}
