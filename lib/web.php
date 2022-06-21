@@ -419,7 +419,7 @@ class Route extends Streams {
      */
     private function _isCacheable() {
         $Excludes = array( 'write', 'settings', 'syndication', 'account' );
-        $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
+        $cacheFile = 'site-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . NoNull(APP_VER);
         $data = getCacheObject($cacheFile);
 
         /* Get the Theme-specific List of Non-Cacheable Pages (if applicable) */
@@ -570,7 +570,7 @@ class Route extends Streams {
                               '[SITE_VERSION]' => nullInt($data['updated_unix']),
                               '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $cacheFile = 'pagination-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
             $rslt = getCacheObject($cacheFile);
             if ( is_array($rslt) === false ) {
                 $sqlStr = prepSQLQuery("CALL GetSitePagination([ACCOUNT_ID], '[SITE_GUID]', '[SITE_TOKEN]', '[CANON_URL]', '[PGROOT]', '[OBJECT]', '[PGSUB1]');", $ReplStr);
@@ -767,7 +767,7 @@ class Route extends Streams {
                               '[SITE_VERSION]' => nullInt($data['updated_unix']),
                               '[APP_VERSION]'  => sqlScrub(APP_VER),
                              );
-            $cacheFile = substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
+            $cacheFile = 'nav-' . substr('00000000' . $this->settings['site_id'], -8) . '-' . sha1(serialize($ReplStr));
             $rslt = getCacheObject($cacheFile);
             if ( is_array($rslt) === false ) {
                 $sqlStr = prepSQLQuery("CALL GetSiteNav([SITE_ID]);", $ReplStr);

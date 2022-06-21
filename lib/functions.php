@@ -1170,13 +1170,39 @@
      *  Cache Functions
      ***********************************************************************/
     /**
+     *  Function determines the "correct" directory for a Cache object
+     */
+    function getCacheFileName( $name ) {
+        if ( strlen(NoNull($name)) < 3 ) { return ''; }
+        $name = strtolower($name);
+
+        /* Do we have a series of dashes? Use a subdirectory with the file name prefix */
+        if ( substr_count($name, '-') >= 2 ) {
+            $segs = explode('-', $name);
+            $dir = NoNull($segs[0], $segs[1]);
+            if ( mb_strlen($dir) >= 4 ) {
+                if ( checkDIRExists(CACHE_DIR) ) {
+                    if ( checkDIRExists(CACHE_DIR . "/$dir") ) {
+                        $name = str_replace($dir . '-', $dir . '/', $name);
+                    }
+                }
+            }
+        }
+
+        /* Return the full path and name or an empty string */
+        if ( mb_strlen(NoNull($name)) >= 4 ) { return CACHE_DIR . '/' . $name . '.data'; }
+        return '';
+    }
+
+    /**
      *  Function Records an array of information to a cache location
      */
     function setCacheObject( $fileName, $data ) {
         if ( strlen(NoNull($fileName)) < 3 ) { return false; }
+
         if ( is_array($data) ) {
-            $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
-            if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
+            $cacheFile = getCacheFileName($fileName);
+            if ( $cacheFile != '' && checkDIRExists(CACHE_DIR) ) {
                 $fh = fopen($cacheFile, 'w');
                 fwrite($fh, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
                 fclose($fh);
@@ -1190,8 +1216,8 @@
      */
     function getCacheObject( $fileName ) {
         if ( strlen(NoNull($fileName)) < 3 ) { return false; }
-        if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
-            $cacheFile = TMP_DIR . '/cache/' . $fileName . '.data';
+        if ( checkDIRExists(CACHE_DIR) ) {
+            $cacheFile = getCacheFileName($fileName);
             if ( file_exists( $cacheFile ) ) {
                 $age = filemtime($cacheFile);
                 if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
