@@ -1,0 +1,5 @@
+        <wp:tag>
+            <wp:term_id>[TAG_IDX]</wp:term_id>
+            <wp:tag_slug><![CDATA[[TAG_KEY]]]></wp:tag_slug>
+            <wp:tag_name><![CDATA[[TAG_NAME]]]></wp:tag_name>
+        </wp:tag>

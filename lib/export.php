@@ -20,29 +20,34 @@ class Export {
      *  Perform Action Blocks
      ** ********************************************************************* */
     public function performAction() {
-        $ReqType = NoNull(strtolower($this->settings['ReqType']));
-        $rVal = false;
+        $ReqType = strtolower(NoNull($this->settings['ReqType'], 'GET'));
 
-        // Perform the Action
+        /* Check the User Token is Valid */
+        if ( !$this->settings['_logged_in']) {
+            $this->_setMetaMessage("You Need to Log In First", 401);
+            return false;
+        }
+
+        /* Perform the Action */
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there was nothing to do */
+        return false;
     }
 
     private function _performGetAction() {
@@ -57,7 +62,7 @@ class Export {
                 return $this->_performExport();
         }
 
-        // If we're here, nothing was done
+        /* If we're here, there was nothing to do */
         return false;
     }
 
@@ -74,7 +79,7 @@ class Export {
                 // Do Nothing
         }
 
-        // If we're here, nothing was done
+        /* If we're here, there was nothing to do */
         return false;
     }
 
@@ -90,7 +95,7 @@ class Export {
                 // Do Nothing
         }
 
-        // If we're here, nothing was done
+        /* If we're here, there was nothing to do */
         return false;
     }
 
@@ -169,11 +174,15 @@ class Export {
             case 'json':
                 break;
 
+            case 'wordpress':
+                return $this->_exportForWordPress();
+                break;
+
             default:
                 $this->_setMetaMessage( "Invalid Export Format Provided", 401 );
         }
 
-        // If We're Here, There's No Data to Export
+        /* If We're Here, There's No Data to Export */
         return array();
     }
 
@@ -384,6 +393,164 @@ class Export {
 
         // If we're here, it didn't work
         return false;
+    }
+
+    /** ********************************************************************* *
+     *  WordPress Export Functions
+     *
+     *  Note: Export operations are expensive. An account cannot issue more than
+     *        one at any given time. Export summaries should be cached for the
+     *        current Site.version.
+     ** ********************************************************************* */
+    /**
+     *  Function constructs the WordPress XML file and returns a cached export summary
+     */
+    private function _exportForWordPress() {
+        $validTypes = array('post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.draft', 'post.page');
+        $CleanGuid = NoNull($this->settings['channel_guid'], $this->settings['_channel_guid']);
+        $CleanType = "'post.article'";
+        $idx = 1;
+
+        /* Determine which Post.type records should be included */
+        $typeList = NoNull($this->settings['post_types'], $this->settings['types']) . ',';
+        $filter = array();
+
+        $tts = explode(',', $typeList);
+        if ( count($tts) > 0 ) {
+            foreach ( $tts as $tt ) {
+                $tname = strtolower(NoNull($tt));
+                if ( mb_strlen($tname) > 5 && in_array($tname, $validTypes) ) {
+                    if ( in_array($tname, $filter) === false ) { $filter[] = "'" . $tname . "'"; }
+                }
+            }
+
+            /* If we have valid items, set the CleanType variable */
+            if ( is_array($filter) && count($filter) > 0 ) { $CleanType = implode(',', $filter); }
+        }
+
+        /* Perform some basic error checking */
+        if ( mb_strlen($CleanGuid) != 36 ) {
+            $this->_setMetaMessage("Invalid Channel GUID provided", 400);
+            return false;
+        }
+
+        /* Prep some common variables */
+        $SiteUrl = NoNull($this->settings['HomeURL']);
+
+        /* Prep the Basic XML Replacement array */
+        $xmlItems = array( '[GENERATOR]'     => GENERATOR . " (" . APP_VER . ")",
+                           '[APP_NAME]'      => APP_NAME,
+                           '[APP_VER]'       => APP_VER,
+                           '[LANG_CD]'       => validateLanguage(NoNull($this->settings['_language_code'], $this->settings['DispLang'])),
+                           '[GENERATED_AT]'  => date('Y-m-d H:i'),
+                           '[GENERATED_XML]' => date("D, d M Y H:i:s O"),
+                           '[YEAR]'          => date('Y'),
+                           '[CHANNEL_GUID]'  => NoNull($CleanGuid),
+
+                           '[SITE_URL]'      => $SiteUrl,
+                           '[SITE_NAME]'     => '',
+                           '[SITE_DESCR]'    => '',
+                           '[SITE_KEYS]'     => '',
+                           '[SITE_GUID]'     => '',
+                           '[SITE_VERSION]'  => '',
+
+                           '[AUTHOR_ID]'     => nullInt($this->settings['_account_id']),
+                           '[DISPLAY_NAME]'  => NoNull($this->settings['_display_name']),
+                           '[FIRST_NAME]'    => '',
+                           '[LAST_NAME]'     => '',
+                           '[AUTHOR_EMAIL]'  => NoNull($this->settings['_email']),
+
+                           '[POST_LIST]'     => '',
+                           '[TAG_LIST]'      => '',
+                          );
+
+        /* Build the basic query parameter array [Note: the NoNull for POST_TYPES is NOT a typo] */
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[CHANNEL_GUID]' => sqlScrub($CleanGuid),
+                          '[POST_TYPES]'   => NoNull($CleanType),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/export/getChannelDetails.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $SiteUrl = ((YNBool($Row['https'])) ? 'https' : 'http') . '://' . NoNull($Row['site_url']);
+
+                $xmlItems['[SITE_URL]']   = $SiteUrl;
+                $xmlItems['[SITE_NAME]']  = NoNull($Row['site_name']);
+                $xmlItems['[SITE_DESCR]'] = NoNull($Row['site_description']);
+                $xmlItems['[SITE_KEYS]']  = NoNull($Row['site_keywords']);
+                $xmlItems['[SITE_GUID]']  = NoNull($Row['site_guid']);
+                $xmlItems['[SITE_VERSION]'] = nullInt($Row['site_version']);
+
+                $xmlItems['[AUTHOR_ID]']    = intToAlpha($Row['author_id']);
+                $xmlItems['[DISPLAY_NAME]'] = NoNull($Row['display_name'], $Row['account_displayname']);
+                $xmlItems['[FIRST_NAME]']   = NoNull($Row['first_name'], $Row['account_firstname']);
+                $xmlItems['[LAST_NAME]']    = NoNull($Row['last_name'], $Row['account_lastname']);
+                $xmlItems['[AUTHOR_EMAIL]'] = NoNull($Row['email'], $Row['account_email']);
+            }
+        }
+
+        /* Collect the Tags for the Channel */
+        $sqlStr = readResource(SQL_DIR . '/export/getChannelTagList.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $vv = array( '[TAG_IDX]'  => nullInt($idx),
+                             '[TAG_KEY]'  => NoNull($Row['key']),
+                             '[TAG_NAME]' => NoNull($Row['name']),
+                             '[COUNTER]'  => nullInt($Row['posts']),
+                            );
+
+                $xmlItems['[TAG_LIST]'] .= readResource(FLATS_DIR . '/templates/export.wordpress-tag.xml', $vv);
+                $idx++;
+            }
+        }
+
+        /* Collect the Posts for the Channel */
+        $sqlStr = readResource(SQL_DIR . '/export/getChannelPosts.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $tags = '';
+                if ( mb_strlen(NoNull($Row['post_tags'])) > 0 ) {
+                    $json = json_decode('[' . NoNull($Row['post_tags']) . ']', true);
+                    if ( is_array($json) ) {
+                        $template = '<category domain="post_tag" nicename="[KEY]"><![CDATA[[NAME]]]></category>';
+
+                        foreach ( $json as $tag ) {
+                            $kk = array( '[NAME]' => NoNull($tag['name']),
+                                         '[KEY]'  => NoNull($tag['key']),
+                                        );
+                            $tags .= tabSpace(3) . str_replace(array_keys($kk), array_values($kk), $template) . "\r\n";
+                        }
+                    }
+                }
+
+                $vv = array( '[AUTHOR_ID]'  => intToAlpha($Row['author_id']),
+                             '[POST_ID]'    => nullInt($Row['post_id']),
+                             '[TITLE]'      => NoNull($Row['title']),
+                             '[CONTENT]'    => NoNull($Row['value']),
+                             '[EXCERPT]'    => '',
+                             '[POST_URL]'   => $SiteUrl . NoNull($Row['canonical_url']),
+                             '[POST_GUID]'  => NoNull($Row['guid']),
+                             '[PRIVACY]'    => NoNull($Row['privacy_type']),
+                             '[PUBLISH_AT]' => date("D, d M Y H:i:s O", strtotime($Row['publish_at'])),
+                             '[POST_TYPE]'  => NoNull($Row['type']),
+                             '[POST_HASH]'  => NoNull($Row['hash']),
+                             '[CREATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['created_at'])),
+                             '[UPDATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['updated_at'])),
+                             '[POST_TAGS]'  => $tags,
+                            );
+                $xmlItems['[POST_LIST]'] .= readResource(FLATS_DIR . '/templates/export.wordpress-post.xml', $vv);
+            }
+        }
+
+        /* Construct the output XML file */
+        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-wrapper.xml', $xmlItems);
+
+        print_r( $xmlOut );
+        die();
+
     }
 
     /** ********************************************************************* *
