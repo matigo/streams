@@ -41,9 +41,3 @@
             <wp:author_first_name><![CDATA[[FIRST_NAME]]]></wp:author_first_name>
             <wp:author_last_name><![CDATA[[LAST_NAME]]]></wp:author_last_name>
         </wp:author>
-
-[TAG_LIST]
-
-[POST_LIST]
-    </channel>
-</rss>

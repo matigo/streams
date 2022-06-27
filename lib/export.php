@@ -407,6 +407,7 @@ class Export {
      */
     private function _exportForWordPress() {
         $validTypes = array('post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.draft', 'post.page');
+        $forceRestart = YNBool(NoNull($this->settings['restart'], $this->settings['force']));
         $CleanGuid = NoNull($this->settings['channel_guid'], $this->settings['_channel_guid']);
         $CleanType = "'post.article'";
         $idx = 1;
@@ -434,8 +435,97 @@ class Export {
             return false;
         }
 
+        /* Ensure execution time is increased to 10 minutes to handle the effort */
+        set_time_limit(600);
+
         /* Prep some common variables */
+        $fileName = 'wordpress-' . substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . md5($CleanGuid . $CleanType . date('Y-m-d')) . '.xml';
+        $cacheKey = md5($fileName);
         $SiteUrl = NoNull($this->settings['HomeURL']);
+        $cdnFile = CDN_PATH . '/export';
+        $PostCount = 0;
+
+        /* Construct the "Current Situation" array */
+        $stats = getCacheObject($cacheKey);
+        if ( is_array($stats) && count($stats) > 0 ) {
+            $udts = nullInt($stats['udts']);
+            $step = NoNull($stats['step']);
+            $age = nullInt(time() - $udts);
+
+            /* Has the Job Stalled? */
+            if ( $udts > 1000 && $age > 120 ) {
+                if ( $forceRestart ) {
+                    unlink($cdnFile . '/' . $fileName);
+                    $stats = false;
+                    $step = '';
+
+                } else {
+                    $this->_setMetaMessage("The job has not progressed in $age seconds. If this job has stalled, force a restart.", 400);
+                    return false;
+                }
+            }
+
+            /* Is there a step already in progress? */
+            if ( mb_strlen($step) > 3 ) {
+                $this->_setMetaMessage("An export is already in progress: [$step]", 400);
+                return false;
+            }
+        }
+
+        /* If this is a new task, ensure the array is built */
+        if ( is_array($stats) === false ) {
+            $stats = array( 'step' => 'Initialising ...',
+                            'udts' => time(),
+                           );
+        }
+
+        /* Determine the Cache Filename for the XML Output and check to see if a file already exists with this name */
+        if ( checkDIRExists($cdnFile) ) {
+            $cdnFile .= '/' . $fileName;
+
+            if ( file_exists($cdnFile) ) {
+                $mtime = filemtime($cdnFile);
+                $bytes = filesize($cdnFile);
+
+                /* If the file already exists, is large, and relatively new, return an output array */
+                if ( nullInt($bytes) > 512 && nullInt($mtime) > 1000 && (time() - $mtime) < 900 ) {
+                    $cdnUrl = getCdnUrl();
+
+                    return array( 'url'   => $cdnUrl . '/export/' . $fileName,
+                                  'file'  => $fileName,
+                                  'type'  => getMimeFromExtension($cdnFile),
+                                  'bytes' => filesize($cdnFile),
+                                 );
+                }
+            }
+        }
+
+        /* Build the basic query parameter array [Note: the NoNull for POST_TYPES is NOT a typo] */
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[CHANNEL_GUID]' => sqlScrub($CleanGuid),
+                          '[POST_TYPES]'   => NoNull($CleanType),
+                          '[START_POS]'    => nullInt($pos),
+                         );
+
+        /* Determine the number of items that will be exported */
+        $sqlStr = readResource(SQL_DIR . '/export/getChannelPostCount.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $PostCount = nullInt($Row['post_count']);
+            }
+        }
+
+        /* If there are no posts, no point continuing */
+        if ( $PostCount <= 0 ) {
+            $this->_setMetaMessage("There are no Posts to export", 404);
+            return false;
+        }
+
+        $stats = array( 'step' => 'Writing Preliminary XML data',
+                        'udts' => time(),
+                       );
+        setCacheObject($cacheKey, $stats);
 
         /* Prep the Basic XML Replacement array */
         $xmlItems = array( '[GENERATOR]'     => GENERATOR . " (" . APP_VER . ")",
@@ -459,16 +549,8 @@ class Export {
                            '[FIRST_NAME]'    => '',
                            '[LAST_NAME]'     => '',
                            '[AUTHOR_EMAIL]'  => NoNull($this->settings['_email']),
-
-                           '[POST_LIST]'     => '',
-                           '[TAG_LIST]'      => '',
                           );
 
-        /* Build the basic query parameter array [Note: the NoNull for POST_TYPES is NOT a typo] */
-        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
-                          '[CHANNEL_GUID]' => sqlScrub($CleanGuid),
-                          '[POST_TYPES]'   => NoNull($CleanType),
-                         );
         $sqlStr = readResource(SQL_DIR . '/export/getChannelDetails.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
@@ -490,6 +572,17 @@ class Export {
             }
         }
 
+        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-header.xml', $xmlItems);
+
+        /* Create the XML File and place the start of the WordPress data */
+        $fh = fopen($cdnFile, 'w');
+        fwrite($fh, $xmlOut);
+
+        $stats = array( 'step' => 'Writing Post Tag data',
+                        'udts' => time(),
+                       );
+        setCacheObject($cacheKey, $stats);
+
         /* Collect the Tags for the Channel */
         $sqlStr = readResource(SQL_DIR . '/export/getChannelTagList.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
@@ -501,56 +594,123 @@ class Export {
                              '[COUNTER]'  => nullInt($Row['posts']),
                             );
 
-                $xmlItems['[TAG_LIST]'] .= readResource(FLATS_DIR . '/templates/export.wordpress-tag.xml', $vv);
+                $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-tag.xml', $vv);
+                if ( mb_strlen($xmlOut) > 3 ) { fwrite($fh, $xmlOut); }
                 $idx++;
             }
         }
 
-        /* Collect the Posts for the Channel */
-        $sqlStr = readResource(SQL_DIR . '/export/getChannelPosts.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            foreach ( $rslt as $Row ) {
-                $tags = '';
-                if ( mb_strlen(NoNull($Row['post_tags'])) > 0 ) {
-                    $json = json_decode('[' . NoNull($Row['post_tags']) . ']', true);
-                    if ( is_array($json) ) {
-                        $template = '<category domain="post_tag" nicename="[KEY]"><![CDATA[[NAME]]]></category>';
+        /* Prep the Markdown Parser */
+        require_once(LIB_DIR . '/posts.php');
+        $post = new Posts($this->settings);
 
-                        foreach ( $json as $tag ) {
-                            $kk = array( '[NAME]' => NoNull($tag['name']),
-                                         '[KEY]'  => NoNull($tag['key']),
-                                        );
-                            $tags .= tabSpace(3) . str_replace(array_keys($kk), array_values($kk), $template) . "\r\n";
+        /* Collect the Posts for the Channel in blocks of 1000 */
+        $CleanStr = array( '</ol>' => "</ol>\r\n", '</ul>' => "</ul>\r\n", '</li>' => "</li>\r\n", '</p>' => "</p>\r\n" );
+        $postIds = array();
+        $hasPosts = true;
+        $loops = 0;
+        $cnt = 0;
+
+        $stats['step'] = 'Writing Posts (0 of $PostCount)';
+        $stats = array( 'step' => "Writing Posts (0 of $PostCount)",
+                        'udts' => time(),
+                       );
+        setCacheObject($cacheKey, $stats);
+
+        while ( $hasPosts ) {
+            $sqlStr = readResource(SQL_DIR . '/export/getChannelPosts.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) && count($rslt) > 0 ) {
+                foreach ( $rslt as $Row ) {
+                    $pid = nullInt($Row['post_id']);
+                    if ( in_array($pid, $postIds) === false ) {
+                        $postIds[] = $pid;
+                        $cnt++;
+
+                        $tags = '';
+                        if ( mb_strlen(NoNull($Row['post_tags'])) > 0 ) {
+                            $json = json_decode('[' . NoNull($Row['post_tags']) . ']', true);
+                            if ( is_array($json) ) {
+                                $template = '<category domain="post_tag" nicename="[KEY]"><![CDATA[[NAME]]]></category>';
+
+                                foreach ( $json as $tag ) {
+                                    $kk = array( '[NAME]' => NoNull($tag['name']),
+                                                 '[KEY]'  => NoNull($tag['key']),
+                                                );
+                                    $tags .= tabSpace(3) . str_replace(array_keys($kk), array_values($kk), $template) . "\r\n";
+                                }
+                            }
                         }
+
+                        /* Parse and Clean the Content */
+                        $content = $post->getMarkdownHTML($Row['value'], $Row['post_id'], false, false);
+                        $content = str_replace(array_keys($CleanStr), array_values($CleanStr), $content);
+
+                        $vv = array( '[AUTHOR_ID]'  => intToAlpha($Row['author_id']),
+                                     '[POST_ID]'    => nullInt($Row['post_id']),
+                                     '[TITLE]'      => NoNull($Row['title']),
+                                     '[CONTENT]'    => $content,
+                                     '[EXCERPT]'    => strip_tags(NoNull($Row['excerpt'])),
+                                     '[POST_URL]'   => $SiteUrl . NoNull($Row['canonical_url']),
+                                     '[POST_GUID]'  => NoNull($Row['guid']),
+                                     '[PRIVACY]'    => NoNull($Row['privacy_type']),
+                                     '[PUBLISH_AT]' => date("D, d M Y H:i:s O", strtotime($Row['publish_at'])),
+                                     '[POST_TYPE]'  => NoNull($Row['type']),
+                                     '[POST_HASH]'  => NoNull($Row['hash']),
+                                     '[CREATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['created_at'])),
+                                     '[UPDATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['updated_at'])),
+                                     '[POST_TAGS]'  => $tags,
+                                    );
+                        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-post.xml', $vv);
+                        if ( mb_strlen($xmlOut) > 3 ) { fwrite($fh, $xmlOut); }
                     }
                 }
 
-                $vv = array( '[AUTHOR_ID]'  => intToAlpha($Row['author_id']),
-                             '[POST_ID]'    => nullInt($Row['post_id']),
-                             '[TITLE]'      => NoNull($Row['title']),
-                             '[CONTENT]'    => NoNull($Row['value']),
-                             '[EXCERPT]'    => '',
-                             '[POST_URL]'   => $SiteUrl . NoNull($Row['canonical_url']),
-                             '[POST_GUID]'  => NoNull($Row['guid']),
-                             '[PRIVACY]'    => NoNull($Row['privacy_type']),
-                             '[PUBLISH_AT]' => date("D, d M Y H:i:s O", strtotime($Row['publish_at'])),
-                             '[POST_TYPE]'  => NoNull($Row['type']),
-                             '[POST_HASH]'  => NoNull($Row['hash']),
-                             '[CREATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['created_at'])),
-                             '[UPDATED_AT]' => date("Y-m-d H:i:s", strtotime($Row['updated_at'])),
-                             '[POST_TAGS]'  => $tags,
-                            );
-                $xmlItems['[POST_LIST]'] .= readResource(FLATS_DIR . '/templates/export.wordpress-post.xml', $vv);
+                /* Set the Position */
+                $ReplStr['[START_POS]'] = $cnt;
+
+                /* Update the Step */
+                $stats = array( 'step' => "Writing Posts ($cnt of $PostCount)",
+                                'udts' => time(),
+                               );
+                setCacheObject($cacheKey, $stats);
+
+            } else {
+                $hasPosts = false;
             }
+
+            /* Let's make sure we're not looping with one record 1000 times */
+            writeNote("Loop: $loops | Row Count: " . count($rslt), true);
+
+            /* Do  not allow an infinite loop. 1-million items "ought to be enough for everyone" */
+            $loops++;
+            if ( $loops > 1000 ) { $hasPosts = false; }
         }
+        unset($post);
 
-        /* Construct the output XML file */
-        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-wrapper.xml', $xmlItems);
+        /* Close the output XML file */
+        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-footer.xml');
+        if ( mb_strlen($xmlOut) > 3 ) { fwrite($fh, $xmlOut); }
 
-        print_r( $xmlOut );
-        die();
+        /* Close the file handler */
+        fclose($fh);
 
+        /* Clear the Cache Object */
+        setCacheObject($cacheKey, array());
+
+        /* Return the Output array or an unhappy boolean */
+        if ( file_exists($cdnFile) && filesize($cdnFile) > 512 ) {
+            $cdnUrl = getCdnUrl();
+
+            return array( 'url'   => $cdnUrl . '/export/' . $fileName,
+                          'file'  => $fileName,
+                          'type'  => getMimeFromExtension($cdnFile),
+                          'bytes' => filesize($cdnFile),
+                         );
+        } else {
+            $this->_setMetaMessage("Could not create export file", 400);
+            return false;
+        }
     }
 
     /** ********************************************************************* *
