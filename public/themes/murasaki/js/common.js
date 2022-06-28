@@ -1318,11 +1318,17 @@ function parseEditPost( data ) {
                     if ( el !== undefined && el.tagName !== undefined && el.tagName.toLowerCase() == 'div' ) {
                         hideByClass('content-area', els[i]);
 
+                        var _reply_guid = '';
+                        if ( post.reply_to !== undefined && post.reply_to !== false ) {
+                            _reply_guid = post.reply_to.substr(post.reply_to.length - 36);
+                        }
+
                         /* Construct the Editor */
                         var _name = 'edit-data';
                         var _html = '<textarea class="content-area edit-content" onkeyup="countCharacters();" name="' + _name + '" data-name="content" data-button="edit-post" data-counter="edit-length">' + post.text + '</textarea>' +
                                     '<input type="hidden" name="' + _name + '" data-name="publish_unix" value="' + post.publish_unix + '">' +
                                     '<input type="hidden" name="' + _name + '" data-name="post_privacy" value="' + post.privacy + '">' +
+                                    ((_reply_guid.length > 30) ? '<input type="hidden" name="' + _name + '" data-name="post_reply_to" value="' + _reply_guid + '">' : '') +
                                     '<input type="hidden" name="' + _name + '" data-name="post_type" value="' + post.type + '">' +
                                     '<input type="hidden" name="' + _name + '" data-name="post_guid" value="' + post.guid + '">' +
                                     '<span class="button-group">' +
