@@ -1123,11 +1123,11 @@
      *  Function Returns a Realistic Mime Type based on a File Extension
      */
     function getMimeFromExtension( $FileExt ) {
-        $types = array( 'mp3' => 'audio/mp3', 'm4a' => 'audio/m4a',
-                        'gif' => 'image/gif', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'tiff' => 'image/tiff', 'bmp' => 'image/bmp',
-                        'mov' => 'video/quicktime', 'qt' => 'video/quicktime', 'mpg' => 'video/mpeg', 'mpeg' => 'video/mpeg', 'mp4' => 'video/mp4',
-                        'pdf' => 'application/pdf',
-                        'md'  => 'text/plain', 'txt' => 'text/plain', 'htm' => 'text/html', 'html' => 'text/html',
+        $types = array( 'mp3' => 'audio/mp3',       'm4a' => 'audio/m4a',
+                        'gif' => 'image/gif',       'jpg' => 'image/jpeg',      'jpeg' => 'image/jpeg', 'png'  => 'image/png',  'tiff' => 'image/tiff', 'bmp' => 'image/bmp',
+                        'mov' => 'video/quicktime', 'qt'  => 'video/quicktime', 'mpg'  => 'video/mpeg', 'mpeg' => 'video/mpeg', 'mp4' => 'video/mp4',
+                        'pdf' => 'application/pdf', 'xml' => 'application/xml',
+                        'md'  => 'text/plain',      'txt' => 'text/plain',      'htm'  => 'text/html',  'html' => 'text/html',
                         );
         return array_key_exists($FileExt, $types) ? NoNull($types[$FileExt]) : 'application/plain';
     }

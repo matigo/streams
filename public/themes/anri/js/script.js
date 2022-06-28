@@ -235,14 +235,32 @@ function performExport(btn) {
     lockExportButtons(btn);
 
     var params = { 'output': _type };
-    doJSONQuery('export/unlock', 'POST', params, parseExportToken);
+    setTimeout(function () { doJSONQuery('export/unlock', 'POST', params, parseExportToken); }, 75);
 }
 function parseExportToken( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         if ( ds.unlock !== undefined && ds.unlock.length >= 30 ) {
-            var params = { 'unlock': ds.unlock };
-            doJSONQuery('export/' + ds.output, 'GET', params, parseExportResult);
+            var params = { 'channel_guid': getMetaValue('channel_guid'),
+                           'post_types': '',
+                           'unlock': ds.unlock,
+                          };
+
+            /* Add the types to collect */
+            var els = document.getElementsByName('xdata');
+            for ( let e = 0; e < els.length; e++ ) {
+                if ( els[e].checked !== undefined && els[e].checked !== null && els[e].checked === true ) {
+                    var _val = NoNull(els[e].getAttribute('data-value')).toLowerCase();
+                    if ( _val != '' ) {
+                        if ( NoNull(params['post_types']) != '' ) { params['post_types'] += ','; }
+                        params['post_types'] += _val;
+                    }
+                }
+            }
+
+            /* Query the API */
+            setTimeout(function () { doJSONQuery('export/' + ds.output, 'GET', params, parseExportResult); }, 75);
+            setTimeout(function () { checkExportStatus(ds.output); }, 5000);
         }
 
     } else {
@@ -253,16 +271,68 @@ function parseExportResult( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
 
-        if ( ds.zip.size > 0 ) {
+        /* DayOne export management (for now) */
+        if ( ds.zip !== undefined && ds.zip !== null && ds.zip !== false ) {
+            if ( ds.zip.size > 0 ) {
+                var els = document.getElementsByClassName('export-result');
+                for ( var i = 0; i < els.length; i++ ) {
+                    els[i].classList.remove('hidden');
+                    els[i].innerHTML = 'Done! ' + numberWithCommas(ds.records) + ' records exported.<br>' +
+                                       '<a href="' + ds.url + '" target="_blank" title="">Click here to download the ' + easyFileSize(ds.zip.size) + ' file.</a>';
+                }
+                unlockExportButtons();
+            }
+        }
+
+        /* WordPress export management (for now) */
+        if ( ds.is_active !== undefined && ds.is_active !== null ) {
+            showByClass('export-result');
+
             var els = document.getElementsByClassName('export-result');
-            for ( var i = 0; i < els.length; i++ ) {
-                els[i].classList.remove('hidden');
-                els[i].innerHTML = 'Done! ' + numberWithCommas(ds.records) + ' records exported.<br>' +
-                                   '<a href="' + ds.url + '" target="_blank" title="">Click here to download the ' + easyFileSize(ds.zip.size) + ' file.</a>';
+            for ( let e = 0; e < els.length; e++ ) {
+                if ( els[e].classList.contains('hidden') ) { els[e].classList.remove('hidden'); }
+                if ( ds.is_active ) {
+                    setTimeout(function () { checkExportStatus('wordpress'); }, 5000);
+                    els[e].innerHTML = NoNull(ds.message);
+
+                } else {
+                    unlockExportButtons();
+                    els[e].innerHTML = ((NoNull(ds.message) != '') ? NoNull(ds.message) + '<br>' : '') +
+                                       '<a href="' + ds.url + '" title="" target="_blank">Download XML File (' + easyFileSize(ds.bytes) + ')</a>';
+                }
             }
         }
     }
-    lockExportButtons();
+}
+function checkExportStatus( _type ) {
+    var params = { 'channel_guid': getMetaValue('channel_guid'),
+                   'post_types': ''
+                  };
+
+    /* Add the types to collect */
+    var els = document.getElementsByName('xdata');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].checked !== undefined && els[e].checked !== null && els[e].checked === true ) {
+            var _val = NoNull(els[e].getAttribute('data-value')).toLowerCase();
+            if ( _val != '' ) {
+                if ( NoNull(params['post_types']) != '' ) { params['post_types'] += ','; }
+                params['post_types'] += _val;
+            }
+        }
+    }
+
+    /* Query the API */
+    setTimeout(function () { doJSONQuery('export/' + _type, 'GET', params, parseExportResult); }, 25);
+}
+function unlockExportButtons() {
+    var els = document.getElementsByClassName('btn-export');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('btn-primary') === false ) { els[e].classList.add('btn-primary'); }
+        if ( els[e].disabled ) { els[e].disabled = false; }
+
+        var _lbl = NoNull(els[e].getAttribute('data-label'));
+        if ( els[e].innerHTML != _lbl ) { els[e].innerHTML = _lbl; }
+    }
 }
 function lockExportButtons(btn) {
     var doLock = false;
@@ -295,7 +365,7 @@ function collectPostEditData() {
             var params = { 'channel_guid': getMetaValue('channel_guid'),
                            'persona_guid': getMetaValue('persona_guid')
                           };
-            doJSONQuery('posts/' + guid, 'GET', params, parsePostEditData);
+            setTimeout(function () { doJSONQuery('posts/' + guid, 'GET', params, parsePostEditData); }, 75);
         }
     }
 }
