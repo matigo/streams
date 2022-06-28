@@ -409,6 +409,7 @@ class Export {
         $validTypes = array('post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.draft', 'post.page');
         $forceRestart = YNBool(NoNull($this->settings['restart'], $this->settings['force']));
         $CleanGuid = NoNull($this->settings['channel_guid'], $this->settings['_channel_guid']);
+        $CleanSize = nullInt($this->settings['file_size'], $this->settings['size']);
         $CleanType = "'post.article'";
         $idx = 1;
 
@@ -435,14 +436,21 @@ class Export {
             return false;
         }
 
-        /* Ensure execution time is increased to 10 minutes to handle the effort */
-        set_time_limit(600);
+        if ( $CleanSize > 50 ) { $CleanSize = 50; }
+        if ( $CleanSize < 1 ) { $CleanSize = 25; }
+
+        /* Ensure execution time is increased to 30 minutes to handle the effort */
+        set_time_limit(1800);
 
         /* Prep some common variables */
-        $fileName = 'wordpress-' . substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . md5($CleanGuid . $CleanType . date('Y-m-d')) . '.xml';
+        $fileKey = substr(md5(substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . $CleanGuid . $CleanType . date('Y-m-d')), 0, 8);
+        $fileLmt = (1024 * 1024) * $CleanSize;
+        $fileIdx = 0;
+
+        $fileName = 'wordpress-' . $fileKey . '-' . substr('000' . $fileIdx, -3) . '.xml';
         $cacheKey = md5($fileName);
         $SiteUrl = NoNull($this->settings['HomeURL']);
-        $cdnFile = CDN_PATH . '/export';
+        $cdnPrefix = $cdnFile = CDN_PATH . '/export';
         $PostCount = 0;
 
         /* Construct the "Current Situation" array */
@@ -467,8 +475,14 @@ class Export {
 
             /* Is there a step already in progress? */
             if ( mb_strlen($step) > 3 ) {
-                $this->_setMetaMessage("An export is already in progress: [$step]", 400);
-                return false;
+                return array( 'url'   => false,
+                              'file'  => false,
+                              'type'  => false,
+                              'bytes' => false,
+
+                              'is_active' => true,
+                              'message'   => "Current Step: $step",
+                             );
             }
         }
 
@@ -495,6 +509,9 @@ class Export {
                                   'file'  => $fileName,
                                   'type'  => getMimeFromExtension($cdnFile),
                                   'bytes' => filesize($cdnFile),
+
+                                  'is_active' => false,
+                                  'message'   => "",
                                  );
                 }
             }
@@ -619,6 +636,8 @@ class Export {
 
         while ( $hasPosts ) {
             $sqlStr = readResource(SQL_DIR . '/export/getChannelPosts.sql', $ReplStr);
+            writeNote($sqlStr, true);
+
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) && count($rslt) > 0 ) {
                 foreach ( $rslt as $Row ) {
@@ -664,6 +683,26 @@ class Export {
                         $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-post.xml', $vv);
                         if ( mb_strlen($xmlOut) > 3 ) { fwrite($fh, $xmlOut); }
                     }
+
+                    /* If the file is larger than X MB, break it up */
+                    if ( filesize($cdnFile) > $fileLmt ) {
+                        /* Close the output XML file */
+                        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-footer.xml');
+                        if ( mb_strlen($xmlOut) > 3 ) { fwrite($fh, $xmlOut); }
+                        fclose($fh);
+
+                        /* Determine the next file name */
+                        $fileIdx++;
+                        $fileName = 'wordpress-' . $fileKey . '-' . substr('000' . $fileIdx, -3) . '.xml';
+                        $cdnFile = $cdnPrefix . '/' . $fileName;
+
+                        /* Open a new file and populate the header */
+                        $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-header.xml', $xmlItems);
+
+                        /* Create the XML File and place the start of the WordPress data */
+                        $fh = fopen($cdnFile, 'w');
+                        fwrite($fh, $xmlOut);
+                    }
                 }
 
                 /* Set the Position */
@@ -682,11 +721,13 @@ class Export {
             /* Let's make sure we're not looping with one record 1000 times */
             writeNote("Loop: $loops | Row Count: " . count($rslt), true);
 
-            /* Do  not allow an infinite loop. 1-million items "ought to be enough for everyone" */
+            /* Do not allow an infinite loop. 1-million items "ought to be enough for everyone" */
             $loops++;
-            if ( $loops > 1000 ) { $hasPosts = false; }
+            if ( $loops > 100 ) { $hasPosts = false; }
         }
         unset($post);
+
+        writeNote("Exited Post Loop", true);
 
         /* Close the output XML file */
         $xmlOut = readResource(FLATS_DIR . '/templates/export.wordpress-footer.xml');
@@ -706,6 +747,9 @@ class Export {
                           'file'  => $fileName,
                           'type'  => getMimeFromExtension($cdnFile),
                           'bytes' => filesize($cdnFile),
+
+                          'is_active' => false,
+                          'message'   => number_format($PostCount + $idx) . " items exported in " . number_format($fileIdx + 1) . " files.",
                          );
         } else {
             $this->_setMetaMessage("Could not create export file", 400);

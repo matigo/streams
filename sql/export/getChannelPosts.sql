@@ -16,4 +16,4 @@ SELECT pa.`id` as `author_id`, pa.`email`, acct.`email` as `account_email`,
    and ca.`can_write` = 'Y' and ch.`guid` = '[CHANNEL_GUID]'
    and pp.`account_id` = [ACCOUNT_ID]
  ORDER BY po.`publish_at`
- LIMIT [START_POS], 2500;
+ LIMIT [START_POS], 5000;
