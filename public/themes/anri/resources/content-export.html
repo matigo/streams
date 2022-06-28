@@ -9,10 +9,17 @@
                         </div>
                         <div class="single-post__contact show-js hidden">
                             <h4>[lblExportS1]</h4>
-                            <p class="single-post__contact-submit">
-                                <button class="btn-lg btn-export btn-primary" data-type="dayone" data-label="[btnExportDayOne]">[btnExportDayOne]</button>
+                            <p class="single-post__contact-submit inline-checks">
+                                <label for="type-article"><input id="type-article" type="checkbox" name="xdata" data-value="post.article" checked /> [optExportArticles]</label>
+                                <label for="type-note"><input id="type-note" type="checkbox" name="xdata" data-value="post.note" checked /> [optExportNotes]</label>
+                                <label for="type-quotation"><input id="type-quotation" type="checkbox" name="xdata" data-value="post.quotation" checked /> [optExportQuotations]</label>
+                                <label for="type-bookmark"><input id="type-bookmark" type="checkbox" name="xdata" data-value="post.bookmark" checked /> [optExportBookmarks]</label>
                             </p>
-                            <p>&nbsp;</p>
+                            <h4>[lblExportS2]</h4>
+                            <p class="single-post__contact-submit">
+                                <button class="btn-lg btn-export btn-primary hidden" data-type="dayone" data-label="[btnExportDayOne]">[btnExportDayOne]</button>
+                                <button class="btn-lg btn-export btn-primary" data-type="wordpress" data-label="[btnExportWordPress]">[btnExportWordPress]</button>
+                            </p>
                             <p class="single-post__content export-result hidden"></p>
                             <p>&nbsp;</p>
                         </div>

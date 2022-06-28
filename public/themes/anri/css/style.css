@@ -2192,6 +2192,17 @@ body.font-xx, body .font-xx { font-size: 22px; }
     direction: rtl;
 }
 
+.inline-checks label {
+    display: inline-block;
+    font-size: 1.25em;
+    vertical-align: text-top;
+    padding: 3px 5px 3px 0;
+    margin: 0 15px 7px 0;
+}
+.inline-checks label input[type=checkbox] {
+    margin: 0 5px 0 0;
+}
+
 /** ******************************************************************************************** *
     Audio Elements
  ** ******************************************************************************************** */
