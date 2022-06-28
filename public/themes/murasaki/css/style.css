@@ -1035,15 +1035,8 @@ section.main-content .timeline .post-item .content-area pre,
     color: var(--code-text, #c7254e);
     font-size: 0.85em;
 }
-section.main-content .timeline .post-item .content-area p span.account,
-.modal-content .modal-body.timeline .post-item .content-area p span.account {
-    color: var(--highlight-text, #5a3b86);
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: bold;
-}
-section.main-content .timeline .post-item .content-area p span.hash,
-.modal-content .modal-body.timeline .post-item .content-area p span.hash {
+span.account,
+span.hash {
     color: var(--highlight-text, #5a3b86);
     cursor: pointer;
     font-size: 0.95em;
