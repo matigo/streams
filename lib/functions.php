@@ -969,6 +969,9 @@
         if ( $url == "" ) { return false; }
         $rVal = false;
 
+        /* Ensure the Constant is Set */
+        if ( defined('VALIDATE_URLS') === false ) { define('VALIDATE_URLS', 0); }
+
         if ( VALIDATE_URLS > 0 ) {
             $url_pattern = '#(www\.|https?://)?[a-z0-9]+\.[a-z0-9]\S*#i';
             $okHead = array('HTTP/1.0 200 OK', 'HTTP/1.1 200 OK', 'HTTP/2.0 200 OK');

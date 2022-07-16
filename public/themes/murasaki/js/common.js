@@ -968,6 +968,7 @@ function replyToPost(el) {
                 els[i].innerHTML = '<textarea class="content-area reply-content" name="rpy-data" onKeyUp="countCharacters();" data-button="reply-post" data-counter="reply-length" data-pvid="' + _pvID + '" data-name="content" placeholder="(Your Reply)">' + _replyTxt + '</textarea>' +
                                    '<input type="hidden" name="rpy-data" data-name="post_privacy" value="' + _priv + '">' +
                                    '<input type="hidden" name="rpy-data" data-name="reply_to" value="' + _guid + '">' +
+                                   '<input type="hidden" name="rpy-data" data-name="post_type" value="post.note">' +
                                    '<progress class="progress ' + _pvProg + ' pu-prog hidden" value="0" min="0" max="100" style="opacity: 1;">&nbsp;</progress>' +
                                    '<span class="button-group">' +
                                    '<input id="' + _pvList + '" type="file" name="rpy-data" class="form-control hidden" accept="image/*" multiple="">' +

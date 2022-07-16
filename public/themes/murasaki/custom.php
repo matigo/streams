@@ -215,6 +215,9 @@ class Murasaki {
         $ScrubTags = array( 'h1>', 'h2>', 'h3>', 'h4>', 'h5>', 'h6>' );
         $Excludes = array("\r", "\n", "\t");
 
+        /* Ensure the Constant is Set */
+        if ( defined('VALIDATE_URLS') === false ) { define('VALIDATE_URLS', 0); }
+
         // Fix the Lines with Breaks Where Appropriate
         $text = str_replace("\r", "\n", $text);
         $lines = explode("\n", $text);
