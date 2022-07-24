@@ -612,8 +612,29 @@ function parsePersonaProfile(data) {
                 e.preventDefault();
                 $(els[i]).popover('destroy');
             });
+
+            /* Ensure the Follow/Mute/Block buttons are functional on touch devices */
+            var btns = els[i].getElementsByTagName('BUTTON');
+            for ( let b = 0; b < btns.length; b++ ) {
+                btns[b].addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    handleProfilePopupButton(e);
+                });
+                btns[b].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handleProfilePopupButton(e);
+                });
+
+            }
         }
     }
+}
+function handleProfilePopupButton(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( el.currentTarget !== undefined || el.currentTarget !== null ) { el = el.currentTarget; }
+    if ( el.tagName.toLowerCase() != 'button' ) { return; }
+    if ( splitSecondCheck(el) === false ) { return; }
+    handleButtonClick(el);
 }
 function togglePersonaAction(el, _act) {
     if ( _act === undefined || _act === false || _act === null ) { return; }
