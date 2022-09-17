@@ -9,9 +9,15 @@ require_once( LIB_DIR . '/functions.php');
 
 class Files {
     var $settings;
+    var $strings;
+    var $cache;
 
-    function __construct( $Items ) {
-        $this->settings = $Items;
+    function __construct( $settings, $strings = false ) {
+        $this->settings = $settings;
+        $this->strings = ((is_array($strings)) ? $strings : getLangDefaults($this->settings['_language_code']));
+        $this->cache = array();
+
+        /* Prep the Count */
         $this->_populateClass();
     }
 
@@ -19,7 +25,8 @@ class Files {
      *  Function Populates the Initial Values Required by the Class
      */
     private function _populateClass() {
-        if ( nullInt($this->settings['_storage_total']) < 0 ) { $this->settings['_storage_total'] = 0; }
+        if ( defined('CDN_POOL_SIZE') === false ) { define('CDN_POOL_SIZE', 1); }
+        if ( nullInt($this->settings['_storage_total']) < 0 ) { $this->settings['_storage_total'] = (1024 * 1024) * nullInt(CDN_POOL_SIZE); }
         if ( nullInt($this->settings['_storage_files']) < 0 ) { $this->settings['_storage_files'] = 0; }
         if ( nullInt($this->settings['_storage_used']) < 0 ) { $this->settings['_storage_used'] = 0; }
 
@@ -36,7 +43,7 @@ class Files {
 
         // Check the User Token is Valid
         if ( !$this->settings['_logged_in']) {
-            $this->_setMetaMessage("You Need to Log In First", 401);
+            $this->_setMetaMessage("You Need to Log In First", 403);
             return false;
         }
 
@@ -149,6 +156,57 @@ class Files {
     /** ********************************************************************* *
      *  Public Functions
      ** ********************************************************************* */
+    public function requestResource() { return $this->_requestResource(); }
+
+    /** ********************************************************************* *
+     *  Settings and Input Functions
+     ** ********************************************************************* */
+    /**
+     *  Function returns a consistent array of values that can be used for file settings and preferences
+     */
+    private function _getInputValues() {
+        $CleanGuid = NoNull($this->settings['file_guid'], $this->settings['file']);
+        if ( mb_strlen($CleanGuid) != 36 ) { $CleanGuid = ''; }
+
+        $CleanName = NoNull($this->settings['file_name'], $this->settings['name']);
+        $CleanMime = NoNull($this->settings['file_mime'], $this->settings['mime']);
+
+        /* Determine whether the file should be public or private */
+        $validACL = array('private', 'public-read', 'public-read-write');
+        $CleanAccess = strtolower(NoNull($this->settings['access'], $this->settings['acl']));
+        if ( in_array($CleanAccess, $validACL) === false ) { $CleanAccess = 'private'; }
+
+        /* Do we have a text-based expiration date? */
+        $ExpiresAt = NoNull($this->settings['expires_at'], $this->settings['expires_on']);
+        $setExpiresAt = '';
+        if ( mb_strlen($ExpiresAt) >= 10 ) {
+            $exp_unix = strtotime($ExpiresAt);
+            if ( is_bool($exp_unix) === false) {
+                $setExpiresAt = date('Y-m-d H:i:59', $exp_unix);
+            }
+        }
+
+        /* Do we have a unix-based expiration date? This overrides any supplied text-based value */
+        $ExpiresUnix = nullInt($this->settings['expires_unix']);
+        if ( $ExpiresUnix > time() ) { $setExpiresAt = date('Y-m-d H:i:59', $ExpiresUnix); }
+
+        /* Is there a password? If so, the access must be private */
+        $CleanPassword = NoNull($this->settings['password'], $this->settings['pass']);
+        if ( mb_strlen($CleanPassword) > 0 ) {
+            $CleanPassword = hash('sha256', $CleanPassword, false);
+            $CleanAccess = 'private';
+        }
+
+        /* Return an Array */
+        return array( 'file_guid'  => ((mb_strlen($CleanGuid) == 36) ? $CleanGuid : ''),
+                      'file_name'  => NoNull($CleanName),
+                      'file_mime'  => NoNull($CleanMime),
+
+                      'access'     => NoNull($CleanAccess, 'private'),
+                      'expires_at' => NoNull($setExpiresAt),
+                      'password'   => NoNull($CleanPassword),
+                     );
+    }
 
     /** ********************************************************************* *
      *  File Upload Functions
@@ -184,6 +242,8 @@ class Files {
 
             // If We Should Use Amazon's S3, Activate the Class
             if ( USE_S3 == 1 ) {
+                if ( !defined('AWS_REGION_NAME') ) { define('AWS_REGION_NAME', ''); }
+                if ( !defined('AWS_BUCKET_NAME') ) { define('AWS_BUCKET_NAME', ''); }
                 if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
                 if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
                 $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, AWS_REGION_NAME);
@@ -240,7 +300,7 @@ class Files {
 
                                 // Resize the Image to a Square
                                 $img = new Images();
-                                $img->load($fullPath);
+                                $img->load($fullPath, $FileType);
                                 $img->makeSquare(450, 250);
                                 $isGood = $img->save($fullPath);
                                 unset($img);
@@ -307,31 +367,51 @@ class Files {
      */
     private function _createNewFile() {
         if ( !defined('CDN_UPLOAD_LIMIT') ) { define('CDN_UPLOAD_LIMIT', 5); }
+        if ( !defined('AWS_REGION_NAME') ) { define('AWS_REGION_NAME', ''); }
+        if ( !defined('AWS_BUCKET_NAME') ) { define('AWS_BUCKET_NAME', ''); }
+        if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
+        if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
+        if ( !defined('CDN_PATH') ) { define('CDN_PATH', ''); }
         if ( !defined('USE_S3') ) { define('USE_S3', 0); }
         if ( $this->settings['_storage_remain'] < 0 ) { return "Insufficient Storage Remaining"; }
         $list = false;
         $errs = false;
 
-        // Collect the Name of the Files Object
+        /* Collect the Name of the Files Object */
         $items = array();
         foreach ( $_FILES as $Key=>$Value ) {
             $items[] = $Key;
         }
 
-        // Do Not Continue if there are No Files
+        /* Do Not Continue if there are No Files */
         if ( count($items) <= 0 ) { return "No Files Found"; }
 
-        // Check to see if there are files and, if so, process them.
+        /* Check to see if there are files and, if so, process them. */
         if ( is_array($_FILES) ) {
             require_once(LIB_DIR . '/images.php');
-            require_once(LIB_DIR . '/s3.php');
 
-            // If We Should Use Amazon's S3, Activate the Class
-            if ( USE_S3 == 1 ) {
-                if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
-                if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
-                if ( !defined('CDN_DOMAIN') ) { define('CDN_DOMAIN', ''); }
-                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, AWS_REGION_NAME);
+            /* If We Should Use Amazon's S3, Activate the Class */
+            if ( YNBool(USE_S3) ) {
+                if ( mb_strlen(NoNull(AWS_REGION_NAME)) < 10 ) {
+                    $this->_setMetaMessage("Invalid AWS Region Name Provided", 401);
+                    return false;
+                }
+                if ( mb_strlen(NoNull(AWS_BUCKET_NAME)) < 10 ) {
+                    $this->_setMetaMessage("Invalid AWS Bucket Name Provided", 401);
+                    return false;
+                }
+                if ( mb_strlen(NoNull(AWS_ACCESS_KEY)) < 20 ) {
+                    $this->_setMetaMessage("Invalid AWS Access Key Provided", 401);
+                    return false;
+                }
+                if ( mb_strlen(NoNull(AWS_SECRET_KEY)) < 36 ) {
+                    $this->_setMetaMessage("Invalid AWS Secret Key Provided", 401);
+                    return false;
+                }
+
+                /* If we're here, we should have a proper set of configuration data for the S3 class */
+                require_once(LIB_DIR . '/s3.php');
+                $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, 's3.amazonaws.com', AWS_REGION_NAME);
             }
 
             foreach ( $items as $FileID ) {
@@ -344,7 +424,7 @@ class Files {
                     switch ( strtolower(NoNull($ext)) ) {
                         case 'jpeg':
                         case 'jpg':
-                            $FileType = 'image/jpg';
+                            $FileType = 'image/jpeg';
                             break;
 
                         case 'gif':
@@ -357,10 +437,10 @@ class Files {
                     }
                 }
 
-                // Validate the File
+                /* Validate the File */
                 $ValidType = $this->_isValidUploadType($FileType, $this->_getFileExtension($FileName, $FileType));
 
-                // Process the File if we have Space in the Bucket, otherwise Record a Size Error
+                /* Process the File if we have Space in the Bucket, otherwise Record a Size Error */
                 if ( $ValidType && $FileSize <= (CDN_UPLOAD_LIMIT * 1024 * 1024) && $FileSize <= nullInt($this->settings['_storage_remain']) ) {
                     $this->settings['_storage_remain'] -= $FileSize;
                     $now = time();
@@ -398,7 +478,7 @@ class Files {
 
                                 // Resize the Image
                                 $img = new Images();
-                                $img->load($origPath);
+                                $img->load($origPath, $FileType);
                                 $geoData = $img->getGeolocation();
                                 $imgMeta = $img->getPhotoMeta();
                                 $imgWidth = $img->getWidth();
@@ -408,7 +488,7 @@ class Files {
                                     /* Is there a medium-sized image to create? */
                                     if ( $imgWidth > 960 ) {
                                         $img_mid = new Images();
-                                        $img_mid->load($origPath);
+                                        $img_mid->load($origPath, $FileType);
                                         $img_mid->reduceToWidth(960);
 
                                         $isGood = $img_mid->save($propPath);
@@ -424,7 +504,7 @@ class Files {
                                     /* Is there a thumbnail to create? */
                                     if ( $imgWidth > 480 ) {
                                         $img_thumb = new Images();
-                                        $img_thumb->load($origPath);
+                                        $img_thumb->load($origPath, $FileType);
                                         $img_thumb->reduceToWidth(480);
 
                                         $isGood = $img_thumb->save($thumbPath);
@@ -581,6 +661,129 @@ class Files {
         }
 
         // If We're Here, The Write Failed
+        return false;
+    }
+
+    /** ********************************************************************* *
+     *  File Request Functions
+     ** ********************************************************************* */
+    /**
+     *  Function checks to see if the requested resource is valid and accessible to the requestor. If the
+     *      resource is not available, an unhappy boolean is returned to trigger a 404.
+     *
+     *  Note: 404's are preferrable to 403's, as it will (theoretically) reduce access attempts
+     */
+    private function _requestResource() {
+        if ( !defined('CDN_PATH') ) { define('CDN_PATH', ''); }
+        if ( !defined('USE_S3') ) { define('USE_S3', 0); }
+        $inputs = $this->_getInputValues();
+        $isValid = false;
+        $srcName = '';
+        $srcMime = '';
+
+        /* Determine the Location */
+        $Location = NoNull($this->settings['PgRoot']);
+
+        /* Determine the File Name */
+        $FileName = '';
+        for ( $i = 9; $i >= 1; $i-- ) {
+            if ( mb_strlen($FileName) <= 0 ) {
+                $FileName = NoNull($this->settings['PgSub' . $i]);
+            }
+        }
+        $BaseName = str_replace(array('_original', '_medium', '_small', '_thumb'), '', $FileName);
+
+        /* Determine the Owner */
+        $OwnerId = alphaToInt($Location);
+        if ( $OwnerId < 0 ) { $OwnerId = 0; }
+
+        /* Perform some basic validation */
+        if ( mb_strlen($FileName) < 3 ) { return false; }
+        if ( mb_strlen($Location) < 6 ) { return false; }
+        if ( $OwnerId <= 0 ) { return false; }
+
+        /* Check to see if the file is accessible to the current account holder */
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[PASSWORD]'   => sqlScrub($inputs['password']),
+                          '[FILE_NAME]'  => sqlScrub($BaseName),
+                          '[LOCATION]'   => sqlScrub($Location),
+                          '[OWNER]'      => nullInt($OwnerId)
+                         );
+        $sqlStr = readResource(SQL_DIR . '/files/checkResourceAccess.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                if ( YNBool($Row['can_access']) ) {
+                    $srcName = NoNull($Row['public_name']);
+                    $srcMime = NoNull($Row['mimetype']);
+                    $isValid = true;
+                }
+            }
+        }
+
+        /* If we cannot continue, let's exit */
+        if ( $isValid === false ) { return false; }
+
+        /* If we're here, we have access. Check that the resource exists on the web server. If it doesn't collect it from the bucket (if applicable) */
+        $srcPath = CDN_PATH . "/$Location/$FileName";
+        if ( file_exists($srcPath) === false ) {
+            if ( YNBool(USE_S3) ) {
+                $rsp = $this->_getFile($srcPath);
+                if ( $rsp !== true ) { return false; }
+            }
+        }
+
+        /* Send the Resource File (if exists) */
+        if ( file_exists($srcPath) ) {
+            return sendResourceFile( $srcPath, $srcName, $srcMime, $this->settings );
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     *  Function retrieves a file from the S3 bucket and returns a boolean response
+     */
+    private function _getFile( $srcPath ) {
+        if ( !defined('AWS_REGION_NAME') ) { define('AWS_REGION_NAME', ''); }
+        if ( !defined('AWS_BUCKET_NAME') ) { define('AWS_BUCKET_NAME', ''); }
+        if ( !defined('AWS_ACCESS_KEY') ) { define('AWS_ACCESS_KEY', ''); }
+        if ( !defined('AWS_SECRET_KEY') ) { define('AWS_SECRET_KEY', ''); }
+        if ( !defined('CDN_PATH') ) { define('CDN_PATH', ''); }
+        if ( !defined('USE_S3') ) { define('USE_S3', 0); }
+
+        if ( YNBool(USE_S3) ) {
+            if ( mb_strlen(NoNull(AWS_REGION_NAME)) < 10 ) {
+                $this->_setMetaMessage("Invalid AWS Region Name Provided", 401);
+                return false;
+            }
+            if ( mb_strlen(NoNull(AWS_BUCKET_NAME)) < 10 ) {
+                $this->_setMetaMessage("Invalid AWS Bucket Name Provided", 401);
+                return false;
+            }
+            if ( mb_strlen(NoNull(AWS_ACCESS_KEY)) < 20 ) {
+                $this->_setMetaMessage("Invalid AWS Access Key Provided", 401);
+                return false;
+            }
+            if ( mb_strlen(NoNull(AWS_SECRET_KEY)) < 36 ) {
+                $this->_setMetaMessage("Invalid AWS Secret Key Provided", 401);
+                return false;
+            }
+
+            $s3Path = str_replace(CDN_PATH . '/', '', $srcPath);
+
+            /* If we're here, we should have a proper set of configuration data for the S3 class */
+            require_once(LIB_DIR . '/s3.php');
+            $s3 = new S3(AWS_ACCESS_KEY, AWS_SECRET_KEY, true, 's3.amazonaws.com', AWS_REGION_NAME);
+
+            $rsp = $s3->getObject(AWS_BUCKET_NAME, $s3Path, $srcPath);
+            if ( is_object($rsp) ) { $rsp = objectToArray($rsp); }
+
+            /* If we have a success code and the file exists, return a happy boolean */
+            if ( file_exists($srcPath) && filesize($srcPath) > 0 ) { return true; }
+        }
+
+        /* If we're here, nothing was done */
         return false;
     }
 

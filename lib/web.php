@@ -52,16 +52,16 @@ class Route extends Streams {
             $RedirectURL = NoNull($data['protocol'] . '://' . $data['HomeURL']);
             $PgRoot = strtolower(NoNull($this->settings['PgRoot']));
 
-            // Is this a favicon request?
+            /* Is this a favicon request? */
             if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), 'favicon.png') !== false ) { $this->_handleFaviconReq($data); }
 
-            // Set some of the Globals
+            /* Set some of the Globals */
             $GLOBALS['site_id'] = $data['site_id'];
 
-            // Is There an HTTPS Upgrade Request?
+            /* Is There an HTTPS Upgrade Request? */
             $Protocol = getServerProtocol();
 
-            // Determine if a Redirect is Required
+            /* Determine if a Redirect is Required */
             if ( strtolower($_SERVER['SERVER_NAME']) != NoNull($data['HomeURL']) ) { $data['do_redirect'] = true; }
             if ( $Protocol != $data['protocol'] ) {
                 $suffix = '/' . NoNull($this->settings['PgRoot']);
@@ -72,25 +72,28 @@ class Route extends Streams {
                     }
                 }
 
-                // Redirect to the Appropriate URL
+                /* Redirect to the Appropriate URL */
                 redirectTo( $data['protocol'] . '://' . NoNull(str_replace('//', '/', $data['HomeURL'] . $suffix), $this->settings ) );
             }
 
-            // Is this a Syndication Request?
+            /* Is this a Syndication Request? */
             if ( $this->_isSyndicationRequest($data) ) { exit; }
 
-            // Is this a JSON Request?
+            /* Is this a JSON Request? */
             if ( array_key_exists('CONTENT_TYPE', $_SERVER) === false ) { $_SERVER['CONTENT_TYPE'] = ''; }
             $CType = NoNull($_SERVER['CONTENT_TYPE'], 'text/html');
             if ( strtolower($CType) == 'application/json' ) { $this->_handleJSONRequest($data); }
 
-            // Are We Signing In?
+            /* Are We Signing In? */
             if ( $PgRoot == 'validatetoken' && NoNull($this->settings['token']) != '' ) {
                 $this->settings['remember'] = false;
                 $data['do_redirect'] = true;
             }
 
-            // Are We Signed In and Accessing Something That Requires Being Signed In?
+            /* Are we working with a valid request */
+            $this->_checkStaticResourceRequest();
+
+            /* Are We Signed In and Accessing Something That Requires Being Signed In? */
             if ( $this->settings['_logged_in'] ) {
                 switch ( $PgRoot ) {
                     case 'signout':
@@ -129,7 +132,7 @@ class Route extends Streams {
                 }
             }
 
-            // Are We NOT Signed In and Accessing Something That Requires Being Signed In?
+            /* Are We NOT Signed In and Accessing Something That Requires Being Signed In? */
             if ( $this->settings['_logged_in'] === false ) {
                 $checks = array('write', 'export', 'account', 'syndication', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
@@ -140,7 +143,7 @@ class Route extends Streams {
                 }
             }
 
-            // Is There a Language Change Request?
+            /* Is There a Language Change Request? */
             if ( strtolower(NoNull($this->settings['PgRoot'])) == 'lang' ) {
                 $val = NoNull($this->settings['PgSub1'], $this->settings['_language_code']);
                 if ( $val != '' ) {
@@ -159,11 +162,11 @@ class Route extends Streams {
                 }
             }
 
-            // Perform the Redirect if Necessary
+            /* Perform the Redirect if Necessary */
             $suffix = ( YNBool($this->settings['remember']) ) ? '?remember=Y' : '';
             if ( $data['do_redirect'] ) { redirectTo( $RedirectURL . $suffix, $this->settings ); }
 
-            // Load the Requested HTML Content
+            /* Load the Requested HTML Content */
             $html = $this->_getPageHTML( $data );
         }
 
@@ -1577,6 +1580,9 @@ class Route extends Streams {
         return false;
     }
 
+    /** ********************************************************************** *
+     *  Additional Functions
+     ** ********************************************************************** */
     /**
      *  Function Determines the Current Page URL
      */
@@ -1594,6 +1600,39 @@ class Route extends Streams {
 
         // Return the Canonical URL
         return $rVal;
+    }
+
+    /**
+     *  Function attempts to determine if the HTTP request is looking for a static resource
+     *      and, if it is, updates $this->settings accordingly
+     */
+    private function _checkStaticResourceRequest() {
+        $exts = array( 'css', 'html', 'xml', 'json', 'pdf',
+                       'jpg', 'jpeg', 'svg', 'gif', 'png', 'tiff',
+                       'xls', 'xlsx', 'doc', 'docx', 'ppt', 'pptx',
+                      );
+        $uri = NoNull($this->settings['ReqURI']);
+        $ext = getFileExtension($uri);
+
+        /* If the request is a resource, treat it as a 404 */
+        if ( in_array($ext, $exts) ) {
+            /* If we are in a files route, then let's check for permission */
+            if ( NoNull($this->settings['Route']) == 'files' ) {
+                require_once(LIB_DIR . '/files.php');
+                $res = new Files($this->settings, $this->strings);
+                $sOK = $res->requestResource();
+                unset($res);
+
+                /* If we have successfully sent the file, then exit */
+                if ( $sOK ) { exit(); }
+            }
+
+            $this->settings['PgRoot'] = '404';
+            $this->settings['status'] = 404;
+
+            if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
+            $this->settings['errors'][] = NoNull($this->strings['msg404Detail'], "Cannot Find Requested Resource");
+        }
     }
 }
 ?>

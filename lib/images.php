@@ -15,48 +15,68 @@ class Images {
     var $image;
     var $exif;
 
-    public function load($FileName) {
-        $image_info = getimagesize($FileName);
+    public function load($FileName, $MimeType = '') {
+        if ( file_exists($FileName) === false ) { return false; }
+
+        $this->image_type = strtolower(NoNull($MimeType));
+        if ( mb_strlen($this->image_type) <= 5 ) {
+            $FileExt = NoNull(substr(strrchr($FileName,'.'), 1));
+            switch ( strtolower(NoNull($FileExt)) ) {
+                case 'jpeg':
+                case 'jpg':
+                    $MimeType = 'image/jpeg';
+                    break;
+
+                case 'gif':
+                    $FileType = 'image/gif';
+                    MimeType;
+
+                case 'png':
+                    $MimeType = 'image/png';
+                    break;
+
+                default:
+                    /* Unsupported Type */
+            }
+            $this->image_type = NoNull($MimeType);
+        }
+
         $this->exif = exif_read_data($FileName);
-        $this->image_type = $image_info[2];
         $this->is_animated = false;
         $this->is_reduced = false;
         $rVal = false;
 
-        // Load the Image into Memory
+        /* Load the Image into Memory */
         switch ( $this->image_type ) {
-            case IMAGETYPE_JPEG:
+            case 'image/jpeg':
+            case 'image/jpg':
                 $this->image = imagecreatefromjpeg($FileName);
-                $rVal = true;
                 break;
 
-            case IMAGETYPE_GIF:
+            case 'image/gif':
                 $this->is_animated = $this->_isAnimated($FileName);
                 $this->image = imagecreatefromgif($FileName);
-                $rVal = true;
                 break;
 
-            case IMAGETYPE_PNG:
+            case 'image/png':
                 $this->image = imagecreatefrompng($FileName);
                 $clr = imagecolorallocatealpha($this->image, 0, 0, 0, 127);
                 imagecolortransparent($this->image, $clr);
                 imageAlphaBlending($this->image, true);
                 imageSaveAlpha($this->image, true);
-                $rVal = true;
                 break;
 
-            case IMAGETYPE_WBMP:
-            case IMAGETYPE_BMP:
+            case 'image/wbmp':
+            case 'image/bmp':
                 $this->image = imagecreatefromwbmp($FileName);
-                $rVal = true;
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Rotate the Image if Necessary
-        if (!empty($this->exif['Orientation'])) {
+        /* Rotate the Image if Necessary */
+        if ( is_array($this->exif) && empty($this->exif['Orientation']) === false ) {
             switch ($this->exif['Orientation']) {
                 case 3:
                     $this->image = imagerotate($this->image, 180, 0);
@@ -72,28 +92,29 @@ class Images {
             }
         }
 
-        // Return the Success Boolean
-        return $rVal;
+        /* Return the Success Boolean */
+        return (empty($this->image) === false) ? true : false;
     }
 
     public function save($FileName, $compress = 100) {
         $rVal = false;
 
         switch ( $this->image_type ) {
-            case IMAGETYPE_JPEG:
+            case 'image/jpeg':
+            case 'image/jpg':
                 $rVal = imagejpeg($this->image, $FileName, $compress);
                 break;
 
-            case IMAGETYPE_GIF:
+            case 'image/gif':
                 $rVal = imagegif($this->image, $FileName);
                 break;
 
-            case IMAGETYPE_PNG:
+            case 'image/png':
                 $rVal = imagepng($this->image, $FileName);
                 break;
 
-            case IMAGETYPE_WBMP:
-            case IMAGETYPE_BMP:
+            case 'image/wbmp':
+            case 'image/bmp':
                 $rVal = imagejpeg($this->image, $FileName, $compress);
                 break;
 
@@ -101,50 +122,18 @@ class Images {
                 // Do Nothing
         }
 
-        // Return the Success Boolean
+        /* Return the Success Boolean */
         return $rVal;
     }
 
     public function getGeolocation() { return $this->_getGeolocation(); }
     public function getPhotoMeta() { return $this->_getPhotoMeta(); }
 
-    public function returnExifData() { return $this->exif; }
-    public function is_animated() { return $this->is_animated; }
-    public function is_reduced() { return $this->is_reduced; }
-    public function getHeight() {
-        $px = imagesy($this->image);
-        if ( $this->exif ) {
-            if (!empty($this->exif['Orientation'])) {
-                switch ($this->exif['Orientation']) {
-                    case 8:
-                    case 6:
-                        $px = nullInt($this->exif['ExifImageWidth'], imagesy($this->image));
-                        break;
-
-                    default:
-                        $px = nullInt($this->exif['ExifImageLength'], imagesy($this->image));
-                }
-            }
-        }
-        return nullInt($px, imagesy($this->image));
-    }
-    public function getWidth() {
-        $px = imagesx($this->image);
-        if ( $this->exif ) {
-            if (!empty($this->exif['Orientation'])) {
-                switch ($this->exif['Orientation']) {
-                    case 8:
-                    case 6:
-                        $px = nullInt($this->exif['ExifImageLength'], imagesx($this->image));
-                        break;
-
-                    default:
-                        $px = nullInt($this->exif['ExifImageWidth'], imagesx($this->image));
-                }
-            }
-        }
-        return nullInt($px, imagesx($this->image));
-    }
+    public function returnExifData() { return (is_array($this->exif)) ? $this->exif : false; }
+    public function is_animated() { return (empty($this->image) === false) ? $this->is_animated : false; }
+    public function is_reduced() { return (empty($this->image) === false) ? $this->is_reduced : false; }
+    public function getWidth() { return (empty($this->image) === false) ? imagesx($this->image) : false; }
+    public function getHeight() { return (empty($this->image) === false) ? imagesy($this->image) : false; }
     public function reduceToHeight($height = 480) {
         $propHeight = $this->getHeight();
         $propWidth = $this->getWidth();
@@ -214,34 +203,28 @@ class Images {
     }
 
     private function _getPhotoMeta() {
+        if ( is_array($this->exif) === false ) { return false; }
         $aperture = false;
+
         if ( in_array('ApertureValue', $this->exif) ) {
             $apt_val = explode('/',$this->exif['ApertureValue']);
             $aperture = $apt_val[0] / $apt_val[1];
-            if ( is_nan($aperture) ) { $aperture = false; }
         }
 
-        /* Determine the Width and Height */
-        $height = nullInt($this->exif['ExifImageLength'], imagesy($this->image));
-        $width = nullInt($this->exif['ExifImageWidth'], imagesx($this->image));
-
-        /* Construct and Return an Array */
-        return array( 'make'        => ((NoNull($this->exif['Make']) != '') ? NoNull($this->exif['Make']) : false),
-                      'model'       => ((NoNull($this->exif['Model']) != '') ? NoNull($this->exif['Model']) : false),
-                      'software'    => ((NoNull($this->exif['Software']) != '') ? NoNull($this->exif['Software']) : false),
-                      'exposure'    => ((NoNull($this->exif['ExposureTime']) != '') ? NoNull($this->exif['ExposureTime']) : false),
-                      'aperture'    => $aperture,
-                      'shutter'     => ((NoNull($this->exif['ShutterSpeedValue']) != '') ? NoNull($this->exif['ShutterSpeedValue']) : false),
-                      'focallength' => ((NoNull($this->exif['FocalLength']) != '') ? NoNull($this->exif['FocalLength']) : false),
-                      'lens'        => ((NoNull($this->exif['UndefinedTag:0xA434']) != '') ? NoNull($this->exif['UndefinedTag:0xA434']) : false),
-                      'iso'         => ((nullInt($this->exif['ISOSpeedRatings']) > 0) ? nullInt($this->exif['ISOSpeedRatings']) : false),
-                      'datetime'    => ((NoNull($this->exif['DateTime']) != '') ? NoNull($this->exif['DateTime']) : false),
-                      'height'      => ((nullInt($height) > 0) ? nullInt($height) : false),
-                      'width'       => ((nullInt($width) > 0) ? nullInt($width) : false),
+        return array( 'make'     => ((NoNull($this->exif['Make']) != '') ? NoNull($this->exif['Make']) : false),
+                      'model'    => ((NoNull($this->exif['Model']) != '') ? NoNull($this->exif['Model']) : false),
+                      'exposure' => ((NoNull($this->exif['ExposureTime']) != '') ? NoNull($this->exif['ExposureTime']) : false),
+                      'aperture' => $aperture,
+                      'shutter'  => ((NoNull($this->exif['ShutterSpeedValue']) != '') ? NoNull($this->exif['ShutterSpeedValue']) : false),
+                      'iso'      => ((nullInt($this->exif['ISOSpeedRatings']) > 0) ? nullInt($this->exif['ISOSpeedRatings']) : false),
+                      'datetime' => ((NoNull($this->exif['DateTime']) != '') ? NoNull($this->exif['DateTime']) : false),
+                      'width'    => ((nullInt($this->exif['ExifImageWidth']) > 0) ? nullInt($this->exif['ExifImageWidth'], imagesx($this->image)) : false),
+                      'height'   => ((nullInt($this->exif['ExifImageLength']) > 0) ? nullInt($this->exif['ExifImageLength'], imagesy($this->image)) : false),
                      );
     }
 
     private function _getGeolocation() {
+        if ( is_array($this->exif) === false ) { return false; }
         if ( isset($this->exif['GPSLatitude']) && isset($this->exif['GPSLongitude']) &&
              isset($this->exif['GPSLatitudeRef']) && isset($this->exif['GPSLongitudeRef']) &&
              in_array($this->exif['GPSLatitudeRef'], array('E','W','N','S')) && in_array($this->exif['GPSLongitudeRef'], array('E','W','N','S')) ) {

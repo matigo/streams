@@ -965,14 +965,12 @@
 
     // Function Validates a URL and, if necessary, follows Redirects to Obtain the Proper URL Domain
     function validateURLDomain( $url ) {
+        if ( defined('VALIDATE_URLS') === false ) { define('VALIDATE_URLS', 0); }
         $url = NoNull($url);
         if ( $url == "" ) { return false; }
         $rVal = false;
 
-        /* Ensure the Constant is Set */
-        if ( defined('VALIDATE_URLS') === false ) { define('VALIDATE_URLS', 0); }
-
-        if ( VALIDATE_URLS > 0 ) {
+        if ( YNBool(VALIDATE_URLS) ) {
             $url_pattern = '#(www\.|https?://)?[a-z0-9]+\.[a-z0-9]\S*#i';
             $okHead = array('HTTP/1.0 200 OK', 'HTTP/1.1 200 OK', 'HTTP/2.0 200 OK');
             $fixes = array( 'http//'  => "http://",         'http://http://'   => 'http://',
@@ -2182,6 +2180,43 @@
         closePersistentSQLConn();
 
         exit( $data );
+    }
+
+    /**
+     *  Function Sends a resource to the browser if it exists
+     */
+    function sendResourceFile( $srcPath, $fileName, $mimeType, $sets ) {
+        $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1');
+        $szOrigin = NoNull($_SERVER['HTTP_ORIGIN'], '*');
+        $status = 200;
+
+        /* Determine whether the file should be downloaded or presented */
+        $disposition = 'attachment';
+        $group = strtok($mimeType, '/');
+        if ( in_array($group, array('audio', 'image', 'video', 'text')) ) { $disposition = 'inline'; }
+
+        /* If the file exists, return it */
+        if ( file_exists($srcPath) ) {
+            $name = basename($fileName);
+
+            header($protocol . ' ' . nullInt($status) . ' ' . getHTTPCode($status) );
+            header("Access-Control-Allow-Origin: $szOrigin");
+            header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+            header("Access-Control-Allow-Headers: Content-Type, Authorization");
+            header("Access-Control-Allow-Credentials: true");
+            header("P3P: CP=\"ALL IND DSP COR ADM CONo CUR CUSo IVAo IVDo PSA PSD TAI TELo OUR SAMo CNT COM INT NAV ONL PHY PRE PUR UNI\"");
+            header("Content-Type: $mimeType");
+            header("Content-Disposition: $disposition; filename=$name");
+            header("Content-Length: " . filesize($srcPath));
+            readfile($srcPath);
+
+        } else {
+            return false;
+        }
+
+        /* Record the Usage Statistic and exit */
+        recordUsageStat( $sets, $status );
+        exit();
     }
 
     /**
