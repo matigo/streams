@@ -1608,7 +1608,7 @@ class Route extends Streams {
      */
     private function _checkStaticResourceRequest() {
         $exts = array( 'css', 'html', 'xml', 'json', 'pdf',
-                       'jpg', 'jpeg', 'svg', 'gif', 'png', 'tiff',
+                       'jpg', 'jpeg', 'svg', 'gif', 'png', 'tiff', 'webp',
                        'xls', 'xlsx', 'doc', 'docx', 'ppt', 'pptx',
                       );
         $uri = NoNull($this->settings['ReqURI']);

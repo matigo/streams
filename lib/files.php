@@ -1138,7 +1138,7 @@ class Files {
 
                 case 'image/jpeg':
                 case 'image/jpg':
-                    $ext = 'jpg';
+                    $ext = 'jpeg';
                     break;
 
                 case 'image/x-windows-bmp':
@@ -1156,6 +1156,10 @@ class Files {
 
                 case 'image/tiff':
                     $ext = 'tiff';
+                    break;
+
+                case 'image/webp':
+                    $ext = 'webp';
                     break;
 
                 case 'video/quicktime':
@@ -1181,7 +1185,7 @@ class Files {
      */
     private function _isValidUploadType( $FileType, $Extension ) {
         $valids = array( 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-mp3', 'audio/x-mp4', 'audio/mpeg', 'audio/x-m4a',
-                         'image/gif', 'image/x-gif', 'image/jpg', 'image/jpeg', 'image/png', 'image/tiff', 'image/bmp', 'image/x-windows-bmp',
+                         'image/gif', 'image/x-gif', 'image/jpg', 'image/jpeg', 'image/png', 'image/tiff', 'image/bmp', 'image/x-windows-bmp', 'image/webp',
                          'video/quicktime', 'video/m4a', 'video/m4v', 'video/mp4', 'application/x-mpegurl', 'video/mp2t'
                         );
 
