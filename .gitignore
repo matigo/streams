@@ -1,6 +1,5 @@
 # Specify filepatterns you want git to ignore.
 .DS_Store
-.htaccess
 *.token
 *.data
 *.inc

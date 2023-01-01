@@ -11,7 +11,7 @@ RewriteRule ^.*$ ./index.php
 
 Header always edit Set-Cookie (.*) "$1; SameSite=None; Secure"
 
-<filesMatch "\.(ico|css|js|pdf|jpg|jpeg|png|gif)$">
+<FilesMatch "\.(ico|css|js|pdf|jpg|jpeg|png|gif)$">
     Header set Cache-Control "max-age=1209600, public"
 </FilesMatch>
 
