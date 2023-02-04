@@ -2419,6 +2419,9 @@ function applyVisTheme( _val ) {
         }
         document.body.classList.add(_val);
         saveStorage('vistheme', _val);
+
+        /* Ensure the page theme is set */
+        applyThemeColor();
     }
 }
 function applyFontSize( _val ) {
@@ -2444,6 +2447,26 @@ function applyPersistPopover( _val ) {
     var _valids = ['y', 'n'];
     _val = NoNull(_val, 'N').toLowerCase();
     if ( _valids.indexOf(_val) >= 0 ) { saveStorage('persistpopover', _val); }
+}
+function applyThemeColor() {
+    var _theme = NoNull(readStorage('vistheme')).toLowerCase();
+    var _color = '#fff';
+
+    switch ( _theme ) {
+        case 'dark':
+            _color = '#000';
+            break;
+
+        case 'solar':
+            _color = '#fdf6e3';
+            break;
+
+        default:
+            /* No Change */
+    }
+
+    /* Ensure the Page Meta is set */
+    setHeadMeta('theme-color', _color);
 }
 
 /** ************************************************************************ *
