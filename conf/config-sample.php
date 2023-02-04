@@ -23,10 +23,12 @@ define('TOKEN_PREFIX', 'CSQAA_');                           // The Authenticatio
 define('TOKEN_EXPY', 30);                                   // Number of Days Tokens Can Sit Idle
 define('TIMEZONE', 'UTC');                                  // The Primary Timezone for the Server
 
-define('DB_SERV', '127.0.0.1');                             // Write Database Server (Usually the Primary Database)
+define('DB_HOST', '127.0.0.1');                             // Write Database Server (Usually the Primary Database)
 define('DB_NAME', '');                                      // Write Database Name
 define('DB_USER', '');                                      // Database Login
 define('DB_PASS', '');                                      // Database Password
+define('DB_PORT', 0);                                       // Database Port (Leave as 0 to use default)
+define('DB_ENGINE', 'mysql');                               // Database Engine (Valid options are 'mysql' and 'pgsql')
 define('DB_CHARSET', 'utf8mb4');                            // Database Character Set
 define('DB_COLLATE', 'utf8mb4_unicode_ci');                 // Database Collation
 define('DB_PERSIST', 1);                                    // Database Connection Persistence
@@ -66,23 +68,23 @@ define('CLOUDFLARE_EMAIL', '');                             // The CloudFlare Em
 define('CLOUDFLARE_SITEDNSTYPE', '');                       // The Type of DNS Record Created in CloudFlare (A, AAAA, CNAME, etc.)
 define('CLOUDFLARE_SITEDNSVAL', '');                        // The Value for the DNS Record creatd in CloudFlare (An IP Address or CNAME Pointer)
 
-define('SCRIPTURE_API_KEY', '');                            // The Api.Bible Scripture API Key
-define('SCRIPTURE_API_URL', '');                            // The Api.Bible Scripture API Address
-
 define('USE_S3', 0);                                        // Use Amazon S3 Storage
 define('AWS_REGION_NAME', '');                              // The Amazon S3 Region Name
 define('AWS_ACCESS_KEY', '');                               // The Amazon S3 Access Key
 define('AWS_SECRET_KEY', '');                               // The Amazon S3 Secret Key
 define('CLOUDFRONT_URL', '');                               // The Amazon Cloudfront URL
 
+define('USE_REDIS', 0);                                     // Use Redis as a cache store
+define('REDIS_HOST', '127.0.0.1');                          // Redis server address
+define('REDIS_PFIX', '');                                   // A Prefix to prepend onto all Keys
+define('REDIS_PORT', 6379);                                 // Redis port (Default 6379)
+define('REDIS_EXPY', 57600);                                // Redis cache lifetime (seconds)
+define('REDIS_PASS', '');                                   // Redis access password
+
 define('USE_W3W', 0);                                       // Use What3Words with GeoTagging
 define('W3W_KEY', '');                                      // The Application Key for What3Words
 
 define('USE_MAPBOX', 0);                                    // Use Mapbox for Static Map Images
 define('MAPBOX_KEY', '');                                   // The Access Key for the Mapbox API
-
-define('B2_CDN_URL', '');                                   // The Backblaze CDN URL
-define('B2_APP_ID', '');                                    // The Backblaze CDN Application ID
-define('B2_APP_KEY', '');                                   // The Backblaze CDN Application Key
 
 ?>

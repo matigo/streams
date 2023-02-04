@@ -7,8 +7,6 @@
  */
 define('BASE_DIR', dirname(__FILE__));
 define('THEME_DIR', BASE_DIR . '/themes');
-define('TOKEN_DIR', BASE_DIR . '/../tokens');
-define('CACHE_DIR', BASE_DIR . '/../cache');
 define('FLATS_DIR', BASE_DIR . '/../flats');
 define('CONF_DIR', BASE_DIR . '/../conf');
 define('LANG_DIR', BASE_DIR . '/../lang');

@@ -226,7 +226,7 @@ class Route extends Streams {
                                       '[POPULAR_LIST]'       => $this->_getPopularPosts(),
                                       '[lblContactValidate]' => $this->_getContactQuestion(),
                                       '[NONCE]'              => $this->_getNonceValue(),
-                                      '[GenTime]'            => $this->_getRunTime(),
+                                      '[GenTime]'            => getRunTime(),
                                      );
                     return str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
                 }
@@ -329,7 +329,7 @@ class Route extends Streams {
         $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
 
         // Get the Run-time
-        $runtime = $this->_getRunTime();
+        $runtime = getRunTime();
 
         // Return HTML Page Content
         return str_replace('[GenTime]', $runtime, $html);
@@ -1476,7 +1476,7 @@ class Route extends Streams {
      */
     private function _getReplStrArray() {
         $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
-                       '[RUNTIME]' => $this->_getRunTime('html'),
+                       '[RUNTIME]' => getRunTime('html'),
                       );
         foreach ( $this->strings as $Key=>$Val ) {
             $rVal["[$Key]"] = NoNull($Val);
@@ -1484,22 +1484,6 @@ class Route extends Streams {
 
         // Return the Array
         return $rVal;
-    }
-
-    /**
-     *  Function Returns the Page Execution Time
-     */
-    private function _getRunTime() {
-        $precision = 6;
-        $GLOBALS['Perf']['app_f'] = getMicroTime();
-        $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
-        $SQL = nullInt( $GLOBALS['Perf']['queries'] );
-
-        $lblSecond = ( $App == 1 ) ? "Second" : "Seconds";
-        $lblQuery  = ( $SQL == 1 ) ? "Query"  : "Queries";
-
-        // Return the Run Time String
-        return "    <!-- Page generated in roughly: $App $lblSecond $SQL SQL $lblQuery -->";
     }
 
     /** ********************************************************************** *

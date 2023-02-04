@@ -115,35 +115,35 @@ class Streams {
      *  Function Checks to Ensure a Device Isn't Hammering the System Like an Idiot
      */
     private function _checkForHammer() {
-        $Token = NoNull($this->settings['token']);
         $HLimit = (defined(HAMMER_LIMIT)) ? nullInt(HAMMER_LIMIT, 120) : 120;
-        $TokenGUID = '';
-        $hitCount = 0;
+        if ( $HLimit <= 0 ) { return true; }
 
-        if ( $Token != '' ) {
-            $data = explode('_', $Token);
-            if ( count($data) == 3 ) {
-                if ( $data[0] == str_replace('_', '', TOKEN_PREFIX) ) { $TokenGUID = NoNull($data[2]); }
+        $Token = NoNull($this->settings['token']);
+        if ( mb_strlen($Token) < 30 ) { $Token = NoNull($this->settings['_address']); }
+        if ( mb_strlen($Token) < 7 ) { $Token = getVisitorIPv4(); }
+
+        /* Check To See If Everything's Good */
+        if ( $Token != '' && mb_strlen($Token) >= 7 ) {
+            $CleanKey = 'hammer-' . md5($Token . apiDate(strtotime(date("Y-m-d H:i:00")), 'U'));
+            $data = getCacheObject($CleanKey);
+            $reqs = 0;
+
+            /* If we have data, how many requests currently exist? */
+            if ( is_array($data) ) {
+                $reqs = nullInt($data['hit_count']);
+                if ( $reqs <= 0 ) { $reqs = 0; }
             }
+            $reqs++;
+
+            /* Record the current number of requests */
+            setCacheObject($CleanKey, array('hit_count' => nullInt($reqs)) );
+
+            /* Return a boolean based on the hit count */
+            if ( $reqs <= $HLimit ) { return true; }
         }
 
-        // If There Is No Token, Grab the Device's IP Address
-        if ( NoNull($TokenGUID) == '' ) { $TokenGUID = getVisitorIPv4(); }
-
-        // Check To See If Everything's Good
-        if ( $TokenGUID != '' && mb_strlen($TokenGUID) >= 6 ) {
-            $key = NoNull(strtotime(date("Y-m-d H:i:00")));
-            $hitCount = nullInt(readSetting($TokenGUID, $key));
-            if ( $hitCount <= 0 ) { $hitCount = 0; }
-            $hitCount++;
-            saveSetting($TokenGUID, $key, $hitCount);
-
-            // If the HitCount Has Exceeded Limits, Return a Failure
-            if ( $hitCount > $HLimit ) { return false; }
-        }
-
-        // If We're Here, We Must Assume the Connection is Valid
-        return true;
+        /* If we're here, we must assume the connection is invalid */
+        return false;
     }
 
     /**

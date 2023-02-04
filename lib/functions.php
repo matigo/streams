@@ -42,6 +42,44 @@
     }
 
     /**
+     *  Function returns a Unix timestamp in a format that is prepped for API output
+     *      or, if within 1000 seconds of Epoch, an unhappy boolean
+     */
+    function apiDate( $unixtime, $format = "Z" ) {
+        $ts = nullInt($unixtime);
+        if( $ts >= 0 && $ts <= 1000 ) { return false; }
+
+        switch ( strtolower(NoNull($format)) ) {
+            case 'unix':
+            case 'int':
+            case 'u':
+                return $ts;
+                break;
+
+            default:
+                /* Carry On */
+        }
+
+        /* Here is the default return string */
+        return date("Y-m-d\TH:i:s\Z", $ts);
+    }
+
+    /**
+     *  Function pads an integer with leading zeroes
+     *
+     *  Note: this is mainly used for internal directory naming
+     */
+    function paddNumber( $num, $length = 8 ) {
+        if ( nullInt($length) > 64 ) { $length = 64; }
+        if ( nullInt($length) <= 0 ) { $length = 8; }
+        if ( nullInt($num) <= 0 ) { return ''; }
+
+        $val = NoNull(substr(str_repeat('0', $length) . nullInt($num), ($length * -1)));
+        if ( $val == str_repeat('0', $length) ) { return ''; }
+        return $val;
+    }
+
+    /**
      *  Function returns an array of Unique words in a string (ideally for database insertion)
      */
     function UniqueWords( $string ) {
@@ -235,16 +273,19 @@
      * Function Returns a Boolean Response based on the Enumerated
      *  Value Passed
      */
-    function YNBool( $Val ) {
-        $valids = array( 'true', 'yes', 'y', 'on', '1', 1 );
-        return in_array(strtolower($Val), $valids);
+    function YNBool( $val ) {
+        $valids = array( 'true', 'yes', 'y', 't', 'on', '1', 1 );
+        if ( is_bool($val) ) { return $val; }
+        return in_array(strtolower($val), $valids);
     }
 
     /**
      * Function Returns a YN Value based on the Boolean Passed
      */
-    function BoolYN( $Val ) {
-        return ( $Val ) ? 'Y' : 'N';
+    function BoolYN( $val ) {
+        if ( is_bool($val) ) { return ( $val ) ? 'Y' : 'N'; }
+        $valids = array( 'true', 'yes', 'y', 't', 'on', '1', 1 );
+        return ( in_array(strtolower($val), $valids) ) ? 'Y' : 'N';
     }
 
     /**
@@ -1167,13 +1208,16 @@
         return in_array($FileType, $valids);
     }
 
-    /***********************************************************************
+    /** ******************************************************************** *
      *  Cache Functions
-     ***********************************************************************/
+     ** ******************************************************************** */
+    global $redis_db;
+
     /**
      *  Function determines the "correct" directory for a Cache object
      */
     function getCacheFileName( $name ) {
+        if ( defined('TMP_DIR') === false ) { return ''; }
         if ( strlen(NoNull($name)) < 3 ) { return ''; }
         $name = strtolower($name);
 
@@ -1182,8 +1226,8 @@
             $segs = explode('-', $name);
             $dir = NoNull($segs[0], $segs[1]);
             if ( mb_strlen($dir) >= 4 ) {
-                if ( checkDIRExists(CACHE_DIR) ) {
-                    if ( checkDIRExists(CACHE_DIR . "/$dir") ) {
+                if ( checkDIRExists(TMP_DIR . '/cache') ) {
+                    if ( checkDIRExists(TMP_DIR . "/cache/$dir") ) {
                         $name = str_replace($dir . '-', $dir . '/', $name);
                     }
                 }
@@ -1191,42 +1235,154 @@
         }
 
         /* Return the full path and name or an empty string */
-        if ( mb_strlen(NoNull($name)) >= 4 ) { return CACHE_DIR . '/' . $name . '.data'; }
+        if ( mb_strlen(NoNull($name)) >= 4 ) { return TMP_DIR . '/cache/' . $name . '.data'; }
         return '';
     }
 
     /**
      *  Function Records an array of information to a cache location
      */
-    function setCacheObject( $fileName, $data ) {
-        if ( strlen(NoNull($fileName)) < 3 ) { return false; }
+    function setCacheObject( $keyName, $data ) {
+        if ( strlen(NoNull($keyName)) < 3 ) { return false; }
+        if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
 
+        /* Continue only if we have an array of data */
         if ( is_array($data) ) {
-            $cacheFile = getCacheFileName($fileName);
-            if ( $cacheFile != '' && checkDIRExists(CACHE_DIR) ) {
+            /* If we have Redis configured, use that. Otherwise, write to a local file */
+            if ( YNBool(USE_REDIS) ) {
+                /* Ensure the basics are in place with defaults */
+                if ( defined('REDIS_HOST') === false ) { define('REDIS_HOST', 'localhost'); }
+                if ( defined('REDIS_PASS') === false ) { define('REDIS_PASS', ''); }
+                if ( defined('REDIS_PORT') === false ) { define('REDIS_PORT', 6379); }
+                if ( defined('REDIS_EXPY') === false ) { define('REDIS_EXPY', 7200); }
+
+                /* Create a connection if we do not already have one */
+                if ( !$redis_db ) {
+                    $redis_db = new Redis();
+
+                    try {
+                        $redis_db->connect(REDIS_HOST, REDIS_PORT);
+                        if ( mb_strlen(REDIS_PASS) > 0 ) {
+                            $redis_db->auth(REDIS_PASS);
+                        }
+
+                    } catch (RedisException $ex) {
+                        $err = $ex->getMessage();
+                        writeNote( "Could not connect to Redis: $err", true );
+                    }
+                }
+
+                /* If we have a connection to Redis, check the data */
+                if ( $redis_db->isConnected() ) {
+                    /* Determine the key */
+                    $key = str_replace(array('/', '_'), '-', $keyName);
+
+                    /* If we have a Key Prefix, Prepend it */
+                    if ( defined('REDIS_PFIX') && mb_strlen(REDIS_PFIX) >= 3 ) { $key = REDIS_PFIX . $key; }
+
+                    /* Set the counter */
+                    $GLOBALS['Perf']['redis_sets'] = nullInt($GLOBALS['Perf']['redis_sets']);
+                    $GLOBALS['Perf']['redis_sets']++;
+
+                    /* Set the Values */
+                    $redis_db->set($key, serialize($data));
+                    $redis_db->expire($key, REDIS_EXPY);
+                    return;
+                }
+            }
+
+            /* If we're here, use the local cahce (including if Redis fails) */
+            $cacheFile = getCacheFileName($keyName);
+            if ( $cacheFile != '' && checkDIRExists( TMP_DIR . '/cache' ) ) {
                 $fh = fopen($cacheFile, 'w');
-                fwrite($fh, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-                fclose($fh);
+                if ( is_bool($fh) === false ) {
+                    /* Set the counter */
+                    $GLOBALS['Perf']['cache_sets'] = nullInt($GLOBALS['Perf']['cache_sets']);
+                    $GLOBALS['Perf']['cache_sets']++;
+
+                    /* Write the data */
+                    fwrite($fh, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                    fclose($fh);
+                }
             }
         }
     }
 
     /**
-     *  Function Reads a Cached JSON file based on the name passed.
-     *      If the data does not exist, an unhappy boolean is returned.
+     *  Function Reads cached data and returns it. If no data exists, an unhappy boolean is returned.
      */
-    function getCacheObject( $fileName ) {
-        if ( strlen(NoNull($fileName)) < 3 ) { return false; }
-        if ( checkDIRExists(CACHE_DIR) ) {
-            $cacheFile = getCacheFileName($fileName);
+    function getCacheObject( $keyName ) {
+        if ( strlen(NoNull($keyName)) < 3 ) { return false; }
+        if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
+
+        /* If we have Redis configured, use that. Otherwise, write to a local file */
+        if ( YNBool(USE_REDIS) ) {
+            /* Ensure the basics are in place with defaults */
+            if ( defined('REDIS_HOST') === false ) { define('REDIS_HOST', 'localhost'); }
+            if ( defined('REDIS_PASS') === false ) { define('REDIS_PASS', ''); }
+            if ( defined('REDIS_PORT') === false ) { define('REDIS_PORT', 6379); }
+            if ( defined('REDIS_EXPY') === false ) { define('REDIS_EXPY', 7200); }
+
+            /* Create a connection if we do not already have one */
+            if ( !$redis_db ) {
+                $redis_db = new Redis();
+
+                try {
+                    $redis_db->connect(REDIS_HOST, REDIS_PORT);
+                    if ( mb_strlen(REDIS_PASS) > 0 ) {
+                        $redis_db->auth(REDIS_PASS);
+                    }
+
+                } catch (RedisException $ex) {
+                    $err = $ex->getMessage();
+                    writeNote( "Could not connect to Redis: $err", true );
+                }
+            }
+
+            /* If we have a connection to Redis, check the data */
+            if ( $redis_db->isConnected() ) {
+                /* Determine the key */
+                $key = str_replace(array('/', '_'), '-', $keyName);
+
+                /* If we have a Key Prefix, Prepend it */
+                if ( defined('REDIS_PFIX') && mb_strlen(REDIS_PFIX) >= 3 ) { $key = REDIS_PFIX . $key; }
+
+                /* Read the Values */
+                $data = $redis_db->get($key);
+                if ( is_string($data) && mb_strlen($data) > 0 ) {
+                    /* Set the counter */
+                    $GLOBALS['Perf']['redis_gets'] = nullInt($GLOBALS['Perf']['redis_gets']);
+                    $GLOBALS['Perf']['redis_gets']++;
+
+                    /* Return the data if we have it */
+                    return unserialize($data);
+                }
+
+                /* If we're here, there's nothing */
+                return false;
+            }
+        }
+
+        /* If we're here, use the local cache (including if Redis fails) */
+        if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
+            $cacheFile = getCacheFileName($keyName);
             if ( file_exists( $cacheFile ) ) {
                 $age = filemtime($cacheFile);
                 if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
 
                 $json = file_get_contents( $cacheFile );
-                return json_decode($json, true);
+                if  ( is_string($json) && mb_strlen($json) > 0 ) {
+                    /* Set the counter */
+                    $GLOBALS['Perf']['cache_gets'] = nullInt($GLOBALS['Perf']['cache_gets']);
+                    $GLOBALS['Perf']['cache_gets']++;
+
+                    /* Return the data if we have it */
+                    return json_decode($json, true);
+                }
             }
         }
+
+        /* If we're here, there's nothing */
         return false;
     }
 
@@ -1234,7 +1390,8 @@
      *  Function Records any sort of ephemeral data to $GLOBALS['cache']
      */
     function setGlobalObject( $key, $data ) {
-        if ( strlen(NoNull($key)) < 3 ) { return false; }
+        if ( strlen(NoNull($key)) < 3 ) { return; }
+        if ( is_array($GLOBALS) === false ) { return; }
         if ( array_key_exists('cache', $GLOBALS) === false ) {
             $GLOBALS['cache'] = array();
         }
@@ -1409,16 +1566,164 @@
         return mb_strtolower(NoNull($prop));
     }
 
-    /***********************************************************************
+    /** ******************************************************************** *
      *  MySQL Functions
-     ***********************************************************************/
+     ** ******************************************************************** */
     global $mysql_db;
+    global $pgsql_db;
+
+    function doSQLQuery($sqlStr, $params = array(), $dbname = '') {
+        if ( defined('DB_ENGINE') === false ) { define('DB_ENGINE', 'mysql'); }
+        if ( defined('DB_NAME') === false ) { define('DB_NAME', ''); }
+
+        switch ( strtolower(DB_ENGINE) ) {
+            case 'pgsql':
+                return doPgSQLQuery($sqlStr, $params, $dbname);
+                break;
+
+            default:
+                return doMySQLQuery($sqlStr, $params, $dbname);
+                break;
+        }
+
+        /* We should never be here */
+        return false;
+    }
+
+    function doSQLExecute($sqlStr, $params = array(), $dbname = '') {
+        if ( defined('DB_ENGINE') === false ) { define('DB_ENGINE', 'mysql'); }
+        if ( defined('DB_NAME') === false ) { define('DB_NAME', ''); }
+
+        switch ( strtolower(DB_ENGINE) ) {
+            case 'pgsql':
+                return doPgSQLQuery($sqlStr, $params, $dbname);
+                break;
+
+            default:
+                return doMySQLExecute($sqlStr, $params, $dbname);
+                break;
+        }
+
+        /* We should never be here */
+        return false;
+    }
+
+    function doPgSQLQuery($sqlStr, $params = array(), $dbname = '') {
+        /* Validate the Database Name */
+        if ( NoNull($dbname) == '' && defined('DB_NAME') ) { $dbname = DB_NAME; }
+
+        /* If We Have Nothing, Return Nothing */
+        if ( NoNull($sqlStr) == '' ) { return false; }
+        $hash = sha1($sqlStr);
+
+        /* Check to see if this query has been run once before and, if so, return the cached result */
+        $rVal = getGlobalObject($hash);
+        if ( $rVal !== false ) { return $rVal; }
+
+        $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
+        $GLOBALS['Perf']['queries']++;
+        $qstart = getMicroTime();
+        $result = false;
+
+        if ( !$pgsql_db ) {
+            $ReplStr = array( '[HOST]' => DB_HOST,
+                              '[NAME]' => sqlScrub($dbname),
+                              '[USER]' => sqlScrub(DB_USER),
+                              '[PASS]' => sqlScrub(DB_PASS),
+                              '[PORT]' => nullInt(DB_PORT, 5432)
+                             );
+            $connStr = prepSQLQuery("host=[HOST] port=[PORT] dbname=[NAME] user=[USER] password=[PASS] options='--client_encoding=UTF8'", $ReplStr);
+            $pgsql_db = pg_connect($connStr);
+            if ( !$pgsql_db || pg_last_error($pgsql_db) ) {
+                writeNote("doPgSQLQuery Connection Error :: " . pg_last_error($pgsql_db), true);
+                return false;
+            }
+
+            /* Set the Client Encoding */
+            pg_set_client_encoding($pgsql_db, "UNICODE");
+        }
+
+        /* If we have a good connection, let's go */
+        if ( $pgsql_db ) {
+            /* If We're In Debug, Capture the SQL Query */
+            if ( defined('DEBUG_ENABLED') ) {
+                if ( DEBUG_ENABLED == 1 ) {
+                    if ( array_key_exists('debug', $GLOBALS) === false ) {
+                        $GLOBALS['debug'] = array();
+                        $GLOBALS['debug']['queries'] = array();
+                    }
+                    $didx = COUNT($GLOBALS['debug']['queries']);
+                    $GLOBALS['debug']['queries'][$didx] = array( 'query' => $sqlStr,
+                                                                 'time'  => 0
+                                                                );
+                }
+            }
+
+            $result = pg_query_params($pgsql_db, $sqlStr, $params);
+        }
+
+        /* Parse the Result If We Have One */
+        if ( $result ) {
+            while ($row = pg_fetch_row($result)) {
+                $rr = array();
+                foreach ( $row as $k=>$val ) {
+                    switch ( pg_field_type($result, $k) ) {
+                        case 'boolean':
+                        case 'bool':
+                        case 'bit':
+                            $val = BoolYN(YNBool($val));
+                            break;
+
+                        case 'timestampz':
+                        case 'timestamp':
+                        case 'timetz':
+                            $val = strtotime($val);
+                            break;
+
+                        default:
+                            /* Do Nothing */
+                    }
+                    $rr[pg_field_name($result, $k)] = $val;
+                }
+
+                $rVal[] = $rr;
+            }
+
+            /* Clear the Result from Memory */
+            pg_free_result($result);
+
+            // Record the Ops Time (if required)
+            if ( defined('DEBUG_ENABLED') ) {
+                if ( DEBUG_ENABLED == 1 ) {
+                    $quntil = getMicroTime();
+                    $ops = round(($quntil - $qstart), 6);
+                    if ( $ops < 0 ) { $ops *= -1; }
+
+                    $GLOBALS['debug']['queries'][$didx]['time'] = $ops;
+                }
+            }
+
+            /* Save the Results into Memory */
+            setGlobalObject($hash, $rVal);
+
+        } else {
+            setGlobalObject('sql_last_error', pg_last_error($pgsql_db));
+            writeNote("doPgSQLQuery Error :: " . pg_last_error($pgsql_db), true );
+            writeNote("doPgSQLQuery Query :: $sqlStr", true );
+        }
+
+        /* Return the Array of Details */
+        return $rVal;
+    }
 
     /**
      * Function Queries the Required Database and Returns the values as an array
      */
-    function doSQLQuery( $sqlStr, $params = array(), $dbname = DB_NAME ) {
-        // If We Have Nothing, Return Nothing
+    function doMySQLQuery($sqlStr, $params = array(), $dbname = '') {
+        /* Validate the Database Name */
+        if ( NoNull($dbname) == '' && defined('DB_NAME') ) { $dbname = DB_NAME; }
+
+        /* If We Have Nothing, Return Nothing */
         if ( NoNull($sqlStr) == '' ) { return false; }
         $hash = sha1($sqlStr);
 
@@ -1434,15 +1739,14 @@
         $didx = 0;
         $r = 0;
 
-        // Do Not Proceed If We Don't Have SQL Settings
-        if ( !defined('DB_SERV') ) { return false; }
-        if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
+        /* Do Not Proceed If We Don't Have SQL Settings */
+        if ( !defined('DB_HOST') ) { return false; }
 
         // Determine Which Database is Required, and Connect If We Don't Already Have a Connection
         if ( !$mysql_db ) {
-            $mysql_db = mysqli_connect(DB_SERV, DB_USER, DB_PASS, $dbname);
+            $mysql_db = mysqli_connect(DB_HOST, DB_USER, DB_PASS, $dbname);
             if ( !$mysql_db || mysqli_connect_errno() ) {
-                writeNote("doSQLQuery Connection Error :: " . mysqli_connect_error(), true);
+                writeNote("doMySQLQuery Connection Error :: " . mysqli_connect_error(), true);
                 return false;
             }
             mysqli_set_charset($mysql_db, DB_CHARSET);
@@ -1450,7 +1754,7 @@
 
         // If We Have a Good Connection, Go!
         if ( $mysql_db ) {
-            // If We're In Debug, Capture the SQL Query
+            /* If We're In Debug, Capture the SQL Query */
             if ( defined('DEBUG_ENABLED') ) {
                 if ( DEBUG_ENABLED == 1 ) {
                     if ( array_key_exists('debug', $GLOBALS) === false ) {
@@ -1492,13 +1796,13 @@
                 }
             }
 
-        } else {
-            writeNote("doSQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
-            writeNote("doSQLQuery Query :: $sqlStr", true );
-        }
+            /* Save the Results into Memory */
+            setGlobalObject($hash, $rVal);
 
-        /* Save the Query Results Ephemerally */
-        setGlobalObject($hash, $rVal);
+        } else {
+            writeNote("doMySQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
+            writeNote("doMySQLQuery Query :: $sqlStr", true );
+        }
 
         // Return the Array of Details
         return $rVal;
@@ -1507,25 +1811,25 @@
     /**
      * Function Executes a SQL String against the Required Database and Returns a boolean response.
      */
-    function doSQLExecute( $sqlStr, $params = array(), $dbname = DB_NAME ) {
+    function doMySQLExecute($sqlStr, $params = array(), $dbname = '') {
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $sqlQueries = array();
         $rVal = -1;
 
-        // Do Not Proceed If We Don't Have SQL Settings
-        if ( !defined('DB_SERV') ) { return false; }
-        if ( !in_array($dbname, array('nextcloud', DB_NAME)) ) { $dbname = DB_NAME; }
+        /* Do Not Proceed If We Don't Have SQL Settings */
+        if ( !defined('DB_HOST') ) { return false; }
+        if ( NoNull($dbname) == '' && defined('DB_NAME') ) { $dbname = DB_NAME; }
 
-        // Strip Out The SQL Queries (If There Are Many)
+        /* Strip Out The SQL Queries (If There Are Many) */
         if ( strpos($sqlStr, SQL_SPLITTER) > 0 ) {
             $sqlQueries = explode(SQL_SPLITTER, $sqlStr);
         } else {
             $sqlQueries[] = $sqlStr;
         }
 
-        // If We Don't Already Have a Connection to the Write Server, Make One
+        /* If We Don't Already Have a Connection to the Write Server, Make One */
         if ( !$mysql_db ) {
-            $mysql_db = mysqli_connect(DB_SERV, DB_USER, DB_PASS, $dbname);
+            $mysql_db = mysqli_connect(DB_HOST, DB_USER, DB_PASS, $dbname);
             if ( !$mysql_db || mysqli_connect_errno() ) {
                 writeNote("doSQLExecute Connection Error :: " . mysqli_connect_error(), true);
                 return $rVal;
@@ -1533,7 +1837,7 @@
             mysqli_set_charset($mysql_db, DB_CHARSET);
         }
 
-        // Execute Each Statement
+        /* Execute Each Statement */
         if ( $mysql_db ) {
             foreach ( $sqlQueries as $sqlStatement ) {
                 if ( NoNull($sqlStatement) != "" ) {
@@ -1545,19 +1849,19 @@
                                 if ( !mysqli_query($mysql_db, $sqlStatement) ) { break; }
 
                             default:
-                                writeNote("doSQLExecute Error (WriteDB) :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true);
-                                writeNote("doSQLExecute Query :: $sqlStatement", true);
+                                writeNote("doMySQLExecute Error (WriteDB) :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true);
+                                writeNote("doMySQLExecute Query :: $sqlStatement", true);
                         }
                     }
                 }
             }
 
-            // Get the Insert ID or the Number of Affected Rows
+            /* Get the Insert ID or the Number of Affected Rows */
             $rVal = mysqli_insert_id( $mysql_db );
             if ( $rVal == 0 ) { $rVal = mysqli_affected_rows( $mysql_db ); }
         }
 
-        // Return the Insert ID or an Unhappy Integer
+        /* Return the Insert ID or an Unhappy Integer */
         return $rVal;
     }
 
@@ -1566,26 +1870,39 @@
      */
     function closePersistentSQLConn() {
         if ( $mysql_db ) { mysqli_close($mysql_db); }
+        if ( $pgsql_db ) { pg_close($pgsql_db); }
     }
 
     /**
      *  Function Returns a Completed SQL Statement based on the SQL String and Parameter Array Provided
      */
-    function prepSQLQuery($sqlStr, $ReplStr = array()) {
-        return str_replace(array_keys($ReplStr), array_values($ReplStr), $sqlStr);
+    function prepSQLQuery($sqlStr, $ReplStr = array(), $Minify = false) {
+        $rVal = str_replace(array_keys($ReplStr), array_values($ReplStr), $sqlStr);
+        if ( is_bool($Minify) !== true ) { $Minify = YNBool($Minify); }
+
+        /* Strip all the white space if required */
+        if ( $Minify ) {
+            for ( $i = 0; $i < 5; $i++ ) {
+                $rVal = str_replace(array("\r\n", "\r", "\n", "\t", '  '), ' ', $rVal);
+            }
+            $rVal = str_replace('> <', '><', $rVal);
+        }
+
+        /* Return the prepped SQL Query */
+        return NoNull($rVal);
     }
 
     /**
      * Function returns a SQL-safe String
      */
     function sqlScrub( $str ) {
-        if ( NoNull($str) == '' ) { return ''; }
+        if ( mb_strlen(NoNull($str)) <= 0 ) { return ''; }
         $rVal = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $str);
 
         if( is_array($str) ) { return array_map(__METHOD__, $str); }
         if(!empty($str) && is_string($str)) {
-            $ReplStr = array( '\\' => '\\\\',   "\0" => '\\0',      "\n" => '\\n',
-                              "\r" => '\\n',    "\t" => '\\t',      "'" => "\\'",
+            $ReplStr = array( '\\' => '\\\\',   "\0" => '\\0',      "\n" => "\\n",
+                              "\r" => "\\n",    "\t" => '\\t',      "'" => "''",
                               '"' => '\\"',     "\x1a" => '\\Z',
                              );
             $rVal = str_replace(array_keys($ReplStr), array_values($ReplStr), $str);
@@ -1593,45 +1910,6 @@
 
         // Return the Scrubbed String
         return NoNull($rVal);
-    }
-
-    /***********************************************************************
-     *  SQL Server Functions
-     ***********************************************************************/
-    function doMSSQLQuery( $sqlStr ) {
-        if ( NoNull($sqlStr) == '' ) { return false; }
-        $rVal = false;
-
-        $serverName = '192.168.0.5';
-        $connInfo = array( "Database" => 'CyberTeacher',
-                           "UID"      => 'sa',
-                           "PWD"      => 'JlM94sK0'
-                          );
-
-        /* Connect using SQL Server Authentication. */
-        $conn = sqlsrv_connect($serverName, $connInfo);
-        if ( !$conn ) { writeNote("doMSSQLQuery :: Could Not Connect to Database", true); }
-
-        $stmt = sqlsrv_query($conn, $sqlStr);
-        if( $stmt === false ) { die( print_r( sqlsrv_errors(), true)); }
-
-        // Make the first (and in this case, only) row of the result set available for reading.
-        if( sqlsrv_fetch( $stmt ) === false) { die( print_r( sqlsrv_errors(), true)); }
-
-        if ( $stmt ) {
-            $rVal = array();
-
-            while( $row = sqlsrv_fetch_array( $stmt, SQLSRV_FETCH_ASSOC) ) {
-                $rVal[] = $row;
-            }
-        }
-
-        // Close the SQL Server Connection
-        sqlsrv_free_stmt($stmt);
-        sqlsrv_close($conn);
-
-        // Return the Data or an Unhappy Boolean
-        return $rVal;
     }
 
     /***********************************************************************
@@ -1886,132 +2164,6 @@
 
         // Return the Cached Data or an Unhappy Boolean
         return $rVal;
-    }
-
-    /***********************************************************************
-     *  Token File Handling
-     ***********************************************************************/
-    /**
-     * Function Saves a Setting with a Specific Token to the Temp Directory
-     */
-    function saveSetting( $Token, $key, $value ) {
-        $settings = array();
-
-        // Check to see if the Settings File Exists or Not
-        if ( checkDIRExists( TOKEN_DIR ) ) {
-            $tmpFile = TOKEN_DIR . "/$Token.inc";
-            if ( file_exists( $tmpFile ) ) {
-                $data = file_get_contents( $tmpFile );
-                $settings = unserialize($data);
-            }
-
-            // Add or Update the Specified Key
-            $settings[ $key ] = NoNull($value);
-
-            // Write the File Back to the Settings Folder
-            $fh = fopen($tmpFile, 'w');
-            fwrite($fh, serialize($settings));
-            fclose($fh);
-        }
-
-        // Return a Happy Boolean
-        return true;
-    }
-
-    /**
-     * Function Reads a Setting with a Specific Token from the Temp Directory
-     */
-    function readSetting( $Token, $key ) {
-        $rVal = "";
-
-        // Check to see if the Settings File Exists or Not
-        $tmpFile = TOKEN_DIR . "/$Token.inc";
-        if ( file_exists( $tmpFile ) ) {
-            $data = file_get_contents( $tmpFile );
-            $settings = unserialize($data);
-        }
-
-        // If an Asterisk was Passed, Return Everything
-        if ( $key == '*' ) {
-            $rVal = $settings;
-        } else {
-            // Check to see if the Key Exists
-            if ( is_array($settings) ) {
-                if ( array_key_exists($key, $settings) ) {
-                    $rVal = NoNull( $settings[ $key ] );
-                }
-            }
-        }
-
-        // Return the Setting Value
-        return $rVal;
-    }
-
-    /**
-     * Function Deletes a Setting with a Specific Token from the Temp Directory
-     */
-    function deleteSetting( $Token, $key ) {
-        $rVal = false;
-
-        // Check to see if the Settings File Exists or Not
-        $tmpFile = TOKEN_DIR . "/$Token.inc";
-        if ( file_exists( $tmpFile ) ) {
-            $data = file_get_contents( $tmpFile );
-            $settings = unserialize($data);
-
-            // Remove the Specified Key
-            unset( $settings[$key] );
-
-            // Write the File Back to the Settings Folder
-            $fh = fopen($tmpFile, 'w');
-            fwrite($fh, serialize($settings));
-            fclose($fh);
-
-            // Set the Happy Boolean
-            $rVal = true;
-        }
-
-        // Return the Setting Value
-        return $rVal;
-    }
-
-    /**
-     * Function Clears Out a Settings File
-     */
-    function clearSettings( $Token ) {
-        $rVal = false;
-
-        // Clear the File (if it exists)
-        $tmpFile = TOKEN_DIR . "/$Token.inc";
-        if ( file_exists( $tmpFile ) ) {
-            // Create an Empty Array
-            $settings = array();
-
-            // Write the File to the Settings Folder
-            $fh = fopen($tmpFile, 'w');
-            fwrite($fh, serialize($settings));
-            fclose($fh);
-
-            $rVal = true;
-        }
-
-        // Return the Boolean (Stating Whether a File has been Wiped Out or Not)
-        return $rVal;
-    }
-
-    /**
-     *  Function Determines if a Setting File Exists or Not
-     */
-    function validateSettingFile( $Token ) {
-        $rVal = false;
-
-        // Check if the File Exists
-        $setFile = TOKEN_DIR . "/$Token.inc";
-        if ( file_exists( $setFile ) ) { $rVal = true; }
-
-        // Return the Boolean Response
-        return $rVal;
-
     }
 
     /***********************************************************************
@@ -2307,16 +2459,30 @@
      *  Function Returns the Run Time and Number of SQL Queries Performed to Fulfill Request
      */
     function getRunTime( $format = 'html' ) {
+        if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
+
         $precision = 6;
         $GLOBALS['Perf']['app_f'] = getMicroTime();
         $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
         $SQL = nullInt( $GLOBALS['Perf']['queries'] );
 
+        /* If the application ran in "no time", return a zero */
+        if ( $GLOBALS['Perf']['app_f'] <= ($GLOBALS['Perf']['app_s'] + 0.0001) ) { $App = 0; }
+
+        $cache_out = '';
+        if ( YNBool(USE_REDIS) ) {
+            $cache_out = nullInt($GLOBALS['Perf']['redis_sets']) . ' Redis Write' . ((nullInt($GLOBALS['Perf']['redis_sets']) != 1) ? 's' : '') . ' and ' .
+                         nullInt($GLOBALS['Perf']['redis_gets']) . ' Redis Read' . ((nullInt($GLOBALS['Perf']['redis_gets']) != 1) ? 's' : '');
+        } else {
+            $cache_out = nullInt($GLOBALS['Perf']['cache_sets']) . ' Temp Write' . ((nullInt($GLOBALS['Perf']['cache_sets']) != 1) ? 's' : '') . ' and ' .
+                         nullInt($GLOBALS['Perf']['cache_gets']) . ' Temp Read' . ((nullInt($GLOBALS['Perf']['cache_gets']) != 1) ? 's' : '');
+        }
+
         $lblSecond = ( $App == 1 ) ? "Second" : "Seconds";
         $lblQuery  = ( $SQL == 1 ) ? "Query"  : "Queries";
 
         // Reutrn the Run Time String
-        return ($format == 'html') ? "    <!-- Page generated in roughly: $App $lblSecond, with $SQL SQL $lblQuery -->" : "$App $lblSecond | $SQL SQL $lblQuery";
+        return ($format == 'html') ? "    <!-- Page generated in roughly: $App $lblSecond, with $SQL SQL $lblQuery, $cache_out -->" : "$App $lblSecond | $SQL SQL $lblQuery | " . $cache_out;
     }
 
     /***********************************************************************

@@ -271,35 +271,5 @@ class Email {
         return $rVal;
     }
 
-    /**
-     *	Function Sends a Test Message to the Address Provided
-     */
-    private function _testEmail() {
-    	$EmailDomain = $this->_readBaseDomainURL( $this->settings['HomeURL'] );
-    	$data = array( 'testerEServ' => NoNull($this->settings['txtMailHost'], readSetting('core', 'EmailServ')),
-    				   'testerEPort' => NoNull($this->settings['txtMailPort'], readSetting('core', 'EmailPort')),
-    				   'testerEUser' => NoNull($this->settings['txtMailUser'], readSetting('core', 'EmailUser')),
-    				   'testerEPass' => NoNull($this->settings['txtMailPass'], readSetting('core', 'EmailPass')),
-    				   'testerESSL'  => NoNull($this->settings['cmbMailSSL'], readSetting('core', 'EmailSSL')),
-    				   'testerMSG'	 => $this->strings['lblMailTestBody'],
-    				   'testerEFrom' => NoNull($this->settings['txtMailReply'], "noteworthy@$EmailDomain"),
-    				   'testerETo'	 => NoNull($this->settings['txtMailSendTo'], readSetting('core', 'EmailSendTo')),
-    				   'testerEFNam' => "Noteworthy",
-    				   );
-	    $rVal = array( 'isGood'	 => 'N',
-	    			   'Message' => $this->strings['lblUnknownErr'],
-	    			  );
-
-    	// Update the Class Settings with the Tester Settings
-    	foreach ( $data as $Key=>$Val ) {
-	    	$this->settings[$Key] = $Val;
-    	}
-
-    	// Send the Test Email
-    	$rVal = $this->_sendEmail();
-
-    	// Return the Response Array
-    	return $rVal;
-    }
 }
 ?>
