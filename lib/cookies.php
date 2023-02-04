@@ -8,7 +8,7 @@
  */
 require_once( LIB_DIR . '/functions.php');
 
-class cookies {
+class Cookies {
     var $cookies;
 
     function __construct() {

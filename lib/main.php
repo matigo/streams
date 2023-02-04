@@ -24,7 +24,7 @@ class Streams {
             define('CSS_VER', $ver);
         }
 
-        $sets = new cookies;
+        $sets = new Cookies();
         $this->settings = $sets->cookies;
         $this->strings = getLangDefaults($this->settings['_language_code']);
         unset( $sets );
@@ -83,6 +83,7 @@ class Streams {
      *      need to be corrected
      */
     private function _checkValidProtocol() {
+        if ( defined('HTTPS_ENABLED') === false ) { define('HTTPS_ENABLED', 0); }
         $protocol = getServerProtocol();
         $rVal = false;
 
@@ -115,7 +116,7 @@ class Streams {
      *  Function Checks to Ensure a Device Isn't Hammering the System Like an Idiot
      */
     private function _checkForHammer() {
-        $HLimit = (defined(HAMMER_LIMIT)) ? nullInt(HAMMER_LIMIT, 120) : 120;
+        $HLimit = (defined('HAMMER_LIMIT')) ? nullInt(HAMMER_LIMIT, 120) : 120;
         if ( $HLimit <= 0 ) { return true; }
 
         $Token = NoNull($this->settings['token']);
@@ -123,7 +124,7 @@ class Streams {
         if ( mb_strlen($Token) < 7 ) { $Token = getVisitorIPv4(); }
 
         /* Check To See If Everything's Good */
-        if ( $Token != '' && mb_strlen($Token) >= 7 ) {
+        if ( mb_strlen($Token) >= 7 ) {
             $CleanKey = 'hammer-' . md5($Token . apiDate(strtotime(date("Y-m-d H:i:00")), 'U'));
             $data = getCacheObject($CleanKey);
             $reqs = 0;
@@ -139,7 +140,7 @@ class Streams {
             setCacheObject($CleanKey, array('hit_count' => nullInt($reqs)) );
 
             /* Return a boolean based on the hit count */
-            if ( $reqs <= $HLimit ) { return true; }
+            if ( $reqs < $HLimit ) { return true; }
         }
 
         /* If we're here, we must assume the connection is invalid */
@@ -151,13 +152,15 @@ class Streams {
      *      open-source package-based attack vector and returns an abrupt message if so.
      */
     private function _isValidRequest() {
-        $roots = array( 'phpmyadmin', 'phpmyadm1n', 'phpmy',
+        $roots = array( 'phpmyadmin', 'phpmyadm1n', 'phpmy', 'pass',
                         'tools', 'typo3', 'xampp', 'www', 'web',
                         'wp-admin', 'wp-content', 'wp-includes', 'vendor',
+                        '.env', 'ads.txt', 'wlwmanifest.xml',
                        );
         if ( in_array(strtolower(NoNull($this->settings['PgSub1'], $this->settings['PgRoot'])), $roots) ) { return false; }
         if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.php') !== false ) { return false; }
-
+        if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.txt') !== false ) { return false; }
+        if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.md') !== false ) { return false; }
         return true;
     }
 
@@ -171,9 +174,9 @@ class Streams {
                            'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler', 'iccrawler',
                            'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate', 'dataforseo',
                            'thither.direct', 'liebaofast', 'micromessenger', 'youdaobot', 'theworld', 'qqbrowser',
-                           'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation', 'searchatlas.com',
-                           'bingbot/2.0', 'aspiegelbot', 'baiduspider', 'ruby', 'LanaiBotmarch',
-                           'zh-cn;oppo a33 build/lmy47v', 'oppo a33 build/lmy47v;wv' );
+                           'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation', 'searchatlas.com', 'googlebot',
+                           'bingbot/2.0', 'aspiegelbot', 'baiduspider', 'ruby', 'webprosbot', 'censysinspect',
+                           'zh-cn;oppo a33 build/lmy47v', 'oppo a33 build/lmy47v;wv', 'LanaiBotmarch' );
         $agent = strtolower(NoNull($_SERVER['HTTP_USER_AGENT']));
         if ( $agent != '' ) {
             foreach ( $excludes as $chk ) {

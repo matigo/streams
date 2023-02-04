@@ -15,7 +15,7 @@ class BlueCDN {
     var $settings;
 
     function __construct() {
-        $sets = new cookies;
+        $sets = new Cookies();
         $this->settings = $sets->cookies;
         unset( $sets );
     }

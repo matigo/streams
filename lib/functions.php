@@ -1479,33 +1479,43 @@
      *       strings so long as they exist.
      */
     function getLangDefaults( $LangCd ) {
-        $FileName = '';
-        if ( !defined('DEFAULT_LANG') ) { $FileName = 'en-us'; } else { $FileName = NoNull($LangCd, 'en-us'); }
-        $rVal = readLangFile($FileName);
+        if ( defined('DEFAULT_LANG') === false ) { define('DEFAULT_LANG', 'en-us'); }
+        if ( defined('APP_VER') === false ) { define('APP_VER', '000'); }
+        if ( mb_strlen($LangCd) < 2 ) { $LangCd = DEFAULT_LANG; }
 
-        // Return the Array of Strings
-        return $rVal;
-    }
+        $CacheKey = 'language-' . strtolower($LangCd) . '-' . NoNull(APP_VER) . '-' . date('Y');
+        $data = getCacheObject($CacheKey);
 
-    function readLangFile( $LangCd ) {
-        $LangFile = LANG_DIR . "/" . strtolower($LangCd) . ".json";
-        $ReplStr = array( '{version_id}' => APP_VER,
-                          '{year}'       => date('Y'),
-                         );
-        $rVal = array();
+        /* If we do not have a cached set of strings, build a set */
+        if ( is_array($data) === false ) {
+            /* Determine the Language File */
+            $LangFile = LANG_DIR . "/" . strtolower($LangCd) . ".json";
 
-        if ( file_exists( $LangFile ) ) {
-            $json = readResource( $LangFile );
-            $items = objectToArray(json_decode($json));
-            if ( is_array($items) ) {
-                foreach ( $items as $Key=>$Value ) {
-                    $rVal["$Key"] = str_replace(array_keys($ReplStr), array_values($ReplStr), NoNull($Value));
+            /* If the requested language does not exist, grab the default */
+            if ( file_exists($LangFile) === false ) { $LangFile = LANG_DIR . "/" . strtolower(DEFAULT_LANG) . ".json"; }
+            if ( file_exists($LangFile) ) {
+                $json = readResource($LangFile);
+                $items = objectToArray(json_decode($json));
+
+                if ( is_array($items) ) {
+                    $ReplStr = array( '{version_id}' => APP_VER,
+                                      '{year}'       => date('Y'),
+                                     );
+                    $data = array();
+
+                    foreach ( $items as $Key=>$Value ) {
+                        $data["$Key"] = str_replace(array_keys($ReplStr), array_values($ReplStr), NoNull($Value));
+                    }
+
+                    /* If the data is valid, cache it */
+                    if ( is_array($data) && count($data) > 0 ) { setCacheObject($CacheKey, $data); }
                 }
             }
         }
 
-        // Return the Array of Items
-        return $rVal;
+        /* Return an array of strings or an unhappy boolean */
+        if ( is_array($data) && count($data) > 0 ) { return $data; }
+        return false;
     }
 
     /**
