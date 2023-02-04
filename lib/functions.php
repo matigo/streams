@@ -1738,21 +1738,24 @@
         $hash = sha1($sqlStr);
 
         /* Check to see if this query has been run once before and, if so, return the cached result */
-        $rVal = getGlobalObject($hash);
-        if ( $rVal !== false ) { return $rVal; }
+        $data = getGlobalObject($hash);
+        if ( $data !== false ) { return $data; }
 
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $GLOBALS['Perf']['queries']++;
         $qstart = getMicroTime();
         $result = false;
-        $rVal = array();
+        $data = array();
         $didx = 0;
         $r = 0;
 
         /* Do Not Proceed If We Don't Have SQL Settings */
-        if ( !defined('DB_HOST') ) { return false; }
+        if ( defined('DB_HOST') === false ) {
+            writeNote("doMySQLQuery Connection Error :: No DB_HOST defined", true);
+            return false;
+        }
 
-        // Determine Which Database is Required, and Connect If We Don't Already Have a Connection
+        /* Determine Which Database is Required, and Connect If We Don't Already Have a Connection */
         if ( !$mysql_db ) {
             $mysql_db = mysqli_connect(DB_HOST, DB_USER, DB_PASS, $dbname);
             if ( !$mysql_db || mysqli_connect_errno() ) {
@@ -1762,7 +1765,7 @@
             mysqli_set_charset($mysql_db, DB_CHARSET);
         }
 
-        // If We Have a Good Connection, Go!
+        /* If We Have a Good Connection, Go! */
         if ( $mysql_db ) {
             /* If We're In Debug, Capture the SQL Query */
             if ( defined('DEBUG_ENABLED') ) {
@@ -1778,10 +1781,17 @@
                 }
             }
 
-            $result = mysqli_query($mysql_db, $sqlStr);
+            /* Try to run the query */
+            try {
+                $result = mysqli_query($mysql_db, $sqlStr);
+
+            } catch (mysqli_sql_exception $e) {
+                writeNote("doMySQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
+                writeNote("doMySQLQuery Query :: $sqlStr", true );
+            }
         }
 
-        // Parse the Result If We Have One
+        /* Parse the Result If We Have One */
         if ( $result ) {
             $finfo = mysqli_fetch_fields($result);
             while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
@@ -1789,13 +1799,13 @@
                 foreach ( $finfo as $col ) {
                     $arr_row[ $col->name ] = $row[$col->name];
                 }
-                $rVal[] = $arr_row;
+                $data[] = $arr_row;
             }
 
-            // Close the MySQL Connection
+            /* Close the MySQL Connection */
             mysqli_free_result($result);
 
-            // Record the Ops Time (if required)
+            /* Record the Ops Time (if required) */
             if ( defined('DEBUG_ENABLED') ) {
                 if ( DEBUG_ENABLED == 1 ) {
                     $quntil = getMicroTime();
@@ -1807,27 +1817,28 @@
             }
 
             /* Save the Results into Memory */
-            setGlobalObject($hash, $rVal);
-
-        } else {
-            writeNote("doMySQLQuery Error :: " . mysqli_errno($mysql_db) . " | " . mysqli_error($mysql_db), true );
-            writeNote("doMySQLQuery Query :: $sqlStr", true );
+            setGlobalObject($hash, $data);
         }
 
-        // Return the Array of Details
-        return $rVal;
+        /* Return the array of details or an unhappy boolean */
+        if ( is_array($data) && count($data) > 0 ) { return $data; }
+        return false;
     }
 
     /**
      * Function Executes a SQL String against the Required Database and Returns a boolean response.
      */
     function doMySQLExecute($sqlStr, $params = array(), $dbname = '') {
+        if ( defined('SQL_SPLITTER') === false ) { define('SQL_SPLITTER', '[||]'); }
         $GLOBALS['Perf']['queries'] = nullInt($GLOBALS['Perf']['queries']);
         $sqlQueries = array();
         $rVal = -1;
 
         /* Do Not Proceed If We Don't Have SQL Settings */
-        if ( !defined('DB_HOST') ) { return false; }
+        if ( defined('DB_HOST') === false ) {
+            writeNote("doMySQLQuery Connection Error :: No DB_HOST defined", true);
+            return false;
+        }
         if ( NoNull($dbname) == '' && defined('DB_NAME') ) { $dbname = DB_NAME; }
 
         /* Strip Out The SQL Queries (If There Are Many) */
