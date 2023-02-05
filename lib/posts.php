@@ -1012,48 +1012,53 @@ class Posts {
      */
     private function _getPostMeta( $PostGUID ) {
         if ( mb_strlen(NoNull($PostGUID)) != 36 ) { return false; }
+        $CacheKey = 'post-meta-' . $PostGUID . '-' . paddNumber($this->settings['_account_id']);
 
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[POST_GUID]'  => sqlScrub($PostGUID),
-                         );
-        $sqlStr = readResource(SQL_DIR . '/posts/getPostMeta.sql', $ReplStr);
-        $rslt = doSQLQuery($sqlStr);
-        if ( is_array($rslt) ) {
-            $data = array();
-            foreach ( $rslt as $Row ) {
-                if ( YNBool($Row['is_visible']) ) {
-                    $block = explode('_', $Row['key']);
-                    if ( is_array($data[$block[0]]) === false ) {
-                        $data[$block[0]] = $this->_getPostMetaArray($block[0]);
+        $data = getCacheObject($CacheKey);
+        if ( is_array($data) === false ) {
+            $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                              '[POST_GUID]'  => sqlScrub($PostGUID),
+                             );
+            $sqlStr = readResource(SQL_DIR . '/posts/getPostMeta.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                $data = array();
+                foreach ( $rslt as $Row ) {
+                    if ( YNBool($Row['is_visible']) ) {
+                        $block = explode('_', $Row['key']);
+                        if ( is_array($data[$block[0]]) === false ) {
+                            $data[$block[0]] = $this->_getPostMetaArray($block[0]);
+                        }
+                        $data[$block[0]][$block[1]] = (is_numeric($Row['value']) ? nullInt($Row['value']) : NoNull($Row['value']));
                     }
-                    $data[$block[0]][$block[1]] = (is_numeric($Row['value']) ? nullInt($Row['value']) : NoNull($Row['value']));
                 }
-            }
 
-            // If there's a Geo Array, Check if a StaticMap can be Provided
-            if ( array_key_exists('geo', $data) ) {
-                if ( $data['geo']['longitude'] !== false && $data['geo']['latitude'] !== false ) {
-                    $data['geo']['staticmap'] = NoNull($this->settings['HomeURL']) . '/api/geocode/staticmap/' . round($data['geo']['latitude'], 5) . '/' . round($data['geo']['longitude'], 5);
+                /* If there's a Geo Array, Check if a StaticMap can be Provided */
+                if ( array_key_exists('geo', $data) ) {
+                    if ( $data['geo']['longitude'] !== false && $data['geo']['latitude'] !== false ) {
+                        $data['geo']['staticmap'] = NoNull($this->settings['HomeURL']) . '/api/geocode/staticmap/' . round($data['geo']['latitude'], 5) . '/' . round($data['geo']['longitude'], 5);
+                    }
                 }
-            }
 
-            // If there's an Episode Array, Ensure the File value is prefixed with the CDN
-            if ( array_key_exists('episode', $data) ) {
-                $file = NoNull($data['episode']['file']);
-                $ext = getFileExtension($file);
-                $data['episode']['mime'] = getMimeFromExtension($ext);
+                /* If there's an Episode Array, Ensure the File value is prefixed with the CDN */
+                if ( array_key_exists('episode', $data) ) {
+                    $file = NoNull($data['episode']['file']);
+                    $ext = getFileExtension($file);
+                    $data['episode']['mime'] = getMimeFromExtension($ext);
 
-                if ( $file != '' && strpos($file, '//') === false ) {
-                    $cdnUrl = getCdnUrl();
-                    $data['episode']['file'] = $cdnUrl . $file;
+                    if ( $file != '' && strpos($file, '//') === false ) {
+                        $cdnUrl = getCdnUrl();
+                        $data['episode']['file'] = $cdnUrl . $file;
+                    }
                 }
-            }
 
-            // If we have data, return it.
-            if ( count($data) > 0 ) { return $data; }
+                /* If we have data, save it */
+                if ( is_array($data) && count($data) > 0 ) { setCacheObject($CacheKey, $data); }
+            }
         }
 
-        // If We're Here, There's No Meta
+        /* If we have data, return it. Otherwise, unhappy boolean */
+        if ( is_array($data) && count($data) > 0 ) { return $data; }
         return false;
     }
 
@@ -1571,15 +1576,13 @@ class Posts {
      *  Note: this caches data for 60 minutes before refreshing
      */
     private function _getPopularPosts() {
-        $CacheFile = 'popular-' . date('Ymdh');
+        $CacheKey = 'popular-' . paddNumber($this->settings['site_id']) . '.' . nullInt($this->settings['pops_count'], 9) . '-' . date('Ymdh');
         $html = '';
 
-        // Check for a Cache File and Return It If Valid
-        if ( defined('ENABLE_CACHING') === false ) { define('ENABLE_CACHING', 0); }
-        if ( nullInt(ENABLE_CACHING) == 1 ) { $html = readCache($this->settings['site_id'], $CacheFile); }
-        if ( $html !== false && $html != '' ) { return $html; }
+        $data = getCacheObject($CacheKey);
+        if ( is_array($data) && mb_strlen($data['html']) > 10 ) { return $data['html']; }
 
-        // If We're Here, Let's Construct the Popular Posts List
+        /* If we're here, we need to construct the Popular Posts listing */
         $ReplStr = array( '[SITE_ID]' => nullInt($this->settings['site_id']),
                           '[COUNT]'   => nullInt($this->settings['pops_count'], 9),
                          );
@@ -1602,14 +1605,14 @@ class Posts {
                          tabSpace(4) . '</div>';
             }
 
-            // Save the File to Cache if Required
-            if ( nullInt(ENABLE_CACHING) == 1 ) { saveCache($this->settings['site_id'], $CacheFile, $html); }
-
-            // Return the List of Popular Posts
-            return $html;
+            /* Save the HTML to the cache if it appears valid and return it */
+            if ( mb_strlen($html) > 10 ) {
+                setCacheObject($CacheKey, array('html' => $html));
+                return $html;
+            }
         }
 
-        // If We're Here, There's Nothing.
+        /* If we're here, there's nothing. */
         return '';
     }
 

@@ -184,22 +184,31 @@ class Auth {
      *  Function Returns Any Data That Might Be Associated With a Token
      */
     private function _getTokenData( $Token = '' ) {
-        // If We Have the Data, Return It
-        if ( array_key_exists('token_data', $GLOBALS) ) { return $GLOBALS['token_data']; }
+        if ( mb_strlen(NoNull($Tokens)) <= 30 ) { return false; }
 
-        // Verifiy We Have a Token Value and Split It Accordingly
-        if ( NoNull($Token) == '' ) { return false; }
+        /* Verifiy We Have a Token Value and Split It Accordingly */
         $data = explode('_', $Token);
         if ( count($data) != 3 ) { return false; }
 
-        // Get the Maximum Age of an Account's Password (28.25 years by default)
+        /* If the data is stored as part of the current HTTP request, return it */
+        $rVal = getGlobalObject('token_data');
+        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) { return $rVal; }
+
+        /* Determine the appropriate CacheKey */
+        $CacheKey = 'token-' . paddNumber(alphaToInt($data[1])) . '-' . NoNull($data[2]);
+
+        /* if the data is stored in the cache, return it */
+        $rVal = getCacheObject($CacheKey);
+        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) { return $rVal; }
+
+        /* If we're here, we need to collect the data */
         $PassAge = 10000;
         if ( defined('PASSWORD_LIFE') ) { $PassAge = nullInt(PASSWORD_LIFE, 10000); }
 
-        // Get the Home URL Address (For Site-Level Access)
+        /* Get the Home URL Address (For Site-Level Access) */
         $HomeURL = NoNull($this->settings['HomeURL']);
 
-        // If the Prefix Matches, Validate the Token Data
+        /* If the Prefix Matches, Validate the Token Data */
         if ( NoNull($data[0]) == str_replace('_', '', TOKEN_PREFIX) ) {
             $ReplStr = array( '[TOKEN_ID]'     => alphaToInt($data[1]),
                               '[TOKEN_GUID]'   => sqlScrub($data[2]),
@@ -243,8 +252,11 @@ class Auth {
             }
         }
 
-        // Set the Cache and Return an Array of Data or an Unhappy Boolean
-        $GLOBALS['token_data'] = $rVal;
+        /* Set the Cache and Return an Array of Data or an Unhappy Boolean */
+        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) {
+            setGlobalObject('token_data', $rVal);
+            setCacheObject($CacheKey, $rVal);
+        }
         return $rVal;
     }
 
@@ -337,6 +349,11 @@ class Auth {
                 $rslt = doSQLQuery($sqlStr);
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
+                        /* Clear the Cached Token Data */
+                        $CacheKey = 'token-' . paddNumber(alphaToInt($data[1])) . '-' . NoNull($data[2]);
+                        setCacheObject($CacheKey, array('_logged_in' => false));
+
+                        /* Construct the Return Array */
                         return array( 'account'      => false,
                                       'distributors' => false,
                                       'is_active'    => false,
