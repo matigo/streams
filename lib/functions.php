@@ -11,33 +11,33 @@
      *  Note: Non-Numeric Values will return 0
      */
     function nullInt($number, $default = 0) {
+        if ( is_bool($number) ) { $number = $default; }
         $number = filter_var($number, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
         $rVal = $default;
 
         if ( is_numeric($number) ) { $rVal = $number; }
-        if ( $rVal == 0 && $default > 0 ) {
-            $rVal = $default;
-        }
+        if ( $rVal == 0 && $default > 0 ) { $rVal = $default; }
 
-        // Return the Numeric Value
+        /* Return the Numeric Value */
         return floatval($rVal);
     }
 
     /**
      * Function checks a value and returns a string
      */
-    function NoNull( $string, $Default = "" ) {
+    function NoNull( $string, $default = "" ) {
+        if ( is_bool($string) ) { $string = $default; }
         $ReplStr = array( '＃' => "#", urldecode('%EF%B8%8F') => ' ', '　' => ' ', );
-        $rVal = $Default;
+        $rVal = $default;
 
-        // Pre-Process the String
+        /* Pre-Process the String */
         $string = str_replace(array_keys($ReplStr), array_values($ReplStr), $string);
 
-        // Let's do some trimming and, if necessary, return defaults
+        /* Let's do some trimming and, if necessary, return defaults */
         if ( is_string($string) ) { $rVal = trim($string); }
-        if ( $rVal == "" && $Default != "" ) { $rVal = $Default; }
+        if ( $rVal == "" && $default != "" ) { $rVal = $default; }
 
-        // Return the String Value
+        /* Return the String Value */
         return $rVal;
     }
 
@@ -69,9 +69,9 @@
      *
      *  Note: this is mainly used for internal directory naming
      */
-    function paddNumber( $num, $length = 8 ) {
+    function paddNumber( $num, $length = 16 ) {
         if ( nullInt($length) > 64 ) { $length = 64; }
-        if ( nullInt($length) <= 0 ) { $length = 8; }
+        if ( nullInt($length) <= 0 ) { $length = 16; }
         if ( nullInt($num) <= 0 ) { return ''; }
 
         $val = NoNull(substr(str_repeat('0', $length) . nullInt($num), ($length * -1)));
@@ -1657,7 +1657,7 @@
         if ( $pgsql_db ) {
             /* If We're In Debug, Capture the SQL Query */
             if ( defined('DEBUG_ENABLED') ) {
-                if ( DEBUG_ENABLED == 1 ) {
+                if ( YNBool(DEBUG_ENABLED) ) {
                     if ( array_key_exists('debug', $GLOBALS) === false ) {
                         $GLOBALS['debug'] = array();
                         $GLOBALS['debug']['queries'] = array();
@@ -1704,7 +1704,7 @@
 
             // Record the Ops Time (if required)
             if ( defined('DEBUG_ENABLED') ) {
-                if ( DEBUG_ENABLED == 1 ) {
+                if ( YNBool(DEBUG_ENABLED) ) {
                     $quntil = getMicroTime();
                     $ops = round(($quntil - $qstart), 6);
                     if ( $ops < 0 ) { $ops *= -1; }
@@ -1769,7 +1769,7 @@
         if ( $mysql_db ) {
             /* If We're In Debug, Capture the SQL Query */
             if ( defined('DEBUG_ENABLED') ) {
-                if ( DEBUG_ENABLED == 1 ) {
+                if ( YNBool(DEBUG_ENABLED) ) {
                     if ( array_key_exists('debug', $GLOBALS) === false ) {
                         $GLOBALS['debug'] = array();
                         $GLOBALS['debug']['queries'] = array();
@@ -1797,7 +1797,12 @@
             while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
                 $arr_row = array();
                 foreach ( $finfo as $col ) {
-                    $arr_row[ $col->name ] = $row[$col->name];
+                    $name = NoNull($col->name);
+                    if ( mb_substr($name, 0, 3) == 'is_' ) {
+                        $arr_row[$name] = YNBool($row[$name]);
+                    } else {
+                        $arr_row[$name] = $row[$name];
+                    }
                 }
                 $data[] = $arr_row;
             }
@@ -1807,7 +1812,7 @@
 
             /* Record the Ops Time (if required) */
             if ( defined('DEBUG_ENABLED') ) {
-                if ( DEBUG_ENABLED == 1 ) {
+                if ( YNBool(DEBUG_ENABLED) ) {
                     $quntil = getMicroTime();
                     $ops = round(($quntil - $qstart), 6);
                     if ( $ops < 0 ) { $ops *= -1; }
