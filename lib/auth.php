@@ -184,7 +184,7 @@ class Auth {
      *  Function Returns Any Data That Might Be Associated With a Token
      */
     private function _getTokenData( $Token = '' ) {
-        if ( mb_strlen(NoNull($Tokens)) <= 30 ) { return false; }
+        if ( mb_strlen(NoNull($Token)) <= 30 ) { return false; }
 
         /* Verifiy We Have a Token Value and Split It Accordingly */
         $data = explode('_', $Token);
