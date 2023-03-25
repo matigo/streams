@@ -14,7 +14,7 @@ class Route extends Streams {
     function __construct( $settings, $strings = false ) {
         $this->settings = $settings;
         $this->strings = ((is_array($strings)) ? $strings : getLangDefaults($this->settings['_language_code']));
-        $GLOBALS['site_id'] = nullInt($this->settings['site_id'], 1);
+        setGlobalObject('site_id', nullInt($this->settings['site_id'], 1));
     }
 
     /** ********************************************************************** *

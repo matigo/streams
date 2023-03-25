@@ -2252,11 +2252,12 @@
         $App = round(( $GLOBALS['Perf']['app_f'] - $GLOBALS['Perf']['app_s'] ), $precision);
         $SqlOps = nullInt( $GLOBALS['Perf']['queries'] ) + 1;
         $Referer = str_replace($data['HomeURL'], '', NoNull($_SERVER['HTTP_REFERER']));
+        $site_id = getGlobalObject('site_id');
         $Agent = parse_user_agent();
         $ip = getVisitorIPv4();
 
-        // Set the Values and Run the SQL Query
-        $ReplStr = array( '[SITE_ID]'    => nullInt($GLOBALS['site_id'], $data['site_id']),
+        /* Set the Values and Run the SQL Query */
+        $ReplStr = array( '[SITE_ID]'    => nullInt($site_id, $data['site_id']),
                           '[TOKEN_ID]'   => nullInt($data['_token_id']),
                           '[HTTP_CODE]'  => nullInt($http_code),
                           '[REQ_TYPE]'   => sqlScrub($data['ReqType']),
@@ -2275,7 +2276,7 @@
         $isOK = doSQLExecute($sqlStr);
 
         if ( defined('DEBUG_ENABLED') ) {
-            if ( DEBUG_ENABLED == 1 ) {
+            if ( YNBool(DEBUG_ENABLED) ) {
                 if ( is_array($GLOBALS['debug']) ) {
                     $json = json_encode($GLOBALS['debug'], JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                     writeDebug($json, 'sqlops');
@@ -2283,7 +2284,7 @@
             }
         }
 
-        // Return the [UsageStats].[id] Value
+        /* Return the [UsageStats].[id] Value */
         return $isOK;
     }
 

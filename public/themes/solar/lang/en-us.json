@@ -1,0 +1,106 @@
+{
+    "navJoin": "Join!",
+    "navHelp": "Help",
+    "navHome": "Home",
+    "navAbout": "About",
+    "navInvite": "Invite",
+    "navSettings": "Settings",
+    "navSignIn": "Sign In",
+    "navSignOut": "Sign Out",
+
+    "navTLHome": "Home",
+    "navTLStream": "Stream",
+    "navTLMentions": "Mentions",
+    "navTLHighlights": "Hightlights",
+    "navTLPictures": "Pictures",
+
+    "navShowAll": "All Posts",
+    "navShowPhoto": "Photos",
+    "navShowNotes": "Social",
+    "navShowArticle": "Articles",
+    "navShowBookmark": "Bookmarks",
+    "navShowQuotation": "Quotations",
+
+    "navVisAll": "Show All",
+    "navVisActive": "Most Active",
+
+    "btnCancel": "Cancel",
+    "btnClose": "Close",
+    "btnGoFetch": "Go!",
+    "btnNo": "No",
+    "btnPublish": "Publish",
+    "btnSave": "Save",
+    "btnSignIn": "Sign In",
+    "btnYes": "Yes",
+
+    "lblComposePH": "What's on your mind?",
+    "lblComposeChooseChannel": "Select a Channel",
+    "lblComposeAttachFile": "Attach ...",
+
+    "lblPostGeo": "Geo Tag",
+    "lblPostGeoPH": "(Geographic Coordinates or a Description)",
+    "lblPostType": "Post Type",
+    "lblPostSource": "Source",
+    "lblPostSourcePH": "(Paste a Website URL Here)",
+    "lblPostSrcTitle": "Title",
+    "lblPostSrcTitlePH": "(A Title for the Post)",
+    "lblPostTitle": "Title",
+    "lblPostTitlePH": "(A Title for the Post)",
+
+    "ttlSettings": "Preferences",
+    "lblSetFontsize": "Character Size",
+    "lblSetFontSizeXS": "XS",
+    "lblSetFontSizeS": "S",
+    "lblSetFontSizeM": "M",
+    "lblSetFontSizeL": "L",
+    "lblSetFontSizeXL": "XL",
+
+    "lblSetVisTheme": "Colour Scheme",
+    "lblSetVisThemeLight": "Light",
+    "lblSetVisThemeDark": "Dark",
+    "lblSetVisThemeSolar": "Solarized",
+
+    "lblSetRefreshTime": "Refresh Time (Seconds)",
+    "lblSetRefresh00": "Never",
+    "lblSetRefresh15": "15",
+    "lblSetRefresh30": "30",
+    "lblSetRefresh45": "45",
+    "lblSetRefresh60": "60",
+
+    "lblSetPostCount": "Posts to Collect",
+    "lblSetPosts50": "50",
+    "lblSetPosts75": "75",
+    "lblSetPosts100": "100",
+    "lblSetPosts150": "150",
+    "lblSetPosts200": "200",
+
+    "lblSetShowLabels": "Show Button Labels",
+    "lblSetPopoversPersist": "Persistent Popovers",
+
+    "optPostNote": "Social",
+    "optPostArticle": "Article",
+    "optPostBookmark": "Bookmark",
+    "optPostQuotation": "Quotation",
+
+    "optVisNone": "Invisible",
+    "optVisPassword": "Password Protected",
+    "optVisPrivate": "Private",
+    "optVisPublic": "Public",
+
+    "compatMsgHead": "Your browser is not compatible with this website.",
+    "compatMsgVersion": "The device is running {browser} version {version}.",
+    "compatMsgReq": "Please upgrade to at least 10.3.3 to use this site.",
+    "compatMsgDefault": "Please update your software to use this site.",
+
+    "ttlSignIn": "Sign In",
+    "msgSignIn": "Sign In to participate with the community",
+    "lblAcctNamePH": "(Your Email Address)",
+    "lblAcctPassPH": "(Your Password)",
+
+    "404Header": "404",
+    "404Message": "Not quite sure what you're looking for, but this message clearly isn't it.",
+
+    "msgOfflineMode": "There does not seem to be a working network connection. Now operating in offline mode.",
+    "msgCollectingData": "Reading data from the database ...",
+    "msgFooter": "Powered by happy puppies and plenty of coffee"
+}

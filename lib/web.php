@@ -56,7 +56,7 @@ class Route extends Streams {
             if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), 'favicon.png') !== false ) { $this->_handleFaviconReq($data); }
 
             /* Set some of the Globals */
-            $GLOBALS['site_id'] = $data['site_id'];
+            setGlobalObject('site_id', nullInt($data['site_id']));
 
             /* Is There an HTTPS Upgrade Request? */
             $Protocol = getServerProtocol();
@@ -133,7 +133,7 @@ class Route extends Streams {
             }
 
             /* Are We NOT Signed In and Accessing Something That Requires Being Signed In? */
-            if ( $this->settings['_logged_in'] === false ) {
+            if ( YNBool($this->settings['_logged_in']) === false ) {
                 $checks = array('write', 'export', 'account', 'syndication', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
@@ -170,7 +170,7 @@ class Route extends Streams {
             $html = $this->_getPageHTML( $data );
         }
 
-        // Return the HTML With the Appropriate Headers
+        /* Return the HTML With the Appropriate Headers */
         unset($this->strings);
         unset($this->site);
         return $html;
@@ -209,12 +209,13 @@ class Route extends Streams {
         if ( $data['site_locked'] ) { $LockPrefix = getRandomString(18); }
 
         /* If Caching Is Enabled, Check If We Have a Valid Cached Version */
-        $cache_file = md5($data['site_version'] . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
-                          nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
-                          NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
+        $CacheKey = 'site-content-' . paddNumber($data['site_id'], 8);
+        $CacheKey .= '-' . md5(NoNull($data['site_version']) . '-' . NoNull($LockPrefix, APP_VER . CSS_VER) . '-' .
+                               nullInt($this->settings['_token_id']) . '.' . nullInt($this->settings['_persona_id']) . '-' .
+                               NoNull($this->settings['ReqURI'], '/') . '-' . nullInt($this->settings['page']));
         if ( $isCacheable && defined('ENABLE_CACHING') ) {
-            if ( nullInt(ENABLE_CACHING) == 1 ) {
-                $html = readCache($data['site_id'], $cache_file);
+            if ( YNBool(ENABLE_CACHING) ) {
+                $html = getCacheObject($CacheKey);
                 if ( $html !== false ) {
                     $this->_getLanguageStrings($data['location']);
                     $SiteLogin = NoNull($this->strings['lblLogin']);
@@ -233,7 +234,7 @@ class Route extends Streams {
             }
         }
 
-        // If We're Here, We Need to Build the File
+        /* If We're Here, We Need to Build the File */
         $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
         if ( checkDIRExists($ThemeLocation) === false ) {
             $this->settings['_theme'] = 'default';
@@ -277,12 +278,12 @@ class Route extends Streams {
             $html = readResource( FLATS_DIR . "/templates/unlock.html", $ReplStr );
 
         } else {
-            // Collect the Preliminary Values
+            /* Collect the Preliminary Values */
             $this->_getLanguageStrings($data['location']);
             $ReplStr = $this->_getContentArray($data);
             $ReqFile = $this->_getContentPage($data);
 
-            // Populate the Appropriate Language Strings
+            /* Populate the Appropriate Language Strings */
             if ( is_array($this->strings) ) {
                 foreach ( $this->strings as $Key=>$Value ) {
                     $ReplStr["[$Key]"] = NoNull($Value);
@@ -294,7 +295,7 @@ class Route extends Streams {
                 $ReplStr['[lblSiteLogin]'] = NoNull($SiteLogin, $this->strings['lblLogin']);
             }
 
-            // If We're Here, We Have Data to Show
+            /* If We're Here, We Have Data to Show */
             $ReplStr['[PAGEHTML]'] = $this->_getPageContent($data);
 
             /* Do we have any page-specific Header details? */
@@ -307,10 +308,8 @@ class Route extends Streams {
 
             // Save the File to Cache if Required and Populate the Base Sections
             if ( defined('ENABLE_CACHING') ) {
-                if ( nullInt(ENABLE_CACHING) == 1 ) {
-                    if ( $isCacheable ) {
-                        saveCache($data['site_id'], $cache_file, $html);
-                    }
+                if ( YNBool(ENABLE_CACHING) ) {
+                    if ( $isCacheable ) { setCacheObject($CacheKey, $html); }
 
                     $SiteLogin = NoNull($this->strings['lblLogin']);
                     if ( $this->settings['_logged_in'] ) { $SiteLogin = '&nbsp;'; }
@@ -324,14 +323,17 @@ class Route extends Streams {
             }
         }
 
-        // Ensure the Contact Validation Element Is Set (if exists)
+        /* Ensure the Contact Validation Element Is Set (if exists) */
         $ReplStr = array( '[lblContactValidate]' => $this->_getContactQuestion() );
         $html = str_replace(array_keys($ReplStr), array_values($ReplStr), $html);
 
-        // Get the Run-time
+        /* Ensure the CC License is set */
+        $html = str_replace('[CC-LICENSE]', $this->_getCCLicense(NoNull($data['license'], 'CC BY-NC-ND')), $html);
+
+        /* Get the Run-time */
         $runtime = getRunTime();
 
-        // Return HTML Page Content
+        /* Return HTML Page Content */
         return str_replace('[GenTime]', $runtime, $html);
     }
 
@@ -501,6 +503,7 @@ class Route extends Streams {
      */
     private function _getPageContent($data) {
         $ThemeLocation = THEME_DIR . '/' . $this->settings['_theme'];
+        $html = '';
 
         // Is there a custom.php file in the theme that will provide the requisite data?
         $ResDIR = $ThemeLocation . "/resources";
@@ -514,9 +517,6 @@ class Route extends Streams {
             $this->settings['errors'] = $this->custom->getResponseMeta();
             $this->settings['status'] = $this->custom->getResponseCode();
 
-            // Return the Completed HTML
-            return $html;
-
         } else {
             if ( $this->posts === false ) {
                 require_once( LIB_DIR . '/posts.php' );
@@ -525,12 +525,10 @@ class Route extends Streams {
             $html = $this->posts->getPageHTML($data);
             $this->settings['status'] = $this->posts->getResponseCode();
             $this->settings['errors'] = $this->posts->getResponseMeta();
-
-            // Return the Completed HTML
-            return $html;
         }
 
-        // If We're Here, Something's Wrong
+        /* Return the Completed HTML (if valid) */
+        if ( mb_strlen($html) >= 10 ) { return $html; }
         return "This is a bad error message ...";
     }
 
@@ -710,7 +708,7 @@ class Route extends Streams {
     private function _getSiteOpsBar( $data ) {
         $OpsBarFile = THEME_DIR . '/' . $data['location'] . '/resources/nav-opsbar.html';
 
-        if ( $this->settings['_logged_in'] ) {
+        if ( YNBool($this->settings['_logged_in']) ) {
             if ( file_exists( $OpsBarFile ) ) {
                 require_once(LIB_DIR . '/contact.php');
                 $msgs = new Contact($this->settings);
@@ -740,7 +738,7 @@ class Route extends Streams {
             }
         }
 
-        // If We're Here, There's Nothing
+        /* If We're Here, There's Nothing */
         return '';
     }
 
@@ -1387,7 +1385,7 @@ class Route extends Streams {
         if ( $rVal == 'content-404.html' ) { $this->settings['status'] = 404; }
         if ( $rVal == 'content-403.html' ) { $this->settings['status'] = 403; }
 
-        // Return the Necessary Page
+        /* Return the Necessary Page */
         return $ResDIR . $rVal;
     }
 
