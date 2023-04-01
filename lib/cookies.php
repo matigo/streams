@@ -189,13 +189,14 @@ class Cookies {
         $SiteUrl = strtolower( NoNull($_SERVER['SERVER_NAME'], $_SERVER['HTTP_HOST']) );
         $Locale = $this->_getDisplayLanguage();
         $LangCd = validateLanguage($Locale);
+        $SiteId = $this->_getSiteID();
 
         /* Return the Array of Defaults */
         $Protocol = getServerProtocol();
         return array( 'DispLang'       => $LangCd,
                       'HomeURL'        => $Protocol . '://' . $SiteUrl,
                       'Route'          => 'web',
-                      'site_id'        => $this->_getSiteID(),
+                      'site_id'        => $SiteId,
 
                       '_address'       => getVisitorIPv4(),
                       '_account_id'    => 0,
@@ -205,7 +206,8 @@ class Cookies {
 
                       '_account_type'  => 'account.anonymous',
                       '_language_code' => $LangCd,
-                      '_site_id'       => $this->_getSiteID(),
+                      '_site_id'       => $SiteId,
+                      '_site_version'  => $this->_getSiteVersion($SiteId),
                       '_is_admin'      => false,
                       '_is_debug'      => false,
                      );
@@ -409,6 +411,37 @@ class Cookies {
 
         /* Return the Site.id value */
         return nullInt($data['site_id']);
+    }
+
+    /**
+     *  Function Returns the current version for a give Site.id
+     */
+    private function _getSiteVersion( $site_id = 0 ) {
+        $site_id = nullInt($site_id);
+        if ( $site_id <= 0 ) { return 0; }
+
+        $CleanKey = 'site-' . paddNumber($site_id, 8) . '-version';
+        $data = getCacheObject($CleanKey);
+        if ( is_array($data) === false || nullInt($data['version']) <= 1000 ) {
+            $ReplStr = array( '[SITE_ID]' => nullInt($site_id) );
+            $sqlStr = readResource(SQL_DIR . '/system/getSiteVersion.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                $data = false;
+
+                foreach ( $rslt as $Row ) {
+                    if ( nullInt($Row['version']) > 1000 ) {
+                        $data = array( 'version' => nullInt($Row['version']) );
+                    }
+                }
+            }
+
+            /* If we have data, let's save it (with a 60-second expiration) */
+            if ( is_array($data) && count($data) > 0 ) { setCacheObject($CleanKey, $data, 60); }
+        }
+
+        /* Return the Site.version value */
+        return nullInt($data['version']);
     }
 
     /**

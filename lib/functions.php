@@ -1242,9 +1242,10 @@
     /**
      *  Function Records an array of information to a cache location
      */
-    function setCacheObject( $keyName, $data ) {
+    function setCacheObject( $keyName, $data, $expy = 0 ) {
         if ( strlen(NoNull($keyName)) < 3 ) { return false; }
         if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
+        if ( nullInt($expy) <= 0 ) { $expy = 0; }
 
         /* Continue only if we have an array of data */
         if ( is_array($data) ) {
@@ -1286,7 +1287,7 @@
 
                     /* Set the Values */
                     $redis_db->set($key, serialize($data));
-                    $redis_db->expire($key, REDIS_EXPY);
+                    $redis_db->expire($key, nullInt($expy, REDIS_EXPY));
                     return;
                 }
             }
@@ -1311,9 +1312,10 @@
     /**
      *  Function Reads cached data and returns it. If no data exists, an unhappy boolean is returned.
      */
-    function getCacheObject( $keyName ) {
+    function getCacheObject( $keyName, $expy = 0 ) {
         if ( strlen(NoNull($keyName)) < 3 ) { return false; }
         if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
+        if ( nullInt($expy) <= 0 ) { $expy = 0; }
 
         /* If we have Redis configured, use that. Otherwise, write to a local file */
         if ( YNBool(USE_REDIS) ) {
@@ -1367,8 +1369,9 @@
         if ( checkDIRExists( TMP_DIR . '/cache' ) ) {
             $cacheFile = getCacheFileName($keyName);
             if ( file_exists( $cacheFile ) ) {
+                $secs = nullInt($expy, CACHE_EXPY);
                 $age = filemtime($cacheFile);
-                if ( !$age or ((time() - $age) > CACHE_EXPY) ) { return false; }
+                if ( !$age or ((time() - $age) > $secs) ) { return false; }
 
                 $json = file_get_contents( $cacheFile );
                 if  ( is_string($json) && mb_strlen($json) > 0 ) {

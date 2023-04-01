@@ -722,6 +722,7 @@ class Posts {
                                  'mentions'   => $mentions,
                                  'points'     => nullInt($Row['total_points']),
                                  'has_thread' => ((nullInt($Row['thread_posts']) > 1) ? true : false),
+                                 'version'    => nullInt($Row['post_version']),
 
                                  'canonical_url'    => $siteURL . NoNull($Row['canonical_url']),
                                  'slug'             => NoNull($Row['slug']),

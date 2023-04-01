@@ -671,3 +671,28 @@ section.content {
     min-height: calc(100vh - 15em);
 }
 
+article {
+    display: block;
+    padding: 0;
+    margin: 0 auto;
+    width: calc(100% - 2em);
+}
+
+/** ************************************************************************ **
+ *  Error Messages
+ ** ************************************************************************ */
+article.fourhundred-box {
+    text-align: center;
+    padding: 5em 0 0;
+}
+article.fourhundred-box h1 {
+    display: block;
+    font-size: 4em;
+    font-weight: bold;
+    padding: 0;
+    margin: 0;
+}
+article.fourhundred-box p {
+    font-size: 1.25em;
+    font-style: italic;
+}
