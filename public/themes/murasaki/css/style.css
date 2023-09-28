@@ -298,9 +298,7 @@ section.titlebar h1 {
     color: var(--highlight-text, #5a3b86);
     display: inline-block;
     text-align: center;
-    max-width: 200px;
-    min-width: 75px;
-    width: calc(100% - 1003px);
+    width: 2em;
 }
 section.titlebar h1 a,
 section.titlebar h1 a:hover,
@@ -311,8 +309,7 @@ section.titlebar h1 a:visited {
 section.titlebar ul {
     display: inline-block;
     text-align: right;
-    max-width: 900px;
-    width: calc(100% - 303px);
+    width: calc(100% - 3em);
 }
 section.titlebar ul li {
     display: inline-block;
@@ -328,12 +325,11 @@ section.titlebar ul li {
     section.titlebar ul {
         display: inline-block;
         text-align: right;
-        max-width: 1125px;
-        width: calc(100% - 125px);
+        width: calc(100% - 6em);
     }
 }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.titlebar {
         max-height: 55px;
         min-height: 55px;
@@ -451,7 +447,7 @@ body.fontsize-xl section.nav-left ul { padding: 10px 0 0 0; }
 @media (max-width: 767px) {
     section.nav-left { position: relative; }
 }
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.nav-left { display: none; }
 }
 
@@ -478,7 +474,7 @@ body.fontsize-xl section.nav-right i { display: none; }
  ** ************************************************************************ */
 section.nav-bottom { display: none; }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.nav-bottom {
         background: var(--background-color, #fff);
         border-top: 1px solid var(--border-color, #000);
@@ -566,7 +562,7 @@ section.fourhundred-box p {
     font-size: 1em;
 }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.fourhundred-box { min-height: calc(100vh - 130px); }
     section.fourhundred-box h1 { font-size: 8em; }
     section.fourhundred-box p {
@@ -933,7 +929,7 @@ body.fontsize-xl section.main-content .composer select { padding: 0 5px; }
     section.main-content { margin: 0; }
 }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.main-content {
         max-width: calc(100% - 5px);
         width: 100%;
@@ -1484,7 +1480,7 @@ span.button-group.spacer-left {
     padding: 0 0 0 10px;
 }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.main-content .composer.hidden-pop { display: none !important; }
     section.main-content .composer {
         background: var(--background-color, #fff);
@@ -1614,7 +1610,7 @@ span.button-group.spacer-left {
         margin: 30px auto;
     }
 }
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     #viewThread .modal-content .modal-header h4 i {
         position: absolute;
         right: 10px;
@@ -1644,7 +1640,7 @@ span.button-group.spacer-left {
         color: #fff;
     }
 }
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     #viewSettings .modal-content button { min-width: 40px; }
     #viewSettings .modal-content button.btn { padding: 6px 12px; }
     #viewSettings .modal-content p { text-align: center; }
@@ -2031,7 +2027,7 @@ span.button-group.spacer-left {
     .profile-detail .profile-posts .main-content { margin: 0; }
     .profile-detail .profile-posts .post-chronology { padding: 10px 0; }
 }
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     .profile-overview {
         display: block;
         padding: 0 10px;
@@ -2099,7 +2095,7 @@ section.other-content p {
     section.other-content { padding: 0 25px; }
 }
 
-@media (max-width: 425px) {
+@media (max-width: 450px) {
     section.other-content { padding: 0 15px 0 10px; }
     section.other-content h3 {
         display: block;

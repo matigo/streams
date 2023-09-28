@@ -158,7 +158,6 @@ class System {
                     $data[] = array( 'db_name'  => NoNull($dbName),
                                      'db_size'  => NoNull(nullInt($Row['tables']) . '.' . nullInt($Row['columns'])),
                                      'db_hash'  => NoNull($Row['hash']),
-                                     'is_valid' => (( NoNull($full_hash) == NoNull(SQL_HASH) ) ? true : false),
                                     );
                 }
             }
