@@ -130,7 +130,14 @@ BEGIN
 
            po.`reply_to`, po.`type`,
            po.`guid` as `post_guid`, po.`privacy_type`,
-           po.`publish_at`, po.`expires_at`, po.`updated_at`,
+           po.`publish_at`, ROUND(UNIX_TIMESTAMP(po.`publish_at`)) as `publish_unix`,
+           po.`expires_at`, ROUND(UNIX_TIMESTAMP(po.`expires_at`)) as `expires_unix`,
+           po.`updated_at`, ROUND(UNIX_TIMESTAMP(po.`updated_at`)) as `updated_unix`,
+           (SELECT ROUND(UNIX_TIMESTAMP(GREATEST(z.`updated_at`, MAX(IFNULL(a.`updated_at`, '2000-01-01 00:00:00')), MAX(IFNULL(b.`updated_at`, '2000-01-01 00:00:00'))))) as `version`
+              FROM `Post` z LEFT OUTER JOIN `PostMeta` a ON z.`id` = a.`post_id`
+                            LEFT OUTER JOIN `PostAction` b ON z.`id` = b.`post_id`
+             WHERE z.`is_deleted` = 'N' and z.`id` = po.`id`) as `post_version`,
+
            CASE WHEN pa.`account_id` = `in_account_id` THEN 'Y' ELSE 'N' END as `is_you`,
            CASE WHEN po.`expires_at` IS NULL THEN 'Y'
                 WHEN po.`expires_at` < Now() THEN 'N'

@@ -515,10 +515,10 @@ class Posts {
                                                       'is_you'       => ((nullInt($Row['created_by']) == nullInt($this->settings['_account_id'])) ? true : false),
                                                       'profile_url'  => $siteURL . '/profile/' . NoNull($Row['persona_name']),
 
-                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['persona_created_at'])),
-                                                      'created_unix' => strtotime($Row['persona_created_at']),
-                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['persona_updated_at'])),
-                                                      'updated_unix' => strtotime($Row['persona_updated_at']),
+                                                      'created_at'   => apiDate($Row['persona_created_unix'], 'Z'),
+                                                      'created_unix' => apiDate($Row['persona_created_unix'], 'U'),
+                                                      'updated_at'   => apiDate($Row['persona_updated_unix'], 'Z'),
+                                                      'updated_unix' => apiDate($Row['persona_updated_unix'], 'U'),
                                                      ),
 
                                  'title'    => ((NoNull($Row['title']) == '') ? false : NoNull($Row['title'])),
@@ -526,12 +526,12 @@ class Posts {
                                  'text'     => NoNull($Row['value']),
                                  'rtl'      => $this->_isRTL(NoNull($Row['value'])),
 
-                                 'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['publish_at'])),
-                                 'publish_unix' => strtotime($Row['publish_at']),
-                                 'expires_at'   => ((NoNull($Row['expires_at']) != '') ? date("Y-m-d\TH:i:s\Z", strtotime($Row['expires_at'])) : false),
-                                 'expires_unix' => ((NoNull($Row['expires_at']) != '') ? strtotime($Row['expires_at']) : false),
-                                 'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
-                                 'updated_unix' => strtotime($Row['updated_at']),
+                                 'publish_at'   => apiDate($Row['publish_unix'], 'Z'),
+                                 'publish_unix' => apiDate($Row['publish_unix'], 'U'),
+                                 'expires_at'   => apiDate($Row['expires_unix'], 'Z'),
+                                 'expires_unix' => apiDate($Row['expires_unix'], 'U'),
+                                 'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                 'updated_unix' => apiDate($Row['updated_unix'], 'U'),
 
                                  'meta'     => $poMeta,
                                  'tags'     => $poTags,
@@ -554,10 +554,10 @@ class Posts {
                                                       'type'    => NoNull($Row['channel_type']),
                                                       'privacy' => NoNull($Row['channel_privacy_type']),
 
-                                                      'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['channel_created_at'])),
-                                                      'created_unix' => strtotime($Row['channel_created_at']),
-                                                      'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['channel_updated_at'])),
-                                                      'updated_unix' => strtotime($Row['channel_updated_at']),
+                                                      'created_at'   => apiDate($Row['channel_created_unix'], 'Z'),
+                                                      'created_unix' => apiDate($Row['channel_created_unix'], 'U'),
+                                                      'updated_at'   => apiDate($Row['channel_updated_unix'], 'Z'),
+                                                      'updated_unix' => apiDate($Row['channel_updated_unix'], 'U'),
                                                      ),
                                  'site'     => array( 'guid'        => NoNull($Row['site_guid']),
                                                       'name'        => NoNull($Row['site_name']),
@@ -2194,7 +2194,7 @@ class Posts {
                     if ( count($data) < $PostLimit ) {
 
                         /* Determine the Record Cache Index */
-                        $CacheFile = 'posts-' . substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . sha1(NoNull($post['post_guid']) . strtotime($post['updated_at']));
+                        $CacheFile = 'posts-' . substr('00000000' . nullInt($this->settings['_account_id']), -8) . '-' . sha1(NoNull($post['post_guid']) . nullInt($post['post_version']));
                         $pd = getCacheObject($CacheFile);
 
                         /* Build the Post Object if it is not already cached */
@@ -2293,12 +2293,12 @@ class Posts {
                                                                       'points'  => nullInt($post['points']),
                                                                      ),
 
-                                         'publish_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['publish_at'])),
-                                         'publish_unix' => strtotime($post['publish_at']),
-                                         'expires_at'   => ((NoNull($post['expires_at']) == '') ? false : date("Y-m-d\TH:i:s\Z", strtotime($post['expires_at']))),
-                                         'expires_unix' => ((NoNull($post['expires_at']) == '') ? false : strtotime($post['expires_at'])),
-                                         'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($post['updated_at'])),
-                                         'updated_unix' => strtotime($post['updated_at']),
+                                         'publish_at'   => apiDate($post['publish_unix'], 'Z'),
+                                         'publish_unix' => apiDate($post['publish_unix'], 'U'),
+                                         'expires_at'   => apiDate($post['expires_unix'], 'Z'),
+                                         'expires_unix' => apiDate($post['expires_unix'], 'U'),
+                                         'updated_at'   => apiDate($post['updated_unix'], 'Z'),
+                                         'updated_unix' => apiDate($post['updated_unix'], 'U'),
                                         );
 
                             /* Save the array to the cache */

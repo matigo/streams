@@ -60,7 +60,8 @@ BEGIN
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
-    SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 1 DAY) THEN po.`updated_at` ELSE NULL END) as `posted_at`,
+    SELECT DISTINCT po.`id` as `post_id`,
+           CAST(CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 2 HOUR) THEN GREATEST(po.`publish_at`, po.`updated_at`) ELSE IFNULL(po.`publish_at`, '2000-01-01 00:00:00') END AS DATETIME) as `posted_at`,
            LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
@@ -86,7 +87,8 @@ BEGIN
     /* If there aren't enough posts, reach back farther to look for some */
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
-        SELECT DISTINCT po.`id` as `post_id`, GREATEST(po.`publish_at`, CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 1 DAY) THEN po.`updated_at` ELSE NULL END) as `posted_at`,
+        SELECT DISTINCT po.`id` as `post_id`,
+               GREATEST(po.`publish_at`, CAST(CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 1 DAY) THEN po.`updated_at` ELSE '2000-01-01 00:00:00' END AS DATETIME)) as `posted_at`,
                LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
@@ -139,7 +141,13 @@ BEGIN
 
            po.`reply_to`, po.`type`,
            po.`guid` as `post_guid`, po.`privacy_type`,
-           po.`publish_at`, po.`expires_at`, po.`updated_at`,
+           po.`publish_at`, ROUND(UNIX_TIMESTAMP(po.`publish_at`)) as `publish_unix`,
+           po.`expires_at`, ROUND(UNIX_TIMESTAMP(po.`expires_at`)) as `expires_unix`,
+           po.`updated_at`, ROUND(UNIX_TIMESTAMP(po.`updated_at`)) as `updated_unix`,
+           (SELECT ROUND(UNIX_TIMESTAMP(GREATEST(z.`updated_at`, MAX(IFNULL(a.`updated_at`, '2000-01-01 00:00:00')), MAX(IFNULL(b.`updated_at`, '2000-01-01 00:00:00'))))) as `version`
+              FROM `Post` z LEFT OUTER JOIN `PostMeta` a ON z.`id` = a.`post_id`
+                            LEFT OUTER JOIN `PostAction` b ON z.`id` = b.`post_id`
+             WHERE z.`is_deleted` = 'N' and z.`id` = po.`id`) as `post_version`,
 
            IFNULL(pp.`pin_type`, 'pin.none') as `pin_type`,
            IFNULL(pp.`is_starred`, 'N') as `is_starred`,
