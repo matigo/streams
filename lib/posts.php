@@ -1,8 +1,6 @@
 <?php
 
 /**
- * @author Jason F. Irwin
- *
  * Class contains the rules and methods called to manage Posts
  */
 require_once(LIB_DIR . '/functions.php');
@@ -3170,6 +3168,7 @@ class Posts {
         if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
         if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
         if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
+        return false;
     }
 
     /**

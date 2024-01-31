@@ -1,8 +1,6 @@
 <?php
 
 /**
- * @author Jason F. Irwin
- *
  * Class contains the rules and methods called for Accounts
  */
 require_once( LIB_DIR . '/functions.php');
@@ -23,34 +21,32 @@ class Account {
      ** ********************************************************************* */
     public function performAction() {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
-        $rVal = false;
 
-        // Perform the Action
+        /* Perform the Action */
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
             case 'put':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
-                // Do Nothing
+                /* Do Nothing */
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, nothing was done */
+        return false;
     }
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'checkname':
@@ -59,7 +55,7 @@ class Account {
                 break;
 
             case 'list':
-                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+                if ( !$this->settings['_logged_in']) { return $this->_setMetaMessage("You need to sign in to use this function", 403); }
                 return $this->_getAccountList();
                 break;
 
@@ -112,12 +108,12 @@ class Account {
                 break;
 
             case 'me':
-                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+                if ( !$this->settings['_logged_in']) { return $this->_setMetaMessage("You need to sign in to use this function", 403); }
                 return $this->_getProfile();
                 break;
 
             case 'summary':
-                if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+                if ( !$this->settings['_logged_in']) { return $this->_setMetaMessage("You need to sign in to use this function", 403); }
                 return $this->_getAccountSummary();
                 break;
 
@@ -125,29 +121,30 @@ class Account {
                 // Do Nothing
         }
 
-        // If We're Here, There Was No Matching Activity
-        return false;
+        /* If we're here, nothing was done */
+        return $this->_setMetaMessage("Unrecognised endpoint: [$Activity]", 400);
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         $excludes = array( 'create', 'forgot' );
-        $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in'] && in_array($Activity, $excludes) === false ) { return "You Need to Log In First"; }
+        /* Check the User Token is Valid */
+        if ( !$this->settings['_logged_in'] && in_array($Activity, $excludes) === false ) {
+            return $this->_setMetaMessage("You need to sign in to use this endpoint", 403);
+        }
 
         switch ( $Activity ) {
             case 'bio':
-                $rVal = $this->_setPublicProfile();
+                return $this->_setPublicProfile();
                 break;
 
             case 'create':
-                $rVal = $this->_createAccount();
+                return $this->_createAccount();
                 break;
 
             case 'forgot':
-                $rVal = $this->_forgotPassword();
+                return $this->_forgotPassword();
                 break;
 
             case 'preference':
@@ -156,87 +153,86 @@ class Account {
 
             case 'profile':
             case 'me':
-                $rVal = $this->_setProfile();
+                return $this->_setProfile();
                 break;
 
             case 'relations':
             case 'relation':
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'follow':
                 $this->settings['follows'] = 'Y';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'mute':
                 $this->settings['muted'] = 'Y';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'block':
                 $this->settings['blocked'] = 'Y';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'star':
                 $this->settings['starred'] = 'Y';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'details':
             case 'detail':
             case '':
-                $this->_setAccountDetails();
+                return $this->_setAccountDetails();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, nothing was done */
+        return $this->_setMetaMessage("Unrecognised endpoint: [$Activity]", 400);
     }
 
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+        /* Check the User Token is Valid */
+        if ( !$this->settings['_logged_in']) { return $this->_setMetaMessage("You need to sign in to use this endpoint", 403); }
 
         switch ( $Activity ) {
             case 'relations':
             case 'relation':
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'follow':
                 $this->settings['follows'] = 'N';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'mute':
                 $this->settings['muted'] = 'N';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'block':
                 $this->settings['blocked'] = 'N';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             case 'star':
                 $this->settings['starred'] = 'N';
-                $rVal = $this->_setRelation();
+                return $this->_setRelation();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, nothing was done */
+        return $this->_setMetaMessage("Unrecognised endpoint: [$Activity]", 400);
     }
 
     /**
@@ -285,42 +281,32 @@ class Account {
     }
 
     /**
-     *  Function Populates the Cache Variable with Account Data for a Given Set of IDs
+     *  Function Returns a simplified list of Account information based on the ID provided
      */
-    private function _readAccountInfo( $AccountIDs ) {
-        $Accounts = explode(',', $AccountIDs);
-        if ( is_array($Accounts) ) {
-            $AcctList = array();
+    private function _readAccountInfo( $AccountID ) {
+        if ( nullInt($AccountID) <= 0 ) { return false; }
 
-            foreach ( $Accounts as $id ) {
-                $chkID = nullInt($id);
-                if ( $chkID > 0 && !array_key_exists($chkID, $this->cache) ) { $AcctList[] = nullInt($id); }
-            }
+        $ReplStr = array( '[ACCOUNT_IDS]' => nullInt($AccountID) );
+        $sqlStr = readResource(SQL_DIR . '/account/getAccountPersonInfo.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return array( 'display_name' => NoNull($Row['display_name']),
+                              'avatar_url'   => NoNull($Row['avatar_url'], 'default.png'),
+                              'type'         => NoNull($Row['type']),
+                              'guid'         => NoNull($Row['account_guid']),
+                              'is_you'       => YNBool(BoolYN($Row['account_id'] == $this->settings['_account_id'])),
 
-            // Get a List of Person Records
-            if ( count($AcctList) > 0 ) {
-                $ReplStr = array( '[ACCOUNT_IDS]' => implode(',', $AcctList) );
-                $sqlStr = readResource(SQL_DIR . '/account/getAccountPersonInfo.sql', $ReplStr);
-                $rslt = doSQLQuery($sqlStr);
-                if ( is_array($rslt) ) {
-                    foreach ( $rslt as $Row ) {
-                        $AcctID = nullInt($Row['account_id']);
-                        $lang_label = 'lbl_' . NoNull($Row['language_code']);
-                        $this->cache[$AcctID] = array( 'display_name'   => NoNull($Row['display_name']),
-                                                       'avatar_url'     => NoNull($Row['avatar_url'], 'default.png'),
-                                                       'type'           => NoNull($Row['type']),
-                                                       'guid'           => NoNull($Row['account_guid']),
-                                                       'is_you'         => YNBool(BoolYN($Row['account_id'] == $this->settings['_account_id'])),
-
-                                                       'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                                                       'created_unix'   => strtotime($Row['created_at']),
-                                                       'updated_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
-                                                       'updated_unix'   => strtotime($Row['updated_at']),
-                                                      );
-                    }
-                }
+                              'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                              'created_unix' => apiDate($Row['created_unix'], 'U'),
+                              'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                              'updated_unix' => apiDate($Row['updated_unix'], 'U'),
+                             );
             }
         }
+
+        /* If we're here, the requested Account.id is either deleted or does not exist */
+        return false;
     }
 
     /** ********************************************************************* *
@@ -1054,9 +1040,6 @@ class Account {
                 $recent_at = false;
                 $first_at = false;
 
-                if ( strtotime($Row['recent_at']) !== false ) { $recent_at = strtotime($Row['recent_at']); }
-                if ( strtotime($Row['first_at']) !== false ) { $first_at = strtotime($Row['first_at']); }
-
                 /* Construct the Output Array */
                 $data = array( 'guid'           => NoNull($Row['guid']),
                                'name'           => NoNull($Row['name']),
@@ -1071,12 +1054,12 @@ class Account {
                                'site_url'       => NoNull($Row['site_url']),
                                'avatar_url'     => NoNull($Row['avatar_url'], $avatar),
 
-                               'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                               'created_unix'   => strtotime($Row['created_at']),
-                               'first_at'       => (($first_at !== false) ? date("Y-m-d\TH:i:s\Z", $first_at) : false),
-                               'first_unix'     => (($first_at !== false) ? $first_at : false),
-                               'recent_at'      => (($recent_at !== false) ? date("Y-m-d\TH:i:s\Z", $recent_at) : false),
-                               'recent_unix'    => (($recent_at !== false) ? $recent_at : false),
+                               'created_at'     => apiDate($Row['created_unix'], 'Z'),
+                               'created_unix'   => apiDate($Row['created_unix'], 'Z'),
+                               'first_at'       => apiDate($Row['first_unix'], 'Z'),
+                               'first_unix'     => apiDate($Row['first_unix'], 'U'),
+                               'recent_at'      => apiDate($Row['recent_unix'], 'Z'),
+                               'recent_unix'    => apiDate($Row['recent_unix'], 'U'),
 
                                'counts'         => array( 'posts'       => nullInt($Row['posts']),
                                                           'notes'       => nullInt($Row['notes']),
@@ -1406,6 +1389,7 @@ class Account {
         if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
         if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
         if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
+        return false;
     }
 }
 ?>

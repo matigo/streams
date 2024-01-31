@@ -138,15 +138,23 @@ BEGIN
            src.`points_earned` = tmp.`points`
      WHERE src.`persona_id` = `x_persona_id`;
 
-    /* Update the Temporary table for the Follow counts */
-    UPDATE `summary` src INNER JOIN (SELECT COUNT(DISTINCT CASE WHEN pr.`persona_id` = 1 THEN pr.`related_id` ELSE NULL END) as `following`,
-                                            COUNT(DISTINCT CASE WHEN pr.`persona_id` <> `x_persona_id` THEN pr.`persona_id` ELSE NULL END) as `followers`
+    /* Update the Temporary table for the Following/Follower counts */
+    UPDATE `summary` src INNER JOIN (SELECT pr.`persona_id`, COUNT(DISTINCT pr.`related_id`) as `following`
+                                       FROM `PersonaRelation` pr INNER JOIN `Persona` pa ON pr.`related_id` = pa.`id`
+                                                                 INNER JOIN `Account` acct ON pa.`account_id` = acct.`id`
+                                      WHERE acct.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pr.`is_deleted` = 'N'
+                                        and pr.`is_blocked` = 'N' and pr.`follows` = 'Y' and pr.`persona_id` = `x_persona_id`
+                                      GROUP BY pr.`persona_id`) tmp ON tmp.`persona_id` = src.`persona_id`
+       SET src.`following` = tmp.`following`
+     WHERE src.`persona_id` = `x_persona_id`;
+
+    UPDATE `summary` src INNER JOIN (SELECT pr.`related_id` as `persona_id`, COUNT(DISTINCT pr.`persona_id`) as `followers`
                                        FROM `PersonaRelation` pr INNER JOIN `Persona` pa ON pr.`persona_id` = pa.`id`
                                                                  INNER JOIN `Account` acct ON pa.`account_id` = acct.`id`
                                       WHERE acct.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pr.`is_deleted` = 'N'
-                                        and pr.`follows` = 'Y' and `x_persona_id` IN (pr.`persona_id`, pr.`related_id`)) tmp ON tmp.`following` >= 0
-       SET src.`following` = tmp.`following`,
-           src.`followers` = tmp.`followers`
+                                        and pr.`is_blocked` = 'N' and pr.`follows` = 'Y' and pr.`related_id` = `x_persona_id`
+                                      GROUP BY pr.`related_id`) tmp ON tmp.`persona_id` = src.`persona_id`
+       SET src.`followers` = tmp.`followers`
      WHERE src.`persona_id` = `x_persona_id`;
 
     /* Collect the Years Active information */
@@ -178,10 +186,13 @@ BEGIN
 
     /* Now let's return the summarized data */
     SELECT `account_id`, `persona_id`, `name`, `last_name`, `first_name`, `display_name`, `bio`, `site_url`, `avatar_url`, `avatar_img`,
-           `guid`, `created_at`, `you_follow`, `you_muted`, `you_blocked`, `you_starred`, `you_pinned`, `follows_you`,
+           `guid`, `created_at`, ROUND(UNIX_TIMESTAMP(`created_at`)) as `created_unix`,
+           `you_follow`, `you_muted`, `you_blocked`, `you_starred`, `you_pinned`, `follows_you`,
            `posts`, `notes`, `articles`, `bookmarks`, `locations`, `quotations`, `photos`, `pins`,
            `stars_given`, `stars_earned`, `points_given`, `points_earned`, `following`, `followers`,
-           CONCAT('{', `years_active`, '}') as `years_active`, `first_at`, `recent_at`
+           CONCAT('{', `years_active`, '}') as `years_active`,
+           `first_at`, ROUND(UNIX_TIMESTAMP(`first_at`)) as `first_unix`,
+           `recent_at`, ROUND(UNIX_TIMESTAMP(`recent_at`)) as `recent_unix`
       FROM `summary` src
      WHERE src.`persona_id` = `x_persona_id`
      LIMIT 1;
