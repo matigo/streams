@@ -61,7 +61,8 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
     SELECT DISTINCT po.`id` as `post_id`, act.`updated_at` as `posted_at`,
-           LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+           LEAST(IFNULL(gg.`value`, 'Y'),
+                 CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
                 CASE WHEN po.`expires_at` IS NULL THEN 'Y'
@@ -75,6 +76,7 @@ BEGIN
                         INNER JOIN `PostAction` act ON po.`id` = act.`post_id`
                         INNER JOIN `Persona` pap ON act.`persona_id` = pap.`id`
                         INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
+                   LEFT OUTER JOIN `SiteMeta` gg ON gg.`is_deleted` = 'N' and gg.`key` = 'show_global' and gg.`site_id` = si.`id`
      WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
        and act.`is_deleted` = 'N' and pap.`is_deleted` = 'N' and pap.`account_id` = `in_account_id`
@@ -86,7 +88,8 @@ BEGIN
     IF (SELECT COUNT(`post_id`) FROM tmpPosts WHERE `is_visible` = 'Y') < `in_count` THEN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
         SELECT DISTINCT po.`id` as `post_id`, act.`updated_at` as `posted_at`,
-               LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+               LEAST(IFNULL(gg.`value`, 'Y'),
+                     CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
                      CASE WHEN po.`expires_at` IS NULL THEN 'Y'
@@ -103,6 +106,7 @@ BEGIN
                             INNER JOIN `PostAction` act ON po.`id` = act.`post_id`
                             INNER JOIN `Persona` pap ON act.`persona_id` = pap.`id`
                             INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
+                       LEFT OUTER JOIN `SiteMeta` gg ON gg.`is_deleted` = 'N' and gg.`key` = 'show_global' and gg.`site_id` = si.`id`
          WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
            and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
            and act.`is_deleted` = 'N' and pap.`is_deleted` = 'N' and pap.`account_id` = `in_account_id`

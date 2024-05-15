@@ -7,124 +7,127 @@
                             <p>[lblSettingsDescr]</p>
                         </div>
                         <div class="single-post__contact">
-                            <form action="[HOMEURL]/api/site" method="POST">
-                                <p class="single-post__site-name">
-                                    <label for="site-name">[lblSettingsSiteName]</label>
-                                    <input id="site-name" type="text" class="fullwide" name="site-name" size="30" aria-required="true" value="[SITE_NAME]" autocomplete="off" required>
-                                </p>
-                                <p class="single-post__site-descr">
-                                    <label for="site-descr">[lblSettingsSiteDescr]</label>
-                                    <input id="site-descr" type="text" class="fullwide" name="site-descr" size="30" aria-required="true" value="[SITEDESCR]" autocomplete="off" required>
-                                </p>
-                                <p class="single-post__site-keys">
-                                    <label for="site-keys">[lblSettingsSiteKeys]</label>
-                                    <input id="site-keys" type="text" class="fullwide" name="site-keys" size="30" aria-required="true" value="[SITEKEYWD]" autocomplete="off" required>
-                                </p>
+                            <p class="single-post__site-name">
+                                <label for="site-name">[lblSettingsSiteName]</label>
+                                <input id="site-name" type="text" class="fullwide" name="fdata" data-name="site_name" size="30" data-required="Y" value="[SITE_NAME]" autocomplete="off" required>
+                            </p>
+                            <p class="single-post__site-descr">
+                                <label for="site-descr">[lblSettingsSiteDescr]</label>
+                                <input id="site-descr" type="text" class="fullwide" name="fdata" data-name="site_descr" size="30" data-required="Y" value="[SITEDESCR]" autocomplete="off" required>
+                            </p>
+                            <p class="single-post__site-keys">
+                                <label for="site-keys">[lblSettingsSiteKeys]</label>
+                                <input id="site-keys" type="text" class="fullwide" name="fdata" data-name="site_keys" size="30" data-required="N" value="[SITEKEYWD]" autocomplete="off" required>
+                            </p>
 
-                                <h4>[lblSettingsS2]</h4>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowNote]</strong>
-                                    <label class="switch">
-                                        <input id="show-note" type="checkbox" name="show-note"[SITE_NOTE]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowArticle]</strong>
-                                    <label class="switch">
-                                        <input id="show-article" type="checkbox" name="show-article"[SITE_ARTICLE]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowBookmark]</strong>
-                                    <label class="switch">
-                                        <input id="show-bookmark" type="checkbox" name="show-bookmark"[SITE_BMARKS]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowPhotos]</strong>
-                                    <label class="switch">
-                                        <input id="show-photo" type="checkbox" name="show-photo"[SITE_PHOTOS]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowLocations]</strong>
-                                    <label class="switch">
-                                        <input id="show-location" type="checkbox" name="show-location"[SITE_PLACES]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowQuotation]</strong>
-                                    <label class="switch">
-                                        <input id="show-quotation" type="checkbox" name="show-quotation"[SITE_QUOTES]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
+                            <h4>[lblSettingsS2]</h4>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowNote]</strong>
+                                <label class="switch">
+                                    <input id="show-note" type="checkbox" name="fdata" data-name="show_note"[SITE_NOTE]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowArticle]</strong>
+                                <label class="switch">
+                                    <input id="show-article" type="checkbox" name="fdata" data-name="show_article"[SITE_ARTICLE]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowBookmark]</strong>
+                                <label class="switch">
+                                    <input id="show-bookmark" type="checkbox" name="fdata" data-name="show_bookmark"[SITE_BMARKS]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowPhotos]</strong>
+                                <label class="switch">
+                                    <input id="show-photo" type="checkbox" name="fdata" data-name="show_photo"[SITE_PHOTOS]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowLocations]</strong>
+                                <label class="switch">
+                                    <input id="show-location" type="checkbox" name="fdata" data-name="show_location"[SITE_PLACES]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowQuotation]</strong>
+                                <label class="switch">
+                                    <input id="show-quotation" type="checkbox" name="fdata" data-name="show_quotation"[SITE_QUOTES]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
 
-                                <h4>[lblSettingsS3]</h4>
-                                <p class="single-post__site-descr">
-                                    <label class="switch-label" for="site-font-family">[lblSettingsSiteFontFamily]</label>
-                                    <select id="site-font-family" class="settings-half" name="font-family" aria-required="true">
-                                        <option value="font-family.auto"[FAMILY_AUTO]>[optFontFamilyAuto]</option>
-                                        <option value="font-family.lato"[FAMILY_LATO]>[optFontFamilyLato]</option>
-                                        <option value="font-family.librebaskerville"[FAMILY_LIBRE]>[optFontFamilyLibreBaskerville]</option>
-                                        <option value="font-family.open-sans"[FAMILY_OPENSANS]>[optFontFamilyOpenSans]</option>
-                                        <option value="font-family.quicksand"[FAMILY_QSAND]>[optFontFamilyQuicksand]</option>
-                                        <option value="font-family.ubuntu"[FAMILY_UBUNTU]>[optFontFamilyUbuntu]</option>
-                                    </select>
-                                </p>
+                            <h4>[lblSettingsS3]</h4>
+                            <p class="single-post__site-descr">
+                                <label class="switch-label" for="site-font-family">[lblSettingsSiteFontFamily]</label>
+                                <select id="site-font-family" class="settings-half" name="fdata" data-name="font_family" aria-required="true">
+                                    <option value="font-family.auto"[FAMILY_AUTO]>[optFontFamilyAuto]</option>
+                                    <option value="font-family.lato"[FAMILY_LATO]>[optFontFamilyLato]</option>
+                                    <option value="font-family.librebaskerville"[FAMILY_LIBRE]>[optFontFamilyLibreBaskerville]</option>
+                                    <option value="font-family.open-sans"[FAMILY_OPENSANS]>[optFontFamilyOpenSans]</option>
+                                    <option value="font-family.quicksand"[FAMILY_QSAND]>[optFontFamilyQuicksand]</option>
+                                    <option value="font-family.ubuntu"[FAMILY_UBUNTU]>[optFontFamilyUbuntu]</option>
+                                </select>
+                            </p>
 
-                                <p class="single-post__site-descr">
-                                    <label class="switch-label" for="site-font-size">[lblSettingsSiteFontSize]</label>
-                                    <select id="site-font-size" class="settings-half" name="font-size" aria-required="true">
-                                        <option value="font-size.xs"[FSIZE_XS]>[optFontFontSizeXS]</option>
-                                        <option value="font-size.sm"[FSIZE_SM]>[optFontFontSizeSM]</option>
-                                        <option value="font-size.md"[FSIZE_MD]>[optFontFontSizeMD]</option>
-                                        <option value="font-size.lg"[FSIZE_LG]>[optFontFontSizeLG]</option>
-                                        <option value="font-size.xl"[FSIZE_XL]>[optFontFontSizeXL]</option>
-                                        <option value="font-size.xx"[FSIZE_XX]>[optFontFontSizeXX]</option>
-                                    </select>
-                                </p>
+                            <p class="single-post__site-descr">
+                                <label class="switch-label" for="site-font-size">[lblSettingsSiteFontSize]</label>
+                                <select id="site-font-size" class="settings-half" name="fdata" data-name="font_size" aria-required="true">
+                                    <option value="font-size.xs"[FSIZE_XS]>[optFontFontSizeXS]</option>
+                                    <option value="font-size.sm"[FSIZE_SM]>[optFontFontSizeSM]</option>
+                                    <option value="font-size.md"[FSIZE_MD]>[optFontFontSizeMD]</option>
+                                    <option value="font-size.lg"[FSIZE_LG]>[optFontFontSizeLG]</option>
+                                    <option value="font-size.xl"[FSIZE_XL]>[optFontFontSizeXL]</option>
+                                    <option value="font-size.xx"[FSIZE_XX]>[optFontFontSizeXX]</option>
+                                </select>
+                            </p>
 
-                                <p class="single-post__site-descr">
-                                    <label class="switch-label" for="site-color">[lblSettingsSiteColor]</label>
-                                    <select id="site-color" class="settings-half" name="site-color" aria-required="true">
-                                        <option value="theme.auto"[THEME_AUTO]>[optThemeAuto]</option>
-                                        <option value="theme.dark"[THEME_DARK]>[optThemeDark]</option>
-                                        <option value="theme.light"[THEME_LIGHT]>[optThemeLight]</option>
-                                    </select>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsPrivateSite]</strong>
-                                    <label class="switch">
-                                        <input id="site-locked" type="checkbox" onclick="toggleSitePassword(this);" name="site-locked"[SITE_LOCKED]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__site-details">
-                                    <input id="site-pass" type="text" class="fullwide hidden" name="site-pass" size="30" aria-required="true" value="[SITE_PASS]" placeholder="[lblSettingsSitePassPH]">
-                                </p>
+                            <p class="single-post__site-descr">
+                                <label class="switch-label" for="site-color">[lblSettingsSiteColor]</label>
+                                <select id="site-color" class="settings-half" name="fdata" data-name="site_color" aria-required="true">
+                                    <option value="theme.auto"[THEME_AUTO]>[optThemeAuto]</option>
+                                    <option value="theme.dark"[THEME_DARK]>[optThemeDark]</option>
+                                    <option value="theme.light"[THEME_LIGHT]>[optThemeLight]</option>
+                                </select>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsPrivateSite]</strong>
+                                <label class="switch">
+                                    <input id="site-locked" type="checkbox" onclick="toggleSitePassword(this);" name="fdata" data-name="site_locked"[SITE_LOCKED]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <input id="site-pass" type="text" class="fullwide hidden" name="fdata" data-name="site_pass" size="30" aria-required="true" value="[SITE_PASS]" placeholder="[lblSettingsSitePassPH]">
+                            </p>
 
-                                <h4>[lblSettingsS4]</h4>
-                                <p class="single-post__site-details">
-                                    <strong class="switch-label">[lblSettingsShowGeo]</strong>
-                                    <label class="switch">
-                                        <input id="show-geo" type="checkbox" name="show-geo"[SITE_GEO]>
-                                        <span class="slider round"></span>
-                                    </label>
-                                </p>
-                                <p class="single-post__contact-submit">
-                                    <input id="contact-submit" type="submit" name="contact-submit" size="30" value="[btnSettingsSave]">
-                                    <input type="hidden" name="channel_guid" value="[CHANNEL_GUID]">
-                                    <input type="hidden" name="token" value="[TOKEN]">
-                                    <input type="hidden" name="web-req" value="Y">
-                                </p>
-                                <p>&nbsp;</p>
-                            </form>
+                            <h4>[lblSettingsS4]</h4>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowGeo]</strong>
+                                <label class="switch">
+                                    <input id="show-geo" type="checkbox" name="fdata" data-name="show_geo"[SITE_GEO]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__site-details">
+                                <strong class="switch-label">[lblSettingsShowGlobal]</strong>
+                                <label class="switch">
+                                    <input id="show-global" type="checkbox" name="fdata" data-name="show_global"[SITE_GLOBAL]>
+                                    <span class="slider round"></span>
+                                </label>
+                            </p>
+                            <p class="single-post__contact-submit">
+                                <button class="btn btn-save btn-primary" onclick="saveSiteData();">[btnSettingsSave]</button>
+                                <input type="hidden" name="fdata" data-name="channel_guid" value="[CHANNEL_GUID]">
+                            </p>
+                            <p>&nbsp;</p>
                         </div>
                     </div>
                 </div>

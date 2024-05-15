@@ -106,6 +106,53 @@ function getMetaValue( name ) {
     }
     return '';
 }
+function disableButtons(cls, disable = true) {
+    if ( disable === undefined || disable === null || disable !== false ) { disable = true; }
+    if ( cls === undefined || cls === false || cls === null || cls == '') { return; }
+    var btns = document.getElementsByClassName(cls);
+    for ( let e = 0; e < btns.length; e++ ) {
+        if ( disable ) {
+            if ( btns[e].disabled === false ) { btns[e].disabled = true; }
+        } else {
+            if ( btns[e].disabled ) { btns[e].disabled = false; }
+        }
+    }
+}
+function spinButtons(cls, reset = false) {
+    if ( cls === undefined || cls === false || cls === null || cls == '') { return; }
+    var btns = document.getElementsByClassName(cls);
+    for ( var e = 0; e < btns.length; e++ ) {
+        spinButton(btns[e], reset);
+    }
+}
+function spinButton(btn, reset = false) {
+    if ( btn === undefined || btn === false || btn === null ) { return; }
+    if ( btn.tagName.toLowerCase() != 'button' ) { return; }
+    var _txt = NoNull(btn.innerHTML);
+    var _lbl = NoNull(btn.getAttribute('data-label'));
+    if ( _lbl == '' ) {
+        _lbl = NoNull(btn.innerHTML);
+        btn.setAttribute('data-label', _lbl);
+    }
+
+    /* Set the button "spinning", or return the original label text */
+    if ( reset || _txt == '<i class="fas fa-spin fa-spinner"></i>' ) {
+        if ( NoNull(btn.getAttribute('data-primary')) == 'Y' ) {
+            btn.setAttribute('data-primary', 'N');
+            btn.classList.add('btn-primary');
+        }
+        btn.innerHTML = _lbl;
+        btn.disabled = false;
+
+    } else {
+        if ( btn.classList.contains('btn-primary') ) {
+            btn.setAttribute('data-primary', 'Y');
+            btn.classList.remove('btn-primary');
+        }
+        btn.innerHTML = '<i class="fas fa-spin fa-spinner"></i>';
+        btn.disabled = true;
+    }
+}
 
 /** ************************************************************************* *
  *  Startup
@@ -177,6 +224,7 @@ document.onreadystatechange = function () {
         togglePostType();
         togglePostEdit();
         getMessageList();
+        watchSiteData();
         prepNewPost();
 
         var els = document.getElementsByName('site-locked');
@@ -1609,6 +1657,72 @@ function toggleAudioSeek(file_id, secs) {
         if ( val > parseInt(sld.max) ) { val = parseInt(sld.max); }
         seekAudio(file_id, val);
         sld.value = val;
+    }
+}
+
+/** ************************************************************************* *
+ *  Site Configuration Functions
+ ** ************************************************************************* */
+function watchSiteData() {
+    var _path = NoNull(window.location.pathname).replaceAll('/', '').toLowerCase();
+    if ( _path == 'settings' ) {
+        var _isValid = validateSiteData();
+
+        disableButtons('btn-save', ((_isValid) ? false : true));
+        setTimeout(function () { watchSiteData(); }, 333);
+    }
+}
+function validateSiteData() {
+    var _cnt = 0;
+
+    var els = document.getElementsByName('fdata');
+    for ( let e = 0; e < els.length; e++ ) {
+        var _req = NoNull(els[e].getAttribute('data-required')).toUpperCase();
+        if ( _req == 'Y' ) {
+            var _min = parseInt(NoNull(els[e].getAttribute('data-minlength'), '0'));
+            if ( _min === undefined || _min === null || isNaN(_min) || _min < 1 ) { _min = 1; }
+
+            var _val = NoNull(els[e].value);
+            if ( NoNull(_val).length < _min ) { _cnt++; }
+        }
+    }
+
+    /* If everything is good, return a happy boolean */
+    return (_cnt > 0) ? false : true;
+}
+function saveSiteData() {
+    if ( validateSiteData() ) {
+        var _params = {};
+        var els = document.getElementsByName('fdata');
+        for ( let e = 0; e < els.length; e++ ) {
+            var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+            if ( NoNull(_name).length > 0 ) {
+                switch ( NoNull(els[e].tagName).toLowerCase() ) {
+                    case 'input':
+                        if ( NoNull(els[e].type).toLowerCase() == 'checkbox' ) {
+                            _params[_name] = ((els[e].checked === true) ? 'Y' : 'N');
+                        } else {
+                            _params[_name] = NoNull(els[e].value);
+                        }
+                        break;
+
+                    default:
+                        _params[_name] = NoNull(els[e].value);
+                }
+            }
+        }
+
+        setTimeout(function () { doJSONQuery('site/set', 'POST', _params, parseSiteData); }, 250);
+        spinButtons('btn-save');
+        console.log(_params);
+    }
+}
+function parseSiteData( data ) {
+    spinButtons('btn-save', true);
+
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+        console.log(ds);
     }
 }
 

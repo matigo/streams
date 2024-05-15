@@ -29,6 +29,7 @@ BEGIN
            ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
            (SELECT z.`guid` FROM `Client` z
              WHERE z.`is_deleted` = 'N' and z.`is_active` = 'Y' and z.`name` = 'Default Client') as `client_guid`,
+           'Y' as `show_global`,
            'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'N' as `show_photo`, 'Y' as `show_quotation`,
            si.`version` as `site_version`, si.`updated_at` as `site_updated_at`, 'auto' as `site_color`,
            lu.`is_active` as `url_active`, UNIX_TIMESTAMP(lu.`updated_at`) as `url_ua`,
@@ -50,6 +51,7 @@ BEGIN
            '' as `page_title`, 'website' as `page_type`,
            ch.`name` as `channel_name`, ch.`guid` as `channel_guid`, ch.`id` as `channel_id`, ch.`privacy_type` as `channel_privacy`,
            '' as `client_guid`,
+           'Y' as `show_global`,
            'N' as `show_geo`, 'N' as `show_note`, 'Y' as `show_article`, 'Y' as `show_bookmark`, 'Y' as `show_location`, 'N' as `show_photo`, 'Y' as `show_quotation`,
            '0' as `site_version`, Now() as `site_updated_at`, 'auto' as `site_color`,
            'Y' as `url_active`, 0 as `url_ua`,
@@ -115,6 +117,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS meta;
     CREATE TEMPORARY TABLE meta AS
     SELECT zz.`site_id`,
+           MAX(zz.`show_global`) as `show_global`,
            MAX(zz.`show_geo`) as `show_geo`,
            MAX(zz.`show_article`) as `show_article`,
            MAX(zz.`show_bookmark`) as `show_bookmark`,
@@ -141,6 +144,7 @@ BEGIN
            MAX(zz.`rss_cat_3`) as `rss_cat_3`,
            MAX(zz.`rss_sub_3`) as `rss_sub_3`
       FROM (SELECT sm.`site_id`,
+                   CASE WHEN sm.`key` = 'show_global' THEN sm.`value` ELSE 'Y' END as `show_global`,
                    CASE WHEN sm.`key` = 'show_geo' THEN sm.`value` ELSE 'N' END as `show_geo`,
                    CASE WHEN sm.`key` = 'show_article' THEN sm.`value` ELSE 'N' END as `show_article`,
                    CASE WHEN sm.`key` = 'show_bookmark' THEN sm.`value` ELSE 'N' END as `show_bookmark`,
@@ -179,6 +183,7 @@ BEGIN
            tmp.`is_default`, tmp.`client_guid`,
            tmp.`summary`, IFNULL(tmp.`page_title`, tmp.`site_name`) as `page_title`, IFNULL(tmp.`page_type`, 'website') as `page_type`,
            tmp.`channel_name`, tmp.`channel_guid`, tmp.`channel_id`, tmp.`channel_privacy`,
+           IFNULL(meta.`show_global`, tmp.`show_global`) as `show_global`,
            IFNULL(meta.`show_geo`, tmp.`show_geo`) as `show_geo`,
            IFNULL(meta.`show_note`, tmp.`show_note`) as `show_note`,
            IFNULL(meta.`show_article`, tmp.`show_article`) as `show_article`,

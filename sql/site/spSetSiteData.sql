@@ -7,7 +7,7 @@ CREATE PROCEDURE SetSiteData( IN `in_account_id` int(11), IN `in_channel_guid` c
                               IN `in_privacy_type` varchar(64), IN `in_site_pass` varchar(2048),
                               IN `in_show_geo` char(1), IN `in_show_note` char(1), IN `in_show_blog` char(1),
                               IN `in_show_bookmark` char(1), IN `in_show_location` char(1), IN `in_show_quote` char(1),
-                              IN `in_show_photo` char(1)
+                              IN `in_show_photo` char(1), IN `in_show_global` char(1)
                              )
 BEGIN
     DECLARE `x_can_edit` tinyint;
@@ -22,7 +22,7 @@ BEGIN
                                 'visibility.public', '',
                                 'N', 'N', 'Y',
                                 'N', 'N', 'Y',
-                                'Y');
+                                'Y', 'Y');
      ** ********************************************************************** **/
 
     /* Determine if the Channel / Account Combination is Valid */
@@ -37,22 +37,23 @@ BEGIN
            si.`name` = LEFT(`in_site_name`, 128),
            si.`description` = LEFT(`in_site_descr`, 255),
            si.`keywords` = LEFT(`in_site_keys`, 255),
-           si.`version` = UNIX_TIMESTAMP(Now()),
-           si.`updated_at` = Now(),
-           ch.`updated_at` = Now()
+           si.`version` = ROUND(UNIX_TIMESTAMP(CURRENT_TIMESTAMP)),
+           si.`updated_at` = CURRENT_TIMESTAMP,
+           ch.`updated_at` = CURRENT_TIMESTAMP
      WHERE ch.`guid` = `in_channel_guid` and si.`account_id` = `in_account_id`;
 
     /* Set the Site's visibility metadata */
     INSERT INTO `SiteMeta` (`site_id`, `key`, `value`)
     SELECT si.`id` as `site_id`, tmp.`key`, CASE WHEN tmp.`value` = 'Y' THEN 'Y' ELSE 'N' END as `value`
       FROM `Channel` ch INNER JOIN `Site` si ON ch.`site_id` = si.`id`
-                        INNER JOIN (SELECT 'show_geo' as `key`, `in_show_geo` as `value` UNION ALL
-                                    SELECT 'show_note' as `key`, `in_show_note` as `value` UNION ALL
-                                    SELECT 'show_article' as `key`, `in_show_blog` as `value` UNION ALL
-                                    SELECT 'show_bookmark' as `key`, `in_show_bookmark` as `value` UNION ALL
-                                    SELECT 'show_location' as `key`, `in_show_location` as `value` UNION ALL
-                                    SELECT 'show_photo' as `key`, `in_show_photo` as `value` UNION ALL
-                                    SELECT 'show_quotation' as `key`, `in_show_quote` as `value`) tmp
+                        INNER JOIN (SELECT 'show_global' as `key`, CASE WHEN UPPER(`in_show_global`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_geo' as `key`, CASE WHEN UPPER(`in_show_geo`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_note' as `key`, CASE WHEN UPPER(`in_show_note`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_article' as `key`, CASE WHEN UPPER(`in_show_blog`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_bookmark' as `key`, CASE WHEN UPPER(`in_show_bookmark`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_location' as `key`, CASE WHEN UPPER(`in_show_location`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_photo' as `key`, CASE WHEN UPPER(`in_show_photo`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value` UNION ALL
+                                    SELECT 'show_quotation' as `key`, CASE WHEN UPPER(`in_show_quote`) IN ('Y','1') THEN 'Y' ELSE 'N' END as `value`) tmp
      WHERE ch.`guid` = `in_channel_guid` and si.`account_id` = `in_account_id`
         ON DUPLICATE KEY UPDATE `value` = CASE WHEN tmp.`value` = 'Y' THEN 'Y' ELSE 'N' END,
                                 `updated_at` = Now();

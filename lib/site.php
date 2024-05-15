@@ -234,6 +234,7 @@ class Site {
                                                             'cacheable'       => YNBool(NoNull($Row['cacheable'], 'Y')),
 
                                                             'can_edit'        => YNBool($Row['can_edit']),
+                                                            'show_global'     => YNBool(NoNull($Row['show_global'], 'Y')),
                                                             'show_geo'        => YNBool($Row['show_geo']),
                                                             'show_note'       => YNBool($Row['show_note']),
                                                             'show_article'    => YNBool($Row['show_article']),
@@ -444,6 +445,7 @@ class Site {
                           '[PRIVACY]'      => sqlScrub($Visibility),
                           '[SITE_PASS]'    => sqlScrub($SitePass),
 
+                          '[SHOW_GLOBAL]'  => BoolYN(YNBool(NoNull($this->settings['show_global'], NoNull($this->settings['show-global'], 'Y')))),
                           '[SHOW_GEO]'     => BoolYN(YNBool(NoNull($this->settings['show_geo'], $this->settings['show-geo']))),
                           '[SHOW_NOTE]'    => BoolYN(YNBool(NoNull($this->settings['show_note'], $this->settings['show-note']))),
                           '[SHOW_BLOG]'    => BoolYN(YNBool(NoNull($this->settings['show_article'], $this->settings['show-article']))),
@@ -455,7 +457,7 @@ class Site {
         $sqlStr = prepSQLQuery("CALL SetSiteData( [ACCOUNT_ID], '[CHANNEL_GUID]',
                                                  '[SITE_NAME]', '[SITE_DESCR]', '[SITE_KEYS]', '[SITE_THEME]', '[SITE_COLOR]', '[SITE_FFAMILY]', '[SITE_FSIZE]',
                                                  '[PRIVACY]', '[SITE_PASS]',
-                                                 '[SHOW_GEO]', '[SHOW_NOTE]', '[SHOW_BLOG]', '[SHOW_BKMK]', '[SHOW_LOCS]', '[SHOW_QUOT]', '[SHOW_PHOT]');", $ReplStr);
+                                                 '[SHOW_GEO]', '[SHOW_NOTE]', '[SHOW_BLOG]', '[SHOW_BKMK]', '[SHOW_LOCS]', '[SHOW_QUOT]', '[SHOW_PHOT]', '[SHOW_GLOBAL]');", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
@@ -465,13 +467,13 @@ class Site {
             }
         }
 
-        // If This is a Web Request, Redirect the Visitor
+        /* If This is a Web Request, Redirect the Visitor */
         if ( $isWebReq ) { redirectTo($this->settings['HomeURL'], $this->settings); }
 
-        // Get the Updated Information
+        /* Get the Updated Information */
         $rVal = $this->_getSiteData();
 
-        // Return the Information
+        /* Return the Information */
         return $rVal;
     }
 

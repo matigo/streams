@@ -1,6 +1,6 @@
 <?php
 
-define('APP_VER', '24A311');                                            // The Application Version
-define('GENERATOR', 'Streams v1.1');                                    // Generator Name
+define('APP_VER', '24E160');                                            // The Application Version
+define('GENERATOR', 'Streams v1.2');                                    // Generator Name
 
 ?>

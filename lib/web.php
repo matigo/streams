@@ -950,6 +950,7 @@ class Route extends Streams {
                                       '[ACCT_MAIL]'    => strtolower(NoNull($Row['email'], $this->settings['_email'])),
                                       '[TIMEZONES]'    => $this->_getTimezoneList(),
 
+                                      '[SITE_GLOBAL]'  => (YNBool(NoNull($Row['show_global'], 'Y')) ? ' checked' : ''),
                                       '[SITE_GEO]'     => (YNBool($Row['show_geo']) ? ' checked' : ''),
                                       '[SHOW_NOTE]'    => (YNBool($Row['show_reminder']) ? ' checked' : ''),
 
@@ -979,6 +980,7 @@ class Route extends Streams {
                               '[SITE_PLACES]'  => $this->_checkboxValue($data, 'show_location'),
                               '[SITE_PHOTOS]'  => $this->_checkboxValue($data, 'show_photo'),
                               '[SITE_QUOTES]'  => $this->_checkboxValue($data, 'show_quotation'),
+                              '[SITE_GLOBAL]'  => $this->_checkboxValue($data, 'show_global'),
                               '[SITE_GEO]'     => $this->_checkboxValue($data, 'show_geo'),
                               '[SITE_LOCKED]'  => (($SitePass != '') ? ' checked' : ''),
                               '[SITE_PASS]'    => $SitePass,

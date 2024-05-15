@@ -62,7 +62,8 @@ BEGIN
     CREATE TEMPORARY TABLE tmpPosts AS
     SELECT DISTINCT po.`id` as `post_id`,
            CAST(CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 2 HOUR) THEN GREATEST(po.`publish_at`, po.`updated_at`) ELSE IFNULL(po.`publish_at`, '2000-01-01 00:00:00') END AS DATETIME) as `posted_at`,
-           LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+           LEAST(IFNULL(gg.`value`, 'Y'),
+                 CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
                  CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
@@ -77,6 +78,7 @@ BEGIN
                         INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                         INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
+                   LEFT OUTER JOIN `SiteMeta` gg ON gg.`is_deleted` = 'N' and gg.`key` = 'show_global' and gg.`site_id` = si.`id`
                    LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
                    LEFT OUTER JOIN (SELECT pm.`post_id`, 'Y' as `is_mention`
                                       FROM `PostMention` pm INNER JOIN `Persona` pa ON pm.`persona_id` = pa.`id`
@@ -91,7 +93,8 @@ BEGIN
         INSERT INTO tmpPosts (`post_id`, `posted_at`, `is_visible`)
         SELECT DISTINCT po.`id` as `post_id`,
                GREATEST(po.`publish_at`, CAST(CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 1 DAY) THEN po.`updated_at` ELSE '2000-01-01 00:00:00' END AS DATETIME)) as `posted_at`,
-               LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+               LEAST(IFNULL(gg.`value`, 'Y'),
+                     CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                           WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                           ELSE 'N' END,
                      CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
@@ -106,6 +109,7 @@ BEGIN
                             INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                             INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                             INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
+                       LEFT OUTER JOIN `SiteMeta` gg ON gg.`is_deleted` = 'N' and gg.`key` = 'show_global' and gg.`site_id` = si.`id`
                        LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
          WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
            and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
