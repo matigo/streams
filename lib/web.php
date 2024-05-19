@@ -121,6 +121,7 @@ class Route extends Streams {
                     case 'account':
                     case 'export':
                     case 'write':
+                    case 'admin':
                         if ( NoNull($this->settings['_access_level'], 'read') != 'write' ) {
                             $this->settings['status'] = 403;
                             redirectTo( $data['protocol'] . '://' . $data['HomeURL'] . '/403', $this->settings );
@@ -134,7 +135,7 @@ class Route extends Streams {
 
             /* Are We NOT Signed In and Accessing Something That Requires Being Signed In? */
             if ( $this->settings['_logged_in'] === false ) {
-                $checks = array('write', 'export', 'account', 'syndication', 'settings', 'messages');
+                $checks = array('admin', 'write', 'export', 'account', 'syndication', 'settings', 'messages');
                 $route = strtolower($this->settings['PgRoot']);
 
                 if ( in_array($route, $checks) ) {

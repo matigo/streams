@@ -128,7 +128,8 @@ BEGIN
            IFNULL((SELECT m.`value` FROM `AccountMeta` m
                     WHERE m.`is_deleted` = 'N' and m.`key` = 'preference.contact.mail'
                       and m.`account_id` = a.`id`), 'N') as `pref_contact_mail`,
-           (SELECT CASE WHEN MAX(ca.`can_write`) = 'Y' THEN 'write'
+           (SELECT CASE WHEN ch.`account_id` = pa.`account_id` THEN 'write'
+                        WHEN MAX(ca.`can_write`) = 'Y' THEN 'write'
                         WHEN MAX(ca.`can_read`) = 'Y' THEN 'read'
                         ELSE 'none' END as `access`
               FROM `SiteUrl` su INNER JOIN `Channel` ch ON su.`site_id` = ch.`site_id`
