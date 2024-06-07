@@ -235,25 +235,44 @@ img {
     padding: 2px;
     max-width: calc(100% - 5px);
 }
+pre {
+    color: var(--text-color, #586e75);
+    font-family: 'Ubuntu', -apple-system, 'メイリオ', 'Meiryo', 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif;
+    white-space: pre-wrap;
+    word-wrap: normal;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+pre.mono {
+    font-family: 'Ubuntu Mono', monospace;
+}
 
 /** ************************************************************************* *
  *  Key Classes
  ** ************************************************************************* */
 .nopadding { padding: 0; }
 .nomargin { margin: 0; }
+.pointer { cursor: pointer; }
 .hidden { display: none; }
 
 /** ************************************************************************* *
  *  Navigation
  ** ************************************************************************* */
 nav {
+    background-color: var(--background-color, #fff);
+    border-bottom: 2px solid var(--border-color, #ccc);
     display: block;
     text-align: right;
     vertical-align: middle;
-    margin: 10px auto 15px;
+    position: fixed;
+    padding: 10px 0 5px;
+    margin: 0 auto;
     min-height: 40px;
     max-width: 980px;
     width: calc(100vw - 2em);
+    right: 0;
+    left: 0;
+    top: 0;
 }
 
 nav button,
@@ -272,13 +291,13 @@ nav button {
     color: var(--link-text, #268bd2);
     font-size: 18px;
     padding: 0 5px;
-    margin: 8px 3px 0;
-}
-nav button:hover {
-    border-bottom-color: var(--link-text, #268bd2);
-    font-weight: bold;
+    margin: 8px 0 0 15px;
 }
 nav h1 { float: left; }
+nav .fas {
+    font-size: 1.25em;
+    margin: 0 0.5em;
+}
 
 /** ************************************************************************* *
  *  Messages
@@ -297,7 +316,7 @@ nav h1 { float: left; }
  ** ************************************************************************* */
 section {
     display: block;
-    margin: 0 auto;
+    margin: 75px auto 25px;
     max-width: 980px;
     width: calc(100vw - 2em);
 }
@@ -355,6 +374,68 @@ section .account-form label input {
     margin: 0 0 0 0.5em;
     width: calc(100% - 10em);
 }
+section .fade,
+section.fade { opacity: 0.25; }
+
+/** ************************************************************************* *
+ *  Authoring
+ ** ************************************************************************* */
+section.authoring {
+    background-color: var(--background-color, #fff);
+    border: 2px solid var(--border-color, #ccc);
+    border-radius: 25px;
+    position: fixed;
+    right: 0;
+    left: 0;
+    top: 100px;
+    z-index: 1000;
+}
+section.authoring h3 {
+    padding: 0.25em 0.5em;
+    margin: 0.5em auto;
+    width: calc(100% - 1em);
+}
+section.authoring h3 span { vertical-align: middle; }
+section.authoring h3 button {
+    background-color: transparent;
+    font-size: 1.25em;
+    vertical-align: middle;
+    padding: 0 0.25em;
+    margin: 0;
+    float: right;
+}
+section.authoring pre {
+    border: 1px solid var(--border-color, #ccc);
+    display: block;
+    padding: 0.25em 0.5em;
+    margin: 0 auto 0.25em;
+    max-height: 80vh;
+    min-height: 4.5em;
+    width: calc(100% - 2em);
+}
+
+section.authoring pre[placeholder]:empty::before
+section.authoring pre:empty:not(:focus):before {
+    content: attr(data-placeholder);
+    color: var(--placeholder-color, #93a1a1);
+    font-style: italic;
+    text-align: center;
+}
+section.authoring pre[placeholder]:empty:focus::before { content: ""; }
+
+section.authoring div {
+    display: block;
+    padding: 0;
+    margin: 0 auto 0.5em;
+    width: calc(100% - 1em);
+}
+section.authoring div button {
+    font-size: 1em;
+}
+section.authoring div span {
+    float: right;
+    vertical-align: middle;
+}
 
 /** ************************************************************************* *
  *  Articles
@@ -373,6 +454,12 @@ article div.authorship p {
     display: inline-block;
     width: 100%;
     margin: 0;
+}
+article div.authorship p.meta { display: block; }
+article div.authorship p.meta .fa {
+    font-size: 0.8em;
+    vertical-align: middle;
+    margin: 0 0.333em 0 0;
 }
 article div.authorship span {
     display: inline-block;
@@ -447,7 +534,7 @@ article .publish-at {
 article .post-content {
     display: block;
     margin: 0 0 0 1.5em;
-    border-left: 3px solid var(--border-color);
+    border-left: 3px solid var(--border-color, #ccc);
     padding: 0 0 0 2em;
     width: calc(100% - 5em);
     vertical-align: text-top;
@@ -457,3 +544,11 @@ article .post-content p {
     padding: 0 0 0.85em;
     margin: 0;
 }
+article .post-content blockquote {
+    border-left: 0.333em solid var(--border-color, #ccc);
+    display: block;
+    margin: 0 0 0.5em;
+    padding: 0.5em 1em 0.5em 0.75em;
+    width: calc(100% - 2em);
+}
+article .post-content blockquote p:last-child { padding: 0; }

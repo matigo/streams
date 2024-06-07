@@ -39,14 +39,17 @@ document.onreadystatechange = function () {
 /** ************************************************************************ **
  *      Watch Functions
  ** ************************************************************************ */
-function watchFormInput() {
-    var _isValid = validateData();
+function watchAuthorInput() {
+    var els = document.getElementsByName('fdata');
+    if ( els.length > 0 ) {
+        var _isValid = validatePostData();
 
-    /* Set the status of the Save button */
-    disableButtons('btn-save', ((_isValid) ? false : true));
+        /* Set the status of the Save button */
+        disableButtons('btn-publish', ((_isValid) ? false : true));
 
-    /* Check again after a pause */
-    setTimeout(function () { watchFormInput(); }, 333);
+        /* Check again after a pause */
+        setTimeout(function () { watchAuthorInput(); }, 333);
+    }
 }
 
 function watchSignIn() {
@@ -95,6 +98,14 @@ function handleButtonAction(el) {
                 buildSignIn();
                 break;
 
+            case 'nav-settings':
+                handleSettings(el);
+                break;
+
+            case 'nav-write':
+                handleWrite(el);
+                break;
+
             case 'toggle':
                 toggleButton(el);
                 if ( el.classList.contains('has-changes') === false ) { el.classList.add('has-changes'); }
@@ -137,28 +148,33 @@ function getPageContent() {
 }
 
 function setPageButtons() {
-    var _token = getMetaValue('authorization');
-    if ( NoNull(_token).length < 36 ) {
-        var _btns = ['signup', 'about', 'login'];
-        var els = document.getElementsByTagName('NAV');
-        for ( let e = 0; e < els.length; e++ ) {
-            for ( let _idx in _btns ) {
-                var _btn = buildElement({ 'tag': 'button',
-                                          'classes': ['button-action'],
-                                          'attribs': [{'key':'data-action','value':'nav-' + _btns[_idx]}],
-                                          'text': NoNull(window.strings['btn.' + _btns[_idx]], _btns[_idx])
-                                         });
-                    _btn.addEventListener('touchend', function(e) { handleButtonAction(e); });
-                    _btn.addEventListener('click', function(e) { handleButtonAction(e); });
-                els[e].appendChild(_btn);
-            }
-        }
+    var _hasAuth = ((NoNull(getMetaValue('authorization')).length > 36) ? true : false);
+    var els = document.getElementsByTagName('NAV');
 
+    /* Determine the button list to display */
+    var _btns = [{'action': 'nav-signup', 'text': NoNull(window.strings['btn.signup'], 'Join') },
+                 {'action': 'nav-about', 'text': NoNull(window.strings['btn.about'], 'FAQ') },
+                 {'action': 'nav-login', 'text': NoNull(window.strings['btn.login'], 'Connect') }
+                 ];
+    if ( _hasAuth ) {
+        _btns = [{'action': 'nav-settings', 'icon': 'fa-user-gear' },
+                 {'action': 'nav-write', 'icon': 'fa-pen-to-square' }
+                 ];
+    }
+
+    /* Set the Menu items */
+    for ( let e = 0; e < els.length; e++ ) {
+        for ( let _idx in _btns ) {
+            var _btn = buildElement({ 'tag': 'button', 'classes': ['button-action', 'nav-button'] });
+            if ( _btns[_idx].action !== undefined && NoNull(_btns[_idx].action).length > 0 ) { _btn.setAttribute('data-action', NoNull(_btns[_idx].action).toLowerCase()); }
+            if ( _btns[_idx].icon !== undefined && NoNull(_btns[_idx].icon).length > 0 ) { _btn.appendChild(buildElement({ 'tag': 'i', 'classes': ['fas', NoNull(_btns[_idx].icon)] })); }
+            if ( _btns[_idx].text !== undefined && NoNull(_btns[_idx].text).length > 0 ) { _btn.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(_btns[_idx].text) })); }
+            _btn.addEventListener('touchend', function(e) { handleButtonAction(e); });
+            _btn.addEventListener('click', function(e) { handleButtonAction(e); });
+            els[e].appendChild(_btn);
+        }
     }
 }
-
-
-
 
 /** ************************************************************************ **
  *      Timeline Functions
@@ -231,17 +247,22 @@ function parseTimeline( data ) {
 function buildPostArticle(data) {
     if ( data === undefined || data === null || data === undefined ) { return; }
     if ( data.guid === undefined || NoNull(data.guid).length != 36 ) { return; }
+    var _hasAuth = ((getMetaValue('authorization').length > 30) ? true : false);
 
     var _post = buildElement({ 'tag': 'article', 'classes': [NoNull(data.type).replaceAll('.', '-')] });
 
     /* Build the top section consisting of the avatar, name, time, and (if applicable) visibility */
-    var _top = buildElement({ 'tag': 'div',
-                              'classes': ['authorship'],
-                              'child': buildElement({ 'tag': 'span',
-                                                      'classes': ['avatar'],
-                                                      'attribs': [{'key':'style','value':'background-image:url(' + NoNull(data.persona.avatar) + ')'}]
-                                                     })
-                             });
+    var _top = buildElement({ 'tag': 'div', 'classes': ['authorship'] });
+
+    var _avatar = buildElement({ 'tag': 'span',
+                                 'classes': ['avatar', ((_hasAuth) ? 'pointer' : '')],
+                                 'attribs': [{'key':'data-guid','value':NoNull(data.persona.guid)},
+                                             {'key':'style','value':'background-image:url(' + NoNull(data.persona.avatar) + ')'}
+                                             ]
+                                });
+        _avatar.addEventListener('touchend', function(e) { handleProfileClick(e); });
+        _avatar.addEventListener('click', function(e) { handleProfileClick(e); });
+        _top.appendChild(_avatar);
 
     var _persona = NoNull(data.persona.name);
     if ( NoNull(_persona).toLowerCase() != NoNull(data.persona.as).replaceAll('@', '').toLowerCase() ) {
@@ -316,6 +337,13 @@ function buildPostArticle(data) {
         }
     }
 
+    /* Handle the profile names in the post */
+    var els = _post.getElementsByClassName('account');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('pointer') === false ) { els[e].classList.add('pointer'); }
+        els[e].addEventListener('touchend', function(e) { handleProfileClick(e); });
+        els[e].addEventListener('click', function(e) { handleProfileClick(e); });
+    }
 
     /* Return the element */
     return _post;
@@ -409,6 +437,149 @@ function parseSignIn( data ) {
 }
 
 /** ************************************************************************ **
+ *      Authoring Functions
+ ** ************************************************************************ */
+function validatePostData() {
+    var _chars = 0;
+    var _cnt = 0;
+
+    /* Check the data for completeness */
+    var els = document.getElementsByName('fdata');
+    for ( let e = 0; e < els.length; e++ ) {
+        var _req = NoNull(els[e].getAttribute('data-required')).toUpperCase();
+        if ( _req == 'Y' ) {
+            var _min = parseInt(els[e].getAttribute('data-minlength'));
+            if ( _min === undefined || _min === null || isNaN(_min) || _min <= 0 ) { _min = 1; }
+            if ( NoNull(getElementValue(els[e])).length < _min ) { _cnt++; }
+        }
+
+        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+        switch ( _name ) {
+            case 'content':
+                _chars = NoNull(getElementValue(els[e])).length;
+                break;
+
+            default:
+                /* Do Nothing */
+        }
+    }
+
+    /* Set the Character Length */
+    var els = document.getElementsByClassName('char-count');
+    for ( let e = 0; e < els.length; e++ ) {
+        var _vv = numberWithCommas(_chars);
+        if ( _vv == 0 ) { _vv = '&nbsp;'; }
+        if ( els[e].innerHTML != _vv ) { els[e].innerHTML = _vv; }
+    }
+
+    /* If there are no issues, return a happy boolean. Otherwise, an uphappy boolean */
+    return ((_cnt <= 0) ? true : false);
+}
+function handleWrite(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'button' ) { return; }
+    removeByClass('authoring');
+    hideByClass('nav-button');
+
+    /* Fade the Content */
+    var els = document.getElementsByTagName('section');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('fade') === false ) { els[e].classList.add('fade'); }
+    }
+
+    /* Construct the Authoring Section */
+    var _section = buildElement({ 'tag': 'section', 'classes': ['authoring'] });
+
+    var _close = buildElement({ 'tag': 'button',
+                                'classes': ['button-action'],
+                                'attribs': [{'key':'data-action','value':'authoring-close'}],
+                                'child': buildElement({ 'tag': 'i', 'classes': ['fas', 'fa-circle-xmark'] })
+                               });
+        _close.addEventListener('touchend', function(e) { handleButtonAction(e); });
+        _close.addEventListener('click', function(e) { handleButtonAction(e); });
+    var _head = buildElement({ 'tag': 'h3', 'classes': ['pop-title'] });
+        _head.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(window.strings['lbl.authorng'], 'Write a Post') }));
+        _head.appendChild(_close);
+    _section.appendChild(_head);
+
+    /* Build the editor element */
+    var _editor = buildElement({ 'tag': 'pre',
+                                 'classes': ['form-control', 'editor', 'required'],
+                                 'attribs': [{'key':'name','value':'fdata'},
+                                             {'key':'data-name','value':'content'},
+                                             {'key':'data-required','value':'Y'},
+                                             {'key':'data-minlength','value':'1'},
+                                             {'key':'data-placeholder','value':NoNull(window.strings['ph.editor'], '(What&apos;s on your mind?)')},
+                                             {'key':'placeholder','value':NoNull(window.strings['ph.editor'], '(What&apos;s on your mind?)')},
+                                             {'key':'autocomplete','value':'off'},
+                                             {'key':'contenteditable','value':'plaintext-only'}
+                                             ],
+                                });
+        _section.appendChild(_editor);
+
+    /* Build the Action bar */
+    var _actions = buildElement({ 'tag': 'div', 'classes': ['actions'] });
+
+    var _publish = buildElement({ 'tag': 'button',
+                                  'classes': ['button-action', 'btn-publish', 'btn-primary'],
+                                  'attribs': [{'key':'data-action','value':'publish'}],
+                                  'text': NoNull(window.strings['btn.publish'], 'Publish')
+                                 });
+        _publish.addEventListener('touchend', function(e) { handleButtonAction(e); });
+        _publish.addEventListener('click', function(e) { handleButtonAction(e); });
+        _publish.disabled = true;
+    _actions.appendChild(_publish);
+
+    _actions.appendChild(buildElement({ 'tag': 'span', 'classes': ['char-count'], 'text': '&nbsp;' }));
+    _section.appendChild(_actions);
+
+
+    /* Build the Meta bar */
+    var _meta = buildElement({ 'tag': 'div', 'classes': ['meta'] });
+
+    var _type = buildElement({ 'tag': 'label', 'classes': ['meta-item'] });
+
+    var _type = buildElement({ 'tag': 'select',
+                               'classes': ['form-control'],
+                               'attribs': [{'key':'name','value':'fdata'},
+                                           {'key':'data-name','value':'post-type'},
+                                           {'key':'data-required','value':'Y'}]
+                              });
+
+
+    /* Add the section to the DOM */
+    document.body.appendChild(_section);
+
+    /* Start the Form Watcher */
+    setTimeout(function () { watchAuthorInput(); }, 250);
+}
+
+/** ************************************************************************ **
+ *      Settings Functions
+ ** ************************************************************************ */
+function handleSettings(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'button' ) { return; }
+    hideByClass('nav-button');
+}
+
+/** ************************************************************************ **
+ *      Interaction Functions
+ ** ************************************************************************ */
+function handleProfileClick(el) {
+    if ( el === undefined || el === null || el === false ) { return false; }
+    if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
+    if ( NoNull(el.tagName).toLowerCase() != 'span' ) { return; }
+
+    if ( splitSecondCheck(el) ) {
+        var _guid = NoNull(el.getAttribute('data-guid'));
+        if ( NoNull(_guid).length == 36 ) {
+            console.log(_guid);
+        }
+    }
+}
+
+/** ************************************************************************ **
  *      Additional Functions
  ** ************************************************************************ */
 function getVisibleTypes() {
@@ -439,12 +610,3 @@ function showErrorPage( _code ) {
         els[e].appendChild(buildElement({ 'tag': 'p', 'text': NoNull(_msg) }));
     }
 }
-
-
-
-
-
-
-
-
-
