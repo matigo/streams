@@ -565,10 +565,6 @@ class Posts {
                                                       'keywords'    => NoNull($Row['site_keywords']),
                                                       'url'         => $siteURL
                                                      ),
-                                 'client'   => array( 'guid'    => NoNull($Row['client_guid']),
-                                                      'name'    => NoNull($Row['client_name']),
-                                                      'logo'    => $cdnURL . NoNull($Row['client_logo_img']),
-                                                     ),
 
                                  'can_edit' => ((nullInt($Row['created_by']) == nullInt($this->settings['_account_id'])) ? true : false),
                                 );
@@ -746,10 +742,6 @@ class Posts {
                                                       'description' => NoNull($Row['site_description']),
                                                       'keywords'    => NoNull($Row['site_keywords']),
                                                       'url'         => $siteURL
-                                                     ),
-                                 'client'   => array( 'guid'    => NoNull($Row['client_guid']),
-                                                      'name'    => NoNull($Row['client_name']),
-                                                      'logo'    => $cdnURL . NoNull($Row['client_logo_img']),
                                                      ),
 
                                  'can_edit' => ((nullInt($Row['created_by']) == nullInt($this->settings['_account_id'])) ? true : false),

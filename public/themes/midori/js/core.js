@@ -32,7 +32,7 @@ document.onreadystatechange = function () {
 
         /* Begin the Page Population process */
         setTimeout(function () { setPageButtons(); }, 25);
-        setTimeout(function () { getPageContent(); }, 75);
+        setTimeout(function () { getMyProfile(); }, 75);
     }
 }
 
@@ -98,12 +98,20 @@ function handleButtonAction(el) {
                 buildSignIn();
                 break;
 
-            case 'nav-settings':
-                handleSettings(el);
+            case 'settings-close':
+                handleSettingsClose();
                 break;
 
-            case 'nav-write':
-                handleWrite(el);
+            case 'settings-open':
+                handleSettingsOpen();
+                break;
+
+            case 'authoring-close':
+                handleAuthorClose();
+                break;
+
+            case 'authoring-open':
+                handleAuthorOpen();
                 break;
 
             case 'toggle':
@@ -120,6 +128,25 @@ function handleButtonAction(el) {
 /** ************************************************************************ **
  *      Page Population Functions
  ** ************************************************************************ */
+window.whoami = false;
+
+function getMyProfile() {
+    var _hasAuth = ((NoNull(getMetaValue('authorization')).length > 36) ? true : false);
+    if ( _hasAuth ) {
+        setTimeout(function () { doJSONQuery('account/me', 'GET', {}, parseMyProfile); }, 75);
+    }
+    setTimeout(function () { getPageContent(); }, 250);
+}
+function parseMyProfile( data ) {
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        if ( NoNull(data.data.guid).length == 36 ) { window.whoami = data.data; }
+        console.log(data.data)
+
+    } else {
+        console.log("No profile data returned.");
+    }
+}
+
 function getPageContent() {
     var _view = NoNull(NoNull(window.location.pathname).replaceAll('/', ''), 'global').toLowerCase();
     console.log(_view);
@@ -157,8 +184,8 @@ function setPageButtons() {
                  {'action': 'nav-login', 'text': NoNull(window.strings['btn.login'], 'Connect') }
                  ];
     if ( _hasAuth ) {
-        _btns = [{'action': 'nav-settings', 'icon': 'fa-user-gear' },
-                 {'action': 'nav-write', 'icon': 'fa-pen-to-square' }
+        _btns = [{'action': 'settings-open', 'icon': 'fa-user-gear' },
+                 {'action': 'authoring-open', 'icon': 'fa-pen-to-square' }
                  ];
     }
 
@@ -475,11 +502,11 @@ function validatePostData() {
     /* If there are no issues, return a happy boolean. Otherwise, an uphappy boolean */
     return ((_cnt <= 0) ? true : false);
 }
-function handleWrite(el) {
-    if ( el === undefined || el === null || el === false ) { return; }
-    if ( NoNull(el.tagName).toLowerCase() != 'button' ) { return; }
-    removeByClass('authoring');
+function handleAuthorOpen() {
+    var _hasAuth = ((NoNull(getMetaValue('authorization')).length > 36) ? true : false);
+    if ( _hasAuth === false ) { return; }
     hideByClass('nav-button');
+    removeByClass('modals');
 
     /* Fade the Content */
     var els = document.getElementsByTagName('section');
@@ -488,7 +515,7 @@ function handleWrite(el) {
     }
 
     /* Construct the Authoring Section */
-    var _section = buildElement({ 'tag': 'section', 'classes': ['authoring'] });
+    var _section = buildElement({ 'tag': 'section', 'classes': ['modals', 'authoring'] });
 
     var _close = buildElement({ 'tag': 'button',
                                 'classes': ['button-action'],
@@ -501,6 +528,30 @@ function handleWrite(el) {
         _head.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(window.strings['lbl.authorng'], 'Write a Post') }));
         _head.appendChild(_close);
     _section.appendChild(_head);
+
+    /* Show the Avatar */
+    var _avatar = buildElement({ 'tag': 'article', 'classes': ['persona-avatar', 'persona-selector', 'clickable'] });
+    if ( window.whoami !== undefined && window.whoami !== false ) {
+        var _img = buildElement({ 'tag': 'button',
+                                  'classes': ['avatar'],
+                                  'attribs': [{'key':'style','value':'background-image:url(/avatars/default.png)'}]
+                                 });
+
+        if ( window.whoami.personas !== undefined && window.whoami.personas !== false ) {
+            var _guid = getMetaValue('persona_guid');
+            for ( let i = 0; i < window.whoami.personas.length; i++ ) {
+                if ( window.whoami.personas[i].guid == _guid || _guid.length != 36 ) {
+                    _img.setAttribute('style', 'background-image:url("' + window.whoami.personas[i].avatar_url + '")');
+                    setMetaValue('persona_guid', window.whoami.personas[i].guid);
+                    i += window.whoami.personas.length;
+                }
+            }
+        }
+
+        /* Add the image to the element */
+        _avatar.appendChild(_img);
+    }
+    _section.appendChild(_avatar);
 
     /* Build the editor element */
     var _editor = buildElement({ 'tag': 'pre',
@@ -553,14 +604,80 @@ function handleWrite(el) {
     /* Start the Form Watcher */
     setTimeout(function () { watchAuthorInput(); }, 250);
 }
+function handleAuthorClose() {
+    /* Check to see if there are unsaved changes */
+
+    /* If it's good, close the modal */
+    closeAuthoring();
+}
+function closeAuthoring() {
+    /* Remove the Fades */
+    var els = document.getElementsByClassName('fade');
+    if ( els.length > 0 ) {
+        for ( let e = (els.length - 1); e >= 0; e-- ) {
+            els[e].classList.remove('fade');
+        }
+    }
+
+    /* Ensure the correct elements are removed and/or displayed */
+    removeByClass('authoring');
+    showByClass('nav-button');
+}
 
 /** ************************************************************************ **
  *      Settings Functions
  ** ************************************************************************ */
-function handleSettings(el) {
-    if ( el === undefined || el === null || el === false ) { return; }
-    if ( NoNull(el.tagName).toLowerCase() != 'button' ) { return; }
+function handleSettingsOpen() {
     hideByClass('nav-button');
+    removeByClass('modals');
+
+    /* Fade the Content */
+    var els = document.getElementsByTagName('section');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('fade') === false ) { els[e].classList.add('fade'); }
+    }
+
+    /* Construct the Authoring Section */
+    var _section = buildElement({ 'tag': 'section', 'classes': ['modals', 'settings'] });
+
+    var _close = buildElement({ 'tag': 'button',
+                                'classes': ['button-action'],
+                                'attribs': [{'key':'data-action','value':'settings-close'}],
+                                'child': buildElement({ 'tag': 'i', 'classes': ['fas', 'fa-circle-xmark'] })
+                               });
+        _close.addEventListener('touchend', function(e) { handleButtonAction(e); });
+        _close.addEventListener('click', function(e) { handleButtonAction(e); });
+    var _head = buildElement({ 'tag': 'h3', 'classes': ['pop-title'] });
+        _head.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(window.strings['lbl.settings'], 'Settings') }));
+        _head.appendChild(_close);
+    _section.appendChild(_head);
+
+
+
+
+    /* Add the section to the DOM */
+    document.body.appendChild(_section);
+}
+
+function handleSettingsClose() {
+    /* Is there anything to check/confirm? */
+
+    /* Close the Modal */
+    closeSettings();
+}
+
+function closeSettings() {
+    /* Remove the Fades */
+    var els = document.getElementsByClassName('fade');
+    if ( els.length > 0 ) {
+        for ( let e = (els.length - 1); e >= 0; e-- ) {
+            els[e].classList.remove('fade');
+        }
+    }
+
+    /* Ensure the correct elements are removed and/or displayed */
+    removeByClass('settings');
+    showByClass('nav-button');
 }
 
 /** ************************************************************************ **
@@ -583,7 +700,7 @@ function handleProfileClick(el) {
  *      Additional Functions
  ** ************************************************************************ */
 function getVisibleTypes() {
-    var valids = ['post.article', 'post.bookmark', 'post.note', 'post.quotation', 'post.photo'];
+    var valids = ['post.article', 'post.location', 'post.note', 'post.photo'];
     return valids.join(',');
 }
 

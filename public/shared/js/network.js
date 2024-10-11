@@ -45,7 +45,7 @@ function jsonToQueryString(json) {
     return (data !== undefined && data !== null && data != '' ) ? '?' + data : '';
 }
 function getMetaValue( _name ) {
-    if ( _name === undefined || _name === false || _name === null || NoNull(_name) == '' ) { return ''; }
+    if ( _name === undefined || _name === null || _name === false || NoNull(_name).length <= 0 ) { return ''; }
     var metas = document.getElementsByTagName('meta');
     for (var i = 0; i < metas.length; i++) {
         if ( metas[i].getAttribute("name") == _name ) {
@@ -53,6 +53,16 @@ function getMetaValue( _name ) {
         }
     }
     return '';
+}
+function setMetaValue( _name, _value ) {
+    if ( _value === undefined || _value === null || _value === false ) { _value = ''; }
+    if ( _name === undefined || _name === null || _name === false ) { return; }
+    var metas = document.getElementsByTagName('meta');
+    for ( var i = 0; i < metas.length; i++ ) {
+        if ( metas[i].getAttribute("name") == _name ) {
+            metas[i].setAttribute('content', _value);
+        }
+    }
 }
 function showNetworkStatus( isOnline ) {
     if ( isOnline === undefined || isOnline === null || isOnline !== true ) { isOnline = false; }

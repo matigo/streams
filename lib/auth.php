@@ -283,7 +283,7 @@ class Auth {
             return false;
         }
 
-        if ( mb_strlen($ClientGuid) <> 36 ) {
+        if ( mb_strlen($ClientGuid) > 0 && mb_strlen($ClientGuid) <> 36 ) {
             $this->_setMetaMessage( "Invalid Client GUID Provided", 401 );
             return false;
         }

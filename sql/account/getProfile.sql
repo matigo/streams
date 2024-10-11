@@ -1,5 +1,8 @@
-SELECT a.`id` as `account_id`, a.`last_name`, a.`first_name`, a.`display_name`, a.`language_code`, a.`timezone`,
-       a.`type`, a.`guid`, a.`created_at`, a.`updated_at`
-  FROM `Account` a
- WHERE a.`is_deleted` = 'N' and a.`id` = [ACCOUNT_ID]
+SELECT acct.`id` as `account_id`, acct.`last_name`, acct.`first_name`, acct.`display_name`, acct.`language_code`, acct.`timezone`,
+       acct.`type`, acct.`guid`,
+       CASE WHEN acct.`id` = [ACCOUNT_ID] THEN 'Y' ELSE 'N' END as `is_you`,
+       acct.`created_at`, ROUND(UNIX_TIMESTAMP(acct.`created_at`)) as `created_unix`,
+       acct.`updated_at`, ROUND(UNIX_TIMESTAMP(acct.`updated_at`)) as `updated_unix`
+  FROM `Account` acct
+ WHERE acct.`is_deleted` = 'N' and acct.`id` = [LOOKUP_ID]
  LIMIT 1;

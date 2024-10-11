@@ -29,7 +29,7 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
   FROM `Site` si INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`
                  INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                  INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
-                 INNER JOIN `Client` cl ON po.`client_id` = cl.`id`
+            LEFT OUTER JOIN `Client` cl ON po.`client_id` = cl.`id` AND cl.`is_deleted` = 'N'
             LEFT OUTER JOIN (SELECT pp.`post_id`, pp.`pin_type`, pp.`is_starred`, pp.`is_muted`, pp.`points`
                                FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
                               WHERE pp.`is_deleted` = 'N' and pp.`post_id` IN ([POST_IDS])

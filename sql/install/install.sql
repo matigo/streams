@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS `Tokens` (
     `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
     `guid`          varchar(50)             CHARACTER SET utf8  NOT NULL    ,
     `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
-    `client_id`     int(11)        UNSIGNED                     NOT NULL    ,
+    `client_id`     int(11)        UNSIGNED                         NULL    ,
 
     `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
     `created_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,

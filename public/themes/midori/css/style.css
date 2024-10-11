@@ -189,6 +189,9 @@ a {
     text-decoration: none;
 }
 button {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -252,6 +255,7 @@ pre.mono {
  ** ************************************************************************* */
 .nopadding { padding: 0; }
 .nomargin { margin: 0; }
+.clickable { cursor: pointer; }
 .pointer { cursor: pointer; }
 .hidden { display: none; }
 
@@ -378,9 +382,9 @@ section .fade,
 section.fade { opacity: 0.25; }
 
 /** ************************************************************************* *
- *  Authoring
+ *  Modals
  ** ************************************************************************* */
-section.authoring {
+section.modals {
     background-color: var(--background-color, #fff);
     border: 2px solid var(--border-color, #ccc);
     border-radius: 25px;
@@ -390,13 +394,13 @@ section.authoring {
     top: 100px;
     z-index: 1000;
 }
-section.authoring h3 {
+section.modals h3 {
     padding: 0.25em 0.5em;
     margin: 0.5em auto;
     width: calc(100% - 1em);
 }
-section.authoring h3 span { vertical-align: middle; }
-section.authoring h3 button {
+section.modals h3 span { vertical-align: middle; }
+section.modals h3 button {
     background-color: transparent;
     font-size: 1.25em;
     vertical-align: middle;
@@ -404,37 +408,59 @@ section.authoring h3 button {
     margin: 0;
     float: right;
 }
-section.authoring pre {
+section.modals pre {
     border: 1px solid var(--border-color, #ccc);
-    display: block;
+    display: inline-block;
+    vertical-align: text-top;
     padding: 0.25em 0.5em;
     margin: 0 auto 0.25em;
     max-height: 80vh;
     min-height: 4.5em;
-    width: calc(100% - 2em);
+    width: calc(100% - 8em);
 }
 
-section.authoring pre[placeholder]:empty::before
-section.authoring pre:empty:not(:focus):before {
+section.modals pre[placeholder]:empty::before
+section.modals pre:empty:not(:focus):before {
     content: attr(data-placeholder);
     color: var(--placeholder-color, #93a1a1);
     font-style: italic;
     text-align: center;
 }
-section.authoring pre[placeholder]:empty:focus::before { content: ""; }
+section.modals pre[placeholder]:empty:focus::before { content: ""; }
 
-section.authoring div {
+section.modals article {
+    border: 2px solid var(--border-color, #ccc);
+    display: inline-block;
+    vertical-align: text-top;
+    margin: 0 0.5em;
+    max-height: calc(5em - 2px);
+    height: 5em;
+    max-width: calc(5em - 2px);
+    width: 5em;
+}
+section.modals article button {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+section.modals div {
     display: block;
     padding: 0;
     margin: 0 auto 0.5em;
     width: calc(100% - 1em);
 }
-section.authoring div button {
+section.modals div button {
     font-size: 1em;
 }
-section.authoring div span {
+section.modals div span {
     float: right;
     vertical-align: middle;
+}
+
+section.modals div.actions {
+    text-align: right;
+    padding: 0.25em 0;
 }
 
 /** ************************************************************************* *

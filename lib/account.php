@@ -109,7 +109,7 @@ class Account {
 
             case 'me':
                 if ( !$this->settings['_logged_in']) { return $this->_setMetaMessage("You need to sign in to use this function", 403); }
-                return $this->_getProfile();
+                return $this->_getAccountProfile();
                 break;
 
             case 'summary':
@@ -792,8 +792,8 @@ class Account {
         $sqlStr = readResource(SQL_DIR . '/account/setLanguage.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
 
-        // Return a Profile Object for the Current Account or an Unhappy String
-        return $this->_getProfile();
+        // Return a Profile Object for the Current Account or an Unhappy Boolean
+        return $this->_getAccountProfile();
     }
 
     /**
@@ -834,21 +834,27 @@ class Account {
         $sqlStr = readResource(SQL_DIR . '/account/setProfile.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
 
-        // Return a Profile Object for the Current Account or an Unhappy String
-        return $this->_getProfile();
+        // Return a Profile Object for the Current Account or an Unhappy boolean
+        return $this->_getAccountProfile();
     }
 
-    private function _getProfile() {
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+    private function _getAccountProfile( $AccountID = 0 ) {
+        $LookupID = nullInt($AccountID, $this->settings['_account_id']);
+        if ( $LookupID <= 0 ) { return false; }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[LOOKUP_ID]'  => nullInt($LookupID)
+                         );
         $sqlStr = readResource(SQL_DIR . '/account/getProfile.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
                 $strings = getLangDefaults($Row['language_code']);
 
-                $rVal = array( 'guid'           => NoNull($Row['guid']),
+                $data = array( 'guid'           => NoNull($Row['guid']),
                                'type'           => NoNull($Row['type']),
-                               'timezone'       => Nonull($Row['timezone']),
+                               'timezone'       => NoNull($Row['timezone']),
+                               'is_you'         => YNBool($Row['is_you']),
 
                                'display_name'   => NoNull($Row['display_name']),
                                'mail_address'   => NoNull($Row['mail_address']),
@@ -856,22 +862,52 @@ class Account {
                                'language'       => array( 'code' => NoNull($Row['language_code']),
                                                           'name' => NoNull($strings['lang_name'], $Row['language_name']),
                                                          ),
-                               'personas'       => $this->_getAccountPersonas($Row['account_id']),
-                               'bucket'         => array( 'storage'   => 0,
-                                                          'available' => 0,
-                                                          'files'     => 0,
-                                                         ),
+                               'channels'       => $this->_getAccountChannels($Row['_account_id']),
+                               'personas'       => $this->_getAccountPersonas($Row['_account_id']),
+                               'bucket'         => $this->_getCdnUsage(),
 
-                               'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                               'created_unix'   => strtotime($Row['created_at']),
-                               'updated_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
-                               'updated_unix'   => strtotime($Row['updated_at']),
+                               'created_at'     => apiDate($Row['created_unix'], 'Z'),
+                               'created_unix'   => apiDate($Row['created_unix'], 'U'),
+                               'updated_at'     => apiDate($Row['updated_unix'], 'Z'),
+                               'updated_unix'   => apiDate($Row['updated_unix'], 'U'),
                               );
+
+                if ( YNBool($Row['is_you']) === false ) {
+                    unset($data['mail_address']);
+                    unset($data['channels']);
+                    unset($data['personas']);
+                    unset($data['bucket']);
+                }
+
+                /* If we have porper-looking data, let's return it */
+                if( is_array($data) && mb_strlen(NoNull($data['guid'])) == 36 ) { return $data; }
             }
         }
 
-        // Return the Profile Object or an Unhappy String
-        return $rVal;
+        /* If we're here, no profile was found */
+        return false;
+    }
+
+    /**
+     *  Function returns the current account's CDN/File usage and limits
+     */
+    private function _getCdnUsage() {
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+        $sqlStr = readResource(SQL_DIR . '/account/getCdnUsage.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return array( 'storage_total' => nullInt($Row['cdn_limit']),
+                              'storage_used'  => nullInt($Row['file_bytes']),
+                              'file_count'    => nullInt($Row['file_count']),
+                              'file_uniques'  => nullInt($Row['file_uniques']),
+                             );
+            }
+        }
+
+        /* If we're here, there is nothing to return */
+        return false;
     }
 
     /**
@@ -1278,10 +1314,59 @@ class Account {
         return array();
     }
 
-    private function _getAccountPersonas( $AccountID = 0 ) {
-        if ( nullInt($AccountID) <= 0 ) { return false; }
+    /**
+     *  Function returns a list of Channels that a given Account can write to
+     */
+    private function _getAccountChannels( $AccountID = 0 ) {
+        $LookupID = nullInt($AccountID, $this->settings['_account_id']);
+        if ( nullInt($LookupID) <= 0 ) { return false; }
 
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[LOOKUP_ID]'  => nullInt($LookupID),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/account/getAccountChannels.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = array();
+
+            foreach ( $rslt as $Row ) {
+                $data[] = array( 'guid'    => NoNull($Row['channel_guid']),
+                                 'name'    => NoNull($Row['site_name'], $Row['channel_name']),
+                                 'type'    => NoNull($Row['channel_type']),
+                                 'privacy' => NoNull($Row['privacy_type']),
+
+                                 'site' => array( 'guid'    => NoNull($Row['site_guid']),
+                                                  'description' => NoNull($Row['site_description']),
+                                                  'https'   => YNBool($Row['https']),
+                                                  'url'     => NoNull($Row['url']),
+                                                  'version' => nullInt($Row['version']),
+                                                  ),
+
+                                 'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                                 'created_unix' => apiDate($Row['created_unix'], 'Z'),
+                                 'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                 'updated_unix' => apiDate($Row['updated_unix'], 'Z'),
+                                );
+            }
+
+            /* If we have what looks like proper data, let's return it */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, there is no data to return */
+        return false;
+    }
+
+    /**
+     *  Function returns a list of Personas associated with a given Account
+     */
+    private function _getAccountPersonas( $AccountID = 0 ) {
+        $LookupID = nullInt($AccountID, $this->settings['_account_id']);
+        if ( nullInt($LookupID) <= 0 ) { return false; }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[LOOKUP_ID]'  => nullInt($LookupID),
+                         );
         $sqlStr = readResource(SQL_DIR . '/account/getPersonas.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
@@ -1289,28 +1374,32 @@ class Account {
             $data = false;
 
             foreach ( $rslt as $Row ) {
-                $data = array( 'guid'           => NoNull($Row['guid']),
+                $cdnUrl = NoNull($this->settings['HomeURL']) . '/avatars/';
+                if ( mb_strpos(NoNull($Row['avatar_img'], 'default.png'), '/') !== false ) { $cdnUrl = getCdnUrl(); }
 
-                               'display_name'   => NoNull($Row['display_name']),
-                               'first_name'     => NoNull($Row['first_name']),
-                               'last_name'      => NoNull($Row['last_name']),
-                               'email'          => NoNull($Row['email']),
+                $data[] = array( 'guid'           => NoNull($Row['guid']),
 
-                               'avatar_url'     => "$cdnUrl/" . NoNull($Row['avatar_img']),
-                               'is_active'      => YNBool($Row['is_active']),
+                                 'display_name'   => NoNull($Row['display_name']),
+                                 'first_name'     => NoNull($Row['first_name']),
+                                 'last_name'      => NoNull($Row['last_name']),
+                                 'email'          => ((YNBool($Row['is_you']) === true) ? NoNull($Row['email']) : ''),
 
-                               'created_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                               'created_unix'   => strtotime($Row['created_at']),
-                               'updated_at'     => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
-                               'updated_unix'   => strtotime($Row['updated_at']),
-                              );
+                                 'avatar_url'     => $cdnUrl . NoNull($Row['avatar_img'], 'default.png'),
+                                 'is_active'      => YNBool($Row['is_active']),
+                                 'is_yours'       => YNBool($Row['is_you']),
+
+                                 'created_at'     => apiDate($Row['created_unix'], 'Z'),
+                                 'created_unix'   => apiDate($Row['created_unix'], 'U'),
+                                 'updated_at'     => apiDate($Row['updated_unix'], 'Z'),
+                                 'updated_unix'   => apiDate($Row['updated_unix'], 'U'),
+                                );
             }
 
-            // If We Have Data, Return It
-            if ( is_array($data) ) { return $data; }
+            /* If We Have Data, Return It */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
         }
 
-        // If We're Here, There Are No Personas
+        /* If We're Here, There Are No Personas ... which should not happen */
         return false;
     }
 

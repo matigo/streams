@@ -17,11 +17,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Channel GUID Provided';
     END IF;
 
-    /* If the Client GUID is bad, Exit */
-    IF LENGTH(IFNULL(`in_channel_guid`, '')) <> 36 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Client GUID Provided';
-    END IF;
-
     /* If the Login Name is bad, Exit */
     IF LENGTH(IFNULL(`in_account_mail`, '')) < 3 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Login ID Provided';
@@ -68,12 +63,12 @@ BEGIN
     INSERT INTO `Tokens` (`guid`, `account_id`, `client_id`)
     SELECT CONCAT(uuid(), '-', LEFT(md5(a.`email`), 4), '-', LEFT(md5(count(p.`id`) + a.`id`), 8)) as `guid`, a.`id` as `account_id`, c.`id` as `client_id`
       FROM `Account` a INNER JOIN `Persona` p ON a.`id` = p.`account_id`
-                       INNER JOIN `Client` c
-     WHERE p.`is_deleted` = 'N' and c.`is_deleted` = 'N' and a.`is_deleted` = 'N'
-       and a.`type` IN ('account.admin', 'account.normal') and c.`guid` = `in_client_guid`
+                  LEFT OUTER JOIN `Client` c ON c.`is_deleted` = 'N' and c.`guid` = `in_client_guid`
+     WHERE p.`is_deleted` = 'N' and a.`is_deleted` = 'N' and a.`type` IN ('account.admin', 'account.normal')
        and a.`id` = `x_account_id`
      GROUP BY a.`email`, a.`id`, c.`id`
      LIMIT 1;
+
     SELECT LAST_INSERT_ID() INTO `x_token_id`;
 
     /* Return the Token Information */

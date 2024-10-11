@@ -231,9 +231,9 @@ BEGIN
       FROM `Site` si INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`
                      INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                      INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
-                     INNER JOIN `Client` cl ON po.`client_id` = cl.`id`
                      INNER JOIN (SELECT z.`post_id` FROM `tmpPosts` z WHERE z.`is_visible` = 'Y'
                                   ORDER BY z.`publish_at` DESC LIMIT `in_page`, `in_count`) tmp ON po.`id` = tmp.`post_id`
+                LEFT OUTER JOIN `Client` cl ON po.`client_id` = cl.`id` AND cl.`is_deleted` = 'N'
      WHERE ch.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and po.`is_deleted` = 'N' and si.`guid` = `in_site_guid`
        and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'

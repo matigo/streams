@@ -22,7 +22,7 @@ BEGIN
              WHERE z.`is_deleted` = 'N' and z.`account_id` = `in_account_id`
              ORDER BY z.`id` LIMIT 1) as `value`,
            ca.`channel_id`, 'post.note' as `type`, 'visibility.public' as `privacy_type`,
-           Now() as `publish_at`, pa.`account_id`, pa.`account_id`
+           DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 SECOND) as `publish_at`, pa.`account_id`, pa.`account_id`
       FROM `Persona` pa INNER JOIN `ChannelAuthor` ca ON pa.`id` = ca.`persona_id`
      WHERE ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and ca.`can_write` = 'Y'
        and pa.`name` = 'welcomebot'
