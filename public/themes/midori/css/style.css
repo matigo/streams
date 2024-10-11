@@ -414,7 +414,7 @@ section.modals pre {
     vertical-align: text-top;
     padding: 0.25em 0.5em;
     margin: 0 auto 0.25em;
-    max-height: 80vh;
+    max-height: 40vh;
     min-height: 4.5em;
     width: calc(100% - 8em);
 }
