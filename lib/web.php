@@ -241,7 +241,7 @@ class Route extends Streams {
             $data['location'] = 'default';
         }
 
-        if ( $data['site_locked'] ) {
+        if ( YNBool($data['site_locked']) ) {
             $HomeUrl = NoNull($this->settings['HomeURL']);
             $ReplStr =  array( '[SHARED_FONT]'  => $HomeUrl . '/shared/fonts',
                                '[SHARED_CSS]'   => $HomeUrl . '/shared/css',
