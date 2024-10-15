@@ -578,3 +578,6 @@ article .post-content blockquote {
     width: calc(100% - 2em);
 }
 article .post-content blockquote p:last-child { padding: 0; }
+article .post-content code {
+    font-size: 1.15em;
+}

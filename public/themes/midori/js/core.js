@@ -114,6 +114,10 @@ function handleButtonAction(el) {
                 handleAuthorOpen();
                 break;
 
+            case 'publish':
+                publishPostData();
+                break;
+
             case 'toggle':
                 toggleButton(el);
                 if ( el.classList.contains('has-changes') === false ) { el.classList.add('has-changes'); }
@@ -139,7 +143,32 @@ function getMyProfile() {
 }
 function parseMyProfile( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
-        if ( NoNull(data.data.guid).length == 36 ) { window.whoami = data.data; }
+        if ( NoNull(data.data.guid).length == 36 ) {
+            /* Set the default channel identifier */
+            if ( data.data.channels !== undefined && data.data.channels !== false ) {
+                for ( let i = 0; i < data.data.channels.length; i++ ) {
+                    var _guid = NoNull(data.data.channels[i].guid);
+                    if ( NoNull(_guid).length == 36 ) {
+                        setMetaValue('channel_guid', _guid);
+                        i += data.data.channels.length;
+                    }
+                }
+            }
+
+            /* Set the default persona identifier */
+            if ( data.data.personas !== undefined && data.data.personas !== false ) {
+                for ( let i = 0; i < data.data.personas.length; i++ ) {
+                    var _guid = NoNull(data.data.personas[i].guid);
+                    if ( NoNull(_guid).length == 36 ) {
+                        setMetaValue('persona_guid', _guid);
+                        i += data.data.personas.length;
+                    }
+                }
+            }
+
+            /* Save the profile data */
+            window.whoami = data.data;
+        }
         console.log(data.data)
 
     } else {
@@ -245,7 +274,6 @@ function parseTimeline( data ) {
         for ( let e = 0; e < els.length; e++ ) {
             for ( let i = 0; i < ds.length; i++ ) {
                 var _visible = true;
-
 
                 /* Add the item to the DOM if applicable */
                 if ( _visible ) {
@@ -502,6 +530,37 @@ function validatePostData() {
     /* If there are no issues, return a happy boolean. Otherwise, an uphappy boolean */
     return ((_cnt <= 0) ? true : false);
 }
+function publishPostData() {
+    if ( validatePostData() ) {
+        publishGeneralPostData('fdata', parsePublishPostData);
+
+    } else {
+        alert("No Dice!");
+    }
+}
+function parsePublishPostData( data ) {
+    if ( data !== false && data.meta.code == 200 ) {
+        var els = document.getElementsByClassName('content');
+        var ds = data.data;
+
+        /* Write the post to the DOM */
+        for ( let e = 0; e < els.length; e++ ) {
+            for ( let i = 0; i < ds.length; i++ ) {
+                var _obj = buildPostArticle(ds[i]);
+                if ( _obj !== undefined && _obj !== null && _obj !== false ) {
+                    els[e].insertBefore(_obj, els[e].childNodes[0]);
+                }
+            }
+        }
+
+        /* Close the authoring section */
+        closeAuthoring();
+        console.log(ds);
+
+    } else {
+        alert("Error! Error! Could not publish! Error!");
+    }
+}
 function handleAuthorOpen() {
     var _hasAuth = ((NoNull(getMetaValue('authorization')).length > 36) ? true : false);
     if ( _hasAuth === false ) { return; }
@@ -568,6 +627,20 @@ function handleAuthorOpen() {
                                 });
         _section.appendChild(_editor);
 
+    /* Build the Meta bar */
+    var _meta = buildElement({ 'tag': 'div', 'classes': ['meta'] });
+    var _type = buildElement({ 'tag': 'input',
+                               'classes': ['form-control'],
+                               'attribs': [{'key':'type','value':'hidden'},
+                                           {'key':'name','value':'fdata'},
+                                           {'key':'data-name','value':'post-type'},
+                                           {'key':'data-required','value':'Y'},
+                                           {'key':'value','value':'post.note'}
+                                           ]
+                              });
+    _meta.appendChild(_type);
+    _section.appendChild(_meta);
+
     /* Build the Action bar */
     var _actions = buildElement({ 'tag': 'div', 'classes': ['actions'] });
 
@@ -583,20 +656,6 @@ function handleAuthorOpen() {
 
     _actions.appendChild(buildElement({ 'tag': 'span', 'classes': ['char-count'], 'text': '&nbsp;' }));
     _section.appendChild(_actions);
-
-
-    /* Build the Meta bar */
-    var _meta = buildElement({ 'tag': 'div', 'classes': ['meta'] });
-
-    var _type = buildElement({ 'tag': 'label', 'classes': ['meta-item'] });
-
-    var _type = buildElement({ 'tag': 'select',
-                               'classes': ['form-control'],
-                               'attribs': [{'key':'name','value':'fdata'},
-                                           {'key':'data-name','value':'post-type'},
-                                           {'key':'data-required','value':'Y'}]
-                              });
-
 
     /* Add the section to the DOM */
     document.body.appendChild(_section);

@@ -80,3 +80,58 @@ function isValidJsonRsp( data ) {
     if ( data !== undefined && data.meta !== undefined && data.meta.code == 200 ) { return true; }
     return false;
 }
+
+/** ********************************************************************* *
+ *  Universal Posting Functions
+ ** ********************************************************************* */
+function validateGeneralPostData( _form = '' ) {
+    if ( _form === undefined || _form === null || NoNull(_form).length <= 3 ) { return false; }
+    var _meta = ['channel_guid', 'persona_guid'];
+    var _cnt = 0;
+
+    /* Confirm that the form data is complete */
+    var els = document.getElementsByName(_form);
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('error') ) { els[e].classList.remove('error'); }
+        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+
+        /* Check to see if this is a required field */
+        var _req = NoNull(els[e].getAttribute('data-required')).toUpperCase();
+        if ( _req == 'Y' ) {
+            var _min = parseInt(els[e].getAttribute('data-minlength'));
+            if ( _min === undefined || _min === null || isNaN(_min) || _min <= 0 ) { _min = 1; }
+            if ( NoNull(getElementValue(els[e])).length < _min ) {
+                if ( els[e].classList.contains('error') === false ) { els[e].classList.add('error'); }
+                _cnt++;
+            }
+        }
+    }
+
+    /* Confirm that the meta is complete */
+    for ( let _idx in _meta ) {
+        var _val = getMetaValue(_meta[_idx]);
+        if ( NoNull(_val).length != 36 ) { _cnt++; }
+    }
+
+    /* Return a boolean response */
+    return ((_cnt <= 0) ? true : false);
+}
+function publishGeneralPostData( _form = '', _responseCall ) {
+    if ( _responseCall === undefined || _responseCall === null || _responseCall === false ) { return; }
+    if ( _form === undefined || _form === null || NoNull(_form).length <= 3 ) { _form = 'fdata'; }
+    var _params = { 'channel_guid': getMetaValue('channel_guid'),
+                    'persona_guid': getMetaValue('persona_guid')
+                   };
+
+    /* Collect the form data */
+    var els = document.getElementsByName(_form);
+    for ( let e = 0; e < els.length; e++ ) {
+        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+        if ( NoNull(_name).length > 0 ) {
+            _params[_name] = getElementValue(els[e]);
+        }
+    }
+
+    /* Call the API */
+    setTimeout(function () { doJSONQuery('post/write', 'POST', _params, _responseCall); }, 25);
+}

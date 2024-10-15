@@ -1199,7 +1199,6 @@ class Posts {
         $ChannelGUID = NoNull($this->settings['channel_guid'], $this->settings['_channel_guid']);
         $PersonaGUID = NoNull($this->settings['persona_guid'], $this->settings['_persona_guid']);
         $Title = NoNull($this->settings['post_title'], $this->settings['title']);
-        $Value = NoNull($this->settings['post_text'], NoNull($this->settings['text'], $this->settings['content']));
         $CanonURL = NoNull($this->settings['canonical_url'], $this->settings['post_url']);
         $ReplyTo = NoNull($this->settings['post_reply_to'], $this->settings['reply_to']);
         $PostAuthor = NoNull($this->settings['post_author'], $this->settings['author']);
@@ -1213,6 +1212,15 @@ class Posts {
         $PostTags = NoNull($this->settings['post_tags'], $this->settings['tags']);
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $PostID = $this->_getPostIDFromGUID($PostGUID);
+
+        /* Ensure we have the post text */
+        $opts = array( 'post_text', 'text', 'post_comment', 'content', 'post_comment', 'comment', 'value');
+        $Value = '';
+        foreach ( $opts as $opt ) {
+            if ( array_key_exists($opt, $this->settings) ) {
+                if ( mb_strlen($Value) <= 0 ) { $Value = NoNull($this->settings[$opt]); }
+            }
+        }
 
         /* More Elements */
         $ParentID = 0;
@@ -1267,7 +1275,7 @@ class Posts {
             if ( nullInt($GeoLong) != 0 && nullInt($GeoLat) != 0 ) { $GeoFull = ''; }
         }
 
-        // Is this a podcast?
+        /* Is this a podcast? */
         $AudioExplicit = NoNull($this->settings['explicit'], $this->settings['audio_explicit']);
         $AudioSummary = NoNull($this->settings['episode_summary'], $this->settings['audio_summary']);
         $AudioEpNo = NoNull($this->settings['episode_number'], $this->settings['audiofile_epno']);
@@ -2490,7 +2498,7 @@ class Posts {
             }
         }
 
-        // Handle Code Blocks
+        /* Handle Code Blocks */
         if (preg_match_all('/\```(.+?)\```/s', $text, $matches)) {
             foreach($matches[0] as $fn) {
                 $cbRepl = array( '```' => '', '<code><br>' => "<code>", '<br></code>' => '</code>', "\n" => '<br>', ' ' => "&nbsp;" );
@@ -2500,16 +2508,39 @@ class Posts {
             }
         }
 
-        // Handle Strikethroughs
+        /* Handle Strikethroughs */
         if (preg_match_all('/\~~(.+?)\~~/s', $text, $matches)) {
             foreach($matches[0] as $fn) {
-                $stRepl = array( '~~' => '' );
-                $code = "<del>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</del>";
-                $text = str_replace($fn, $code, $text);
+                if ( mb_strpos($fn, "\n") === false && mb_strpos($fn, "\r") === false ) {
+                    $stRepl = array( '~~' => '' );
+                    $code = "<del>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</del>";
+                    $text = str_replace($fn, $code, $text);
+                }
             }
         }
 
-        // Get the Markdown Formatted
+        /* Handle Underlines */
+        if (preg_match_all('/\_(.+?)\_/s', $text, $matches)) {
+            foreach($matches[0] as $fn) {
+                $errs = array("\n", "\r", '_ ', ' _');
+                $zz = false;
+                $fn = NoNull($fn);
+
+                /* Check to see if the string contains disqualifiers */
+                foreach ( $errs as $err ) {
+                    if ( $zz === false ) { $zz = mb_strpos($fn, $err); }
+                }
+
+                /* If we're good, let's transform */
+                if ( $zz === false ) {
+                    $stRepl = array( '_' => '' );
+                    $code = "<u>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</u>";
+                    $text = str_replace($fn, $code, $text);
+                }
+            }
+        }
+
+        /* Get the Markdown Formatted */
         $text = str_replace('\\', '&#92;', $text);
         $rVal = Markdown::defaultTransform($text, $isNote);
         for ( $i = 0; $i <= 5; $i++ ) {
@@ -2518,7 +2549,7 @@ class Posts {
             }
         }
 
-        // Replace any Hashtags if they exist
+        /* Replace any Hashtags if they exist */
         $rVal = str_replace('</p>', '</p> ', $rVal);
         $words = explode(' ', " $rVal ");
         $out_str = '';
