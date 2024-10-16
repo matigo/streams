@@ -87,6 +87,11 @@ class Posts {
                 return  $this->_getPostByGUID();
                 break;
 
+            case 'readmore':
+            case 'readnext':
+                return $this->_getReadMore();
+                break;
+
             case 'thread':
                 return $this->_getThreadByGUID();
                 break;
@@ -2176,6 +2181,77 @@ class Posts {
     }
 
     /** ********************************************************************* *
+     *  Additional Readability Functions
+     ** ********************************************************************* */
+    /**
+     *  Function returns a short list of posts of a given type to represent previous, next, and random.
+     */
+    private function _getReadMore() {
+        $CleanGuid = NoNull($this->settings['post_guid'], $this->settings['guid']);
+
+        /* Perform some basic validation */
+        if ( mb_strlen($CleanGuid) != 36 ) { return $this->_setMetaMessage("Invalid Post Identifier Supplied", 400); }
+
+        /* Collect the data */
+        $ReplStr = array( '[POST_GUID]' => sqlScrub($CleanGuid) );
+        $sqlStr = readResource(SQL_DIR . '/posts/getReadMore.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = false;
+
+            foreach ( $rslt as $Row ) {
+                $data = array( 'domain'   => NoNull($Row['url']),
+                               'previous' => false,
+                               'random'   => false,
+                               'next'     => false,
+                              );
+
+                /* Previous Post */
+                if ( mb_strlen(NoNull($Row['prev_guid'])) == 36 ) {
+                    $data['previous'] = array( 'guid'  => NoNull($Row['prev_guid']),
+                                               'type'  => NoNull($Row['prev_type']),
+                                               'title' => NoNull($Row['prev_title']),
+                                               'url'   => NoNull($Row['prev_url']),
+
+                                               'publish_at'   => apiDate($Row['prev_unix'], 'Z'),
+                                               'publish_unix' => apiDate($Row['prev_unix'], 'U'),
+                                              );
+                }
+
+                /* Random Post */
+                if ( mb_strlen(NoNull($Row['rand_guid'])) == 36 ) {
+                    $data['random'] = array( 'guid'  => NoNull($Row['rand_guid']),
+                                             'type'  => NoNull($Row['rand_type']),
+                                             'title' => NoNull($Row['rand_title']),
+                                             'url'   => NoNull($Row['rand_url']),
+
+                                             'publish_at'   => apiDate($Row['rand_unix'], 'Z'),
+                                             'publish_unix' => apiDate($Row['rand_unix'], 'U'),
+                                            );
+                }
+
+                /* Next Post */
+                if ( mb_strlen(NoNull($Row['next_guid'])) == 36 ) {
+                    $data['next'] = array( 'guid'  => NoNull($Row['next_guid']),
+                                           'type'  => NoNull($Row['next_type']),
+                                           'title' => NoNull($Row['next_title']),
+                                           'url'   => NoNull($Row['next_url']),
+
+                                           'publish_at'   => apiDate($Row['next_unix'], 'Z'),
+                                           'publish_unix' => apiDate($Row['next_unix'], 'U'),
+                                          );
+                }
+            }
+
+            /* If we have something that looks valid, let's return it */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, there's nothing to return. Either because every post is private, or because there are no matching posts */
+        return $this->_setMetaMessage("No matching posts found", 404);
+    }
+
+    /** ********************************************************************* *
      *  Timeline / Stream Functions
      ** ********************************************************************* */
     private function _processTimeline( $posts ) {
@@ -3185,16 +3261,6 @@ class Posts {
      *  Class Functions
      ** ********************************************************************* */
     /**
-     *  Function Sets a Message in the Meta Field
-     */
-    private function _setMetaMessage( $msg, $code = 0 ) {
-        if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
-        if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
-        if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
-        return false;
-    }
-
-    /**
      *  Function Converts a Time from the Account's Current Timezone to UTC
      */
     private function _convertTimeToUTC( $DateString ) {
@@ -3348,6 +3414,16 @@ class Posts {
 
         // If we have 60% or more Arabic characters, it's RTL
         if ( ($arabic_count/$total_count) > 0.6 ) { return true; }
+        return false;
+    }
+
+    /**
+     *  Function Sets a Message in the Meta Field
+     */
+    private function _setMetaMessage( $msg, $code = 0 ) {
+        if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
+        if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
+        if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
         return false;
     }
 }

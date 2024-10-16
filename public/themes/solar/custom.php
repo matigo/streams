@@ -82,7 +82,7 @@ class Solar {
 
                           '[CHANNEL_GUID]'  => NoNull($data['channel_guid']),
 
-                          '[CONTENT]'       => 'This is where content goes ...',
+                          '[CONTENT]'       => $this->_getPageContent(),
 
                           '[SITE_URL]'      => $this->settings['HomeURL'],
                           '[SITE_NAME]'     => $data['name'],
@@ -104,12 +104,66 @@ class Solar {
     private function _getResourceFile() {
         $ResDIR = __DIR__ . '/resources';
 
-        // Which Page Should be Returned?
+        /* Which Page Should be Returned? */
         $ReqPage = 'page-' . NoNull($this->settings['PgRoot'], 'main') . '.html';
+
+        /* Is the Url a valid Post? */
+        $CacheKey = 'site-' . substr('00000000' . NoNull($this->settings['_site_id'], $this->settings['site_id']), -8) . '_' . md5(strtolower(NoNull($this->settings['ReqURI'])));
+        $data = getCacheObject( $CacheKey );
+        if ( is_array($data) === false || mb_strlen(NoNull($data['guid'])) != 36 ) {
+            $ReplStr = array( '[REQ_URI]' => sqlScrub($this->settings['ReqURI']),
+                              '[SITE_ID]' => nullInt($this->settings['_site_id']),
+                             );
+            $sqlStr = readResource(SQL_DIR . '/web/chkReqUri.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                foreach ( $rslt as $Row ) {
+                    $data = array( 'guid'     => NoNull($Row['guid']),
+                                   'is_match' => YNBool($Row['is_match']),
+                                   'template' => NoNull($Row['template']),
+                                  );
+                }
+            }
+
+            /* Save the cache if we have something that looks valid */
+            if ( is_array($data) && mb_strlen(NoNull($data['guid'])) == 36 ) { setCacheObject($CacheKey, $data); }
+        }
+
+        if ( is_array($data) && mb_strlen(NoNull($data['guid'])) == 36 ) {
+            if ( YNBool($data['is_match']) ) { $ReqPage = 'page-' . NoNull($data['template']) . '.html'; }
+        }
 
         /* Confirm the Page Exists and Return the proper Resource path */
         if ( file_exists("$ResDIR/$ReqPage") === false ) { $ReqPage = 'page-404.html'; }
         return "$ResDIR/$ReqPage";
+    }
+
+    /** ********************************************************************* *
+     *  Page Content Functions
+     ** ********************************************************************* */
+    /**
+     *  Function builds the page content for the requested URL
+     */
+    private function _getPageContent() {
+        $CacheKey = 'solar-' .
+                    substr('00000000' . NoNull($this->settings['_site_id'], $this->settings['site_id']), -8) . '_' .
+                    substr('00000000' . NoNull($this->settings['_account_id']), -8) . '_' .
+                    md5(strtolower(NoNull($this->settings['ReqURI'])));
+        $data = getCacheObject( $CacheKey );
+
+        print_r( $CacheKey );
+        die();
+
+        /* If we do not already have parsed content, let's build it */
+        if ( is_array($data) === false || mb_strlen(NoNull($data['guid'])) != 36 ) {
+
+        }
+
+        /* Return the completed HTML if it exists ... or an empty string */
+        if ( is_array($data) && mb_strlen(NoNull($data['guid'])) == 36 ) {
+            return NoNull($data['content_html']);
+        }
+        return '';
     }
 
     /** ********************************************************************* *
