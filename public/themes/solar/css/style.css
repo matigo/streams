@@ -391,8 +391,16 @@ article.article span {
     margin: 0 0.1em;
 }
 article.article p {
+    line-height: 1.25em;
     scroll-snap-type: x mandatory;
     scroll-snap-align: start;
+}
+article.article p sup {
+    display: inline-block;
+    margin-top: -5px;
+}
+article.article p a:hover {
+    text-decoration: underline;
 }
 
 article.article .endnote {
