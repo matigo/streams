@@ -2218,18 +2218,6 @@ class Posts {
                                               );
                 }
 
-                /* Random Post */
-                if ( mb_strlen(NoNull($Row['rand_guid'])) == 36 ) {
-                    $data['random'] = array( 'guid'  => NoNull($Row['rand_guid']),
-                                             'type'  => NoNull($Row['rand_type']),
-                                             'title' => NoNull($Row['rand_title']),
-                                             'url'   => NoNull($Row['rand_url']),
-
-                                             'publish_at'   => apiDate($Row['rand_unix'], 'Z'),
-                                             'publish_unix' => apiDate($Row['rand_unix'], 'U'),
-                                            );
-                }
-
                 /* Next Post */
                 if ( mb_strlen(NoNull($Row['next_guid'])) == 36 ) {
                     $data['next'] = array( 'guid'  => NoNull($Row['next_guid']),
@@ -2240,6 +2228,25 @@ class Posts {
                                            'publish_at'   => apiDate($Row['next_unix'], 'Z'),
                                            'publish_unix' => apiDate($Row['next_unix'], 'U'),
                                           );
+                }
+
+                /* Random Post (Do not allow dupes of previous or next) */
+                $randKeys = array( 'rand', 'yand', 'zand' );
+                foreach ( $randKeys as $key ) {
+                    if ( is_array($data['random']) === false ) {
+                        if ( NoNull($Row[$key . '_guid']) != NoNull($Row['prev_guid']) && NoNull($Row[$key . '_guid']) != NoNull($Row['next_guid']) ) {
+                            if ( mb_strlen(NoNull($Row[$key . '_guid'])) == 36 ) {
+                                $data['random'] = array( 'guid'  => NoNull($Row[$key . '_guid']),
+                                                         'type'  => NoNull($Row[$key . '_type']),
+                                                         'title' => NoNull($Row[$key . '_title']),
+                                                         'url'   => NoNull($Row[$key . '_url']),
+
+                                                         'publish_at'   => apiDate($Row[$key . '_unix'], 'Z'),
+                                                         'publish_unix' => apiDate($Row[$key . '_unix'], 'U'),
+                                                        );
+                            }
+                        }
+                    }
                 }
             }
 
