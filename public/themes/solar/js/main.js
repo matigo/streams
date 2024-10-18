@@ -16,7 +16,7 @@ document.onreadystatechange = function () {
         }
 
         /* Prep the page elements */
-        var _sections = ['comments', 'readnext'];
+        var _sections = ['readnext'];
         var _classes = ['article', 'bookmark', 'quotation', 'location'];
         var els = document.getElementsByTagName('article');
         for ( let e = 0; e < els.length; e++ ) {
@@ -206,7 +206,6 @@ function setReadNextSection( el ) {
     if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
 
     el.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Read Next' }));
-    el.appendChild(buildElement({ 'tag': 'p', 'classes': ['instructions'], 'text': 'This is where we will see some other things to read' }));
     el.appendChild(buildElement({ 'tag': 'ul', 'classes': ['readmore-list'] }));
     setTimeout(function () { getReadMoreLinks(); }, 50);
 
@@ -228,7 +227,6 @@ function parseReadMoreLinks( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var _links = ['next', 'random', 'previous'];
         var ds = data.data;
-        console.log( ds );
 
         var els = document.getElementsByClassName('readmore-list');
         for ( let e = 0; e < els.length; e++ ) {
