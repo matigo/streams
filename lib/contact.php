@@ -21,39 +21,34 @@ class Contact {
      ** ********************************************************************* */
     public function performAction() {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
-        $rVal = false;
 
-        // Perform the Action
+        /* Perform the Action */
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
-                // Do Nothing
+                /* Do Nothing */
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, an unrecognized request type was submitted */
+        return false;
     }
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) {
-            $this->_setMetaMessage("You Need to Log In First", 401);
-            return false;
-        }
+        /* Check the User Token is Valid */
+        if ( YNBool($this->settings['_logged_in']) !== true ) { return $this->_setMetaMessage("You Need to Log In First", 401); }
 
         switch ( $Activity ) {
             case 'count':
@@ -73,15 +68,17 @@ class Contact {
                 // Do Nothing
         }
 
-        // If We're Here, It's No Good. Return an Unhappy Boolean.
+        /* If We're Here, It's No Good. Return an Unhappy Boolean. */
         return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
+            case 'submit':
+            case 'send':
+            case 'set':
             case '':
                 return $this->_processMessage();
                 break;
@@ -90,21 +87,17 @@ class Contact {
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* Return the Array of Data or an Unhappy Boolean */
+        return false;
     }
 
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
-        // Check the User Token is Valid
-        if ( !$this->settings['_logged_in']) {
-            $this->_setMetaMessage("You Need to Log In First", 401);
-            return false;
-        }
+        /* Check the User Token is Valid */
+        if ( YNBool($this->settings['_logged_in']) !== true ) { return $this->_setMetaMessage("You Need to Log In First", 401); }
 
-        // If We Have a GUID, We're Deleting a Message
+        /* If We Have a GUID, We're Deleting a Message */
         if ( mb_strlen($Activity) == 36 ) { $Activity = 'scrub'; }
 
         switch ( $Activity ) {
@@ -117,7 +110,7 @@ class Contact {
                 // Do Nothing
         }
 
-        // If we here, nothing was done. Return an Unhappy Boolean.
+        /* If we here, nothing was done. Return an Unhappy Boolean. */
         return false;
     }
 
@@ -173,8 +166,8 @@ class Contact {
             }
         }
 
-        // If We're Here, There's Nothing
-        return array();
+        /* If We're Here, There's Nothing */
+        return false;
     }
 
     /**
@@ -209,21 +202,21 @@ class Contact {
                                      'is_read'  => YNBool($Row['is_read']),
                                      'is_spam'  => YNBool($Row['is_spam']),
 
-                                     'created_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['created_at'])),
-                                     'created_unix' => strtotime($Row['created_at']),
-                                     'updated_at'   => date("Y-m-d\TH:i:s\Z", strtotime($Row['updated_at'])),
-                                     'updated_unix' => strtotime($Row['updated_at']),
+                                     'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                                     'created_unix' => apiDate($Row['created_unix'], 'U'),
+                                     'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                     'updated_unix' => apiDate($Row['updated_unix'], 'U'),
                                     );
                 }
                 unset($post);
 
-                // If we have data, Return it
+                /* If we have data, Return it */
                 if ( count($data) > 0 ) { return $data; }
             }
         }
 
-        // If We're Here, There's Nothing
-        return array();
+        /* If We're Here, There's Nothing */
+        return false;
     }
 
     /**
@@ -236,28 +229,30 @@ class Contact {
         $CleanMsg = NoNull($this->settings['contact-message'], $this->settings['message']);
         $CleanChk = nullInt($this->settings['contact-validate'], $this->settings['validate']);
         $CleanNonce = NoNull($this->settings['contact-nonce'], $this->settings['nonce']);
+        $isWebReq = YNBool(NoNull($this->settings['redirect'], 'Y'));
 
-        // Remove any HTML That Might Exist
+        /* Remove any HTML That Might Exist */
         $CleanName = strip_tags($CleanName);
         $CleanMail = strip_tags($CleanMail);
         $CleanSubj = strip_tags($CleanSubj);
         $CleanMsg = strip_tags($CleanMsg);
 
-        // Perform Some Basic Error Checking
-        if ( strlen($CleanName) < 1 ) { return "No Name Provided"; }
-        if ( strlen($CleanMail) < 3 ) { return "Invalid Email Address Provided"; }
-        if ( strpos($CleanMail, '@') === false ) { return "Invalid Email Address Provided"; }
-        if ( strpos($CleanMail, '.') === false ) { return "Invalid Email Address Provided"; }
-        if ( validateEmail($CleanMail) === false ) { return "Invalid Email Address Provided"; }
-        if ( strlen($CleanMsg) < 3 ) { return "No Message Provided"; }
+        /* Perform Some Basic Error Checking */
+        if ( mb_strlen($CleanName) < 1 ) { return $this->_setMetaMessage("No Name Provided", 400); }
+        if ( mb_strlen($CleanMsg) < 3 ) { return $this->_setMetaMessage("No Message Provided", 400); }
 
-        // Construct the Expected Nonce Value
+        /* If we have an email address, confirm it's potentially valid */
+        if ( mb_strlen($CleanMail) > 0 ) {
+            if ( mb_strlen($CleanMail) < 3 ) { return $this->_setMetaMessage("Invalid Email Address Provided", 400); }
+            if ( strpos($CleanMail, '@') === false ) { return $this->_setMetaMessage("Invalid Email Address Provided", 400); }
+            if ( strpos($CleanMail, '.') === false ) { return $this->_setMetaMessage("Invalid Email Address Provided", 400); }
+            if ( validateEmail($CleanMail) === false ) { return $this->_setMetaMessage("Invalid Email Address Provided", 400); }
+        }
+
+        /* Construct the Expected Nonce Value */
         $ExpectedNonce = md5(NoNull($this->settings['HomeURL']) . NoNull($this->settings['_address']));
 
-        // The check value is hard-coded to be 42. There are several questions, but all are 42.
-        if ( $CleanChk != 42 ) { return "Invalid Check Value Provided"; }
-
-        // Record the Data to the Database
+        /* Record the Data to the Database */
         $ReplStr = array( '[NAME]'        => sqlScrub($CleanName),
                           '[MAIL]'        => sqlScrub($CleanMail),
                           '[SUBJECT]'     => sqlScrub($CleanSubj),
@@ -272,7 +267,7 @@ class Contact {
         $sqlStr = readResource(SQL_DIR . '/contact/setMessage.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
 
-        // If a Message was Recorded, Send a message to the Site Owner
+        /* If a Message was Recorded, Send a message to the Site Owner */
         if ( $rslt ) {
             $canSend = true;
             if ( defined('MAIL_MAILHOST') === false ) { $canSend = false; }
@@ -282,13 +277,27 @@ class Contact {
             if ( NoNull(MAIL_USERNAME) == '' ) { $canSend = false; }
             if ( NoNull(MAIL_USERPASS) == '' ) { $canSend = false; }
 
-            // If We Have Passed _basic_ Validation, Send the Message
+            /* If We Have Passed _basic_ Validation, Send the Message */
             if ( $canSend ) { $this->_sendEmailNotification(); }
         }
 
-        // Redirect to a "Thank You" Page
-        $OutUrl = $this->settings['HomeURL'] . '/thankyou';
-        redirectTo($OutUrl, $this->settings);
+        /* Return a JSON object or redirect to a "Thank You" Page */
+        if ( $isWebReq ) {
+            $OutUrl = $this->settings['HomeURL'] . '/thankyou';
+            redirectTo($OutUrl, $this->settings);
+
+        } else {
+            return array( 'name'    => $CleanName,
+                          'mail'    => $CleanMail,
+                          'subject' => $CleanSubj,
+                          'message' => $CleanMsg,
+                          'is_sent' => true,
+
+                          'nonce'   => array( 'value'    => $CleanNonce,
+                                              'is_valid' => YNBool(BoolYN($CleanNonce == $ExpectedNonce))
+                                             ),
+                         );
+        }
     }
 
     private function _sendEmailNotification() {
@@ -364,9 +373,8 @@ class Contact {
             return array( 'sent' => $rslt );
         }
 
-        // If We're Here, It's Not Good
-        $this->_setMetaMessage("There is no Site Record specified for the Token", 400);
-        return false;
+        /* If We're Here, It's Not Good */
+        return $this->_setMetaMessage("There is no Site Record specified for the Token", 400);
     }
 
     /**
@@ -382,13 +390,12 @@ class Contact {
             $sqlStr = readResource(SQL_DIR . '/contact/setDeleted.sql', $ReplStr);
             $isOK = doSQLExecute($sqlStr);
 
-            // Return an Updated Message List
+            /* Return an Updated Message List */
             return $this->_getMessageList();
         }
 
-        // If We're Here, the GUID is Bad
-        $this->_setMetaMessage("Invalid Message GUID Supplied", 400);
-        return false;
+        /* If We're Here, the GUID is Bad */
+        return $this->_setMetaMessage("Invalid Message GUID Supplied", 400);
     }
 
     /** ********************************************************************* *
@@ -401,6 +408,7 @@ class Contact {
         if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
         if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
         if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
+        return false;
     }
 }
 ?>

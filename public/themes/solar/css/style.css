@@ -192,18 +192,19 @@ button {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    border-color: transparent !important;
     border: 0;
-    border-radius: 0;
+    border-radius: 1.25em;
     box-shadow: none;
     cursor: pointer;
     filter: none;
     outline: none;
     text-shadow: none;
-    padding: 0.25em 0.5em;
+    vertical-align: text-top;
+    padding: 0.5em 1.25em;
+    margin: 0;
     -moz-box-shadow: none;
     -webkit-box-shadow: none;
-    -moz-border-radius: 0;
-    -webkit-border-radius: 0;
 }
 button[disabled] {
     cursor: not-allowed;
@@ -463,8 +464,9 @@ article ol.readmore-list,
 article ul.readmore-list {
     display: block;
     list-style: none;
+    padding: 0;
+    margin: 0 auto;
 }
-
 
 article ul.readmore-list li,
 article ol li.footnote {
@@ -473,13 +475,33 @@ article ol li.footnote {
 article ul.readmore-list label {
     text-align: right;
     margin: 0 0.5em 0 0;
-    min-width: 6em;
+    min-width: 5em;
 }
+article ul.readmore-list a { max-width: calc(100% - 6em); }
 article ul.readmore-list label,
 article ul.readmore-list a {
     display: inline-block;
     vertical-align: text-top;
 }
+article ol.comment-list,
+article ul.comment-list {
+    display: block;
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+}
+
+article ul.comment-list li {
+    padding: 0 0 0.5em;
+}
+article li.comment-zero {
+    font-style: italic;
+    text-align: center;
+    padding: 1em 0;
+    margin: 0;
+}
+
+
 article blockquote {
     border-left: 5px solid var(--border-color);
     display: block;
@@ -501,13 +523,6 @@ article section.appendix {
 article section.appendix .nobreak,
 article section.appendix.nobreak { break-inside: avoid-column; }
 
-article section.appendix button {
-    border-color: transparent !important;
-    border-radius: 1.25em;
-    vertical-align: text-top;
-    padding: 0.5em 1.25em;
-    margin: 0;
-}
 article section.appendix textarea {
     border-radius: 1.25em;
     display: block;
@@ -527,6 +542,74 @@ article section.appendix .action-bar {
     margin: 0 auto;
     max-width: calc(100% - 1em);
     width: 100%;
+}
+
+/** ************************************************************************* *
+ *  Contact Form
+ ** ************************************************************************* */
+article.contact h1 {
+    font-size: 2.5em;
+    text-align: center;
+    padding: 1em 0;
+    margin: 0;
+}
+
+section.contact-form {
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 1em;
+    display: block;
+    padding: 1em;
+    margin: 0 auto;
+    max-width: 650px;
+    width: calc(100% - 4em);
+}
+
+section.contact-form div {
+    max-width: calc(100% - 1em);
+    margin: 0.5em auto 0;
+}
+section.contact-form div.error {
+    background-color: var(--background-yellow, #fdf6e3);
+    border: 0.175em solid var(--pin-red, #dc322f);
+    border-radius: 0.5em;
+    overflow: hidden;
+    text-align: center;
+    padding: 0;
+    margin: 1em auto 0;
+}
+section.contact-form div.error p {
+    color: var(--pin-red, #dc322f);
+    text-align: center;
+    padding: 0 1em;
+    margin: 0.5em 0;
+    max-width: calc(100% - 2em);
+}
+
+section.contact-form label {
+    display: inline-block;
+    font-weight: bold;
+    vertical-align: text-top;
+    text-align: right;
+    margin: 0.4em 0 0;
+    width: 6em;
+}
+section.contact-form p.fineprint {
+    font-size: 0.8em;
+    font-style: italic;
+    text-align: center;
+    max-width: calc(100% - 3em);
+    margin: 1em auto 0;
+}
+section.contact-form textarea,
+section.contact-form input {
+    display: inline-block;
+    vertical-align: text-top;
+    padding: 0.5em 1em;
+    margin: 0 0 0.5em 1em;
+    width: calc(100% - 11em);
+}
+section.contact-form textarea {
+    resize: none;
 }
 
 /** ************************************************************************* *

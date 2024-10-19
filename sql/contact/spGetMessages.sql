@@ -97,7 +97,8 @@ BEGIN
         /* Return the Messages */
         SELECT my_home as `my_home`, tmp.`url`, tmp.`name`, tmp.`mail`, tmp.`subject`, tmp.`message`,
                tmp.`guid`, tmp.`is_read`, tmp.`is_mailed`, tmp.`is_spam`,
-               tmp.`created_at`, tmp.`updated_at`
+               tmp.`created_at`, ROUND(UNIX_TIMESTAMP(tmp.`created_at`)) as `created_unix`,
+               tmp.`updated_at`, ROUND(UNIX_TIMESTAMP(tmp.`updated_at`)) as `updated_unix`
           FROM tmp
          ORDER BY tmp.`is_read`, tmp.`created_at` DESC
          LIMIT 250;

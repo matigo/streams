@@ -84,6 +84,7 @@ class Solar {
                           '[YEAR]'          => date('Y'),
 
                           '[CHANNEL_GUID]'  => NoNull($data['channel_guid']),
+                          '[NONCE]'         => md5(NoNull($this->settings['HomeURL']) . NoNull($this->settings['_address'])),
 
                           '[SITE_URL]'      => $this->settings['HomeURL'],
                           '[SITE_NAME]'     => $data['name'],
@@ -368,27 +369,6 @@ class Solar {
             }
         }
 
-        /* Handle Underlines */
-        if (preg_match_all('/\_(.+?)\_/s', $text, $matches)) {
-            foreach($matches[0] as $fn) {
-                $errs = array("\n", "\r", '_ ', ' _');
-                $zz = false;
-                $fn = NoNull($fn);
-
-                /* Check to see if the string contains disqualifiers */
-                foreach ( $errs as $err ) {
-                    if ( $zz === false ) { $zz = mb_strpos($fn, $err); }
-                }
-
-                /* If we're good, let's transform */
-                if ( $zz === false ) {
-                    $stRepl = array( '_' => '' );
-                    $code = "<u>" . NoNull(str_replace(array_keys($stRepl), array_values($stRepl), $fn)) . "</u>";
-                    $text = str_replace($fn, $code, $text);
-                }
-            }
-        }
-
         /* Get the Markdown Formatted */
         $text = str_replace('\\', '&#92;', $text);
         $rVal = Markdown::defaultTransform($text, $isNote);
@@ -544,6 +524,7 @@ class Solar {
                          '<blockquote><br>' => '<blockquote>', '<br></blockquote>' => '</blockquote>', '<p><blockquote>' => '<blockquote>',
                          '<ul><br>' => '<ul>', '<br></ul>' => '</ul>', '<ol><br>' => '<ol>', '<br></ol>' => '</ol>',
                          '<li><br>' => '<li>', '</li><br>' => '</li>',
+                         "&nbsp;" => ' ',
 
                          '</p>' => "</p>\n" . tabSpace(4),
                          '<ul>' => "<ul>\n",

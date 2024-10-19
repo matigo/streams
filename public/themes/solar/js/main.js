@@ -25,6 +25,7 @@ document.onreadystatechange = function () {
                 if ( _isValid === false ) { _isValid = els[e].classList.contains(_classes[_idx]); }
             }
 
+            /* Is this a long-form post? */
             if ( _isValid ) {
                 for ( let _idx in _sections ) {
                     els[e].appendChild(buildElement({ 'tag': 'section',
@@ -32,28 +33,16 @@ document.onreadystatechange = function () {
                                                       'attribs': [{'key':'data-name','value':_sections[_idx]}]
                                                      }));
                 }
+
+                /* Prepare the Reader */
+                setTimeout(function () { prepArticleReader(); }, 25);
+            }
+
+            /* Are we working with a contact form? */
+            if ( els[e].classList.contains('contact') ) {
+                setTimeout(function () { prepContactForm(); }, 25);
             }
         }
-
-        var els = document.getElementsByTagName('section');
-        for ( let e = 0; e < els.length; e++ ) {
-            var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
-            switch ( _name ) {
-                case 'comments':
-                    setCommentSection(els[e]);
-                    break;
-
-                case 'readmore':
-                    setReadNextSection(els[e]);
-                    break;
-
-                default:
-                    /* No Action */
-            }
-        }
-
-        /* Start the navigation counter watcher */
-        setTimeout(function () { watchNavCounter(); }, 500);
     }
 }
 
@@ -75,6 +64,10 @@ function handleButtonAction(el) {
 
             case 'nav-next':
                 setVisibleColumn(1);
+                break;
+
+            case 'contact-send':
+                sendContactMessage();
                 break;
 
             default:
@@ -172,38 +165,118 @@ function setNavCapsule( _visCols = 0, _page = 0, _cols = 0 ) {
 }
 
 /** ************************************************************************* *
+ *  Article Reader Functions
+ ** ************************************************************************* */
+function prepArticleReader() {
+    var els = document.getElementsByTagName('section');
+    for ( let e = 0; e < els.length; e++ ) {
+        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+        switch ( _name ) {
+            case 'comments':
+                setCommentSection(els[e]);
+                break;
+
+            case 'readmore':
+                setReadNextSection(els[e]);
+                break;
+
+            default:
+                /* No Action */
+        }
+    }
+
+    /* Start the navigation counter watcher */
+    setTimeout(function () { watchNavCounter(); }, 500);
+}
+function setVisibleColumn( _plusMinus = 0 ) {
+    if ( _plusMinus === undefined || _plusMinus === null || isNaN(_plusMinus) ) { _plusMinus = 0; }
+    if ( _plusMinus == 0 ) { return; }
+
+    var _colWidth = 550;
+    var els = document.getElementsByTagName('article');
+    if ( els.length > 0 ) {
+        for ( let e = 0; e < els.length; e++ ) {
+            if ( els[e].childNodes.length !== undefined && els[e].childNodes.length > 0 ) {
+                for ( let z = 0; z < els[e].childNodes.length; z++ ) {
+                    if ( NoNull(els[e].childNodes[z].tagName).toLowerCase() == 'p' ) {
+                        _colWidth = els[e].childNodes[z].offsetWidth;
+                    }
+                }
+            }
+            var _visCols = Math.floor(els[e].offsetWidth / _colWidth);
+            var _cols = Math.floor(els[e].scrollWidth / _colWidth);
+            var _page = Math.floor(els[e].scrollLeft / _colWidth);
+
+            els[e].scrollLeft = _colWidth * (_page + _plusMinus);
+
+            /* This should only run on the first article */
+            e += els.length;
+        }
+    }
+}
+
+/** ************************************************************************* *
  *  Comment Functions
  ** ************************************************************************* */
 function setCommentSection( el ) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
     el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
+    el.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Comments' }));
+    el.appendChild(buildElement({ 'tag': 'ol', 'classes': ['comment-list', 'hidden'] }));
 
-    var _block = buildElement({ 'tag': 'div', 'classes': ['comments', 'hidden'] });
-        _block.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Comments' }));
-        _block.appendChild(buildElement({ 'tag': 'p', 'classes': ['instructions'], 'text': 'Be the first to comment!' }));
+    /* Collect the Post Comments */
+    setTimeout(function () { getPostComments(); }, 75);
+}
+function getPostComments() {
+    var els = document.getElementsByTagName('article');
+    for ( let e = 0; e < els.length; e++ ) {
+        var _guid = NoNull(els[e].getAttribute('data-guid'));
+        if ( NoNull(_guid).length == 36 ) {
+            setTimeout(function () { doJSONQuery('post/thread', 'GET', { 'post_guid': _guid }, parsePostComments); }, 25);
+        }
 
-    var _form = buildElement({ 'tag': 'div', 'classes': ['comment-form', 'hidden'] });
+        /* We should only ever do this for one article, as there should only be one article on the page */
+        e += els.length;
+    }
+    hideByClass('comment-list');
+}
+function parsePostComments( data ) {
+    var els = document.getElementsByClassName('comment-list');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
+        els[e].innerHTML = '';
+    }
 
-    var _inpt = buildElement({ 'tag': 'textarea',
-                               'classes': ['form-input'],
-                               'attribs': [{'key':'name','value':'cdata'},
-                                           {'key':'data-name','value':'content'},
-                                           {'key':'data-placeholder','value':'(Comment Text)'},
-                                           {'key':'placeholder','value':'(Comment Text)'}
-                                           ]
-                              });
-    _block.appendChild(_form);
+    /* If we have comments, let's parse them */
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
 
-    var _btn = buildElement({ 'tag': 'button',
-                              'classes': ['btn-action', 'btn-primary'],
-                              'attribs': [{'key':'data-action','value':'comment-publish'}],
-                              'text': 'Publish'
-                             });
-    _form.appendChild(buildElement({ 'tag': 'div', 'classes': ['action-bar'], 'child': _btn }));
+        console.log(ds);
+    }
 
-    /* Add the comment section to the DOM */
-    el.appendChild(_block);
+    /* If there are no comments, show a message */
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].childNodes.length <= 0 ) {
+            var _token = getMetaValue('authorization');
+            var _msg = NoNull(window.strings['lbl.start-comments'], 'Be the first to comment!');
+            if ( NoNull(_token).length < 36 ) {
+                _msg = NoNull(window.strings['lbl.no-comments'], 'There are no comments just yet.');
+            }
+
+            /* Set the list item */
+            els[e].appendChild(buildElement({ 'tag': 'li',
+                                              'classes': ['comment-item', 'comment-zero', 'text-center'],
+                                              'text': _msg
+                                             }));
+        }
+
+        /* If we have list items, make sure the elements are visible */
+        if ( els[e].childNodes.length > 0 ) { showByClass('comment-list'); }
+    }
+
+    /* Ensure the comment section is visible */
+    showByClass('comments');
 }
 
 /** ************************************************************************* *
@@ -278,31 +351,106 @@ function buildReadMoreItem( data, _label = '' ) {
 }
 
 /** ************************************************************************* *
- *  Additional Page Functions
+ *  Contact Form
  ** ************************************************************************* */
-function setVisibleColumn( _plusMinus = 0 ) {
-    if ( _plusMinus === undefined || _plusMinus === null || isNaN(_plusMinus) ) { _plusMinus = 0; }
-    if ( _plusMinus == 0 ) { return; }
-
-    var _colWidth = 550;
-    var els = document.getElementsByTagName('article');
-    if ( els.length > 0 ) {
+function prepContactForm() {
+    /* Remove the frustrating bits of forms */
+    var _tags = ['input', 'textarea'];
+    for ( let _idx in _tags ) {
+        var els = document.getElementsByTagName(_tags[_idx]);
         for ( let e = 0; e < els.length; e++ ) {
-            if ( els[e].childNodes.length !== undefined && els[e].childNodes.length > 0 ) {
-                for ( let z = 0; z < els[e].childNodes.length; z++ ) {
-                    if ( NoNull(els[e].childNodes[z].tagName).toLowerCase() == 'p' ) {
-                        _colWidth = els[e].childNodes[z].offsetWidth;
-                    }
-                }
-            }
-            var _visCols = Math.floor(els[e].offsetWidth / _colWidth);
-            var _cols = Math.floor(els[e].scrollWidth / _colWidth);
-            var _page = Math.floor(els[e].scrollLeft / _colWidth);
-
-            els[e].scrollLeft = _colWidth * (_page + _plusMinus);
-
-            /* This should only run on the first article */
-            e += els.length;
+            if ( els[e].classList.contains('has-changes') ) { els[e].classList.remove('has-changes'); }
+            els[e].setAttribute('autocomplete', 'off');
+            els[e].setAttribute('spellcheck', 'false');
         }
     }
+
+    /* Start the form watcher */
+    setTimeout(function () { watchContactForm(); }, 250);
 }
+
+function validateContactForm() {
+    var _cnt = 0;
+
+    var els = document.getElementsByName('fdata');
+    if ( els.length === undefined || els.length <= 0 ) { _cnt++; }
+
+    for ( let e = 0; e < els.length; e++ ) {
+        var _req = NoNull(els[e].getAttribute('data-required')).toUpperCase();
+        if ( _req == 'Y' ) {
+            var _min = parseInt(NoNull(els[e].getAttribute('data-minlength')));
+            if ( _min === undefined || _min === null || isNaN(_min) ) { _min = 1; }
+            if ( _min <= 0 ) { _min = 1; }
+
+            var _val = getElementValue(els[e]);
+            if ( NoNull(_val).length < _min ) { _cnt++; }
+        }
+    }
+
+    /* If there are zero issues, return a happy boolean */
+    return ((_cnt == 0) ? true : false);
+}
+
+function watchContactForm() {
+    var els = document.getElementsByClassName('contact');
+    if ( els.length === undefined || els.length <= 0 ) { return; }
+
+    var _isValid = validateContactForm();
+    disableButtons('btn-send', ((_isValid) ? false : true));
+
+    /* Run the watcher again after a brief delay */
+    setTimeout(function () { watchContactForm(); }, 333);
+}
+function sendContactMessage() {
+    if ( validateContactForm() ) {
+        var _params = {};
+        var els = document.getElementsByName('fdata');
+        for ( let e = 0; e < els.length; e++ ) {
+            var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
+            if ( NoNull(_name).length > 0 ) { _params[_name] = getElementValue(els[e]); }
+        }
+
+        setTimeout(function () { doJSONQuery('contact/send', 'POST', _params, parseContactSend); }, 25);
+        setContactErrorMessage();
+        spinButtons('btn-send');
+    }
+}
+function parseContactSend( data ) {
+    spinButtons('btn-send', true);
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        if ( ds.is_sent !== undefined && ds.is_sent !== null && ds.is_sent !== false ) {
+            var els = document.getElementsByTagName('article');
+            for ( let e = 0; e < els.length; e++ ) {
+                els[e].innerHTML = '';
+
+                /* Set the "thank you" message */
+                els[e].appendChild(buildElement({ 'tag': 'h1', 'text': NoNull(window.strings['ttl.contact-success'], "Message Sent!") }));
+                els[e].appendChild(buildElement({ 'tag': 'p',
+                                                  'classes': ['text-center'],
+                                                  'text': NoNull(window.strings['msg.contact-success'], "Thank you for getting in touch.")
+                                                 }));
+            }
+        }
+
+    } else {
+        setContactErrorMessage(data.meta.text);
+    }
+}
+function setContactErrorMessage( _msg = '' ) {
+    if ( _msg === undefined || _msg === null || NoNull(_msg).length <= 0 ) { _msg = ''; }
+    var els = document.getElementsByClassName('error');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
+        els[e].innerHTML = '';
+
+        /* Set the message */
+        els[e].appendChild(buildElement({ 'tag': 'p', 'text': NoNull(_msg, "An error occurred") }));
+        if ( NoNull(_msg).length > 0 && els[e].classList.contains('hidden') ) { els[e].classList.remove('hidden'); }
+    }
+}
+
+/** ************************************************************************* *
+ *  Additional Page Functions
+ ** ************************************************************************* */

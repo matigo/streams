@@ -1,0 +1,26 @@
+{
+    "navHome": "Home",
+    "navSettings": "Settings",
+    "navSignIn": "Sign In",
+    "navSignOut": "Sign Out",
+
+    "lblName": "Name",
+    "lblNamePH": "(Required)",
+    "lblMail": "Email",
+    "lblMailPH": "(Optional)",
+    "lblMessage": "Message",
+    "lblMessagePH": "(Required)",
+
+    "btnSend": "Send Message",
+
+    "ContactHeader": "Get in touch!",
+    "404Header": "404",
+    "404Message": "Not quite sure what you're looking for, but this message clearly isn't it.",
+
+    "ttlContactSuccess": "Message Sent!",
+    "msgContactSuccess": "Thanks for being awesome! Your message has been received.",
+
+    "msgFinePrint": "Please be aware that abusive messages, spam, and potentially unwarranted messages may be automatically filtered by the system. By submitting a note on this form, you are signifying your agreement with this condition.",
+    "msgOfflineMode": "There does not seem to be a working network connection. Now operating in offline mode.",
+    "msgCollectingData": "Collecting posts ..."
+}
