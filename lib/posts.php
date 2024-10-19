@@ -2194,59 +2194,25 @@ class Posts {
 
         /* Collect the data */
         $ReplStr = array( '[POST_GUID]' => sqlScrub($CleanGuid) );
-        $sqlStr = readResource(SQL_DIR . '/posts/getReadMore.sql', $ReplStr);
+        $sqlStr = prepSQLQuery( "CALL GetReadNextList('[POST_GUID]');", $ReplStr );
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
-            $data = false;
+            $data = array();
 
             foreach ( $rslt as $Row ) {
-                $data = array( 'domain'   => NoNull($Row['url']),
-                               'previous' => false,
-                               'random'   => false,
-                               'next'     => false,
-                              );
+                $key = strtolower(NoNull($Row['key']));
+                if ( array_key_exists($key, $data) === false && mb_strlen(NoNull($Row['guid'])) == 36 ) {
+                    $data[$key] = array( 'guid'  => NoNull($Row['guid']),
+                                         'type'  => NoNull($Row['type']),
+                                         'title' => NoNull($Row['title']),
+                                         'url'   => NoNull($Row['canonical_url']),
+                                         'idx'   => nullInt($Row['post_num']),
 
-                /* Previous Post */
-                if ( mb_strlen(NoNull($Row['prev_guid'])) == 36 ) {
-                    $data['previous'] = array( 'guid'  => NoNull($Row['prev_guid']),
-                                               'type'  => NoNull($Row['prev_type']),
-                                               'title' => NoNull($Row['prev_title']),
-                                               'url'   => NoNull($Row['prev_url']),
+                                         'publish_at'   => apiDate($Row['publish_unix'], 'Z'),
+                                         'publish_unix' => apiDate($Row['publish_unix'], 'U'),
+                                        );
 
-                                               'publish_at'   => apiDate($Row['prev_unix'], 'Z'),
-                                               'publish_unix' => apiDate($Row['prev_unix'], 'U'),
-                                              );
-                }
 
-                /* Next Post */
-                if ( mb_strlen(NoNull($Row['next_guid'])) == 36 ) {
-                    $data['next'] = array( 'guid'  => NoNull($Row['next_guid']),
-                                           'type'  => NoNull($Row['next_type']),
-                                           'title' => NoNull($Row['next_title']),
-                                           'url'   => NoNull($Row['next_url']),
-
-                                           'publish_at'   => apiDate($Row['next_unix'], 'Z'),
-                                           'publish_unix' => apiDate($Row['next_unix'], 'U'),
-                                          );
-                }
-
-                /* Random Post (Do not allow dupes of previous or next) */
-                $randKeys = array( 'rand', 'yand', 'zand' );
-                foreach ( $randKeys as $key ) {
-                    if ( is_array($data['random']) === false ) {
-                        if ( NoNull($Row[$key . '_guid']) != NoNull($Row['prev_guid']) && NoNull($Row[$key . '_guid']) != NoNull($Row['next_guid']) ) {
-                            if ( mb_strlen(NoNull($Row[$key . '_guid'])) == 36 ) {
-                                $data['random'] = array( 'guid'  => NoNull($Row[$key . '_guid']),
-                                                         'type'  => NoNull($Row[$key . '_type']),
-                                                         'title' => NoNull($Row[$key . '_title']),
-                                                         'url'   => NoNull($Row[$key . '_url']),
-
-                                                         'publish_at'   => apiDate($Row[$key . '_unix'], 'Z'),
-                                                         'publish_unix' => apiDate($Row[$key . '_unix'], 'U'),
-                                                        );
-                            }
-                        }
-                    }
                 }
             }
 
