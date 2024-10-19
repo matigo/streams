@@ -213,8 +213,11 @@ function setReadNextSection( el ) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
     el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
+    if ( el.classList !== undefined && el.classList !== null ) {
+        if ( el.classList.contains('nobreak') === false ) { el.classList.add('nobreak'); }
+    }
 
-    var _block = buildElement({ 'tag': 'div', 'classes': ['readmore', 'nobreak', 'hidden'] });
+    var _block = buildElement({ 'tag': 'div', 'classes': ['readmore', 'hidden'] });
         _block.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Read Next' }));
         _block.appendChild(buildElement({ 'tag': 'ul', 'classes': ['readmore-list'] }));
     el.appendChild(_block);
