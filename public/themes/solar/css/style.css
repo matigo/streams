@@ -264,9 +264,9 @@ input {
  ** ************************************************************************* */
 .nopadding { padding: 0; }
 .nomargin { margin: 0; }
-.clickable { cursor: pointer; }
-.pointer { cursor: pointer; }
-.hidden { display: none; }
+.clickable { cursor: pointer !important; }
+.pointer { cursor: pointer !important; }
+.hidden { display: none !important; }
 
 .text-left { text-align: left !important; }
 .text-center { text-align: center !important; }
@@ -498,6 +498,9 @@ article section.appendix {
     display: block;
     width: 100%;
 }
+article section.appendix .nobreak,
+article section.appendix.nobreak { break-inside: avoid-column; }
+
 article section.appendix button {
     border-color: transparent !important;
     border-radius: 1.25em;

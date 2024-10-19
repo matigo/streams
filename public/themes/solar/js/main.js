@@ -16,7 +16,7 @@ document.onreadystatechange = function () {
         }
 
         /* Prep the page elements */
-        var _sections = ['readnext'];
+        var _sections = ['readmore', 'comments'];
         var _classes = ['article', 'bookmark', 'quotation', 'location'];
         var els = document.getElementsByTagName('article');
         for ( let e = 0; e < els.length; e++ ) {
@@ -27,8 +27,10 @@ document.onreadystatechange = function () {
 
             if ( _isValid ) {
                 for ( let _idx in _sections ) {
-                    els[e].appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
-                    els[e].appendChild(buildElement({ 'tag': 'section', 'classes': ['appendix'], 'attribs': [{'key':'data-name','value':_sections[_idx]}] }));
+                    els[e].appendChild(buildElement({ 'tag': 'section',
+                                                      'classes': ['appendix', _sections[_idx], 'hidden'],
+                                                      'attribs': [{'key':'data-name','value':_sections[_idx]}]
+                                                     }));
                 }
             }
         }
@@ -41,7 +43,7 @@ document.onreadystatechange = function () {
                     setCommentSection(els[e]);
                     break;
 
-                case 'readnext':
+                case 'readmore':
                     setReadNextSection(els[e]);
                     break;
 
@@ -170,14 +172,18 @@ function setNavCapsule( _visCols = 0, _page = 0, _cols = 0 ) {
 }
 
 /** ************************************************************************* *
- *  Additional Page Functions
+ *  Comment Functions
  ** ************************************************************************* */
 function setCommentSection( el ) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
+    el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
 
-    el.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Comments' }));
-    el.appendChild(buildElement({ 'tag': 'p', 'classes': ['instructions'], 'text': 'Be the first to comment!' }));
+    var _block = buildElement({ 'tag': 'div', 'classes': ['comments', 'hidden'] });
+        _block.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Comments' }));
+        _block.appendChild(buildElement({ 'tag': 'p', 'classes': ['instructions'], 'text': 'Be the first to comment!' }));
+
+    var _form = buildElement({ 'tag': 'div', 'classes': ['comment-form', 'hidden'] });
 
     var _inpt = buildElement({ 'tag': 'textarea',
                                'classes': ['form-input'],
@@ -187,32 +193,32 @@ function setCommentSection( el ) {
                                            {'key':'placeholder','value':'(Comment Text)'}
                                            ]
                               });
-    el.appendChild(_inpt);
+    _block.appendChild(_form);
 
     var _btn = buildElement({ 'tag': 'button',
                               'classes': ['btn-action', 'btn-primary'],
                               'attribs': [{'key':'data-action','value':'comment-publish'}],
                               'text': 'Publish'
                              });
-    el.appendChild(buildElement({ 'tag': 'div', 'classes': ['action-bar'], 'child': _btn }));
+    _form.appendChild(buildElement({ 'tag': 'div', 'classes': ['action-bar'], 'child': _btn }));
 
-    /* Ensure the element is visible */
-    if ( el.classList !== undefined && el.classList !== null ) {
-        if ( el.classList.contains('hidden') ) { el.classList.remove('hidden'); }
-    }
+    /* Add the comment section to the DOM */
+    el.appendChild(_block);
 }
+
+/** ************************************************************************* *
+ *  ReadMore Functions
+ ** ************************************************************************* */
 function setReadNextSection( el ) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
+    el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
 
-    el.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Read Next' }));
-    el.appendChild(buildElement({ 'tag': 'ul', 'classes': ['readmore-list'] }));
+    var _block = buildElement({ 'tag': 'div', 'classes': ['readmore', 'nobreak', 'hidden'] });
+        _block.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Read Next' }));
+        _block.appendChild(buildElement({ 'tag': 'ul', 'classes': ['readmore-list'] }));
+    el.appendChild(_block);
     setTimeout(function () { getReadMoreLinks(); }, 50);
-
-    /* Ensure the element is not yet visible */
-    if ( el.classList !== undefined && el.classList !== null ) {
-        if ( el.classList.contains('hidden') === false ) { el.classList.add('hidden'); }
-    }
 }
 function getReadMoreLinks() {
     var els = document.getElementsByTagName('article');
@@ -240,14 +246,8 @@ function parseReadMoreLinks( data ) {
                 }
             }
 
-            /* Find the parent section and make sure it's visible */
-            var el = els[e];
-            for ( let z = 0; z <= 9; z++ ) {
-                if ( NoNull(el.tagName).toLowerCase() == 'section' ) {
-                    if ( el.classList.contains('hidden') ) { el.classList.remove('hidden'); }
-                    z += 9;
-                }
-            }
+            /* Set the section as visible */
+            showByClass('readmore');
         }
     }
 }
@@ -274,6 +274,9 @@ function buildReadMoreItem( data, _label = '' ) {
     return _obj;
 }
 
+/** ************************************************************************* *
+ *  Additional Page Functions
+ ** ************************************************************************* */
 function setVisibleColumn( _plusMinus = 0 ) {
     if ( _plusMinus === undefined || _plusMinus === null || isNaN(_plusMinus) ) { _plusMinus = 0; }
     if ( _plusMinus == 0 ) { return; }
