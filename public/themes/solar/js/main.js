@@ -15,6 +15,9 @@ document.onreadystatechange = function () {
             els[i].addEventListener('click', function(e) { handleButtonAction(e); });
         }
 
+        /* Restore any Page Prefrences that might be set */
+        restorePagePref();
+
         /* Prep the page elements */
         var _sections = ['readmore', 'comments'];
         var _classes = ['article', 'bookmark', 'quotation', 'location'];
@@ -38,10 +41,9 @@ document.onreadystatechange = function () {
                 setTimeout(function () { prepArticleReader(); }, 25);
             }
 
-            /* Are we working with a contact form? */
-            if ( els[e].classList.contains('contact') ) {
-                setTimeout(function () { prepContactForm(); }, 25);
-            }
+            /* Are we working with a static page? */
+            if ( els[e].classList.contains('archives') ) { setTimeout(function () { prepArchiveList(); }, 25); }
+            if ( els[e].classList.contains('contact') ) { setTimeout(function () { prepContactForm(); }, 25); }
         }
     }
 }
@@ -68,6 +70,16 @@ function handleButtonAction(el) {
 
             case 'contact-send':
                 sendContactMessage();
+                break;
+
+            case 'menu':
+                toggleMenu();
+                break;
+
+            case 'pref-theme':
+            case 'pref-font':
+            case 'pref-size':
+                setPagePref(el);
                 break;
 
             default:
@@ -351,6 +363,103 @@ function buildReadMoreItem( data, _label = '' ) {
 }
 
 /** ************************************************************************* *
+ *  Archive List
+ ** ************************************************************************* */
+function prepArchiveList() {
+    var els = document.getElementsByTagName('article');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('archives') ) {
+            els[e].innerHTML = '';
+
+            /* Set the Message */
+            els[e].appendChild(buildElement({ 'tag': 'h1', 'text': NoNull(window.strings['ttl.archives'], "Post History") }));
+            var _msg = buildElement({ 'tag': 'p', 'classes': ['api-message'] });
+
+
+            /* Collect the post history */
+            var _guid = getMetaValue('channel_guid');
+            if ( NoNull(_guid).length == 36 ) {
+                _msg.appendChild(buildElement({ 'tag': 'i', 'classes': ['fas', 'fa-spinner', 'fa-spin'] }));
+                _msg.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(window.strings['msg.arcives-read'], "Collecting Posts ...") }));
+                setTimeout(function () { doJSONQuery('posts/list', 'GET', { 'channel_guid': _guid }, parseArchiveList); }, 25);
+
+            } else {
+                _msg.appendChild(buildElement({ 'tag': 'i', 'classes': ['fas', 'fa-triangle-exclamation'] }));
+                _msg.appendChild(buildElement({ 'tag': 'span', 'text': "Invalid Channel Identifier" }));
+            }
+
+            /* Set the appropriate message */
+            els[e].appendChild(_msg);
+        }
+    }
+}
+function parseArchiveList( data ) {
+    var els = document.getElementsByTagName('article');
+    var _list = buildElement({ 'tag': 'section', 'classes': ['archive-list'] });
+
+    /* Reset the Contents */
+    for ( let e = 0; e < els.length; e++ ) {
+        els[e].innerHTML = '';
+        els[e].appendChild(buildElement({ 'tag': 'h1', 'text': NoNull(window.strings['ttl.archives'], "Post History") }));
+    }
+
+    /* Parse the results */
+    if ( data.meta !== undefined && data.meta.code == 200 ) {
+        var ds = data.data;
+
+        /* Fill the Post list */
+        var _mmYY = '';
+
+        /* Begin processing the data */
+        for ( let i = 0; i < ds.length; i++ ) {
+            /* If we have a different Month/Year combination, show a title */
+            var _period = dateToYearMonthString(ds[i].publish_unix);
+            if ( _period != _mmYY ) {
+                _list.appendChild(buildElement({ 'tag': 'h3', 'text': _period }));
+                _mmYY = _period;
+            }
+
+            /* Record the item */
+            if ( ds[i].title !== undefined && ds[i].title !== false ) {
+                var _item = buildElement({ 'tag': 'p', 'classes': ['post-item', NoNull(ds[i].type).replaceAll('post.', '')] });
+                    _item.appendChild(buildElement({ 'tag': 'label', 'text': numberWithCommas(ds[i].number) }));
+                    _item.appendChild(buildElement({ 'tag': 'span', 'text': '&bull;' }));
+                    _item.appendChild(buildElement({ 'tag': 'a',
+                                                     'attribs': [{'key':'href','value':NoNull(ds[i].url)},
+                                                                 {'key':'target','value':'_blank'},
+                                                                 {'key':'data-guid','value':ds[i].guid}
+                                                                 ],
+                                                     'text': NoNull(ds[i].title)
+                                                    }));
+                _list.appendChild(_item);
+            }
+        }
+    }
+
+    /* Set the appropriate elements to the DOM */
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( _list.childNodes.length > 0 ) {
+            /* Show the number of items available (if applicable) */
+            els[e].appendChild(buildElement({ 'tag': 'h3',
+                                              'classes': ['archive-count'],
+                                              'child': buildElement({ 'tag': 'span',
+                                                                      'text': NoNull(window.strings['msg.archive-count'], "Showing {num} articles for you to read.").replaceAll('{num}', numberWithCommas(ds.length))
+                                                                     })
+                                             }));
+
+            /* Set the List */
+            els[e].appendChild(_list);
+
+        } else {
+            var _msg = buildElement({ 'tag': 'p', 'classes': ['api-message'] });
+                _msg.appendChild(buildElement({ 'tag': 'i', 'classes': ['fas', 'fa-triangle-exclamation'] }));
+                _msg.appendChild(buildElement({ 'tag': 'span', 'text': NoNull(window.strings['msg.archives-zero'], "There are no visible posts to show") }));
+            els[e].appendChild(_msg);
+        }
+    }
+}
+
+/** ************************************************************************* *
  *  Contact Form
  ** ************************************************************************* */
 function prepContactForm() {
@@ -452,5 +561,168 @@ function setContactErrorMessage( _msg = '' ) {
 }
 
 /** ************************************************************************* *
+ *  Reader Menu
+ ** ************************************************************************* */
+function toggleMenu() {
+    var els = document.getElementsByClassName('menu');
+    if ( els.length > 0 ) {
+        clearMenu();
+    } else {
+        buildMenu();
+    }
+}
+function buildMenu() {
+    var _menu = buildElement({ 'tag': 'section', 'classes': ['menu'] });
+
+    /* Construct the Links block */
+        _menu.appendChild(buildElement({ 'tag': 'h1', 'classes': ['title'], 'text': NoNull(window.strings['mnu.links'], 'Links') }));
+    var _links = buildElement({ 'tag': 'ul', 'classes': ['page-links'] });
+        _links.appendChild(buildElement({ 'tag': 'li',
+                                          'classes': ['link-item'],
+                                          'child': buildElement({ 'tag': 'a',
+                                                                  'attribs': [{'key':'href','value': window.location.origin + '/archives'},
+                                                                              {'key':'target','value':'_self'}
+                                                                              ],
+                                                                  'text': NoNull(window.strings['lbl.archives'], 'Article History')
+                                                                 })
+                                         }));
+        _links.appendChild(buildElement({ 'tag': 'li',
+                                          'classes': ['link-item'],
+                                          'child': buildElement({ 'tag': 'a',
+                                                                  'attribs': [{'key':'href','value': window.location.origin + '/contact'},
+                                                                              {'key':'target','value':'_self'}
+                                                                              ],
+                                                                  'text': NoNull(window.strings['lbl.contact'], 'Contact Form')
+                                                                 })
+                                         }));
+        _menu.appendChild(_links);
+
+    /* Construct the Preferences block */
+    var _prefs = { 'theme': ['', 'Dark'],
+                   'font': ['', 'Sans', 'Serif', 'Mono'],
+                   'size': ['xs', 'sm', '', 'lg', 'xl']
+                  };
+        _menu.appendChild(buildElement({ 'tag': 'h1', 'classes': ['title'], 'text': NoNull(window.strings['mnu.prefs'], 'Reading Preferences') }));
+
+    for ( let _pp in _prefs ) {
+        _menu.appendChild(buildElement({ 'tag': 'label', 'text': NoNull(window.strings['lbl.' + _pp], _pp) }));
+
+        var _block = buildElement({ 'tag': 'div', 'classes': ['row'] });
+        var _btns = _prefs[_pp];
+
+        var _key = 'pref-' + _pp;
+        var _val = readStorage(_key);
+        if ( _val === undefined || _val === null || NoNull(_val).length <= 0 ) { _val = ''; }
+
+        for ( let _idx in _btns ) {
+            var _vv = NoNull(_btns[_idx]).toLowerCase();
+            console.log('btn.' + _vv);
+            var _btn = buildElement({ 'tag': 'button',
+                                      'classes': ['btn-action', ((NoNull(_btns[_idx]).toLowerCase() == _val.toLowerCase()) ? 'btn-primary' : '')],
+                                      'attribs': [{'key':'data-action','value':'pref-' + _pp},
+                                                  {'key':'data-value','value':_vv}
+                                                  ],
+                                      'text': NoNull(window.strings['btn.' + _vv], 'Default')
+                                     });
+                _btn.addEventListener('touchend', function(e) { handleButtonAction(e); });
+                _btn.addEventListener('click', function(e) { handleButtonAction(e); });
+            _block.appendChild(_btn);
+        }
+        _menu.appendChild(_block);
+    }
+
+    /* Add the "close" button */
+    var _btn = buildElement({ 'tag': 'button',
+                              'classes': ['btn-action'],
+                              'attribs': [{'key':'data-action','value':'menu'}],
+                              'text': NoNull(window.strings['lbl.close'], 'Close')
+                             });
+                _btn.addEventListener('touchend', function(e) { handleButtonAction(e); });
+                _btn.addEventListener('click', function(e) { handleButtonAction(e); });
+        _menu.appendChild(buildElement({ 'tag': 'div',
+                                         'classes': ['footer'],
+                                         'child': _btn
+                                        }));
+
+    /* Set the Menu on the DOM */
+    var els = document.getElementsByTagName('body');
+    for ( let e = 0; e < els.length; e++ ) {
+        els[e].appendChild(_menu);
+    }
+
+    /* Trigger the ease-in */
+    setTimeout(function () { showMenu(); }, 25);
+}
+function showMenu() {
+    var els = document.getElementsByClassName('menu');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('active') === false ) { els[e].classList.add('active'); }
+    }
+}
+function clearMenu() {
+    var els = document.getElementsByClassName('menu');
+    if ( els.length > 0 ) {
+        for ( let e = 0; e < els.length; e++ ) {
+            if ( els[e].classList.contains('active') ) { els[e].classList.remove('active'); }
+        }
+
+        /* Destroy the Menus */
+        setTimeout(function () { removeByClass('menu'); }, 500);
+    }
+}
+
+/** ************************************************************************* *
  *  Additional Page Functions
  ** ************************************************************************* */
+function restorePagePref() {
+    var _opts = ['pref-theme', 'pref-font', 'pref-size'];
+    for ( let _idx in _opts ) {
+        var _val = readStorage(_opts[_idx]);
+        if ( NoNull(_val).length > 0 ) { applyPagePref(_opts[_idx], _val); }
+    }
+}
+function setPagePref(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'button' ) { return; }
+    if ( el.classList.contains('btn-primary') ) { return; }
+
+    var _key = NoNull(el.getAttribute('data-action')).toLowerCase();
+    var _val = NoNull(el.getAttribute('data-value')).toLowerCase();
+
+    /* Ensure the buttons are appropritely de-activated */
+    var els = el.parentElement.getElementsByTagName('button');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('btn-primary') ) { els[e].classList.remove('btn-primary'); }
+        if ( els[e].classList.contains('selected') ) { els[e].classList.remove('selected'); }
+    }
+
+    /* Save the Preference to the browser */
+    saveStorage(_key, _val);
+
+    /* Apply the Preference */
+    applyPagePref(_key.replaceAll('pref-', ''), _val);
+
+    /* Set the current button as active */
+    el.classList.add('btn-primary');
+}
+function applyPagePref( _key, _val ) {
+    if ( _val === undefined || _val === null || NoNull(_val).length <= 0 ) { _val = ''; }
+    if ( _key === undefined || _key === null || NoNull(_key).length <= 0 ) { return; }
+    _key = NoNull(_key.replaceAll('pref-', ''));
+    var _name = NoNull(_key + '-' + _val).toLowerCase();
+
+    var els = document.getElementsByTagName('body');
+    for ( let e = 0; e < els.length; e++ ) {
+        /* Remove any matching keys */
+        if ( els[e].classList.length > 0 ) {
+            for ( let c = (els[e].classList.length - 1); c >= 0; c-- ) {
+                var _chk = NoNull(els[e].classList[c]).toLowerCase();
+                if ( _chk.includes(_key) ) { els[e].classList.remove(_chk); }
+            }
+        }
+
+        /* Set the new value (only if we have one) */
+        if ( NoNull(_val).length > 0 ) { els[e].classList.add(_name); }
+    }
+}
+

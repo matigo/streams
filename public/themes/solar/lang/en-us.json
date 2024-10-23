@@ -1,5 +1,7 @@
 {
     "navHome": "Home",
+    "navArchives": "Archive Library",
+    "navContact": "Contact Form",
     "navSettings": "Settings",
     "navSignIn": "Sign In",
     "navSignOut": "Sign Out",
@@ -11,6 +13,20 @@
     "lblMessage": "Message",
     "lblMessagePH": "(Required)",
 
+    "lblPrefTheme": "Theme",
+    "lblPrefFont": "Font",
+    "lblPrefSize": "Size",
+
+    "btnPrefDark": "Dark",
+    "btnPrefSans": "Sans",
+    "btnPrefSerif": "Serif",
+    "btnPrefMono": "Mono",
+    "btnPrefXS": "XS",
+    "btnPrefSM": "Sm",
+    "btnPrefLG": "Lg",
+    "btnPrefXL": "XL",
+
+    "btnClose": "Close",
     "btnSend": "Send Message",
 
     "ContactHeader": "Get in touch!",

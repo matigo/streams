@@ -78,9 +78,12 @@ class Posts {
                 return $this->_getWordHistory();
                 break;
 
+            case 'archives':
+            case 'archive':
+            case 'library':
             case 'list':
             case '':
-                return false;
+                return $this->_getPostList();
                 break;
 
             case 'read':
@@ -823,10 +826,9 @@ class Posts {
 
         // If It's Good, Record the Meta Data & Collect the Post Object to Return
         if ( nullInt($data['post_id'], $post_id) >= 1 ) {
-            // Reset the SQL String
             $sqlStr = '';
 
-            // Record the MetaData for the Post
+            /* Record the MetaData for the Post */
             foreach ( $data['meta'] as $Key=>$Value ) {
                 if ( NoNull($Value) != '' ) {
                     $ReplStr = array( '[POST_ID]' => nullInt($data['post_id'], $post_id),
@@ -838,8 +840,8 @@ class Posts {
                 }
             }
 
-            // Record the Tags for the Post
-            if ( NoNull($data['tags']) != '' ) {
+            /* Record the Tags for the Post */
+            if ( mb_strlen(NoNull($data['tags'])) > 0 ) {
                 $tgs = explode(',', NoNull($data['tags']));
                 $lst = '';
                 foreach ( $tgs as $Value ) {
@@ -864,7 +866,7 @@ class Posts {
                 }
             }
 
-            // Execute the Queries
+            /* Execute the Queries */
             $isOK = doSQLExecute($sqlStr);
 
             // Send any Webmentions or Pingbacks (If Applicable)
@@ -883,11 +885,11 @@ class Posts {
         $PersonaGUID = NoNull($this->settings['persona_guid']);
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
 
-        // Ensure we Have the requisite GUIDs
+        /* Ensure we Have the requisite GUIDs */
         if ( mb_strlen($PersonaGUID) <= 30 ) { return false; }
         if ( mb_strlen($PostGUID) <= 30 ) { return false; }
 
-        // Build and Run the SQL Query
+        /* Build and Run the SQL Query */
         $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                           '[POST_GUID]'    => sqlScrub($PostGUID),
                           '[PERSONA_GUID]' => sqlScrub($PersonaGUID),
@@ -895,7 +897,7 @@ class Posts {
         $sqlStr = readResource(SQL_DIR . '/posts/preparePostAction.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
 
-        // If We Have a Result, It's Good
+        /* If We Have a Result, It's Good */
         if ( $rslt ) { return true; }
         return false;
     }
@@ -906,13 +908,13 @@ class Posts {
         $PinValue = NoNull($this->settings['pin_value'], $this->settings['value']);
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
 
-        // Ensure we Have the requisite GUIDs
-        if ( mb_strlen($PersonaGUID) <= 30 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); return false; }
-        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        /* Ensure we Have the requisite GUIDs */
+        if ( mb_strlen($PersonaGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); }
+        if ( mb_strlen($PostGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Post GUID Supplied", 400); }
         $this->settings['guid'] = $PostGUID;
         $this->settings['ReqType'] = 'GET';
 
-        // Ensure the Pin Value is Logical
+        /* Ensure the Pin Value is Logical */
         $PinValue = str_replace('pin.pin.', 'pin.', "pin.$PinValue");
 
         // Prep the Action Record (if applicable)
@@ -940,9 +942,9 @@ class Posts {
         $PostGUID = NoNull($this->settings['post_guid'], NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
 
-        // Ensure we Have the requisite GUIDs
-        if ( mb_strlen($PersonaGUID) <= 30 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); return false; }
-        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        /* Ensure we Have the requisite GUIDs */
+        if ( mb_strlen($PersonaGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); }
+        if ( mb_strlen($PostGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Post GUID Supplied", 400); }
         $this->settings['guid'] = $PostGUID;
         $this->settings['ReqType'] = 'GET';
 
@@ -971,9 +973,9 @@ class Posts {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
         $Points = nullInt($this->settings['points'], $this->settings['point']);
 
-        // Ensure we Have the requisite GUIDs
-        if ( mb_strlen($PersonaGUID) <= 30 ) { $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); return false; }
-        if ( mb_strlen($PostGUID) <= 30 ) { $this->_setMetaMessage("Invalid Post GUID Supplied", 400); return false; }
+        /* Ensure we Have the requisite GUIDs */
+        if ( mb_strlen($PersonaGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Persona GUID Supplied", 400); }
+        if ( mb_strlen($PostGUID) <= 30 ) { return $this->_setMetaMessage("Invalid Post GUID Supplied", 400); }
         $this->settings['guid'] = $PostGUID;
         $this->settings['ReqType'] = 'GET';
 
@@ -2443,6 +2445,75 @@ class Posts {
 
         /* If We're Here, No Posts Could Be Retrieved */
         return array();
+    }
+
+
+    /**
+     *  Function returns a list of posts for a given Channel. If a Post.guid is also supplied, then the
+     *      thread the post belongs to is returned in its entirety.
+     */
+    private function _getPostList() {
+        $ChannelGuid = NoNull($this->settings['channel_guid'], $this->settings['channel']);
+        $PostGuid = NoNull($this->settings['post_guid'], NoNull($this->settings['post'], $this->settings['guid']));
+
+        /* Perform some basic error checking */
+        if ( mb_strlen($ChannelGuid) != 36 ) { return $this->_setMetaMessage("Invalid Channel identifier supplied", 400); }
+        if ( mb_strlen($PostGuid) > 0 && mb_strlen($PostGuid) != 36 ) { return $this->_setMetaMessage("Invalid Post identifier supplied", 400); }
+
+        /* Let's collect some data */
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[CHANNEL_GUID]' => sqlScrub($ChannelGuid),
+                          '[POST_GUID]'    => sqlScrub($PostGuid),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/posts/getPostList.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = array();
+
+            foreach ( $rslt as $Row ) {
+                if ( YNBool($Row['is_visible']) ) {
+                    $data[] = array( 'guid'   => NoNull($Row['post_guid']),
+                                     'type'   => NoNull($Row['post_type']),
+                                     'number' => nullInt($Row['post_num']),
+
+                                     'title'  => ((mb_strlen(NoNull($Row['title'])) > 0) ? NoNull($Row['title']) : false),
+                                     'url'    => NoNull($Row['site_url']) . NoNull($Row['canonical_url']),
+
+                                     'publish_at'   => apiDate($Row['publish_unix'], 'Z'),
+                                     'publish_unix' => apiDate($Row['publish_unix'], 'U'),
+                                     'expires_at'   => apiDate($Row['expires_unix'], 'Z'),
+                                     'expires_unix' => apiDate($Row['expires_unix'], 'U'),
+
+                                     'author' => array( 'guid'       => NoNull($Row['persona_guid']),
+                                                        'display_as' => NoNull($Row['display_name'], NoNull(NoNull($Row['first_name']) . ' ' . NoNull($Row['last_name']))),
+                                                        'last_name'  => NoNull($Row['last_name']),
+                                                        'first_name' => NoNull($Row['first_name']),
+                                                        'avatar_url' => NoNull($Row['site_url']) . '/avatars/' . NoNull($Row['avatar_img'], 'default.png'),
+                                                        'is_active'  => YNBool($Row['persona_active']),
+
+                                                        'created_at'   => apiDate($Row['persona_created_unix'], 'Z'),
+                                                        'created_unix' => apiDate($Row['persona_created_unix'], 'U'),
+                                                       ),
+
+                                     'slug'    => NoNull($Row['slug']),
+                                     'privacy' => NoNull($Row['privacy_type']),
+                                     'hash'    => NoNull($Row['hash']),
+
+                                     'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                                     'created_unix' => apiDate($Row['created_unix'], 'U'),
+                                     'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                     'updated_unix' => apiDate($Row['updated_unix'], 'U'),
+                                    );
+
+                }
+            }
+
+            /* If we have data, let's return it */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, nothing was found */
+        return $this->_setMetaMessage("No visible posts found with the lookup criteria", 404);
     }
 
     /** ********************************************************************* *
