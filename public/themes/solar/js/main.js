@@ -245,7 +245,10 @@ function getPostComments() {
     for ( let e = 0; e < els.length; e++ ) {
         var _guid = NoNull(els[e].getAttribute('data-guid'));
         if ( NoNull(_guid).length == 36 ) {
-            setTimeout(function () { doJSONQuery('post/thread', 'GET', { 'post_guid': _guid }, parsePostComments); }, 25);
+            var _params = { 'channel_guid': getMetaValue('channel_guid'),
+                            'post_guid': _guid
+                           };
+            setTimeout(function () { doJSONQuery('post/thread', 'GET', _params, parsePostComments); }, 25);
         }
 
         /* We should only ever do this for one article, as there should only be one article on the page */
@@ -263,8 +266,14 @@ function parsePostComments( data ) {
     /* If we have comments, let's parse them */
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
-
-        console.log(ds);
+        for ( let e = 0; e < els.length; e++ ) {
+            for ( let i = 0; i < ds.length; i++ ) {
+                var _obj = buildCommentItem(ds[i]);
+                if ( _obj !== undefined && _obj !== null && _obj !== false ) {
+                    els[e].appendChild(_obj);
+                }
+            }
+        }
     }
 
     /* If there are no comments, show a message */
@@ -289,6 +298,42 @@ function parsePostComments( data ) {
 
     /* Ensure the comment section is visible */
     showByClass('comments');
+}
+function buildCommentItem( data ) {
+    if ( data === undefined || data === null || data === false ) { return; }
+    if ( data.content === undefined || data.content === false ) { return; }
+    if ( NoNull(data.guid).length !== 36 ) { return; }
+
+    var _urlPrefix = NoNull(window.location.origin).toLowerCase();
+
+    var _obj = buildElement({ 'tag': 'li',
+                              'classes': ['comment-item'],
+                              'attribs': [{'key':'data-guid','value':NoNull(data.guid)},
+                                          {'key':'data-type','value':NoNull(data.type)}
+                                          ]
+                             });
+
+    /* Set the Author data */
+    var _avatar = buildElement({ 'tag': 'div',
+                                 'classes': ['avatar-wrap'],
+                                 'attribs': [{'key':'data-guid','value': NoNull(data.author.guid)}]
+                                });
+        _avatar.appendChild(buildElement({ 'tag': 'span',
+                                           'classes': ['avatar'],
+                                           'attribs': [{'key':'style','value': 'background-image: url(' + NoNull(data.author.avatar_url) + ')'}]
+                                          }));
+        _obj.appendChild(_avatar);
+
+    /* Set the post content */
+    var _content = buildElement({ 'tag': 'div', 'classes': ['content-wrap'], 'attribs': [{'key':'data-guid','value': NoNull(data.guid)}] });
+        _content.appendChild(buildElement({ 'tag': 'h4', 'classes': ['persona'], 'text': NoNull(data.author.display_as) }));
+        _content.appendChild(buildElement({ 'tag': 'h5', 'classes': ['publish-at'], 'text': formatShortDate(data.publish_at) + ' @' + dateToHHMM(data.publish_unix) }));
+
+        _content.appendChild(buildElement({ 'tag': 'div', 'classes': ['comment-content'], 'text': NoNull(data.content.html) }));
+        _obj.appendChild(_content);
+
+    /* Return the element */
+    return _obj;
 }
 
 /** ************************************************************************* *

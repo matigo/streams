@@ -81,6 +81,7 @@ class Posts {
             case 'archives':
             case 'archive':
             case 'library':
+            case 'thread':
             case 'list':
             case '':
                 return $this->_getPostList();
@@ -2466,18 +2467,31 @@ class Posts {
                           '[POST_GUID]'    => sqlScrub($PostGuid),
                          );
         $sqlStr = readResource(SQL_DIR . '/posts/getPostList.sql', $ReplStr);
+        if ( mb_strlen($PostGuid) == 36 ) { $sqlStr = readResource(SQL_DIR . '/posts/getPostReplies.sql', $ReplStr); }
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             $data = array();
 
             foreach ( $rslt as $Row ) {
                 if ( YNBool($Row['is_visible']) ) {
-                    $data[] = array( 'guid'   => NoNull($Row['post_guid']),
-                                     'type'   => NoNull($Row['post_type']),
-                                     'number' => nullInt($Row['post_num']),
+                    $content = false;
 
-                                     'title'  => ((mb_strlen(NoNull($Row['title'])) > 0) ? NoNull($Row['title']) : false),
-                                     'url'    => NoNull($Row['site_url']) . NoNull($Row['canonical_url']),
+                    /* Do we have content to present? */
+                    $text = NoNull($Row['value'], $Row['post_text']);
+                    if ( mb_strlen($text) > 0 ) {
+                        $content = array( 'html' => $this->_getMarkdownHTML($text, $Row['post_id'], true),
+                                          'text' => $text,
+                                         );
+                    }
+
+                    /* Build the output array */
+                    $data[] = array( 'guid'    => NoNull($Row['post_guid']),
+                                     'type'    => NoNull($Row['post_type']),
+                                     'number'  => nullInt($Row['post_num']),
+
+                                     'title'   => ((mb_strlen(NoNull($Row['title'])) > 0) ? NoNull($Row['title']) : false),
+                                     'content' => $content,
+                                     'url'     => NoNull($Row['site_url']) . NoNull($Row['canonical_url']),
 
                                      'publish_at'   => apiDate($Row['publish_unix'], 'Z'),
                                      'publish_unix' => apiDate($Row['publish_unix'], 'U'),
@@ -2485,7 +2499,7 @@ class Posts {
                                      'expires_unix' => apiDate($Row['expires_unix'], 'U'),
 
                                      'author' => array( 'guid'       => NoNull($Row['persona_guid']),
-                                                        'display_as' => NoNull($Row['display_name'], NoNull(NoNull($Row['first_name']) . ' ' . NoNull($Row['last_name']))),
+                                                        'display_as' => NoNull($Row['name'], $Row['display_name']),
                                                         'last_name'  => NoNull($Row['last_name']),
                                                         'first_name' => NoNull($Row['first_name']),
                                                         'avatar_url' => NoNull($Row['site_url']) . '/avatars/' . NoNull($Row['avatar_img'], 'default.png'),
