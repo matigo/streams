@@ -327,7 +327,7 @@ function buildCommentItem( data ) {
     /* Set the post content */
     var _content = buildElement({ 'tag': 'div', 'classes': ['content-wrap'], 'attribs': [{'key':'data-guid','value': NoNull(data.guid)}] });
         _content.appendChild(buildElement({ 'tag': 'h4', 'classes': ['persona'], 'text': NoNull(data.author.display_as) }));
-        _content.appendChild(buildElement({ 'tag': 'h5', 'classes': ['publish-at'], 'text': formatShortDate(data.publish_at) + ' @' + dateToHHMM(data.publish_unix) }));
+        _content.appendChild(buildElement({ 'tag': 'h5', 'classes': ['publish-at'], 'text': formatShortDate(data.publish_at) }));
 
         _content.appendChild(buildElement({ 'tag': 'div', 'classes': ['comment-content'], 'text': NoNull(data.content.html) }));
         _obj.appendChild(_content);
