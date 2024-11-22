@@ -81,7 +81,6 @@ class Posts {
             case 'archives':
             case 'archive':
             case 'library':
-            case 'thread':
             case 'list':
             case '':
                 return $this->_getPostList();
@@ -2462,7 +2461,7 @@ class Posts {
         if ( mb_strlen($PostGuid) > 0 && mb_strlen($PostGuid) != 36 ) { return $this->_setMetaMessage("Invalid Post identifier supplied", 400); }
 
         /* Let's collect some data */
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
                           '[CHANNEL_GUID]' => sqlScrub($ChannelGuid),
                           '[POST_GUID]'    => sqlScrub($PostGuid),
                          );
