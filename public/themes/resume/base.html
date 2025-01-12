@@ -27,38 +27,68 @@
         <link rel="icon" href="[IMG_DIR]/favicon-192.png" sizes="192x192" />
         <link rel="icon" href="[IMG_DIR]/favicon-128.png" sizes="128x128" />
 
-        <link rel="stylesheet" type="text/css" href="[CSS_DIR]/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="[CSS_DIR]/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="[SHARED_CSS]/all.min.css">
         <link rel="stylesheet" type="text/css" href="[CSS_DIR]/style.css?ver=[CSS_VER]">
     </head>
     <body>
+        <nav>
+            <h1><i class="fas fa-c"></i><i class="fas fa-v"></i></h1>
+            <ul>
+                <li class="nav-item" data-article="home">Home</li>
+                <li class="nav-item" data-article="portfolio">Portfolio</li>
+                <li class="nav-item" data-article="pages">Pages</li>
+                <li class="nav-item" data-article="blog">Blog</li>
+                <li class="nav-item" data-article="contact">Contact</li>
+            </ul>
+        </nav>
         <div class="container">
-            <div class="row text-center">
-                <div class="col-md-12 col-sm-12 col-xs-12">
-                    <h1>[SITE_NAME]</h1>
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row section-padding">
-                <div class="col-md-4 col-sm-4">
+            <section class="port">
+                <article class="idtag">
                     <img class="img-responsive" src="https://cdn.10centuries.org/NtyZNP/ce8b855163e9e4a4f25d7ba93cf53f2e.jpg" alt="">
-                </div>
-                <div class="col-md-8 col-sm-8">
-                    <div class="about_me_content">
-                        <h2>Jason F. Irwin</h2>
-                        <h3>Developer, Writer, and Podcaster</h3>
-                        <p>If you&apos;ve landed here, you&apos;re probably wondering a little bit about me. Like the header reads, I like to think of myself as a software developer, blogger, and podcaster. Being creative is both a blessing and a curse because, when I&apos;m not coding, writing, or recording, I can be found learning about other creative pursuits, or enjoying the wonderful creations of others. At the moment, this means I&apos;m listening to a lot of podcasts and reading philosophy blogs.</p>
-                        <p>I live in Central Japan with my wife, a very young son, and the kindest little dog you&apos;ve ever laid eyes on. Want to learn more? Feel free to follow some or all of the links below.</p>
-                        <ul>
-                            <li><a href="https://matigo.ca/note"><i class="fa fa-list tencee"></i></a></li>
-                            <li><a href="https://matigo.ca"><i class="fa fa-newspaper-o twitter"></i></a></li>
-                            <li><a href="https://github.com/matigo"><i class="fa fa-github github"></i></a></li>
-                            <li><a href="skype:jason.in.japan?chat"><i class="fa fa-skype skype"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+                    <h2>Jason F. Irwin</h2>
+                    <ul>
+                        <li><a href="https://github.com/matigo" title="See some of what I've built!"><i class="fab fa-github"></i></a></li>
+                        <li><a href="https://x.com/@matigo73" title="See what I'm doing!"><i class="fab fa-x-twitter"></i></a></li>
+                        <li><a href="https://matigo.ca" title="Read what I write!"><i class="fas fa-feather-pointed"></i></a></li>
+                        <li><a href="skype:jason.in.japan?chat" title="Get in Touch!"><i class="fab fa-skype"></i></a></li>
+                        <li><a href="mailto:jason@matigo.ca" title="Send an Email!"><i class="fas fa-envelope"></i></a></li>
+                    </ul>
+                </article>
+            </section>
+            <section class="starboard">
+                <article class="item home">
+                    <h2>About Me</h2>
+                    <h3>Developer, Writer, and Photographer</h3>
+                    <p>With over 30 years of experience as a full-stack software developer, I bring a wealth of technical expertise and creative problem-solving to every project I undertake. In addition to my career in development, I have spent two decades honing my skills as a writer, crafting thoughtful and engaging content that resonates with diverse audiences. More recently, I’ve embraced photography, capturing compelling visuals that tell stories and complement my creative pursuits. My multifaceted background reflects a deep passion for innovation, storytelling, and continuous growth.</p>
+                    <hr>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th colspan="2">Personal Information</th>
+                                <th>Skills Overview</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-right">Location:</td>
+                                <td>Aichi, Japan</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Availability:</td>
+                                <td><i class="fas fa-check-circle"></i> Freelance</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+            </section>
+        </div>
+
+
+
+
+
             <div class="row text-center section-padding">
                 <div class="section_title text-center">
                     <h2>Things I Can Do Relatively Well</h2>
@@ -85,8 +115,9 @@
                     <p>I&apos;ve been working with databases of all kinds for over two decades and have a knack for finding patterns that can answer quite a few business questions and raise a good deal more. If this is something that I might be able to help you with, just send me a message and I&apos;ll be sure to respond.</p>
                 </div>
             </div>
-            <footer class="footer text-center"><p>Jason F. Irwin © [YEAR]</p></footer>
+
         </div>
+        <footer class="footer text-center"><p>Jason F. Irwin © [YEAR]</p></footer>
     </body>
 [GenTime]
 </html>
