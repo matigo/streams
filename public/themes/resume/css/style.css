@@ -99,7 +99,7 @@
     --background-white: #fcfcfc;
     --background-color: #d5ead5;
     --background-grey: #f6f6f6;
-    --border-color: #ccc;
+    --border-color: #628262;
     --line-color: #004fef;
     --text-inactive: #c7254e;
     --text-black: #000;
@@ -130,7 +130,7 @@
     --header-text: #fff;
     --code-back: #f9f2f4;
     --code-text: #c7254e;
-    --link-text: #004fef;
+    --link-text: #628262;
 
     --pin-purple: #643ba2;
     --pin-yellow: #ffff00;
@@ -145,7 +145,7 @@
  *  Core Defaults
  ** ************************************************************************* */
 html {
-    height: 100vh;
+    min-height: 100vh;
     overflow: -moz-scrollbars-none;
 }
 body {
@@ -232,6 +232,21 @@ input {
     font-family: 'Ubuntu', -apple-system, 'メイリオ', 'Meiryo', 'DejaVu Sans', 'Helvetica', 'Tahoma', 'Arial', sans-serif;
     font-weight: normal;
 }
+a,
+a:hover,
+a:visited {
+    color: var(--link-text, #628262);
+}
+hr {
+    border-bottom: 2px dotted var(--border-color, #ccc);
+    border-right: none;
+    border-left: none;
+    border-top: none;
+    display: block;
+    padding: 0;
+    margin: 1em auto 0.75em;
+    width: calc(100% - 4em);
+}
 
 /** ************************************************************************* *
  *  Key Classes
@@ -301,6 +316,7 @@ nav ul {
     justify-content: flex-end;
 }
 nav ul li {
+    color: var(--text-white, #fff);
     cursor: pointer;
     display: inline-block;
     list-style: none;
@@ -323,7 +339,7 @@ div.container {
 }
 section {
     background: transparent;
-    display: inline-flex;
+    display: inline-block;
     text-align: justify;
     vertical-align: text-top;
 }
@@ -343,7 +359,9 @@ article {
     background: var(--background-white, #fff);
     border: 2px solid var(--background-white, #fff);
     border-radius: 0.25em;
+    display: block;
     padding: 1em 0.5em;
+    margin: 0 0 1em;
 }
 article.idtag h2 {
     display: block;
@@ -383,7 +401,7 @@ article.item h3 {
 }
 article.item h2 { font-size: 1.5em; }
 article.item h3 {
-    border-bottom: 1px solid var(--border-color, #ccc);
+    border-bottom: 2px solid var(--border-color, #ccc);
     font-size: 1.25em;
     font-style: italic;
     font-weight: 100;
@@ -399,4 +417,112 @@ article.item p {
     padding: 0 0.5em;
     margin: 0 0 0.5em;
     width: calc(100% - 1em);
+}
+
+table.contact {
+    width: calc(100% - 2em);
+    padding: 0;
+    margin: 0 auto;
+}
+table.contact td {
+    text-align: right;
+    vertical-align: text-top;
+    padding: 0 0.5em;
+}
+table.contact td.twenty {
+    width: 20em;
+}
+table.contact textarea,
+table.contact input {
+    background: transparent;
+    border-bottom: 1px solid var(--border-color, #ccc);
+    border-right: none;
+    border-left: 1px solid var(--border-color, #ccc);
+    border-top: none;
+    border-bottom-left-radius: 0.5em;
+    text-align: left;
+    vertical-align: text-top;
+    padding: 1em;
+    width: calc(100% - 2em);
+}
+table.contact textarea {
+    resize: none;
+    min-height: 10em;
+}
+
+table.resume {
+    width: calc(100% - 2em);
+    padding: 0;
+    margin: 0 auto;
+}
+table.resume h2 {
+    padding: 0 0 0 0.25em;
+    margin: 0;
+}
+table.resume h3,
+table.resume h4,
+table.resume h5,
+table.resume h6 {
+    padding: 0 0 0 1em;
+    margin: 0 0 0.25em;
+}
+table.resume h3 span,
+table.resume h4 span,
+table.resume h5 span,
+table.resume h6 span {
+    font-size: 0.9em;
+    font-style: italic;
+    font-weight: normal;
+    vertical-align: middle;
+    margin: 0;
+}
+table.resume h3 span:before,
+table.resume h4 span:before,
+table.resume h5 span:before,
+table.resume h6 span:before {
+    content: "—";
+    display : inline-block;
+    text-align : center;
+    margin: 0 0.5em 0 0;
+}
+
+table.resume td {
+    border: 2px solid transparent;
+    vertical-align: text-top;
+    padding: 0.5em 0 0.5em 0;
+}
+table.resume td:last-child {
+    border-bottom: 2px solid var(--border-color, #ccc);
+    border-left: 2px solid var(--border-color, #ccc);
+    border-bottom-left-radius: 0.5em;
+}
+table.resume td span {
+    padding: 0;
+    margin: 0 0 0 0.5em;
+}
+table.resume td.milestone {
+    text-align: right;
+    padding: 0.5em 1em 0 0;
+    min-width: 10em;
+}
+table.resume td.milestone span {
+    display: block;
+}
+table.resume ul {
+    text-align: left;
+    padding: 0;
+    margin: 0 0 0 2em;
+    width: calc(100% - 4em);
+}
+table.resume ul li {
+    padding: 0;
+    margin: 0 0 0.5em 0;
+}
+
+footer {
+    color: var(--text-white, #fff);
+    display: block;
+    text-shadow: 1px 1px var(--link-text, #ccc);
+    padding: 1em 0;
+    margin: 0 auto 1em;
 }
