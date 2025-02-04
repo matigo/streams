@@ -49,7 +49,7 @@ document.onreadystatechange = function () {
 }
 
 /** ************************************************************************ **
- *      Button Functions
+ *      Handler Functions
  ** ************************************************************************ */
 function handleButtonAction(el) {
     if ( el === undefined || el === null || el === false ) { return; }
@@ -85,6 +85,41 @@ function handleButtonAction(el) {
             default:
                 console.log("Not sure how to handle: " + _action);
         }
+    }
+}
+
+function handleImageClick(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
+    if ( NoNull(el.tagName).toLowerCase() !== 'img' ) { return; }
+    if ( el.disabled !== undefined && el.disabled === true ) { return; }
+    if ( splitSecondCheck(el) ) {
+        var _src = el.src.replaceAll('_medium', '');
+        if ( NoNull(_src).length > 0 ) {
+            console.log(_src);
+
+            var _gallery = buildElement({ 'tag': 'div', 'classes': ['gallery-wrapper'] });
+            var _img = buildElement({ 'tag': 'img',
+                                      'classes': ['img-full', 'text-center'],
+                                      'attribs': [{'key':'src','value':_src}]
+                                     });
+                _img.addEventListener('touchend', function(e) { handleGalleryImageClick(e); });
+                _img.addEventListener('click', function(e) { handleGalleryImageClick(e); });
+                _gallery.appendChild(_img);
+
+            /* Add the Image Gallery to the DOM */
+            document.body.appendChild(_gallery);
+        }
+    }
+}
+
+function handleGalleryImageClick(el) {
+    if ( el === undefined || el === null || el === false ) { return; }
+    if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
+    if ( NoNull(el.tagName).toLowerCase() !== 'img' ) { return; }
+    if ( el.disabled !== undefined && el.disabled === true ) { return; }
+    if ( splitSecondCheck(el) ) {
+        removeByClass('gallery-wrapper');
     }
 }
 
@@ -196,6 +231,37 @@ function prepArticleReader() {
                 /* No Action */
         }
     }
+
+    /* Prep the image galleries */
+    var els = document.getElementsByTagName('P');
+    for ( let e = (els.length - 1); e >= 0; e-- ) {
+        var imgs = els[e].getElementsByTagName('IMG');
+        if ( imgs.length > 0 ) {
+            var _gallery = buildElement({ 'tag': 'gallery', 'classes': ['wrapper'] });
+
+            for ( let i = 0; i < imgs.length; i++ ) {
+                var _src = NoNull(imgs[i].getAttribute('src')),
+                    _alt = NoNull(imgs[i].getAttribute('alt'));
+
+                var _img = buildElement({ 'tag': 'img',
+                                          'classes': ['image-count-' + NoNull(i + 1), 'image-' + NoNull(i + 1)],
+                                          'attribs': [{'key':'src','value':_src}]
+                                         });
+                if ( NoNull(_alt).length > 0 ) { _img.setAttribute('alt', _alt); }
+
+                /* Add the Event Listeners */
+                _img.addEventListener('touchend', function(e) { handleImageClick(e); });
+                _img.addEventListener('click', function(e) { handleImageClick(e); });
+                _gallery.appendChild(_img);
+            }
+
+            /* Replace the P with the Gallery */
+            els[e].parentNode.replaceChild(_gallery, els[e]);
+        }
+    }
+
+    /* Remove the irrelevant tags */
+    removeByTag('br');
 
     /* Start the navigation counter watcher */
     setTimeout(function () { watchNavCounter(); }, 500);

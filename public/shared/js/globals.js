@@ -400,6 +400,15 @@ function toggleElementVisibility( el ) {
         el.classList.add('hidden');
     }
 }
+function removeByTag( _tag ) {
+    if ( _tag === undefined || _tag === null || _tag === false || NoNull(_tag).length <= 0 ) { return; }
+    var els = document.getElementsByTagName(_tag);
+    if ( els.length > 0 ) {
+        for ( let e = els.length - 1; e >= 0; e-- ) {
+            els[e].parentElement.removeChild(els[e]);
+        }
+    }
+}
 function disableButtons(cls, disable = true) {
     if ( disable === undefined || disable === null || disable !== false ) { disable = true; }
     if ( cls === undefined || cls === false || cls === null || cls == '') { return; }

@@ -466,6 +466,21 @@ article.article p a:hover {
     text-decoration: underline;
 }
 
+article.article gallery {
+    background: transparent;
+    border: 1px solid transparent;
+    display: block;
+    max-width: 100%;
+    min-width: 100%;
+    width: 100%;
+}
+article.article gallery img {
+    border: 1px solid transparent;
+    cursor: pointer;
+    max-width: calc(100% - 6px);
+    width: auto;
+}
+
 article.article .endnote {
     border-color: var(--border-color);
     border-style: solid;
@@ -662,6 +677,35 @@ article section.appendix .action-bar {
     margin: 0 auto;
     max-width: calc(100% - 1em);
     width: 100%;
+}
+
+/** ************************************************************************* *
+ *  Image Gallery
+ ** ************************************************************************* */
+div.gallery-wrapper {
+    background: rgba(0, 0, 0, 0.75);
+    display: block;
+    position: fixed;
+    padding: 0;
+    margin: 0 auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    top: 0;
+}
+
+div.gallery-wrapper img {
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: block;
+    padding: 1em 0;
+    margin: 0 auto;
+    max-height: calc(100vh - 100px);
+    min-height: auto;
+    height: auto;
+    max-width: calc(100vw - 25px);
+    min-width: auto;
+    width: auto;
 }
 
 /** ************************************************************************* *
@@ -922,5 +966,15 @@ body.size-lg section.archive-list { height: 58vh; }
 body.size-xl section.archive-list { height: 50vh; }
 
 @media ( max-width: 450px ) {
-    main { min-height: calc(100vh - 10em); }
+    header {
+        padding: 0.5em;
+        max-width: calc(100% - 2em);
+    }
+    main { min-height: calc(100vh - 12em); }
+    article {
+        max-height: calc(100vh - 13em);
+        min-height: calc(100vh - 13em);
+        height: calc(100vh - 13em);
+    }
+    article.article h1 { margin: 1em auto 0.25em; }
 }

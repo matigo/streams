@@ -2684,7 +2684,10 @@
             $platform = 'PlayStation ' . preg_replace('/[^\d]/i', '', $pKey);
             $browser  = 'NetFront';
         }
-        return array( 'platform' => $platform ?: null, 'browser' => $browser ?: null, 'version' => $version ?: null );
+        return array( 'platform' => utf8_encode($platform) ?: null,
+                      'browser'  => utf8_encode($browser) ?: null,
+                      'version'  => utf8_encode($version) ?: null
+                     );
     }
 
     /***********************************************************************
