@@ -14,7 +14,13 @@ class Cookies {
     function __construct() {
         $this->cookies = $this->_getCookies();
 
-        // Perform the PHP Version Check
+        /* Ensure the constants are in place */
+        if ( defined('ENFORCE_PHPVERSION') === false ) { define('ENFORCE_PHPVERSION', ''); }
+        if ( defined('MIN_PHPVERSION') === false ) { define('MIN_PHPVERSION', ''); }
+        if ( defined('PHP_VERSION_ID') === false ) { define('PHP_VERSION_ID', ''); }
+        if ( defined('CRON_KEY') === false ) { define('CRON_KEY', ''); }
+
+        /* Perform the PHP Version Check */
         $this->_validatePHPVersion();
     }
 
@@ -147,6 +153,15 @@ class Cookies {
 
             if ( is_array($data) ) {
                 foreach ( $data as $Key=>$Value ) { $rVal[ $Key ] = $Value; }
+            }
+        }
+
+        /* If we are not authenticated, are we using a Cron Key? */
+        if ( YNBool($rVal['_logged_in']) === false && mb_strlen(NoNull(CRON_KEY)) >= 20 ) {
+            $cronkey = NoNull($rVal['cronkey'], $rVal['key']);
+            if ( mb_strlen($cronkey) >= 20 && $cronkey == CRON_KEY ) {
+                $rVal['_account_type'] = 'account.system';
+                $rVal['_logged_in'] = true;
             }
         }
 

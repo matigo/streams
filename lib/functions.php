@@ -142,11 +142,12 @@
     }
 
     function isValidCronRequest( $sets, $valids ) {
+        if ( defined('CRON_KEY') === false ) { define('CRON_KEY', ''); }
         if ( is_array($valids) === false ) { return false; }
         if ( is_array($sets) === false ) { return false; }
 
         if ( array_key_exists('key', $sets) && defined('CRON_KEY') ) {
-            if ( NoNull($sets['key']) == NoNull(CRON_KEY) ) {
+            if ( mb_strlen(NoNull(CRON_KEY)) >= 20 && NoNull($sets['key']) == NoNull(CRON_KEY) ) {
                 $route = NoNull($sets['PgRoot']) . '/' . NoNull($sets['PgSub1']);
                 return in_array($route, $valids);
             }
