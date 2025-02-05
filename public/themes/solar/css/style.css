@@ -457,6 +457,7 @@ article.article p {
     line-height: 1.5em;
     scroll-snap-type: x mandatory;
     scroll-snap-align: start;
+    vertical-align: text-top;
     margin: 0.75em auto;
 }
 article.article p sup {
@@ -472,6 +473,8 @@ article.article gallery {
     border: 1px solid transparent;
     display: grid;
     overflow: hidden;
+    page-break-inside: avoid;
+    vertical-align: text-top;
     height: 300px;
     width: 100%;
 }
@@ -492,7 +495,7 @@ article.article gallery span {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    border: 1px solid transparent;
+    border: none !important;
     color: transparent;
     cursor: pointer;
     max-height: none;
@@ -712,11 +715,18 @@ article section.appendix .action-bar {
  *  Image Gallery
  ** ************************************************************************* */
 div.gallery-wrapper {
+    align-items: center;
     background: rgba(0, 0, 0, 0.75);
-    display: block;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    justify-content: center;
     position: fixed;
     padding: 0;
     margin: 0 auto;
+    height: 100vh;
+    width: 100vw;
     bottom: 0;
     right: 0;
     left: 0;
@@ -724,7 +734,7 @@ div.gallery-wrapper {
 }
 
 div.gallery-wrapper img {
-    border: 1px solid transparent;
+    border: none;
     cursor: pointer;
     display: block;
     padding: 1em 0;

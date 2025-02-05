@@ -278,7 +278,7 @@ function prepImageGalleries() {
                         _img.addEventListener('click', function(e) { handleImageClick(e); });
 
                     /* Update the DOM */
-                    _pp.nextElementSibling.appendChild(_img);
+                    _pp.nextElementSibling.prepend(_img);
                     imgs[i].parentElement.removeChild(imgs[i]);
                 }
 
