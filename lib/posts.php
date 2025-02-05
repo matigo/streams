@@ -239,11 +239,17 @@ class Posts {
      *  Function returns a Collection of Posts based on the Post.GUID of a Single Post in a Thread Supplied or an Unhappy Boolean
      */
     private function _getThreadByGUID() {
-        $PostGUID = strtolower(NoNull($this->settings['guid'], $this->settings['PgSub1']));
         $SimpleHtml = YNBool(NoNull($this->settings['simple']));
+        $PostGuid = NoNull($this->settings['guid'], $this->settings['PgSub1']);
+
+        /* Get the Post.Guid */
+        $guids = array('post_guid', 'post', 'guid', 'PgSub1');
+        foreach ( $guids as $key ) {
+            if ( mb_strlen($PostGuid) != 36 ) { $PostGuid = NoNull($this->settings[$key]); }
+        }
 
         /* Ensure we have a valid Post.guid */
-        if ( mb_strlen($PostGUID) != 36 ) { $this->_setMetaMessage("Invalid Thread Identifier Supplied (1)", 400); return false; }
+        if ( mb_strlen($PostGuid) != 36 ) { return $this->_setMetaMessage("Invalid Post Identifier Supplied (1)", 400); }
 
         /* Get the Types Requested (Default is Everything) */
         $validTypes = array( 'post.article', 'post.note', 'post.quotation', 'post.bookmark', 'post.location', 'post.photo' );
@@ -283,7 +289,7 @@ class Posts {
                           '[SINCE_UNIX]'  => nullInt($SinceUnix),
                           '[UNTIL_UNIX]'  => nullInt($UntilUnix),
                           '[POST_TYPES]'  => NoNull($CleanTypes),
-                          '[THREAD_GUID]' => sqlScrub($PostGUID),
+                          '[THREAD_GUID]' => sqlScrub($PostGuid),
                           '[COUNT]'       => nullInt($CleanCount),
                          );
         $sqlStr = prepSQLQuery("CALL GetThreadPosts([ACCOUNT_ID], '[THREAD_GUID]', '[POST_TYPES]', [SINCE_UNIX], [UNTIL_UNIX], [COUNT]);", $ReplStr);
@@ -293,8 +299,7 @@ class Posts {
         }
 
         /* If We're Here, the Post.guid Was Not Found (or is Inaccessible) */
-        $this->_setMetaMessage("Invalid Thread Identifier Supplied (2)", 400);
-        return false;
+        return $this->_setMetaMessage("Invalid Thread Identifier Supplied (2)", 400);
     }
 
     /**

@@ -111,7 +111,9 @@ BEGIN
            po.`reply_to`, po.`type`,
            po.`guid` as `post_guid`,
            CASE WHEN ch.`privacy_type` IN ('visibility.private', 'visibility.password') THEN 'visibility.none' ELSE po.`privacy_type` END as `privacy_type`,
-           po.`publish_at`, po.`expires_at`, po.`updated_at`,
+           po.`publish_at`, ROUND(UNIX_TIMESTAMP(po.`publish_at`)) as `publish_unix`,
+           po.`expires_at`, ROUND(UNIX_TIMESTAMP(po.`expires_at`)) as `expires_unix`,
+           po.`updated_at`, ROUND(UNIX_TIMESTAMP(po.`updated_at`)) as `updated_unix`,
 
            IFNULL(pp.`pin_type`, 'pin.none') as `pin_type`,
            IFNULL(pp.`is_starred`, 'N') as `is_starred`,

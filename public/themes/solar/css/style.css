@@ -457,6 +457,7 @@ article.article p {
     line-height: 1.5em;
     scroll-snap-type: x mandatory;
     scroll-snap-align: start;
+    margin: 0.75em auto;
 }
 article.article p sup {
     display: inline-block;
@@ -469,16 +470,44 @@ article.article p a:hover {
 article.article gallery {
     background: transparent;
     border: 1px solid transparent;
-    display: block;
-    max-width: 100%;
-    min-width: 100%;
+    display: grid;
+    overflow: hidden;
+    height: 300px;
     width: 100%;
 }
-article.article gallery img {
+article.article gallery.layout-2 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 50%;
+}
+article.article gallery.layout-3 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 50%;
+    gap: 5px;
+}
+article.article gallery.layout-4 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 50%;
+}
+article.article gallery span {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
     border: 1px solid transparent;
+    color: transparent;
     cursor: pointer;
-    max-width: calc(100% - 6px);
-    width: auto;
+    max-height: none;
+    max-width: none;
+    height: 100%;
+    width: 100%;
+}
+
+article.article gallery.layout-3 span.image-1 {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    position: relative;
+    height: 300px;
 }
 
 article.article .endnote {

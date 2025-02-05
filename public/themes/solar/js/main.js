@@ -91,13 +91,11 @@ function handleButtonAction(el) {
 function handleImageClick(el) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
-    if ( NoNull(el.tagName).toLowerCase() !== 'img' ) { return; }
+    if ( NoNull(el.tagName).toLowerCase() != 'span' ) { return; }
     if ( el.disabled !== undefined && el.disabled === true ) { return; }
     if ( splitSecondCheck(el) ) {
-        var _src = el.src.replaceAll('_medium', '');
+        var _src = el.getAttribute('data-src').replaceAll('_medium', '').replaceAll('_thumb', '');
         if ( NoNull(_src).length > 0 ) {
-            console.log(_src);
-
             var _gallery = buildElement({ 'tag': 'div', 'classes': ['gallery-wrapper'] });
             var _img = buildElement({ 'tag': 'img',
                                       'classes': ['img-full', 'text-center'],
@@ -233,38 +231,77 @@ function prepArticleReader() {
     }
 
     /* Prep the image galleries */
-    var els = document.getElementsByTagName('P');
-    for ( let e = (els.length - 1); e >= 0; e-- ) {
-        var imgs = els[e].getElementsByTagName('IMG');
-        if ( imgs.length > 0 ) {
-            var _gallery = buildElement({ 'tag': 'gallery', 'classes': ['wrapper'] });
-
-            for ( let i = 0; i < imgs.length; i++ ) {
-                var _src = NoNull(imgs[i].getAttribute('src')),
-                    _alt = NoNull(imgs[i].getAttribute('alt'));
-
-                var _img = buildElement({ 'tag': 'img',
-                                          'classes': ['image-count-' + NoNull(i + 1), 'image-' + NoNull(i + 1)],
-                                          'attribs': [{'key':'src','value':_src}]
-                                         });
-                if ( NoNull(_alt).length > 0 ) { _img.setAttribute('alt', _alt); }
-
-                /* Add the Event Listeners */
-                _img.addEventListener('touchend', function(e) { handleImageClick(e); });
-                _img.addEventListener('click', function(e) { handleImageClick(e); });
-                _gallery.appendChild(_img);
-            }
-
-            /* Replace the P with the Gallery */
-            els[e].parentNode.replaceChild(_gallery, els[e]);
-        }
-    }
+    prepImageGalleries();
 
     /* Remove the irrelevant tags */
     removeByTag('br');
 
     /* Start the navigation counter watcher */
     setTimeout(function () { watchNavCounter(); }, 500);
+}
+function prepImageGalleries() {
+    var els = document.getElementsByTagName('ARTICLE');
+    for ( let e = 0; e < els.length; e++ ) {
+        /* Construct the Gallery Wrappers */
+        var imgs = els[e].getElementsByTagName('IMG');
+        if ( imgs.length > 0 ) {
+            for ( let i = (imgs.length - 1); i >= 0; i-- ) {
+                var _pp = imgs[i].parentElement;
+                for ( let p = 0; p <= 9; p++ ) {
+                    if ( _pp.parentElement.tagName != 'ARTICLE' ) {
+                        _pp = _pp.parentElement;
+                    } else {
+                        p += 10;
+                    }
+                }
+
+                /* If we don't have a gallery on the DOM, add one */
+                if ( _pp.nextElementSibling.tagName != 'GALLERY' ) {
+                    var _gallery = buildElement({ 'tag': 'gallery', 'classes': ['wrapper'] });
+                    _pp.after(_gallery);
+                }
+
+                /* Add the image to the gallery */
+                if ( _pp.nextElementSibling.tagName == 'GALLERY' ) {
+                    var _src = NoNull(imgs[i].getAttribute('src')),
+                        _alt = NoNull(imgs[i].getAttribute('alt'));
+                    if ( NoNull(_alt).length <= 0 ) { _alt = '&nbsp;'; }
+
+                    var _img = buildElement({ 'tag': 'span',
+                                              'classes': ['image-item'],
+                                              'attribs': [{'key':'style','value':'background-image: url(' + _src + ')'},
+                                                          {'key':'data-src','value':_src}
+                                                          ],
+                                              'text': _alt
+                                             });
+                        _img.addEventListener('touchend', function(e) { handleImageClick(e); });
+                        _img.addEventListener('click', function(e) { handleImageClick(e); });
+
+                    /* Update the DOM */
+                    _pp.nextElementSibling.appendChild(_img);
+                    imgs[i].parentElement.removeChild(imgs[i]);
+                }
+
+                /* Remove empty parent elements */
+                if ( _pp.innerHTML == '' ) { _pp.parentElement.removeChild(_pp); }
+            }
+        }
+
+        /* Modify the galleries */
+        var gals = els[e].getElementsByTagName('GALLERY');
+        for ( let i = 0; i < gals.length; i++ ) {
+            var imgs = gals[i].getElementsByTagName('SPAN');
+            if ( imgs.length > 0 ) {
+                gals[i].classList.add('layout-' + NoNull(imgs.length));
+                for ( let z = 0; z < imgs.length; z++ ) {
+                    imgs[z].classList.add('image-' + NoNull(z + 1));
+                }
+
+            } else {
+                if ( gals[i].classList.contains('hidden') === false ) { gals[i].classList.add('hidden'); }
+            }
+        }
+    }
 }
 function setVisibleColumn( _plusMinus = 0 ) {
     if ( _plusMinus === undefined || _plusMinus === null || isNaN(_plusMinus) ) { _plusMinus = 0; }
@@ -306,23 +343,28 @@ function setCommentSection( el ) {
     /* Collect the Post Comments */
     setTimeout(function () { getPostComments(); }, 75);
 }
-function getPostComments() {
+function getPostGuid() {
     var els = document.getElementsByTagName('article');
     for ( let e = 0; e < els.length; e++ ) {
         var _guid = NoNull(els[e].getAttribute('data-guid'));
-        if ( NoNull(_guid).length == 36 ) {
-            var _params = { 'channel_guid': getMetaValue('channel_guid'),
-                            'post_guid': _guid
-                           };
-            setTimeout(function () { doJSONQuery('post/thread', 'GET', _params, parsePostComments); }, 25);
-        }
+        if ( NoNull(_guid).length == 36 ) { return _guid; }
+    }
+    return '';
+}
+function getPostComments() {
+    var _guid = getPostGuid();
 
-        /* We should only ever do this for one article, as there should only be one article on the page */
-        e += els.length;
+    if ( NoNull(_guid).length == 36 ) {
+        var _params = { 'channel_guid': getMetaValue('channel_guid'),
+                        'post_guid': _guid
+                       };
+        setTimeout(function () { doJSONQuery('post/thread', 'GET', _params, parsePostComments); }, 25);
     }
     hideByClass('comment-list');
 }
 function parsePostComments( data ) {
+    var _guid = getPostGuid();
+
     var els = document.getElementsByClassName('comment-list');
     for ( let e = 0; e < els.length; e++ ) {
         if ( els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
@@ -333,10 +375,12 @@ function parsePostComments( data ) {
     if ( data.meta !== undefined && data.meta.code == 200 ) {
         var ds = data.data;
         for ( let e = 0; e < els.length; e++ ) {
-            for ( let i = 0; i < ds.length; i++ ) {
-                var _obj = buildCommentItem(ds[i]);
-                if ( _obj !== undefined && _obj !== null && _obj !== false ) {
-                    els[e].appendChild(_obj);
+            if ( ds.length > 0 ) {
+                for ( let i = (ds.length - 1); i >= 0; i-- ) {
+                    if ( ds[i].guid != _guid ) {
+                        var _obj = buildCommentItem(ds[i]);
+                        if ( _obj !== undefined && _obj !== null && _obj !== false ) { els[e].appendChild(_obj); }
+                    }
                 }
             }
         }
@@ -382,20 +426,20 @@ function buildCommentItem( data ) {
     /* Set the Author data */
     var _avatar = buildElement({ 'tag': 'div',
                                  'classes': ['avatar-wrap'],
-                                 'attribs': [{'key':'data-guid','value': NoNull(data.author.guid)}]
+                                 'attribs': [{'key':'data-guid','value': NoNull(data.persona.guid)}]
                                 });
         _avatar.appendChild(buildElement({ 'tag': 'span',
                                            'classes': ['avatar'],
-                                           'attribs': [{'key':'style','value': 'background-image: url(' + NoNull(data.author.avatar_url) + ')'}]
+                                           'attribs': [{'key':'style','value': 'background-image: url(' + NoNull(data.persona.avatar) + ')'}]
                                           }));
         _obj.appendChild(_avatar);
 
     /* Set the post content */
     var _content = buildElement({ 'tag': 'div', 'classes': ['content-wrap'], 'attribs': [{'key':'data-guid','value': NoNull(data.guid)}] });
-        _content.appendChild(buildElement({ 'tag': 'h4', 'classes': ['persona'], 'text': NoNull(data.author.display_as) }));
+        _content.appendChild(buildElement({ 'tag': 'h4', 'classes': ['persona'], 'text': NoNull(data.persona.name) }));
         _content.appendChild(buildElement({ 'tag': 'h5', 'classes': ['publish-at'], 'text': formatShortDate(data.publish_at) }));
 
-        _content.appendChild(buildElement({ 'tag': 'div', 'classes': ['comment-content'], 'text': NoNull(data.content.html) }));
+        _content.appendChild(buildElement({ 'tag': 'div', 'classes': ['comment-content'], 'text': NoNull(data.content) }));
         _obj.appendChild(_content);
 
     /* Return the element */
@@ -727,7 +771,6 @@ function buildMenu() {
 
         for ( let _idx in _btns ) {
             var _vv = NoNull(_btns[_idx]).toLowerCase();
-            console.log('btn.' + _vv);
             var _btn = buildElement({ 'tag': 'button',
                                       'classes': ['btn-action', ((NoNull(_btns[_idx]).toLowerCase() == _val.toLowerCase()) ? 'btn-primary' : '')],
                                       'attribs': [{'key':'data-action','value':'pref-' + _pp},
