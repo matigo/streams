@@ -504,6 +504,9 @@ article.article gallery span {
     width: 100%;
 }
 
+article.article gallery.layout-1 span.image-1 {
+    background-position: top;
+}
 article.article gallery.layout-3 span.image-1 {
     grid-column-start: 1;
     grid-column-end: 2;
