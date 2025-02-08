@@ -1,0 +1,23 @@
+            <div class="jotter req-auth hidden">
+                <div class="profile">
+                    <span class="avatar" style="background-image: url(https://10centuries.org/avatars/jason_fox_box.jpg);" data-action="profile-select" data-guid="0737c327-913d-c0d2-1229-1154f2a3caa9">&nbsp;</span>
+                </div>
+                <div class="scribble">
+                    <textarea name="fdata" data-name="content" placeholder="What's on your mind?"></textarea>
+                    <select class="hidden" name="fdata" data-name="post_type">
+                        <option value="post.note">Social</option>
+                        <option value="post.bookmark">Bookmark</option>
+                        <option value="post.quotation">Quotation</option>
+                    </select>
+                    <select class="hidden" name="fdata" data-name="channel_guid"></select>
+                    <div class="button-box">
+                        <ul>
+                            <li class="action-item" data-action="post-privacy"><i class="fas fa-eye-slash"></i><span>Private</span></li>
+                            <li class="action-item" data-action="file-upload"><i class="fas fa-cloud-arrow-up"></i></li>
+                            <li class="action-item" data-action="geo-location"><i class="fas fa-location-dot"></i></li>
+                            <li class="action-item" data-action="post-schedule"><i class="far fa-calendar-plus"></i></li>
+                        </ul>
+                        <button class="action-item btn-primary" data-action="publish" disabled>Publish</button>
+                    </div>
+                </div>
+            </div>

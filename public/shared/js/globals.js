@@ -24,12 +24,10 @@ function nullInt( val, alt ) {
     if ( val === undefined || val === false || val === null || NoNull(val).length <= 0 ) { val = alt; }
 
     if ( val.length > 0 ) {
-        var _kanji = '〇一二三四五六七八九';
         var _nums = '０１２３４５６７８９';
         var _vv = '';
         var _src = NoNull(val).split('');
         _src.forEach( _char => {
-            if ( _kanji.indexOf(_char) >= 0 ) { _char = _kanji.indexOf(_char); }
             if ( _nums.indexOf(_char) >= 0 ) { _char = _nums.indexOf(_char); }
             _vv += _char.toString();
         });

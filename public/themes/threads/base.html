@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="[LANG_CD]">
+    <head>
+        <title>[PAGE_TITLE]</title>
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="cleartype" content="on" />
+        <meta charset="utf-8" />
+
+        <meta name="authorization" content="[TOKEN]" />
+        <meta name="channel_guid" content="[CHANNEL_GUID]" />
+        <meta name="persona_guid" content="[PERSONA_GUID]" />
+        <meta name="home_url" content="[HOMEURL]" />
+        <meta name="api_url" content="[API_URL]" />
+
+        <meta name="description" content="[PAGEDESCR]" />
+        <meta name="keywords" content="[SITEKEYWD]" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="generator" content="[GENERATOR]" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-capable" content="no" />
+        <meta name="mobile-web-app-capable" content="no" />
+        <meta name="last-modified" content="[UPDATED_AT]" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="robots" content="index, follow" />
+
+        <link rel="alternate" type="application/json" title="[SITE_NAME]" href="[HOMEURL]/feed.json" />
+        <link rel="alternate" type="application/rss+xml" title="[SITE_NAME]" href="[HOMEURL]/rss" />
+
+        <link rel="webmention" href="[API_URL]/webmention" />
+        <link rel="pingback" href="[API_URL]/xmlrpc" />
+
+        <link rel="shortcut icon" type="[MIME_ICO]" href="[SHORT_ICO]" />
+        <link rel="icon" type="[MIME_ICO]" href="[SHORT_ICO]" />
+        <link rel="apple-touch-icon" href="[SHORT_ICO]" />
+
+        <link rel="stylesheet" type="text/css" href="[SHARED_CSS]/fontawesome.min.css?ver=[CSS_VER]" />
+        <link rel="stylesheet" type="text/css" href="[CSS_DIR]/style.css?ver=[CSS_VER]" />
+    </head>
+    <body>
+        <nav>
+            <h1><a href="[HOMEURL]" title=""><i class="fas fa-hourglass-end fa-rotate-by" style="--fa-rotate-angle: 33deg;"></i><span>Nice</span></a></h1>
+            <ul>
+                <li class="action-item"><i class="fas fa-globe"></i><span>Stream</span></li>
+                <li class="action-item req-auth hidden"><i class="fas fa-house"></i><span>Home</span></li>
+                <li class="action-item req-auth hidden"><i class="fas fa-comments"></i><span>Mentions</span></li>
+                <li class="action-item req-auth hidden"><i class="fas fa-bookmark"></i><span>Bookmarks</span></li>
+                <li class="action-item req-auth hidden"><i class="fas fa-user-pen"></i><span>Profile</span></li>
+                <li class="action-item"><i class="fas fa-gear"></i><span>Settings</span></li>
+            </ul>
+            <div class="stick-bottom req-auth hidden">
+                <button class="btn-primary"><i class="fas fa-pencil"></i><span>Write</span></button>
+            </div>
+        </nav>
+        <main>
+[PAGEHTML]
+        </main>
+        <script type="text/javascript" src="[SHARED_JS]/network.js?ver=[CSS_VER]"></script>
+        <script type="text/javascript" src="[SHARED_JS]/globals.js?ver=[CSS_VER]"></script>
+        <script type="text/javascript" src="[JS_DIR]/main.js?ver=[CSS_VER]"></script>
+        <script type="text/javascript">
+            window.strings = { 'lbl.previous': "Previous",
+                               'lbl.random': "Random",
+                               'lbl.next': "Next",
+
+                               'lbl.theme': "[lblPrefTheme]",
+                               'lbl.font': "[lblPrefFont]",
+                               'lbl.size': "[lblPrefSize]",
+
+                               'btn.dark': "[btnPrefDark]",
+
+                               'btn.sans': "[btnPrefSans]",
+                               'btn.serif': "[btnPrefSerif]",
+                               'btn.mono': "[btnPrefMono]",
+
+                               'btn.xs': "[btnPrefXS]",
+                               'btn.sm': "[btnPrefSM]",
+                               'btn.lg': "[btnPrefLG]",
+                               'btn.xl': "[btnPrefXL]",
+
+                               'ttl.contact-success': "[ttlContactSuccess]",
+                               'msg.contact-success': "[msgContactSuccess]"
+                              };
+        </script>
+    </body>
+[GenTime]
+</html>
