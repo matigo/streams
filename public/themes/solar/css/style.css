@@ -508,6 +508,7 @@ article.article gallery img {
     max-width: calc(100% - 5px);
 }
 
+article.article gallery.layout-1 img { max-height: 100%; }
 article.article gallery.layout-1 span.image-1 {
     background-position: center;
     max-height: 275px;
@@ -519,7 +520,6 @@ article.article gallery.layout-3 span.image-1 {
     grid-row-end: span 2;
     position: relative;
 }
-
 article.article gallery.layout-3 span.image-2,
 article.article gallery.layout-3 span.image-3 {
     max-height: 150px;

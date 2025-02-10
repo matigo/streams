@@ -308,7 +308,6 @@ function prepImageGalleries() {
                     var _src = NoNull(imgs[z].getAttribute('data-src'));
                     var _img = buildElement({ 'tag': 'img', 'attribs': [{'key':'src','value':_src}] });
                     imgs[z].appendChild(_img);
-                    console.log(_src);
                 }
 
             } else {
