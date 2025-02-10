@@ -474,45 +474,55 @@ article.article gallery {
     overflow: hidden;
     page-break-inside: avoid;
     vertical-align: text-top;
-    height: 300px;
     width: 100%;
 }
-article.article gallery.layout-2 {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 50%;
-}
+article.article gallery.layout-2,
 article.article gallery.layout-3 {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 50%;
-    gap: 5px;
+    grid-template-columns: 50% 50%;
 }
 article.article gallery.layout-4 {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: 50%;
 }
 article.article gallery span {
+    align-content: center;
+    background-color: rgba(0,0,0,0.75);
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    border: 3px solid var(--background-color, #fff);
+    border: none;
     color: transparent;
     cursor: pointer;
+    padding: 0;
+    margin: 0;
     max-height: none;
     max-width: none;
     height: 100%;
     width: 100%;
 }
+article.article gallery img {
+    border: 0;
+    padding: 0;
+    margin: 0 auto;
+    max-height: calc(100% - 5px);
+    max-width: calc(100% - 5px);
+}
 
 article.article gallery.layout-1 span.image-1 {
     background-position: center;
+    max-height: 275px;
 }
 article.article gallery.layout-3 span.image-1 {
     grid-column-start: 1;
-    grid-column-end: 2;
+    grid-column-end: auto;
     grid-row-start: 1;
-    grid-row-end: 4;
+    grid-row-end: span 2;
     position: relative;
-    height: 300px;
+}
+
+article.article gallery.layout-3 span.image-2,
+article.article gallery.layout-3 span.image-3 {
+    max-height: 150px;
 }
 
 article.article .endnote {

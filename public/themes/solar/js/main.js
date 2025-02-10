@@ -266,7 +266,7 @@ function prepImageGalleries() {
                 }
 
                 /* If we don't have a gallery on the DOM, add one */
-                if ( _pp.nextElementSibling.tagName != 'GALLERY' ) {
+                if ( _pp.nextElementSibling.tagName != 'GALLERY' || (_pp.nextElementSibling.tagName == 'GALLERY' && _pp.nextElementSibling.childNodes.length >= 4) ) {
                     var _gallery = buildElement({ 'tag': 'gallery', 'classes': ['wrapper'] });
                     _pp.after(_gallery);
                 }
@@ -279,10 +279,9 @@ function prepImageGalleries() {
 
                     var _img = buildElement({ 'tag': 'span',
                                               'classes': ['image-item'],
-                                              'attribs': [{'key':'style','value':'background-image: url(' + _src + ')'},
-                                                          {'key':'data-src','value':_src}
-                                                          ],
-                                              'text': _alt
+                                              'attribs': [{'key':'data-src','value':_src},
+                                                          {'key':'data-alt','value':_alt}
+                                                          ]
                                              });
                         _img.addEventListener('touchend', function(e) { handleImageClick(e); });
                         _img.addEventListener('click', function(e) { handleImageClick(e); });
@@ -305,6 +304,11 @@ function prepImageGalleries() {
                 gals[i].classList.add('layout-' + NoNull(imgs.length));
                 for ( let z = 0; z < imgs.length; z++ ) {
                     imgs[z].classList.add('image-' + NoNull(z + 1));
+
+                    var _src = NoNull(imgs[z].getAttribute('data-src'));
+                    var _img = buildElement({ 'tag': 'img', 'attribs': [{'key':'src','value':_src}] });
+                    imgs[z].appendChild(_img);
+                    console.log(_src);
                 }
 
             } else {
