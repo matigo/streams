@@ -127,6 +127,7 @@
     --pin-blue: #268bd2;
     --pin-red: #dc322f;
     --pin-black: #000;
+    --vh: 1vh;
 }
 
 :root .theme-dark {
@@ -177,6 +178,7 @@ body {
     padding: 0;
     margin: 0;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     max-width: 100vw;
     min-width: 100vw;
     width: 100%;
@@ -394,7 +396,7 @@ footer nav span {
 footer p {
     display: block;
     font-size: 0.9em;
-    padding: 0 2em;
+    padding: 0 0 0.5em;
     margin: 0.25em auto;
 }
 footer p.cc {
@@ -403,7 +405,6 @@ footer p.cc {
 
 main {
     position: relative;
-    min-height: calc(100vh - 12em);
     width: 100%;
 }
 
@@ -412,9 +413,7 @@ article {
     width: calc(100% - 3em);
     padding: 0;
     margin: 0 auto;
-    max-height: calc(100vh - 12em);
-    min-height: calc(100vh - 12em);
-    height: calc(100vh - 12em);
+    height: calc(100% - 1em);
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
@@ -495,7 +494,7 @@ article.article gallery span {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    border: none !important;
+    border: 3px solid var(--background-color, #fff);
     color: transparent;
     cursor: pointer;
     max-height: none;
@@ -505,7 +504,7 @@ article.article gallery span {
 }
 
 article.article gallery.layout-1 span.image-1 {
-    background-position: top;
+    background-position: center;
 }
 article.article gallery.layout-3 span.image-1 {
     grid-column-start: 1;
@@ -756,7 +755,7 @@ div.gallery-wrapper img {
 article.archives h1 {
     font-size: 2.5em;
     text-align: center;
-    padding: 1em 0 0;
+    padding: 0;
     margin: 0;
 }
 article.archives h3 {
@@ -779,13 +778,13 @@ section.archive-list {
     column-fill: auto;
     column-width: 550px;
     display: block;
+    overflow-x: auto;
     position: relative;
     padding: 0.5em 0;
     margin: 0 auto;
-    overflow-x: auto;
+    height: calc(100% - 6.5em);
     scroll-snap-type: x mandatory;
     scroll-snap-align: start;
-    height: 66vh;
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
@@ -822,6 +821,7 @@ section.archive-list p.post-item a {
     vertical-align: text-top;
     padding: 0;
     margin: 0;
+    max-width: calc(100% - 6em);
 }
 section.archive-list p.post-item label {
     text-align: right;
@@ -890,6 +890,7 @@ section.contact-form p.fineprint {
 }
 section.contact-form textarea,
 section.contact-form input {
+    border: 1px solid var(--border-color, #ccc);
     display: inline-block;
     vertical-align: text-top;
     padding: 0.5em 1em;
@@ -1012,11 +1013,22 @@ body.size-xl section.archive-list { height: 50vh; }
         padding: 0.5em;
         max-width: calc(100% - 2em);
     }
-    main { min-height: calc(100vh - 12em); }
-    article {
-        max-height: calc(100vh - 13em);
-        min-height: calc(100vh - 13em);
-        height: calc(100vh - 13em);
+    article { height: calc(100% - 1em); }
+    article.article h1 { margin: 0 auto 0.25em; }
+    footer {
+        padding: 0.5em;
+        max-width: calc(100% - 1em);
     }
-    article.article h1 { margin: 1em auto 0.25em; }
+    footer p { padding: 0; }
+
+    section.contact-form label {
+        display: block;
+        text-align: left;
+    }
+    section.contact-form textarea,
+    section.contact-form input {
+        display: block;
+        margin: 0;
+        width: calc(100% - 2.25em);
+    }
 }
