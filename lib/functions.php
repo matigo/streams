@@ -2310,7 +2310,7 @@
                 case 'application/json':
                     if ( is_bool($data) || (is_string($data) && strlen($data) <= 0) ) { $data = array(); }
                     $metaText = ((is_array($meta) && count($meta) > 0) ? $meta[count($meta) - 1] : false);
-                    $metaList = false;
+                    $metaList = array();
                     if ( $metaText !== false ) {
                         if ( is_array($meta) ) {
                             foreach ( $meta as $msg ) {
@@ -2321,6 +2321,8 @@
                             }
                         }
                     }
+                    if ( is_array($metaList) === false ) { $metaList = false; }
+                    if ( is_array($metaList) && count($metaList) <= 0 ) { $metaList = false; }
 
                     $json = array( 'meta' => array( 'code' => $status,
                                                     'text' => $metaText,

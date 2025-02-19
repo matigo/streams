@@ -1534,7 +1534,11 @@ class Route extends Streams {
             }
 
             // Ditch the Filter If Zero Values Exist
-            if ( count($this->settings['rss_filter_on']) <= 0 ) { unset($this->settings['rss_filter_on']); }
+            if ( array_key_exists('rss_filter_on', $this->settings) ) {
+                if ( is_array($this->settings['rss_filter_on']) && count($this->settings['rss_filter_on']) <= 0 ) {
+                    unset($this->settings['rss_filter_on']);
+                }
+            }
         }
 
         $fullPath = explode('/', $ReqURI);
