@@ -42,7 +42,7 @@ class Streams {
         $code = 500;
 
         // Check to Ensure the Visitor is not Overwhelming the Server(s) and Respond Accordingly
-        if ( $this->_checkForHammer() && $this->_isValidRequest() && $this->_isValidAgent() ) {
+        if ( $this->_checkForHammer() && $this->_isValidRequest() ) {
             switch ( strtolower($this->settings['Route']) ) {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
@@ -66,11 +66,7 @@ class Streams {
             unset($data);
 
         } else {
-            if ( $this->_isValidAgent() ) {
-                $code = $this->_isValidRequest() ? 420 : 422;
-            } else {
-                $code = 403;
-            }
+            $code = $this->_isValidRequest() ? 420 : 422;
             $rslt = readResource( FLATS_DIR . "/templates/$code.html", $ReplStr);
         }
 
@@ -161,28 +157,6 @@ class Streams {
         if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.php') !== false ) { return false; }
         if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.txt') !== false ) { return false; }
         if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.md') !== false ) { return false; }
-        return true;
-    }
-
-    /**
-     *  Function determines if the reported agent is valid for use or not. This is not meant to be a comprehensive list of
-     *      unacceptable agents, as agent strings are easily spoofed.
-     */
-    private function _isValidAgent() {
-        $excludes = array( 'ahrefsbot', 'mj12bot', 'mb2345browser', 'semrushbot', 'mmb29p', 'mbcrawler', 'blexbot', 'sogou web spider',
-                           'serpstatbot', 'semanticscholarbot', 'yandexbot', 'yandeximages', 'gwene', 'barkrowler', 'yeti', 'ccbot',
-                           'seznambot', 'domainstatsbot', 'sottopop', 'megaindex.ru', '9537.53', 'seekport crawler', 'iccrawler',
-                           'magpie-crawler', 'crawler4j', 'facebookexternalhit', 'turnitinbot', 'netestate', 'dataforseo',
-                           'thither.direct', 'liebaofast', 'micromessenger', 'youdaobot', 'theworld', 'qqbrowser',
-                           'dotbot', 'exabot', 'gigabot', 'slurp', 'keybot translation', 'searchatlas.com', 'googlebot',
-                           'bingbot/2.0', 'aspiegelbot', 'baiduspider', 'ruby', 'webprosbot', 'censysinspect',
-                           'zh-cn;oppo a33 build/lmy47v', 'oppo a33 build/lmy47v;wv', 'LanaiBotmarch' );
-        $agent = strtolower(NoNull($_SERVER['HTTP_USER_AGENT']));
-        if ( $agent != '' ) {
-            foreach ( $excludes as $chk ) {
-                if ( mb_strpos($agent, $chk) !== false ) { return false; }
-            }
-        }
         return true;
     }
 }
