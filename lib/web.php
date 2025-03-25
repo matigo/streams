@@ -813,6 +813,9 @@ class Route extends Streams {
             foreach ( $data['personas'] as $pa ) {
                 if ( NoNull($pa['avatar_img']) != '' ) { $short_ico = NoNull($pa['avatar_img']); }
             }
+
+        } else {
+            $short_ico = $HomeUrl . '/apple-touch-icon.png';
         }
         $ico_type = getFileExtension($short_ico);
         $ico_mime = getMimeFromExtension($ico_type);
@@ -859,6 +862,8 @@ class Route extends Streams {
                        '[META_DOMAIN]'  => NoNull($data['HomeURL']),
                        '[META_TYPE]'    => NoNull($data['page_type'], 'website'),
                        '[META_DESCR]'   => NoNull($data['description']),
+                       '[CANON_META]'   => $this->_getCanonicalMeta(),
+
                        '[CSS_EXTEND]'   => $this->_getCustomCSS($data),
                        '[FONT_SIZE]'    => NoNull($data['font-size'], 'md'),
                        '[CC-LICENSE]'   => $this->_getCCLicense(NoNull($data['license'], 'CC BY-NC-ND')),
@@ -1487,6 +1492,98 @@ class Route extends Streams {
 
         // Return the Array
         return $rVal;
+    }
+
+    /** ********************************************************************** *
+     *  Canonical Functions
+     ** ********************************************************************** */
+    /**
+     *  Function returns a complete Canonical Meta block for the HTML head
+     */
+    private function _getCanonicalMeta() {
+        $locale = str_replace(array('_', '-'), '-', strtolower(NoNull($this->settings['DispLang'], $this->settings['_language_code'])));
+        $default = strtolower(str_replace(array('_', '-'), '-', NoNull(DEFAULT_LANG)));
+        $langs = array();
+
+        /* Collect the languages for the theme */
+        if ( is_array($this->cache) && array_key_exists('location', $this->cache) ) {
+            $src = THEME_DIR . '/' . strtolower($this->cache['location']) . '/lang';
+            if ( file_exists($src) ) {
+                foreach ( glob($src . "/*.json") as $filename) {
+                    $key = str_replace(array($src, '.json', '/'), '', $filename);
+                    if ( mb_strlen($key) == 5 ) { $langs[] = $key; }
+                }
+            }
+        }
+
+        /* If we have a list of languages, let's build the Canonical links */
+        if ( is_array($langs) ) {
+            $path = $this->_getProperPath();
+            $curl = NoNull($this->settings['LangURL'], $this->settings['HomeURL']) . '/' . $path;
+            $xurl = NoNull($this->settings['HomeURL']) . '/' . $path;
+
+            /* Set the top-level Canonicals */
+            $out = tabSpace(2) . '<link rel="canonical" href="' . rtrim($curl, '/') . '">' . "\r\n";
+            if ( $curl != $xurl ) {
+                $out .= tabSpace(2) . '<link rel="alternate" hreflang="x-default" href="' . rtrim($xurl, '/') . '">' . "\r\n";
+            }
+
+            /* Add the Language variations */
+            if ( is_array($langs) && count($langs) > 0 ) {
+                foreach ( $langs as $lang ) {
+                    $url = NoNull($this->settings['HomeURL']) . '/' . (($lang == $default) ? '' : $lang . '/') . $path;
+                    $out .= tabSpace(2) . '<link rel="alternate" hreflang="' . $lang . '" href="' . rtrim($url, '/') . '" />' . "\r\n";
+                }
+
+                $out .= "\r\n";
+
+                /* Add the RSS links */
+                foreach ( $langs as $lang ) {
+                    $url = NoNull($this->settings['HomeURL']) . '/' . (($lang == $default) ? '' : $lang . '/') . 'rss.xml';
+                    $out .= tabSpace(2) . '<link rel="alternate" hreflang="' . $lang . '" type="application/rss+xml" title="" href="' . rtrim($url, '/') . '">' . "\r\n";
+                }
+            }
+
+            /* If we have a string, let's return it */
+            if ( mb_strlen($out) > 0 ) { return $out; }
+        }
+        /* If we're here, there are no alternative languages */
+        return '';
+    }
+
+    /**
+     *  Function determines the "proper" path for the current page
+     */
+    private function _getProperPath() {
+        $langs = array('en-us', 'es-es', 'es-mx', 'ja-jp', 'ko-kr', 'ru-ru', 'pt-br');
+        $parts = array();
+
+        /* Collect the languages for the theme */
+        if ( is_array($this->cache) && array_key_exists('location', $this->cache) ) {
+            $src = THEME_DIR . '/' . strtolower($this->cache['location']) . '/lang';
+            if ( file_exists($src) ) {
+                foreach ( glob($src . "/*.json") as $filename) {
+                    $key = str_replace(array($src, '.json', '/'), '', $filename);
+                    if ( mb_strlen($key) == 5 && in_array($key, $langs) === false ) { $langs[] = $key; }
+                }
+            }
+        }
+
+        $keys = array( 'PgRoot' );
+        for ( $i = 1; $i <= 9; $i++ ) {
+            $keys[] = 'PgSub' . $i;
+        }
+
+        foreach ( $keys as $key ) {
+            if ( array_key_exists($key, $this->settings) ) {
+                $vv = strtolower(NoNull($this->settings[$key]));
+                if ( mb_strlen($vv) > 0 && in_array($vv, $langs) === false ) { $parts[] = $vv; }
+            }
+        }
+
+        /* Return the proper path */
+        if ( is_array($parts) && count($parts) > 0 ) { return implode('/', $parts); }
+        return '';
     }
 
     /** ********************************************************************** *

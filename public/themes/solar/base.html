@@ -27,7 +27,7 @@
 
         <link rel="alternate" type="application/json" title="[SITE_NAME]" href="[HOMEURL]/feed.json" />
         <link rel="alternate" type="application/rss+xml" title="[SITE_NAME]" href="[HOMEURL]/rss" />
-
+[CANON_META]
         <link rel="webmention" href="[API_URL]/webmention" />
         <link rel="pingback" href="[API_URL]/xmlrpc" />
 
@@ -40,19 +40,15 @@
     </head>
     <body>
         <header>
-            <h1><a href="[HOMEURL]" title="">[SITE_NAME]</a></h1>
-            <button class="btn-action" data-action="menu"><i class="fas fa-bars"></i></button>
-            <h3>[SITEDESCR]</h3>
+            <ul>
+                <li><a href="[HOMEURL]" class="title" title="">[SITE_NAME]</a></li>
+                <li><button class="btn-action" data-action="menu"><i class="fas fa-bars"></i></button></li>
+            </ul>
         </header>
         <main>
 [PAGEHTML]
         </main>
         <footer class="page-footer">
-            <nav class="col-count hidden">
-                <button class="col-count-item btn-action" data-action="nav-prev" data-name="prev" disabled><i class="fas fa-arrow-left"></i></button>
-                <span class="col-count-item" data-name="label">&mdash;</span>
-                <button class="col-count-item btn-action" data-action="nav-next" data-name="next"><i class="fas fa-arrow-right"></i></button>
-            </nav>
             <p class="copyright">&copy; [YEAR] &mdash; Site Powered by Strong Coffee &amp; Pictures of Happy Puppies</p>
             <p class="cc">[CC-LICENSE]</p>
         </footer>

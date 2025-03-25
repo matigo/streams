@@ -16,39 +16,13 @@ document.onreadystatechange = function () {
         }
 
         /* Restore any Page Prefrences that might be set */
-        setTimeout(function () { resizeMain(); }, 250);
-        restorePagePref();
+        setTimeout(function () { restorePagePref(); }, 25);
 
-        /* Determine and Set the device-specific Viewport Height */
-        window.addEventListener('resize', () => { resizeMain(); });
+        /* Prep the Page */
+        setTimeout(function () { handlePageLoad(); }, 125);
 
-        /* Prep the page elements */
-        var _sections = ['readmore', 'comments'];
-        var _classes = ['article', 'bookmark', 'quotation', 'location'];
-        var els = document.getElementsByTagName('article');
-        for ( let e = 0; e < els.length; e++ ) {
-            var _isValid = false;
-            for ( let _idx in _classes ) {
-                if ( _isValid === false ) { _isValid = els[e].classList.contains(_classes[_idx]); }
-            }
-
-            /* Is this a long-form post? */
-            if ( _isValid ) {
-                for ( let _idx in _sections ) {
-                    els[e].appendChild(buildElement({ 'tag': 'section',
-                                                      'classes': ['appendix', _sections[_idx], 'hidden'],
-                                                      'attribs': [{'key':'data-name','value':_sections[_idx]}]
-                                                     }));
-                }
-
-                /* Prepare the Reader */
-                setTimeout(function () { prepArticleReader(); }, 25);
-            }
-
-            /* Are we working with a static page? */
-            if ( els[e].classList.contains('archives') ) { setTimeout(function () { prepArchiveList(); }, 25); }
-            if ( els[e].classList.contains('contact') ) { setTimeout(function () { prepContactForm(); }, 25); }
-        }
+        /* Watch for Scroll Changes */
+        window.addEventListener("scroll", watchScrollPosition, false);
     }
 }
 
@@ -64,14 +38,6 @@ function handleButtonAction(el) {
         var _action = NoNull(el.getAttribute('data-action')).toLowerCase();
 
         switch ( _action ) {
-            case 'nav-prev':
-                setVisibleColumn(-1);
-                break;
-
-            case 'nav-next':
-                setVisibleColumn(1);
-                break;
-
             case 'contact-send':
                 sendContactMessage();
                 break;
@@ -92,162 +58,81 @@ function handleButtonAction(el) {
     }
 }
 
+function handlePageLoad() {
+    var els = document.getElementsByTagName('article');
+    for ( let e = 0; e < els.length; e++ ) {
+        if ( els[e].classList.contains('archives') ) { prepArchiveList(); }
+        if ( els[e].classList.contains('article') ) { prepArticleReader(); }
+    }
+}
 function handleImageClick(el) {
     if ( el === undefined || el === null || el === false ) { return; }
     if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
     if ( NoNull(el.tagName).toLowerCase() != 'span' ) { return; }
+    if ( el.classList.contains('selected') ) { return; }
     if ( el.disabled !== undefined && el.disabled === true ) { return; }
     if ( splitSecondCheck(el) ) {
         var _src = el.getAttribute('data-src').replaceAll('_medium', '').replaceAll('_thumb', '');
         if ( NoNull(_src).length > 0 ) {
-            var _gallery = buildElement({ 'tag': 'div', 'classes': ['gallery-wrapper'] });
-            var _img = buildElement({ 'tag': 'img',
-                                      'classes': ['img-full', 'text-center'],
-                                      'attribs': [{'key':'src','value':_src}]
-                                     });
-                _img.addEventListener('touchend', function(e) { handleGalleryImageClick(e); });
-                _img.addEventListener('click', function(e) { handleGalleryImageClick(e); });
-                _gallery.appendChild(_img);
-
-            /* Add the Image Gallery to the DOM */
-            document.body.appendChild(_gallery);
-        }
-    }
-}
-
-function handleGalleryImageClick(el) {
-    if ( el === undefined || el === null || el === false ) { return; }
-    if ( el.currentTarget !== undefined && el.currentTarget !== null ) { el = el.currentTarget; }
-    if ( NoNull(el.tagName).toLowerCase() !== 'img' ) { return; }
-    if ( el.disabled !== undefined && el.disabled === true ) { return; }
-    if ( splitSecondCheck(el) ) {
-        setTimeout(function () { removeByClass('gallery-wrapper'); }, 50);
-
-    }
-}
-
-/** ************************************************************************* *
- *  Nav-Pill Watcher
- ** ************************************************************************* */
-window.pillhash = '';
-
-function watchNavCounter() {
-    var els = document.getElementsByClassName('col-count');
-    if ( els.length === undefined || els.length <= 0 ) { return; }
-
-    var _colWidth = 550;
-    var els = document.getElementsByTagName('article');
-    if ( els.length > 0 ) {
-        for ( let e = 0; e < els.length; e++ ) {
-            var _pp = els[e];
-
-            if ( els[e].childNodes.length !== undefined && els[e].childNodes.length > 0 ) {
-                var itms = els[e].getElementsByTagName('P');
-                for ( let z = 0; z < itms.length; z++ ) {
-                    if ( itms[z].parentElement.tagName == 'SECTION' ) { _pp = itms[z].parentElement; }
-                    if ( _colWidth != itms[z].offsetWidth ) { _colWidth = itms[z].offsetWidth; }
+            /* Find the Gallery */
+            var _pp = el;
+            for ( let i = 0; i <= 9; i++ ) {
+                if ( NoNull(_pp.tagName).toLowerCase() != 'gallery' ) {
+                    _pp = _pp.parentElement;
+                } else {
+                    i += 10;
                 }
             }
 
-            /* Do some math! */
-            var _visCols = Math.floor(_pp.offsetWidth / _colWidth);
-            var _cols = Math.floor(_pp.scrollWidth / _colWidth);
-            var _page = Math.floor(_pp.scrollLeft / _colWidth);
+            /* So long as we have a proper gallery, let's load the image and set the selected item */
+            if ( NoNull(_pp.tagName).toLowerCase() == 'gallery' ) {
+                var _id = NoNull(_pp.getAttribute('data-id'));
+                if ( NoNull(_id).length > 0 ) {
+                    var _alt = NoNull(el.getAttribute('data-alt'), el.getAttribute('alt'));
 
-            /* Ensure the navigation capsule is updated only if needs be */
-            var _hash = NoNull('v:' + _visCols + '|c:' + _cols + '|p:' + _page).hashCode();
-            if ( _hash != window.pillhash ) {
-                setNavCapsule(_visCols, (_page + 1), _cols);
-                window.pillhash = _hash;
+                    var els = document.getElementsByClassName('for-gallery-' + NoNull(_id));
+                    for ( let e = 0; e < els.length; e++ ) {
+                        els[e].innerHTML = '';
+                        els[e].appendChild(buildElement({ 'tag': 'img', 'attribs': [{'key':'src','value':_src}] }));
+                    }
+                }
+
+                var els = _pp.getElementsByClassName('image-item');
+                for ( let e = 0; e < els.length; e++ ) {
+                    if ( els[e].classList.contains('selected') ) { els[e].classList.remove('selected'); }
+                }
+                if ( el.classList.contains('selected') === false ) { el.classList.add('selected'); }
             }
-
-            /* This should only run on the first article */
-            e += els.length;
         }
-
-        /* Run the counter */
-        setTimeout(function () { watchNavCounter(); }, 333);
     }
 }
-function setNavCapsule( _visCols = 0, _page = 0, _cols = 0 ) {
-    if ( _visCols === undefined || _visCols === null || isNaN(_visCols) ) { _visCols = 0; }
-    if ( _page === undefined || _page === null || isNaN(_page) ) { _page = 0; }
-    if ( _cols === undefined || _cols === null || isNaN(_cols) ) { _cols = 0; }
-    if( _visCols <= 0 ) { _visCols = 1; }
-    if( _page <= 0 ) { _page = 1; }
-    if( _cols <= 0 ) { _cols = 1; }
 
-    /* Build the Label */
-    var _msg = numberWithCommas(_page);
-    if ( _visCols >= 2 ) {
-        for ( let z = 1; z < _visCols; z++ ) {
-            _msg += ((z >= (_visCols - 1)) ? ' &amp; ' : ', ') + numberWithCommas(_page + z);
+/** ************************************************************************ **
+ *      Watch Functions
+ ** ************************************************************************ */
+function watchScrollPosition() {
+    var el = document.querySelector("header");
+    if ( el !== undefined && el !== null ) {
+        if ( this.scrollY >= 200 ) {
+            if ( el.classList.contains('stick') === false ) { el.classList.add('stick'); }
+        } else {
+            if ( el.classList.contains('stick') ) { el.classList.remove('stick'); }
         }
     }
-    _msg += ' of ' + numberWithCommas(_cols);
-
-    /* Set the DOM elements */
-    var els = document.getElementsByClassName('col-count-item');
-    for ( let e = 0; e < els.length; e++ ) {
-        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
-        switch ( _name ) {
-            case 'label':
-                if ( els[e].innerHTML != _msg ) { els[e].innerHTML = _msg; }
-                break;
-
-            case 'prev':
-                els[e].disabled = ((_page <= 1) ? true : false);
-                break;
-
-            case 'next':
-                els[e].disabled = (((_page + _visCols) > _cols) ? true : false);
-                break;
-
-            default:
-                /* No Action required */
-        }
-    }
-
-    /* Ensure the Counter is visible */
-    if ( _page <= 1 && _cols <= 1 ) {
-        hideByClass('col-count');
-    } else {
-        showByClass('col-count');
-    }
-
-    /* Ensure the Page is properly sized */
-    resizeMain();
 }
 
 /** ************************************************************************* *
  *  Article Reader Functions
  ** ************************************************************************* */
 function prepArticleReader() {
-    var els = document.getElementsByTagName('section');
-    for ( let e = 0; e < els.length; e++ ) {
-        var _name = NoNull(els[e].getAttribute('data-name')).toLowerCase();
-        switch ( _name ) {
-            case 'comments':
-                setCommentSection(els[e]);
-                break;
-
-            case 'readmore':
-                setReadNextSection(els[e]);
-                break;
-
-            default:
-                /* No Action */
-        }
-    }
-
     /* Prep the image galleries */
     prepImageGalleries();
 
     /* Remove the irrelevant tags */
     removeByTag('br');
 
-    /* Start the navigation counter watcher */
-    setTimeout(function () { watchNavCounter(); }, 500);
+    /* Collect the ReadMore items (if applicable) */
+    setTimeout(function () { getReadMoreLinks(); }, 50);
 }
 function prepImageGalleries() {
     var els = document.getElementsByTagName('ARTICLE');
@@ -266,7 +151,7 @@ function prepImageGalleries() {
                 }
 
                 /* If we don't have a gallery on the DOM, add one */
-                if ( _pp.nextElementSibling.tagName != 'GALLERY' || (_pp.nextElementSibling.tagName == 'GALLERY' && _pp.nextElementSibling.childNodes.length >= 4) ) {
+                if ( _pp.nextElementSibling.tagName != 'GALLERY' ) {
                     var _gallery = buildElement({ 'tag': 'gallery', 'classes': ['wrapper'] });
                     _pp.after(_gallery);
                 }
@@ -301,12 +186,20 @@ function prepImageGalleries() {
         for ( let i = 0; i < gals.length; i++ ) {
             var imgs = gals[i].getElementsByTagName('SPAN');
             if ( imgs.length > 0 ) {
-                gals[i].classList.add('layout-' + NoNull(imgs.length));
+                gals[i].classList.add('layout-' + ((imgs.length > 1) ? 'multi' : 'single') );
+                gals[i].setAttribute('data-id', NoNull(i + 1));
+
+                /* Prep the Viewer */
+                if ( imgs.length > 1 ) {
+                    gals[i].parentElement.insertBefore(buildElement({ 'tag': 'div', 'classes': ['viewer', 'for-gallery-' + NoNull(i + 1)] }), gals[i]);
+                }
+
+                /* Set the Images */
                 for ( let z = 0; z < imgs.length; z++ ) {
                     imgs[z].classList.add('image-' + NoNull(z + 1));
 
                     var _src = NoNull(imgs[z].getAttribute('data-src'));
-                    var _img = buildElement({ 'tag': 'img', 'attribs': [{'key':'src','value':_src}] });
+                    var _img = buildElement({ 'tag': 'img', 'classes': ['thumb'], 'attribs': [{'key':'src','value':_src}] });
                     imgs[z].appendChild(_img);
                 }
 
@@ -314,168 +207,18 @@ function prepImageGalleries() {
                 if ( gals[i].classList.contains('hidden') === false ) { gals[i].classList.add('hidden'); }
             }
         }
-    }
-}
-function setVisibleColumn( _plusMinus = 0 ) {
-    if ( _plusMinus === undefined || _plusMinus === null || isNaN(_plusMinus) ) { _plusMinus = 0; }
-    if ( _plusMinus == 0 ) { return; }
 
-    var _colWidth = 550;
-    var els = document.getElementsByTagName('article');
-    if ( els.length > 0 ) {
-        for ( let e = 0; e < els.length; e++ ) {
-            if ( els[e].childNodes.length !== undefined && els[e].childNodes.length > 0 ) {
-                for ( let z = 0; z < els[e].childNodes.length; z++ ) {
-                    if ( NoNull(els[e].childNodes[z].tagName).toLowerCase() == 'p' ) {
-                        _colWidth = els[e].childNodes[z].offsetWidth;
-                    }
-                }
-            }
-            var _visCols = Math.floor(els[e].offsetWidth / _colWidth);
-            var _cols = Math.floor(els[e].scrollWidth / _colWidth);
-            var _page = Math.floor(els[e].scrollLeft / _colWidth);
-
-            els[e].scrollLeft = _colWidth * (_page + _plusMinus);
-
-            /* This should only run on the first article */
-            e += els.length;
+        /* Trigger the first image in each gallery */
+        var imgs = document.getElementsByClassName('image-1');
+        for ( let i = 0; i < imgs.length; i++ ) {
+            handleImageClick(imgs[i]);
         }
     }
-}
-
-/** ************************************************************************* *
- *  Comment Functions
- ** ************************************************************************* */
-function setCommentSection( el ) {
-    if ( el === undefined || el === null || el === false ) { return; }
-    if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
-    el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
-    el.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Comments' }));
-    el.appendChild(buildElement({ 'tag': 'ol', 'classes': ['comment-list', 'hidden'] }));
-
-    /* Collect the Post Comments */
-    setTimeout(function () { getPostComments(); }, 75);
-}
-function getPostGuid() {
-    var els = document.getElementsByTagName('article');
-    for ( let e = 0; e < els.length; e++ ) {
-        var _guid = NoNull(els[e].getAttribute('data-guid'));
-        if ( NoNull(_guid).length == 36 ) { return _guid; }
-    }
-    return '';
-}
-function getPostComments() {
-    var _guid = getPostGuid();
-
-    if ( NoNull(_guid).length == 36 ) {
-        var _params = { 'channel_guid': getMetaValue('channel_guid'),
-                        'post_guid': _guid
-                       };
-        setTimeout(function () { doJSONQuery('post/thread', 'GET', _params, parsePostComments); }, 25);
-    }
-    hideByClass('comment-list');
-}
-function parsePostComments( data ) {
-    var _guid = getPostGuid();
-
-    var els = document.getElementsByClassName('comment-list');
-    for ( let e = 0; e < els.length; e++ ) {
-        if ( els[e].classList.contains('hidden') === false ) { els[e].classList.add('hidden'); }
-        els[e].innerHTML = '';
-    }
-
-    /* If we have comments, let's parse them */
-    if ( data.meta !== undefined && data.meta.code == 200 ) {
-        var ds = data.data;
-        for ( let e = 0; e < els.length; e++ ) {
-            if ( ds.length > 0 ) {
-                for ( let i = (ds.length - 1); i >= 0; i-- ) {
-                    if ( ds[i].guid != _guid ) {
-                        var _obj = buildCommentItem(ds[i]);
-                        if ( _obj !== undefined && _obj !== null && _obj !== false ) { els[e].appendChild(_obj); }
-                    }
-                }
-            }
-        }
-    }
-
-    /* If there are no comments, show a message */
-    for ( let e = 0; e < els.length; e++ ) {
-        if ( els[e].childNodes.length <= 0 ) {
-            var _token = getMetaValue('authorization');
-            var _msg = NoNull(window.strings['lbl.start-comments'], 'Be the first to comment!');
-            if ( NoNull(_token).length < 36 ) {
-                _msg = NoNull(window.strings['lbl.no-comments'], 'There are no comments just yet.');
-            }
-
-            /* Set the list item */
-            els[e].appendChild(buildElement({ 'tag': 'li',
-                                              'classes': ['comment-item', 'comment-zero', 'text-center'],
-                                              'text': _msg
-                                             }));
-        }
-
-        /* If we have list items, make sure the elements are visible */
-        if ( els[e].childNodes.length > 0 ) { showByClass('comment-list'); }
-    }
-
-    /* Ensure the comment section is visible */
-    showByClass('comments');
-}
-function buildCommentItem( data ) {
-    if ( data === undefined || data === null || data === false ) { return; }
-    if ( data.content === undefined || data.content === false ) { return; }
-    if ( NoNull(data.guid).length !== 36 ) { return; }
-
-    var _urlPrefix = NoNull(window.location.origin).toLowerCase();
-
-    var _obj = buildElement({ 'tag': 'li',
-                              'classes': ['comment-item'],
-                              'attribs': [{'key':'data-guid','value':NoNull(data.guid)},
-                                          {'key':'data-type','value':NoNull(data.type)}
-                                          ]
-                             });
-
-    /* Set the Author data */
-    var _avatar = buildElement({ 'tag': 'div',
-                                 'classes': ['avatar-wrap'],
-                                 'attribs': [{'key':'data-guid','value': NoNull(data.persona.guid)}]
-                                });
-        _avatar.appendChild(buildElement({ 'tag': 'span',
-                                           'classes': ['avatar'],
-                                           'attribs': [{'key':'style','value': 'background-image: url(' + NoNull(data.persona.avatar) + ')'}]
-                                          }));
-        _obj.appendChild(_avatar);
-
-    /* Set the post content */
-    var _content = buildElement({ 'tag': 'div', 'classes': ['content-wrap'], 'attribs': [{'key':'data-guid','value': NoNull(data.guid)}] });
-        _content.appendChild(buildElement({ 'tag': 'h4', 'classes': ['persona'], 'text': NoNull(data.persona.name) }));
-        _content.appendChild(buildElement({ 'tag': 'h5', 'classes': ['publish-at'], 'text': formatShortDate(data.publish_at) }));
-
-        _content.appendChild(buildElement({ 'tag': 'div', 'classes': ['comment-content'], 'text': NoNull(data.content) }));
-        _obj.appendChild(_content);
-
-    /* Return the element */
-    return _obj;
 }
 
 /** ************************************************************************* *
  *  ReadMore Functions
  ** ************************************************************************* */
-function setReadNextSection( el ) {
-    if ( el === undefined || el === null || el === false ) { return; }
-    if ( el.tagName === undefined || el.tagName === NoNull || NoNull(el.tagName).toLowerCase() != 'section' ) { return; }
-    el.appendChild(buildElement({ 'tag': 'hr', 'classes': ['endnote'] }));
-    if ( el.classList !== undefined && el.classList !== null ) {
-        if ( el.classList.contains('nobreak') === false ) { el.classList.add('nobreak'); }
-    }
-
-    var _block = buildElement({ 'tag': 'div', 'classes': ['readmore', 'hidden'] });
-        _block.appendChild(buildElement({ 'tag': 'h3', 'classes': ['header', 'text-center'], 'text': 'Read Next' }));
-        _block.appendChild(buildElement({ 'tag': 'ul', 'classes': ['readmore-list'] }));
-    el.appendChild(_block);
-    setTimeout(function () { getReadMoreLinks(); }, 50);
-}
 function getReadMoreLinks() {
     var els = document.getElementsByTagName('article');
     for ( let e = 0; e < els.length; e++ ) {
@@ -769,8 +512,7 @@ function buildMenu() {
         _menu.appendChild(_links);
 
     /* Construct the Preferences block */
-    var _prefs = { 'theme': ['', 'Dark'],
-                   'font': ['', 'Sans', 'Serif', 'Mono'],
+    var _prefs = { 'font': ['', 'Sans', 'Serif', 'Mono'],
                    'size': ['xs', 'sm', '', 'lg', 'xl']
                   };
         _menu.appendChild(buildElement({ 'tag': 'h1', 'classes': ['title'], 'text': NoNull(window.strings['mnu.prefs'], 'Reading Preferences') }));
@@ -837,7 +579,7 @@ function clearMenu() {
         }
 
         /* Destroy the Menus */
-        setTimeout(function () { removeByClass('menu'); }, 500);
+        setTimeout(function () { removeByClass('menu'); }, 25);
     }
 }
 

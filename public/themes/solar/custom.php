@@ -158,6 +158,7 @@ class Solar {
                             }
 
                             /* Set the special values */
+                            $data['title_letter'] = mb_substr(NoNull($Row['title']), 0, 1);
                             $data['content_html'] = $this->_getMarkdownHTML($Row['content_text']);
                             $data['publish_on'] = date('F jS, Y', $Row['publish_unix']);
                             $data['tag_list'] = '';
