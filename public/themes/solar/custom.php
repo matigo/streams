@@ -222,6 +222,8 @@ class Solar {
                 if ( is_array($rslt) ) {
                     foreach ( $rslt as $Row ) {
                         $summ = NoNull(preg_replace('/\s*/m', '', NoNull($Row['summary'])));
+                        $url = NoNull($Row['prefix']) . NoNull($Row['canonical_url']);
+
                         if ( mb_strlen($summ) > 3 ) {
                             $data = array( '@context' => 'https://schema.org',
                                            '@type'    => 'BlogPosting',
@@ -235,11 +237,11 @@ class Solar {
                                                                  'name'  => NoNull($Row['domain']),
                                                                 ),
                                            'datePublished' => apiDate($Row['publish_unix'], 'Z'),
-                                           'dateModified' => apiDate($Row['updated_unix'], 'Z'),
+                                           'dateModified'  => apiDate($Row['updated_unix'], 'Z'),
                                            'mainEntityOfPage' => array( '@type' => 'WebPage',
-                                                                        '@id'   => NoNull($Row['prefix'] . $Row['canonical_url']),
+                                                                        '@id'   => $url,
                                                                        ),
-                                           'url' => NoNull($Row['prefix'] . $Row['canonical_url']),
+                                           'url' => $url,
                                           );
                         }
 
@@ -251,7 +253,6 @@ class Solar {
 
             /* If we have data, let's build the output */
             if ( is_array($data) && mb_strlen(NoNull($data['url'])) > 10 ) {
-
                 $out = '<script type="application/ld+json">' . "\n" .
                        json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n" .
                        '</script>' . "\n";

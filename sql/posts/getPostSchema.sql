@@ -1,5 +1,5 @@
 SELECT po.`id` as `post_id`, po.`guid` as `post_guid`, ROUND(UNIX_TIMESTAMP(po.`updated_at`)) as `version`,
-       LOWER(CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`, po.`canonical_url`)) as `url`, su.`url` as `domain`, po.`type`,
+       CONCAT(CASE WHEN si.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', su.`url`) as `prefix`, po.`canonical_url`, su.`url` as `domain`, po.`type`,
        po.`title`, mm.`value` as `summary`, pa.`display_name` as `author_name`,
        DATE_FORMAT(po.`publish_at`, '%Y-%m-%d') as `publish_ymd`, ROUND(UNIX_TIMESTAMP(po.`publish_at`)) as `publish_unix`,
        DATE_FORMAT(GREATEST(po.`publish_at`, po.`updated_at`), '%Y-%m-%d') as `updated_ymd`, ROUND(UNIX_TIMESTAMP(GREATEST(po.`publish_at`, po.`updated_at`))) as `updated_unix`
