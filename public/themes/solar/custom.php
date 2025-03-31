@@ -56,6 +56,7 @@ class Solar {
     public function getPagination( $data ) { return ''; }
     public function getPopularPosts( $data ) { return ''; }
     public function getSiteNav( $data ) { return ''; }
+    public function getSchemaMeta($data) { return $this->_getSchemaMeta($data); }
 
     /** ********************************************************************* *
      *  Private Functions
@@ -201,6 +202,80 @@ class Solar {
     }
 
     /** ********************************************************************* *
+     *  Page Schema Functions
+     ** ********************************************************************* */
+    /**
+     *  Function returns the schema for a given page
+     */
+    private function _getSchemaMeta( $data ) {
+        $page = $this->_getPageLookupData();
+
+        if ( is_array($page) && array_key_exists('guid', $page) && mb_strlen(NoNull($page['guid'])) == 36 ) {
+            $CacheKey = 'schema-' . NoNull($page['guid']) . '-' . nullInt($data['updated_unix']);
+            $data = getCacheObject($CacheKey);
+            if ( is_array($data) === false || array_key_exists('url', $data) === false ) {
+                $ReplStr = array( '[SITE_ID]'   => nullInt($this->settings['_site_id']),
+                                  '[POST_GUID]' => sqlScrub($page['guid']),
+                                 );
+                $sqlStr = readResource(SQL_DIR . '/posts/getPostSchema.sql', $ReplStr);
+                $rslt = doSQLQuery($sqlStr);
+                if ( is_array($rslt) ) {
+                    foreach ( $rslt as $Row ) {
+                        $summ = NoNull(preg_replace('/\s*/m', '', NoNull($Row['summary'])));
+                        if ( mb_strlen($summ) > 3 ) {
+                            $data = array( '@context' => 'https://schema.org',
+                                           '@type'    => 'BlogPosting',
+                                           'headline' => NoNull($Row['title']),
+                                           'description' => NoNull($Row['summary']),
+                                           'author'   => array( '@type' => 'Person',
+                                                                'name'  => NoNull($Row['author_name']),
+                                                               ),
+                                           'publisher' => array( '@type' => 'Organization',
+                                                                 'name'  => NoNull($Row['domain']),
+                                                                ),
+                                           'datePublished' => NoNull($Row['publish_ymd']),
+                                           'dateModified' => NoNull($Row['updated_ymd']),
+                                           'mainEntityOfPage' => array( '@type' => 'WebPage',
+                                                                        '@id'   => NoNull($Row['url']),
+                                                                       ),
+                                           'url' => NoNull($Row['url']),
+                                          );
+                        }
+
+                        /* If the data is valid, let's cache it */
+                        if ( is_array($data) && count($data) > 0 ) { setCacheObject($CacheKey, $data); }
+                    }
+                }
+            }
+
+            /* If we have data, let's build the output */
+            if ( is_array($data) && mb_strlen(NoNull($data['url'])) > 10 ) {
+
+                $out = '<script type="application/ld+json">' . "\n" .
+                       json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n" .
+                       '</script>' . "\n";
+                $meta = '';
+
+                /* Ensure the padding is correct */
+                $lines = explode("\n", $out);
+                if ( is_array($lines) && count($lines) > 0 ) {
+                    foreach ( $lines as $line ) {
+                        if ( mb_strlen(NoNull($line)) > 0 ) {
+                            $meta .= tabSpace(2) . $line . "\n";
+                        }
+                    }
+                }
+
+                /* So long as we have something that looks normal, return it */
+                if ( mb_strlen($meta) > 10 ) { return $meta; }
+            }
+        }
+
+        /* If we're here, there's nothing to return */
+        return '';
+    }
+
+    /** ********************************************************************* *
      *  Page Cache Functions
      ** ********************************************************************* */
     /**
@@ -220,8 +295,7 @@ class Solar {
      *  Function returns an array with basic lookup data or an unhappy boolean
      */
     private function _getPageLookupData() {
-        $CacheKey = $this->_getRequestCacheKey('site');
-        $CacheKey = '';
+        $CacheKey = $this->_getRequestCacheKey('po');
 
         $data = getCacheObject( $CacheKey );
         if ( is_array($data) === false || mb_strlen(NoNull($data['guid'])) != 36 ) {
@@ -232,10 +306,12 @@ class Solar {
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
                 foreach ( $rslt as $Row ) {
-                    $data = array( 'guid'     => NoNull($Row['guid']),
-                                   'is_match' => YNBool($Row['is_match']),
-                                   'template' => NoNull($Row['template']),
-                                  );
+                    if ( YNBool($Row['is_match']) ) {
+                        $data = array( 'guid'     => NoNull($Row['guid']),
+                                       'is_match' => YNBool($Row['is_match']),
+                                       'template' => NoNull($Row['template']),
+                                      );
+                    }
                 }
             }
 

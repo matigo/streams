@@ -863,6 +863,7 @@ class Route extends Streams {
                        '[META_TYPE]'    => NoNull($data['page_type'], 'website'),
                        '[META_DESCR]'   => NoNull($data['description']),
                        '[CANON_META]'   => $this->_getCanonicalMeta(),
+                       '[SCHEMA_META]'  => $this->_getSchemaMeta($data),
 
                        '[CSS_EXTEND]'   => $this->_getCustomCSS($data),
                        '[FONT_SIZE]'    => NoNull($data['font-size'], 'md'),
@@ -1492,6 +1493,29 @@ class Route extends Streams {
 
         // Return the Array
         return $rVal;
+    }
+
+    /** ********************************************************************** *
+     *  Schema Functions
+     ** ********************************************************************** */
+    /**
+     *  Function returns a complete JSON+LD Schema object if the theme supports it
+     */
+    private function _getSchemaMeta($data) {
+        if ( is_array($data) && array_key_exists('location', $data) ) {
+            $ThemeLocation = THEME_DIR . '/' . NoNull($data['location'], 'error');
+            if ( file_exists("$ThemeLocation/custom.php") ) {
+                if ( $this->custom === false ) {
+                    require_once("$ThemeLocation/custom.php");
+                    $ClassName = ucfirst(NoNull($data['location'], 'default'));
+                    $this->custom = new $ClassName( $this->settings, $this->strings );
+                }
+                if ( method_exists($this->custom, 'getSchemaMeta') ) {
+                    return $this->custom->getSchemaMeta($data);
+                }
+            }
+        }
+        return '';
     }
 
     /** ********************************************************************** *
