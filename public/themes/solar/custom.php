@@ -229,16 +229,17 @@ class Solar {
                                            'description' => NoNull($Row['summary']),
                                            'author'   => array( '@type' => 'Person',
                                                                 'name'  => NoNull($Row['author_name']),
+                                                                'url'   => NoNull($Row['prefix']),
                                                                ),
                                            'publisher' => array( '@type' => 'Organization',
                                                                  'name'  => NoNull($Row['domain']),
                                                                 ),
-                                           'datePublished' => NoNull($Row['publish_ymd']),
-                                           'dateModified' => NoNull($Row['updated_ymd']),
+                                           'datePublished' => apiDate($Row['publish_unix'], 'Z'),
+                                           'dateModified' => apiDate($Row['updated_unix'], 'Z'),
                                            'mainEntityOfPage' => array( '@type' => 'WebPage',
-                                                                        '@id'   => NoNull($Row['url']),
+                                                                        '@id'   => NoNull($Row['prefix'] . $Row['canonical_url']),
                                                                        ),
-                                           'url' => NoNull($Row['url']),
+                                           'url' => NoNull($Row['prefix'] . $Row['canonical_url']),
                                           );
                         }
 
