@@ -41,8 +41,8 @@ class Streams {
         $meta = false;
         $code = 500;
 
-        // Check to Ensure the Visitor is not Overwhelming the Server(s) and Respond Accordingly
-        if ( $this->_checkForHammer() && $this->_isValidRequest() ) {
+        /* So long as we have what appears to be a valid request, respond accoringly */
+        if ( $this->_isValidRequest() ) {
             switch ( strtolower($this->settings['Route']) ) {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
@@ -70,79 +70,30 @@ class Streams {
             $rslt = readResource( FLATS_DIR . "/templates/$code.html", $ReplStr);
         }
 
-        // Return the Data in the Correct Format
+        /* Return the Data in the Correct Format */
         formatResult($rslt, $this->settings, $type, $code, $meta, $more);
-    }
-
-    /**
-     *  Function Checks to Ensure the Connecting Protocol is Correct. Incorrect Protocols
-     *      need to be corrected
-     */
-    private function _checkValidProtocol() {
-        if ( defined('HTTPS_ENABLED') === false ) { define('HTTPS_ENABLED', 0); }
-        $protocol = getServerProtocol();
-        $rVal = false;
-
-        if ( HTTPS_ENABLED == 1 && $protocol == 'https' ) { $rVal = true; }
-        if ( HTTPS_ENABLED == 0 && $protocol == 'http' ) { $rVal = true; }
-
-        // Return the Boolean Response
-        return $rVal;
     }
 
     /**
      *  Function Constructs and Returns the Language String Replacement Array
      */
     private function _getReplStrArray() {
-        $rVal = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
+        $data = array( '[SITEURL]' => NoNull($this->settings['HomeURL']),
                        '[RUNTIME]' => getRunTime('html'),
                       );
-        foreach ( $this->strings as $Key=>$Val ) {
-            $rVal["[$Key]"] = NoNull($Val);
+        if ( is_array($this->strings) && count($this->strings) > 0 ) {
+            foreach ( $this->strings as $kk=>$vv ) {
+                $data["[$kk]"] = NoNull($vv);
+            }
         }
 
-        // Return the Array
-        return $rVal;
+        /* Return the completed array */
+        return $data;
     }
 
     /** ********************************************************************** *
      *  Bad Behaviour Functions
      ** ********************************************************************** */
-    /**
-     *  Function Checks to Ensure a Device Isn't Hammering the System Like an Idiot
-     */
-    private function _checkForHammer() {
-        $HLimit = (defined('HAMMER_LIMIT')) ? nullInt(HAMMER_LIMIT, 120) : 120;
-        if ( $HLimit <= 0 ) { return true; }
-
-        $Token = NoNull($this->settings['token']);
-        if ( mb_strlen($Token) < 30 ) { $Token = NoNull($this->settings['_address']); }
-        if ( mb_strlen($Token) < 7 ) { $Token = getVisitorIPv4(); }
-
-        /* Check To See If Everything's Good */
-        if ( mb_strlen($Token) >= 7 ) {
-            $CleanKey = 'hammer-' . md5($Token . apiDate(strtotime(date("Y-m-d H:i:00")), 'U'));
-            $data = getCacheObject($CleanKey);
-            $reqs = 0;
-
-            /* If we have data, how many requests currently exist? */
-            if ( is_array($data) ) {
-                $reqs = nullInt($data['hit_count']);
-                if ( $reqs <= 0 ) { $reqs = 0; }
-            }
-            $reqs++;
-
-            /* Record the current number of requests */
-            setCacheObject($CleanKey, array('hit_count' => nullInt($reqs)) );
-
-            /* Return a boolean based on the hit count */
-            if ( $reqs < $HLimit ) { return true; }
-        }
-
-        /* If we're here, we must assume the connection is invalid */
-        return false;
-    }
-
     /**
      *  Function determines if the request is looking for a WordPress, phpMyAdmin, or other
      *      open-source package-based attack vector and returns an abrupt message if so.
@@ -151,7 +102,7 @@ class Streams {
         $roots = array( 'phpmyadmin', 'phpmyadm1n', 'phpmy', 'pass',
                         'tools', 'typo3', 'xampp', 'www', 'web',
                         'wp-admin', 'wp-content', 'wp-includes', 'vendor',
-                        '.env', 'ads.txt', 'wlwmanifest.xml',
+                        '.env', 'wlwmanifest.xml',
                        );
         if ( in_array(strtolower(NoNull($this->settings['PgSub1'], $this->settings['PgRoot'])), $roots) ) { return false; }
         if ( strpos(strtolower(NoNull($this->settings['ReqURI'])), '.php') !== false ) { return false; }

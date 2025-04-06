@@ -2518,30 +2518,6 @@
      *  IP Filtering Functions
      ***********************************************************************/
     /**
-     *  Function Checks the Visitor IP with a Filter List and Returns a Boolean Response
-     *  Note: This is supposed to cut down on system resources by blocking IPs that hammer
-     *        the servers far too often. A tiny static file will be returned rather than
-     *        the full site.
-     */
-    function checkVisitorOK() {
-        $rVal = true;
-
-        if ( IPFILTER_ENABLED != 0 ) {
-            $visitorIP = getVisitorIPv4();
-            $noGo = array( '0.0.0.0' );
-
-            // Record the IP Record
-            writeIPRecord( $visitorIP );
-
-            // Determine if the IP is Filtered
-            if ( in_array($visitorIP, $noGo) ) { $rVal = false; }
-        }
-
-        // Return the Response
-        return $rVal;
-    }
-
-    /**
      *  Function Writes the IP Record to a Flatfile Where It Can Be Imported and
      *      Analysed Later.
      */
