@@ -753,7 +753,7 @@ class Account {
                                                   "'[DISP_NAME]', '[FIRST_NAME]', '[LAST_NAME]', " .
                                                   "'[MAIL_ADDY]', '[ACCT_LANG]', '[ACCT_ZONE]', " .
                                                   "'[SEND_REMIND]', '[SHOW_GEO]', " .
-                                                  "'[ACCT_PASS]', '10c2015' );", $ReplStr);
+                                                  "'[ACCT_PASS]', '[SHA_SALT]' );", $ReplStr);
         $rslt = doSQLQuery($sqlStr);
         if ( is_array($rslt) ) {
             foreach ( $rslt as $Row ) {
@@ -1378,6 +1378,7 @@ class Account {
                 if ( mb_strpos(NoNull($Row['avatar_img'], 'default.png'), '/') !== false ) { $cdnUrl = getCdnUrl(); }
 
                 $data[] = array( 'guid'           => NoNull($Row['guid']),
+                                 'name'           => strtolower(NoNull($Row['name'])),
 
                                  'display_name'   => NoNull($Row['display_name']),
                                  'first_name'     => NoNull($Row['first_name']),

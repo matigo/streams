@@ -50,7 +50,7 @@ BEGIN
     IF IFNULL(`x_valid`, 'N') = 'Y' THEN
         UPDATE `Account` acct
            SET `email` = LOWER(LEFT(`in_email`, 256)),
-               `password` = CASE WHEN IFNULL(`in_password`, '') <> '' THEN sha2(CONCAT(`in_shasalt`, `in_password`), 512) ELSE `password` END,
+               `password` = CASE WHEN LENGTH(IFNULL(`in_password`, '')) > 6 THEN sha2(CONCAT(`in_shasalt`, `in_password`), 512) ELSE `password` END,
                `last_name` = LEFT(`in_lastname`, 40),
                `first_name` = LEFT(`in_firstname`, 40),
                `display_name` = LEFT(`in_dispname`, 40),
