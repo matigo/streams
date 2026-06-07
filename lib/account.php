@@ -1384,6 +1384,7 @@ class Account {
                                  'first_name'     => NoNull($Row['first_name']),
                                  'last_name'      => NoNull($Row['last_name']),
                                  'email'          => ((YNBool($Row['is_you']) === true) ? NoNull($Row['email']) : ''),
+                                 'bio'            => NoNull($Row['bio']),
 
                                  'avatar_url'     => $cdnUrl . NoNull($Row['avatar_img'], 'default.png'),
                                  'is_active'      => YNBool($Row['is_active']),
