@@ -1,6 +1,6 @@
 DELIMITER ;;
 DROP PROCEDURE IF EXISTS PerformLogin;;
-CREATE PROCEDURE PerformLogin( IN `in_account_mail` varchar(140), IN `in_password` varchar(2048), IN `in_channel_guid` varchar(64), IN `in_client_guid` varchar(64), IN `in_salt` varchar(64) )
+CREATE PROCEDURE PerformLogin( IN `in_lookup` varchar(140), IN `in_password` varchar(2048), IN `in_channel_guid` varchar(64), IN `in_client_guid` varchar(64), IN `in_salt` varchar(64) )
 BEGIN
     DECLARE `x_account_id`  int(11);
     DECLARE `x_token_id`    int(11);
@@ -12,13 +12,8 @@ BEGIN
      *  Usage: CALL PerformLogin('{email}', '{password}', '{channel_guid}', '{client_guid}', '{salt}');
      ** ********************************************************************** **/
 
-    /* If the Channel GUID is bad, Exit */
-    IF LENGTH(IFNULL(`in_channel_guid`, '')) <> 36 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Channel GUID Provided';
-    END IF;
-
     /* If the Login Name is bad, Exit */
-    IF LENGTH(IFNULL(`in_account_mail`, '')) < 3 THEN
+    IF LENGTH(IFNULL(`in_lookup`, '')) < 3 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid Login ID Provided';
     END IF;
 
@@ -34,10 +29,13 @@ BEGIN
            CAST(0 AS UNSIGNED) as `persona_count`, CAST('Y' AS CHAR(1)) as `can_read`, CAST('N' AS CHAR(1)) as `can_write`,
            CASE WHEN acct.`type` = 'account.admin' THEN 0
                 ELSE DATEDIFF(Now(), IFNULL((SELECT max(tt.`updated_at`) FROM `Tokens` tt WHERE tt.`account_id` = acct.`id`), Now())) END as `last_activity`
-      FROM `Account` acct
+      FROM `Persona` pa INNER JOIN `Account` acct ON pa.`account_id` = acct.`id`
      WHERE acct.`is_deleted` = 'N' and acct.`type` IN ('account.admin', 'account.normal')
-       and LOWER(acct.`email`) = LOWER(`in_account_mail`)
+       and pa.`is_deleted` = 'N' and pa.`is_active` = 'Y'
        and acct.`password` IN ( sha2(CONCAT(IFNULL(`in_salt`, ''), `in_password`), 512), sha2(CONCAT(DATE_FORMAT(acct.`created_at`, '%Y-%m-%d %H:%i:00'), `in_password`), 512) )
+       and LOWER(`in_lookup`) IN (LOWER(acct.`email`), LOWER(pa.`name`))
+     GROUP BY acct.`id`, acct.`type`, acct.`display_name`, acct.`language_code`
+     ORDER BY acct.`id`
      LIMIT 1;
 
     IF (SELECT COUNT(`account_id`) FROM `tmp`) <> 1 THEN
@@ -48,13 +46,18 @@ BEGIN
     SELECT `account_id` INTO `x_account_id` FROM tmp;
 
     /* Determine the Channel Permissions */
-    UPDATE tmp INNER JOIN (SELECT pa.`account_id`, COUNT(pa.`id`) as `persona_count`, ca.`can_read`, ca.`can_write`
-                             FROM `Channel` ch INNER JOIN `ChannelAuthor` ca ON ch.`id` = ca.`channel_id`
-                                               INNER JOIN `Persona` pa ON ca.`persona_id` = pa.`id`
-                            WHERE ch.`is_deleted` = 'N' and ca.`is_deleted` = 'N' and pa.`is_deleted` = 'N'
-                              and ch.`guid` = `in_channel_guid` and pa.`account_id` = `x_account_id`
-                            GROUP BY pa.`account_id`, ca.`can_read`, ca.`can_write`
-                            ORDER BY `can_write` DESC, `persona_count` DESC LIMIT 1) perms ON tmp.`account_id` = perms.`account_id`
+    UPDATE tmp INNER JOIN (SELECT pa.`account_id`, COUNT(DISTINCT pa.`id`) as `persona_count`, MAX(ca.`can_read`) as `can_read`, MAX(ca.`can_write`) as `can_write`
+                             FROM `Persona` pa INNER JOIN `ChannelAuthor` ca ON pa.`id` = ca.`persona_id`
+                                               INNER JOIN `Channel` ch ON ca.`channel_id` = ch.`id`
+                                          LEFT OUTER JOIN `PersonaMeta` mm ON pa.`id` = mm.`persona_id` AND mm.`key` = 'site.default'
+                            WHERE pa.`is_deleted` = 'N' and pa.`is_active` = 'Y'
+                              and ca.`is_deleted` = 'N' and ca.`can_write` = 'Y'
+                              and ch.`is_deleted` = 'N'
+                              and CASE WHEN LENGTH(`in_channel_guid`) = 36 AND `in_channel_guid` = ch.`guid` THEN true
+                                       WHEN LENGTH(`in_channel_guid`) = 0 THEN true
+                                       ELSE false END
+                              and pa.`account_id` = `x_account_id`
+                            GROUP BY pa.`account_id` LIMIT 1) perms ON tmp.`account_id` = perms.`account_id`
        SET tmp.`persona_count` = perms.`persona_count`,
            tmp.`can_write` = perms.`can_write`,
            tmp.`can_read` = perms.`can_read`;

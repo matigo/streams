@@ -75,85 +75,82 @@ class Auth {
         // Perform the Action
         switch ( $ReqType ) {
             case 'get':
-                $rVal = $this->_performGetAction();
+                return $this->_performGetAction();
                 break;
 
             case 'post':
             case 'put':
-                $rVal = $this->_performPostAction();
+                return $this->_performPostAction();
                 break;
 
             case 'delete':
-                $rVal = $this->_performDeleteAction();
+                return $this->_performDeleteAction();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'status':
-                $rVal = $this->_checkTokenStatus();
+                return $this->_checkTokenStatus();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy String
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'login':
             case '':
-                $rVal = $this->_performLogin();
+                return $this->_performLogin();
                 break;
 
             case 'signout':
             case 'logout':
-                $rVal = $this->_performLogout();
+                return $this->_performLogout();
                 break;
 
             case 'reset':
-                $rVal = $this->_requestPassReset();
+                return $this->_requestPassReset();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy String
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     private function _performDeleteAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             case '':
-                $rVal = $this->_performLogout();
+                return $this->_performLogout();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     /** ********************************************************************* *
@@ -277,16 +274,6 @@ class Auth {
         $isWebReq = YNBool(NoNull($this->settings['webreq']));
         $LangCd = NoNull(DEFAULT_LANG, 'en-us');
         $Token = false;
-
-        if ( mb_strlen($ChannelGuid) <> 36 ) {
-            $this->_setMetaMessage( "Invalid Channel GUID Provided", 401 );
-            return false;
-        }
-
-        if ( mb_strlen($ClientGuid) > 0 && mb_strlen($ClientGuid) <> 36 ) {
-            $this->_setMetaMessage( "Invalid Client GUID Provided", 401 );
-            return false;
-        }
 
         // Ensure We Have the Data, and Check the Database
         if ( $AcctName != "" && $AcctPass != "" && $AcctName != $AcctPass ) {
