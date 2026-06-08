@@ -1374,8 +1374,11 @@ class Account {
             $data = false;
 
             foreach ( $rslt as $Row ) {
-                $cdnUrl = NoNull($this->settings['HomeURL']) . '/avatars/';
-                if ( mb_strpos(NoNull($Row['avatar_img'], 'default.png'), '/') !== false ) { $cdnUrl = getCdnUrl(); }
+                if ( mb_strpos(NoNull($Row['avatar_img'], 'default.png'), '/') === false ) {
+                    $cdnUrl = NoNull($this->settings['HomeURL']) . '/avatars/';
+                } else {
+                    $cdnUrl = getCdnUrl();
+                }
 
                 $data[] = array( 'guid'           => NoNull($Row['guid']),
                                  'name'           => strtolower(NoNull($Row['name'])),

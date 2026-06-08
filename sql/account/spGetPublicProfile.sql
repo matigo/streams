@@ -54,7 +54,7 @@ BEGIN
     SELECT DISTINCT pa.`name`, pa.`last_name`, pa.`first_name`, pa.`display_name`, pa.`guid` as `persona_guid`,
            (SELECT CASE WHEN IFNULL(zpm.`value`, 'N') = 'Y'
                         THEN CONCAT('https://www.gravatar.com/avatar/', MD5(LOWER(CASE WHEN zpa.`email` <> '' THEN zpa.`email` ELSE zacct.`email` END)), '?s=250&r=pg')
-                        ELSE (SELECT CONCAT(CASE WHEN zsi.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', zsu.`url`, '/avatars/', zpa.`avatar_img`) as `avatar_url`
+                        ELSE (SELECT CONCAT(CASE WHEN zsi.`https` = 'Y' THEN 'https' ELSE 'http' END, '://', zsu.`url`, CASE WHEN zpa.`avatar_img` NOT LIKE '/%' THEN '/avatars/' ELSE '' END, zpa.`avatar_img`) as `avatar_url`
                                 FROM `Site` zsi INNER JOIN `SiteUrl` zsu ON zsi.`id` = zsu.`site_id`
                                WHERE zsi.`is_deleted` = 'N' and zsi.`is_default` = 'Y' and zsu.`is_active` = 'Y'
                                LIMIT 1) END as `avatar_url`
