@@ -928,7 +928,7 @@ class Account {
         if ( in_array($CleanAvatar, $avatarTypes) === false ) { $CleanAvatar = 'own'; }
 
         /* Check if there is an Avatar File Reference */
-        $avatarPathExcludes = array('/files/', 'files/', '/avatars/', 'avatars/');
+        $avatarPathExcludes = array('/files/', 'files/', 'files', '/avatars/', 'avatars/', 'avatars');
         $CleanAvatarFile = str_replace($avatarPathExcludes, '', NoNull($this->settings['avatar_file'], $this->settings['avatar-file']));
 
         /* Ensure We Have a GUID */
