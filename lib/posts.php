@@ -670,6 +670,18 @@ class Posts {
                     }
                 }
 
+                // Do we have files? Grab a list
+                $files = false;
+                if ( YNBool($Row['has_files']) ) {
+                    $files = $this->_getPostFiles(nullInt($Row['post_id']), nullInt($Row['updated_unix']));
+
+                    /* If we have an array of files, let's add it to the meta object */
+                    if ( is_array($files) ) {
+                        if ( is_array($poMeta) === false ) { $poMeta = array(); }
+                        $poMeta['files'] = $files;
+                    }
+                }
+
                 // Do We Have Geo-Markers? Grab the History
                 $markers = false;
                 if ( YNBool($Row['has_markers']) ) {
@@ -1087,6 +1099,86 @@ class Posts {
             default:
                 return array();
         }
+    }
+
+    /**
+     *  Function Returns the files that are associated with a given post
+     */
+    private function _getPostFiles( $post_id, $version = 0 ) {
+        if ( nullInt($version) <= 1000 ) { $version = 0; }
+        if ( nullInt($post_id) <= 0 ) { return false; }
+        $CacheKey = 'post-files-' . $post_id . '-' . paddNumber($version);
+
+        $data = getCacheObject($CacheKey);
+        if ( is_array($data) === false ) {
+            $ReplStr = array( '[POST_ID]'  => nullInt($post_id) );
+            $sqlStr = readResource(SQL_DIR . '/posts/getPostFiles.sql', $ReplStr);
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                $cdnUrl = getCdnUrl();
+                $data = array();
+
+                foreach ( $rslt as $Row ) {
+                    $fileName = CDN_PATH . NoNull($Row['local_file']);
+                    $fObj = array( 'guid' => NoNull($Row['file_guid']),
+                                   'name' => NoNull($Row['name'], $Row['public_name']),
+                                   'type' => NoNull($Row['type']),
+                                   'hash' => NoNull($Row['hash']),
+
+                                   'bytes'  => nullInt($Row['bytes']),
+                                   'height' => false,
+                                   'width'  => false,
+
+                                   'src'    => $cdnUrl . NoNull($Row['local_file']),
+                                   'medium' => false,
+                                   'thumb'  => false,
+
+                                   'expires_at'   => apiDate($Row['expires_unix'], 'Z'),
+                                   'expires_unix' => apiDate($Row['expires_unix'], 'U'),
+
+                                   'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                                   'created_unix' => apiDate($Row['created_unix'], 'U'),
+                                   'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                   'updated_unix' => apiDate($Row['updated_unix'], 'U'),
+                                  );
+
+                    /* If the file exists, let's check some attributes */
+                    if ( file_exists($fileName) ) {
+                        if ( str_contains($Row['type'], 'image') ) {
+                            list($width, $height) = getimagesize($fileName);
+
+                            $fObj['height'] = nullInt($height);
+                            $fObj['width'] = nullInt($width);
+
+                            /* Do we have a thumbnail? */
+                            $ext = getFileExtension($fileName);
+                            $medium = str_ireplace(".$ext", "_medium.$ext", $fileName);
+                            $thumb = str_ireplace(".$ext", "_thumb.$ext", $fileName);
+
+                            if ( file_exists($medium) ) { $fObj['medium'] = $cdnUrl . str_ireplace(".$ext", "_medium.$ext", NoNull($Row['local_file'])); }
+                            if ( file_exists($thumb) ) { $fObj['thumb'] = $cdnUrl . str_ireplace(".$ext", "_thumb.$ext", NoNull($Row['local_file'])); }
+                        }
+
+                        /* There's no point having empty elements */
+                        if ( $fObj['medium'] === false ) { unset($fObj['medium']); }
+                        if ( $fObj['height'] === false ) { unset($fObj['height']); }
+                        if ( $fObj['width'] === false ) { unset($fObj['width']); }
+                        if ( $fObj['thumb'] === false ) { unset($fObj['thumb']); }
+
+                        /* Add the object to the output array */
+                        $data[] = $fObj;
+                    }
+                }
+
+                /* If we have data, save it */
+                $CacheKey = 'no-caching';
+                if ( is_array($data) && count($data) > 0 ) { setCacheObject($CacheKey, $data); }
+            }
+        }
+
+        /* If we have data, return it. Otherwise, unhappy boolean */
+        if ( is_array($data) && count($data) > 0 ) { return $data; }
+        return false;
     }
 
     /**

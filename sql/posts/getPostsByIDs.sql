@@ -5,6 +5,10 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
        pa.`guid` as `persona_guid`, pa.`is_active` as `persona_active`, pa.`created_at` as `persona_created_at`, pa.`updated_at` as `persona_updated_at`,
        po.`title`, po.`value`,
        (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
+       (SELECT CASE WHEN COUNT(DISTINCT fi.`id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostFile` pf INNER JOIN `File` fi ON pf.`file_id` = fi.`id`
+         WHERE pf.`is_deleted` = 'N' and fi.`is_deleted` = 'N'
+           and IFNULL(fi.`expires_at`, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)) > CURRENT_TIMESTAMP
+           and pf.`post_id` = po.`id` LIMIT 1) as `has_files`,
        (SELECT GROUP_CONCAT(z.`value`) as `value` FROM `PostTags` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id`) as `post_tags`,
        CASE WHEN po.`type` IN ('post.location')
             THEN (SELECT CASE WHEN COUNT(DISTINCT z.`seq_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMarker` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1)
@@ -25,7 +29,7 @@ SELECT po.`id` as `post_id`, po.`parent_id`, po.`guid` as `post_guid`, po.`type`
        si.`guid` as `site_guid`, si.`created_at` as `site_created_at`, si.`updated_at` as `site_updated_at`,
        po.`client_id`, cl.`name` as `client_name`, cl.`logo_img` as `client_logo_img`, cl.`guid` as `client_guid`,
        po.`publish_at`, po.`expires_at`,
-       po.`created_at`, po.`created_by`, po.`updated_at`
+       po.`created_at`, po.`created_by`, po.`updated_at`, UNIX_TIMESTAMP(po.`updated_at`) as `updated_unix`
   FROM `Site` si INNER JOIN `Channel` ch ON si.`id` = ch.`site_id`
                  INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                  INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
