@@ -2384,6 +2384,18 @@ class Posts {
                                 }
                             }
 
+                            // Do we have files? Grab a list
+                            $files = false;
+                            if ( YNBool($post['has_files']) ) {
+                                $files = $this->_getPostFiles(nullInt($post['post_id']), nullInt($post['updated_unix']));
+
+                                /* If we have an array of files, let's add it to the meta object */
+                                if ( is_array($files) ) {
+                                    if ( is_array($poMeta) === false ) { $poMeta = array(); }
+                                    $poMeta['files'] = $files;
+                                }
+                            }
+
                             /* Do We Have Geo-Markers? Grab the History */
                             $markers = false;
                             if ( YNBool($Row['has_markers']) ) {

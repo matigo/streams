@@ -133,6 +133,10 @@ BEGIN
              WHERE z.`is_deleted` = 'N' and z.`thread_id` = IFNULL(po.`thread_id`, po.`id`) and z.`id` >= IFNULL(po.`thread_id`, po.`id`)) as `thread_length`,
            po.`title`, po.`value`,
            (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
+           (SELECT CASE WHEN COUNT(DISTINCT fi.`id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostFile` pf INNER JOIN `File` fi ON pf.`file_id` = fi.`id`
+             WHERE pf.`is_deleted` = 'N' and fi.`is_deleted` = 'N'
+               and IFNULL(fi.`expires_at`, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)) > CURRENT_TIMESTAMP
+               and pf.`post_id` = po.`id` LIMIT 1) as `has_files`,
            CASE WHEN po.`type` IN ('post.location')
                 THEN (SELECT CASE WHEN COUNT(DISTINCT z.`seq_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMarker` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1)
                 ELSE 'N' END as `has_markers`,
