@@ -928,15 +928,16 @@ class Account {
         if ( in_array($CleanAvatar, $avatarTypes) === false ) { $CleanAvatar = 'own'; }
 
         /* Check if there is an Avatar File Reference */
-        $CleanAvatarFile = NoNull($this->settings['avatar_file'], $this->settings['avatar-file']);
+        $avatarPathExcludes = array('/files/', 'files/', '/avatars/', 'avatars/');
+        $CleanAvatarFile = str_replace($avatarPathExcludes, '', NoNull($this->settings['avatar_file'], $this->settings['avatar-file']));
 
-        // Ensure We Have a GUID
+        /* Ensure We Have a GUID */
         if ( strlen($CleanGUID) != 36 ) {
             $this->_setMetaMessage("Invalid Persona GUID Supplied", 400);
             return false;
         }
 
-        // Collect the Data
+        /* Collect the Data */
         $ReplStr = array( '[PERSONA_GUID]' => sqlScrub($CleanGUID),
                           '[PERSONA_BIO]'  => sqlScrub($CleanBio),
                           '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
