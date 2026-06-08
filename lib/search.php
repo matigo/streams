@@ -20,17 +20,16 @@ class Search {
      ** ********************************************************************* */
     public function performAction() {
         $ReqType = NoNull(strtolower($this->settings['ReqType']));
-        $rVal = false;
 
         // Perform the Action if permissions exist
         if ( $this->settings['_can_access'] ) {
             switch ( $ReqType ) {
                 case 'get':
-                    $rVal = $this->_performGetAction();
+                    return $this->_performGetAction();
                     break;
 
                 case 'post':
-                    $rVal = $this->_performPostAction();
+                    return $this->_performPostAction();
                     break;
 
                 default:
@@ -41,40 +40,42 @@ class Search {
             $this->_setMetaMessage('You do not have permission to search this channel.', 403);
         }
 
-        // Return The Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     private function _performGetAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         if ( nullInt($this->settings['PgSub1']) > 0 ) { $Activity = 'list'; }
-        $rVal = false;
 
         switch ( $Activity ) {
             case 'list':
             case '':
-                $rVal = $this->_getSearchResult();
+                return $this->_getSearchResult();
+                break;
+
+            case 'all':
+                return $this->_collectSearchResults();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
 
         switch ( $Activity ) {
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, there's nothing */
+        return false;
     }
 
     /**
@@ -258,6 +259,81 @@ class Search {
         return array();
     }
 
+    /**
+     *  Function scans everything in the database for the search terms
+     */
+    private function _collectSearchResults() {
+        $excludes = array( 'the', 'and', 'or' );
+        $SearchFor = NoNull($this->settings['for'], $this->settings['search_for']);
+        $InclFull = YNBool(NoNull($this->settings['incl_html'], $this->settings['incl_full']));
+        $Count = nullInt($this->settings['results'], $this->settings['count']);
+        $Uniques = array();
+
+        if ( strlen($SearchFor) <= 0 ) {
+            return $this->_setMetaMessage("Please enter some search criteria", 400);
+        }
+
+        $Criteria = '';
+        $words = explode(' ', strtolower($SearchFor));
+        if ( count($words) > 0 ) {
+            foreach ( $words as $word ) {
+                $word = NoNull($word);
+                if ( strlen($word) > 1 && in_array($word, $excludes) === false && in_array($word, $Uniques) === false ) {
+                    $Uniques[] = $word;
+                    $Criteria .= " UNION ALL\r\n        " .
+                                 "SELECT ss.`post_id`, ss.`word`, CAST(1 AS UNSIGNED) as `score` FROM `PostSearch` ss INNER JOIN `Post` po ON ss.`post_id` = po.`id`" .
+                                 " WHERE ss.`is_deleted` = 'N' and po.`is_deleted` = 'N' and ss.`word` = '" . sqlScrub($word) . "'";
+                }
+            }
+        }
+
+        // Ensure We Still Have Some Search Criteria
+        if ( count($Uniques) <= 0 ) {
+            return $this->_setMetaMessage("Please enter some more specific search criteria", 400);
+        }
+        if ( $Count <= 0 ) { $Count = 50; }
+        if ( $Count > 100 ) { $Count = 100; }
+
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[CRITERIA]'   => $Criteria,
+                          '[COUNT]'      => nullInt($Count, 50),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/search/getSearchMatches.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            $data = array();
+            $ids = '0,';
+
+            foreach ( $rslt as $Row ) {
+                if ( nullInt($Row['post_id']) > 0 ) {
+                    $ids .= ',' . NoNull($Row['post_id']);
+                }
+            }
+
+            /* Let's collect the posts */
+            require_once(LIB_DIR . '/posts.php');
+            $post = new Posts($this->settings);
+            $posts = $post->getPostsByIDs($ids);
+            unset($post);
+
+            /* Go through the posts and update the matches */
+            foreach ( $posts as $pp ) {
+                foreach ( $Uniques as $word ) {
+                    $pp['content'] = str_ireplace($word, '<span class="highlight">' . $word . '</span>', $pp['content']);
+                }
+
+                /* If we can include this response, let's do so */
+                if ( count($data) < $Count ) { $data[] = $pp; }
+            }
+
+            /* If We Have Data, Return It */
+            if ( is_array($data) && count($data) > 0 ) { return $data; }
+        }
+
+        /* If we're here, we have nothing */
+        return $this->_setMetaMessage("Nothing found for the given criteria", 404);
+    }
+
     /** ********************************************************************* *
      *  Internal Functions
      ** ********************************************************************* */
@@ -293,6 +369,7 @@ class Search {
         if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
         if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
         if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
+        return false;
     }
 }
 ?>

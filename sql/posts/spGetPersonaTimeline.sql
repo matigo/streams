@@ -22,7 +22,7 @@ BEGIN
     END IF;
 
     /* Set the Date Limits */
-    SET `x_start_at` = DATE_FORMAT(DATE_SUB(Now(), INTERVAL 14 DAY), '%Y-%m-%d 00:00:00');
+    SET `x_start_at` = DATE_FORMAT(DATE_SUB(Now(), INTERVAL 6 MONTH), '%Y-%m-%d 00:00:00');
     IF IFNULL(`in_since_unix`, 0) > 1000 THEN
         SET `x_start_at` = FROM_UNIXTIME(`in_since_unix`);
     END IF;
@@ -45,22 +45,45 @@ BEGIN
      WHERE t.`is_deleted` = 'N' and t.`code` LIKE 'post.%'
      ORDER BY t.`code`;
 
+    /* Collect the Persona Relationships */
+    DROP TEMPORARY TABLE IF EXISTS tmpRelations;
+    CREATE TEMPORARY TABLE tmpRelations AS
+    SELECT zz.`persona_id`, MAX(zz.`follows`) as `follows`, MAX(zz.`is_muted`) as `is_muted`, MIN(zz.`is_blocked`) as `is_blocked`, MAX(zz.`is_starred`) as `is_starred`, MAX(zz.`pin_type`) as `pin_type`
+      FROM (SELECT pr.`related_id` as `persona_id`, pr.`follows`, pr.`is_muted`, pr.`is_blocked`, pr.`is_starred`, pr.`pin_type`
+              FROM `PersonaRelation` pr INNER JOIN `Persona` pa ON pr.`persona_id` = pa.`id`
+             WHERE pr.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`
+             UNION ALL
+            SELECT pa.`id` as `persona_id`, 'Y' as `follows`, 'N' as `is_muted`, 'N' as `is_blocked`, 'N' as `is_starred`, '' as `pin_type`
+              FROM `Persona` pa
+             WHERE pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`) zz
+     GROUP BY zz.`persona_id`;
+
     /* Collect the Timeline Details into a Temporary Table */
     DROP TEMPORARY TABLE IF EXISTS tmpPosts;
     CREATE TEMPORARY TABLE tmpPosts AS
-    SELECT DISTINCT po.`id` as `post_id`, po.`publish_at` as `posted_at`,
-           LEAST(CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
+    SELECT DISTINCT po.`id` as `post_id`,
+           CAST(CASE WHEN po.`updated_at` <= DATE_ADD(po.`publish_at`, INTERVAL 2 HOUR) THEN GREATEST(po.`publish_at`, po.`updated_at`) ELSE IFNULL(po.`publish_at`, '2000-01-01 00:00:00') END AS DATETIME) as `posted_at`,
+           LEAST(IFNULL(gg.`value`, 'Y'),
+                 CASE WHEN ch.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END,
-                CASE WHEN po.`expires_at` IS NULL THEN 'Y'
-                     WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
-                     WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                     ELSE 'Y' END) as `is_visible`
+                 CASE WHEN IFNULL(pr.`is_blocked`, 'N') = 'Y' THEN 'N'
+                      WHEN IFNULL(pr.`is_muted`, 'N') = 'Y' AND IFNULL(men.`is_mention`, 'N') = 'N' THEN 'N'
+                      ELSE 'Y' END,
+                 CASE WHEN po.`expires_at` IS NULL THEN 'Y'
+                      WHEN po.`expires_at` IS NOT NULL AND po.`expires_at` < Now() THEN 'N'
+                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
+                      ELSE 'Y' END) as `is_visible`
       FROM `SiteUrl` su INNER JOIN `Site` si ON su.`site_id` = si.`id`
                         INNER JOIN `Channel` ch ON ch.`site_id` = si.`id`
                         INNER JOIN `Post` po ON ch.`id` = po.`channel_id`
                         INNER JOIN `Persona` pa ON po.`persona_id` = pa.`id`
                         INNER JOIN `tmpTypes` tmp ON po.`type` = tmp.`code`
+                   LEFT OUTER JOIN `SiteMeta` gg ON gg.`is_deleted` = 'N' and gg.`key` = 'show_global' and gg.`site_id` = si.`id`
+                   LEFT OUTER JOIN `tmpRelations` pr ON pa.`id` = pr.`persona_id`
+                   LEFT OUTER JOIN (SELECT pm.`post_id`, 'Y' as `is_mention`
+                                      FROM `PostMention` pm INNER JOIN `Persona` pa ON pm.`persona_id` = pa.`id`
+                                     WHERE pm.`is_deleted` = 'N' and pa.`is_deleted` = 'N' and pa.`account_id` = `in_account_id`) men ON po.`id` = men.`post_id`
      WHERE po.`is_deleted` = 'N' and si.`is_deleted` = 'N' and su.`is_deleted` = 'N' and su.`is_active` = 'Y'
        and ch.`is_deleted` = 'N' and ch.`type` = 'channel.site'
        and pa.`is_deleted` = 'N' and pa.`guid` = `in_persona_guid`
@@ -111,6 +134,10 @@ BEGIN
              WHERE z.`is_deleted` = 'N' and z.`thread_id` = IFNULL(po.`thread_id`, po.`id`) and z.`id` >= IFNULL(po.`thread_id`, po.`id`)) as `thread_length`,
            po.`title`, po.`value`,
            (SELECT CASE WHEN COUNT(z.`key`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMeta` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1) as `has_meta`,
+           (SELECT CASE WHEN COUNT(DISTINCT fi.`id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostFile` pf INNER JOIN `File` fi ON pf.`file_id` = fi.`id`
+             WHERE pf.`is_deleted` = 'N' and fi.`is_deleted` = 'N'
+               and IFNULL(fi.`expires_at`, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)) > CURRENT_TIMESTAMP
+               and pf.`post_id` = po.`id` LIMIT 1) as `has_files`,
            CASE WHEN po.`type` IN ('post.location')
                 THEN (SELECT CASE WHEN COUNT(DISTINCT z.`seq_id`) > 0 THEN 'Y' ELSE 'N' END FROM `PostMarker` z WHERE z.`is_deleted` = 'N' and z.`post_id` = po.`id` LIMIT 1)
                 ELSE 'N' END as `has_markers`,
@@ -161,8 +188,7 @@ BEGIN
                       WHEN pa.`account_id` = `in_account_id` THEN 'Y'
                       ELSE 'N' END
        and 'Y' = CASE WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
-                      WHEN pa.`account_id` = `in_account_id` THEN 'Y'
-                      ELSE 'N' END
+                      ELSE tmp.`is_visible` END
      ORDER BY tmp.`posted_at` DESC;
 
 END ;;
