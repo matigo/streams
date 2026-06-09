@@ -2261,6 +2261,7 @@ class Posts {
     private function _setPostPublishData( $PostID = 0 ) {
         if ( $PostID <= 0 ) { return false; }
 
+        /* Are there web-mentions to go? */
         $ReplStr = array( '[POST_ID]' => nullInt($PostID) );
         $sqlStr = readResource(SQL_DIR . '/posts/getPostWebMentionToSend.sql', $ReplStr);
         $rslt = doSQLQuery($sqlStr);
@@ -2275,7 +2276,10 @@ class Posts {
             unset($webm);
         }
 
-        // Return a Happy Boolean
+        /* Are there push notifications to take care of? */
+
+
+        /* Return a Happy Boolean */
         return true;
     }
 

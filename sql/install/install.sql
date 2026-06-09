@@ -188,6 +188,21 @@ CREATE TABLE IF NOT EXISTS `AccountMeta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE INDEX `idx_ameta_main` ON `AccountMeta` (`is_deleted`, `account_id`, `key`);
 
+DROP TABLE IF EXISTS `AccountPushTokens`;
+CREATE TABLE IF NOT EXISTS `AccountPushTokens` (
+    `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
+    `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
+    `device_token`  varchar(200)            CHARACTER SET utf8  NOT NULL    ,
+    `comment`       varchar(2048)                                   NULL    ,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    datetime                                    NOT NULL    DEFAULT Now(),
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`account_id`) REFERENCES `Account` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_apts_main` ON `AccountPushTokens` (`is_deleted`, `account_id`);
+
 DROP TABLE IF EXISTS `AccountPass`;
 CREATE TABLE IF NOT EXISTS `AccountPass` (
     `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,

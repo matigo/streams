@@ -187,6 +187,13 @@ class Account {
                 return $this->_setAccountDetails();
                 break;
 
+            case 'devicetokens':
+            case 'devicetoken':
+            case 'pushtokens':
+            case 'pushtoken':
+                return $this->_setPushToken();
+                break;
+
             default:
                 // Do Nothing
         }
@@ -1407,6 +1414,39 @@ class Account {
 
         /* If We're Here, There Are No Personas ... which should not happen */
         return false;
+    }
+
+    /** ********************************************************************* *
+     *  Push Notifications
+     ** ********************************************************************* */
+    /**
+     *  Function records a Device Token to the AccountPushTokens table if one does not already exist
+     */
+    private function _setPushToken() {
+        $device_token = NoNull($this->settings['device_token'], $this->settings['device']);
+        if ( mb_strlen($device_token) <= 10 ) { return $this->_setMetaMessage("Invalid device token provided.", 400); }
+
+        /* Record the Value */
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
+                          '[DEVICE]'     => sqlScrub($device_token),
+                         );
+        $sqlStr = readResource(SQL_DIR . '/account/setPushToken.sql', $ReplStr);
+        $rslt = doSQLExecute($sqlStr);
+
+        /* Collect and return the number of devices tokens that a person has registered */
+        $sqlStr = readResource(SQL_DIR . '/account/getPushTokenCount.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                return array( 'account_guid' => NoNull($Row['account_guid']),
+                              'personas'     => nullInt($Row['persona_count']),
+                              'tokens'       => nullInt($Row['token_count']),
+                             );
+            }
+        }
+
+        /* If we're here, nothing was done */
+        return $this->_setMetaMessage("Could not register device for push notifications", 400);
     }
 
     /** ********************************************************************* *

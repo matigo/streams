@@ -2245,6 +2245,125 @@
     }
 
     /***********************************************************************
+     *  Apple APN (Push Notifications)
+     ***********************************************************************/
+
+    function sendApnsNotification(string $deviceToken, string $title, string $body, bool $production = true ): bool {
+        $host = $production ? 'api.push.apple.com' : 'api.sandbox.push.apple.com';
+        $url  = "https://$host/3/device/$deviceToken";
+
+        /* Ensure the basics are in place */
+        if ( defined('USE_APPLE_APN') === false || YNBool(USE_APPLE_APN) === false ) { return false; }
+        if ( defined('APN_BUNDLEID') === false ) { return false; }
+        if ( defined('APN_KEYID') === false ) { return false; }
+        if ( defined('APN_TEAM') === false ) { return false; }
+
+        /* Construct the Payload */
+        $payload = json_encode([
+            'aps' => [
+                'alert' => ['title' => $title, 'body' => $body],
+                'badge' => 1,
+                'sound' => 'default',
+            ]
+        ]);
+
+        /* Obtain a token */
+        $jwt = generateApnsJWT();
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_HTTP_VERSION    => CURL_HTTP_VERSION_2_0,
+            CURLOPT_POST            => true,
+            CURLOPT_POSTFIELDS      => $payload,
+            CURLOPT_RETURNTRANSFER  => true,
+            CURLOPT_HTTPHEADER      => [
+                "authorization: bearer $jwt",
+                "apns-topic: " . NoNull(APN_BUNDLEID),
+                "content-type: application/json",
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        /* Write some debug info for a while */
+        writeNote("APNS Response: $httpCode", true);
+        writeNote($response, true);
+
+        // 200 = success, 410 = token stale (remove from DB), 400/403 = config problem
+        return $httpCode === 200;
+    }
+
+    /**
+     *  Function generates and/or returns the JWT required for the notification server
+     *
+     *  Note: Tokens can be used for approximately 55 minutes. However, the decision here was to set it to 45 minutes
+     */
+    function generateApnsJWT(): string {
+        $cacheLife = 60 * 45;
+
+        /* Ensure the Basics are in place */
+        if ( defined('APN_KEY_FILE') === false ) { return ''; }
+        if ( defined('APN_KEYID') === false || mb_strlen(APN_KEYID) != 10 ) { return ''; }
+        if ( defined('APN_TEAM') === false || mb_strlen(APN_TEAM) != 10 ) { return ''; }
+
+        /* Do we have a cached key? */
+        $data = getCacheObject('apns-jwt');
+
+        /* If we have data, let's return it */
+        if ( is_array($data) && array_key_exists('jwt', $data) ) { return $data['jwt']; }
+
+        /* Construct the basics */
+        $header  = base64url_encode(json_encode(['alg' => 'ES256', 'kid' => NoNull(APN_KEYID)]));
+        $payload = base64url_encode(json_encode(['iss' => NoNull(APN_TEAM), 'iat' => time()]));
+        $unsignedToken = "$header.$payload";
+
+        $keyPath = CONF_DIR . '/' . NoNull(APN_KEY_FILE);
+        if ( file_exists($keyPath) === false ) { return ''; }
+
+        $privateKey = openssl_pkey_get_private(file_get_contents($keyPath));
+        openssl_sign($unsignedToken, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+
+        /* Convert DER signature to raw R|S format that APNs expects */
+        $signature = derToRaw($signature);
+        $jwt = "$unsignedToken." . base64url_encode($signature);
+
+        /* Save the signature to the cache and return the Token */
+        setCacheObject('apns-jwt', array('jwt' => $jwt));
+        return $jwt;
+    }
+
+    function derToRaw(string $der): string {
+        // DER-encoded ECDSA signature needs to be converted to raw 64-byte R|S
+        $decoded = base64_decode(base64_encode($der)); // ensure binary
+        $offset  = 0;
+        $offset += 2; // sequence tag + length
+
+        // R value
+        $offset++;    // integer tag
+        $rLen = ord($der[$offset++]);
+        if (ord($der[$offset]) === 0x00) { $offset++; $rLen--; } // strip padding
+        $r = substr($der, $offset, $rLen);
+        $offset += $rLen;
+
+        // S value
+        $offset++;    // integer tag
+        $sLen = ord($der[$offset++]);
+        if (ord($der[$offset]) === 0x00) { $offset++; $sLen--; } // strip padding
+        $s = substr($der, $offset, $sLen);
+
+        return str_pad($r, 32, "\0", STR_PAD_LEFT) . str_pad($s, 32, "\0", STR_PAD_LEFT);
+    }
+
+    /**
+     *  Return a properly-trimmed Base64-encoded string
+     */
+    function base64url_encode(string $data): string {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /***********************************************************************
      *  Stats Recording
      ***********************************************************************/
     function recordUsageStat( $data, $http_code, $message = '' ) {
