@@ -1428,7 +1428,7 @@ class Account {
 
         /* Record the Value */
         $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[DEVICE]'     => sqlScrub($device_token),
+                          '[TOKEN]'      => sqlScrub($device_token),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/setPushToken.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);
