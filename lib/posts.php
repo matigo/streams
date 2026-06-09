@@ -2277,7 +2277,20 @@ class Posts {
         }
 
         /* Are there push notifications to take care of? */
+        $sqlStr = readResource(SQL_DIR . '/posts/getPostNotificationList.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $device = NoNull($Row['device_token']);
+                $title = '@' . NoNull($Row['post_from']) . ((YNBool($Row['is_reply'])) ? " has replied to you" : " has mentioned you");
+                $body = NoNull($Row['post_text']);
+                $guid = NoNull($Row['post_guid']);
+                $to = NoNull($Row['name']);
 
+                /* Attempt to send the message */
+                $isOK = sendApnsNotification($device, $title, $body, $guid, $to, false);
+            }
+        }
 
         /* Return a Happy Boolean */
         return true;
