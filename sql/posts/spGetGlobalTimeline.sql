@@ -2,7 +2,8 @@ DELIMITER ;;
 DROP PROCEDURE IF EXISTS GetGlobalTimeline;;
 CREATE PROCEDURE GetGlobalTimeline( IN `in_account_id` int(11), IN `in_persona_guid` varchar(36), IN `in_type_list` varchar(1024), IN `in_since_unix` int(11), IN `in_until_unix` int(11), IN `in_count` int(11) )
 BEGIN
-    DECLARE `min_id` int(11);
+    DECLARE `sub_count` int(11);
+    DECLARE `min_id`    int(11);
 
     /** ********************************************************************** **
      *  Function returns the Visible Timeline for the Global Timeline
@@ -23,7 +24,7 @@ BEGIN
     /* Get the Initial Post.id Minimum */
     IF IFNULL(`min_id`, 0) <= 0 THEN
         SET `min_id` = (SELECT MIN(po.`id`) FROM `Post` po
-                         WHERE po.`is_deleted` = 'N' and po.`publish_at` >= DATE_SUB(Now(), INTERVAL 14 DAY)
+                         WHERE po.`is_deleted` = 'N' and po.`publish_at` >= DATE_SUB(Now(), INTERVAL 90 DAY)
                          LIMIT 1);
     END IF;
     IF IFNULL(`min_id`, 0) <= 0 THEN
@@ -33,6 +34,8 @@ BEGIN
     IF IFNULL(`min_id`, 0) <= 0 THEN
         SET `min_id` = 1;
     END IF;
+
+    SET `sub_count` = `in_count` * 3;
 
     /* Separate and Validate the Post Type Filters */
     DROP TEMPORARY TABLE IF EXISTS tmpTypes;
@@ -185,7 +188,7 @@ BEGIN
                                        and `posted_at` BETWEEN FROM_UNIXTIME(`in_since_unix`) AND
                                                                CASE WHEN `in_until_unix` = 0 THEN Now() ELSE FROM_UNIXTIME(`in_until_unix`) END
                                      ORDER BY CASE WHEN `in_since_unix` = 0 THEN 1 ELSE tmpPosts.`posted_at` END, tmpPosts.`posted_at` DESC
-                                     LIMIT `in_count`) tmp ON po.`id` = tmp.`post_id`
+                                     LIMIT `sub_count`) tmp ON po.`id` = tmp.`post_id`
                    LEFT OUTER JOIN (SELECT pp.`post_id`, pp.`pin_type`, pp.`is_starred`, pp.`is_muted`, pp.`points`
                                       FROM `PostAction` pp INNER JOIN `Persona` pz ON pp.`persona_id` = pz.`id`
                                      WHERE pp.`is_deleted` = 'N' and pz.`is_deleted` = 'N' and pz.`account_id` = `in_account_id`) pp ON po.`id` = pp.`post_id`
@@ -197,7 +200,8 @@ BEGIN
                       WHEN po.`privacy_type` = 'visibility.public' THEN 'Y'
                       WHEN po.`privacy_type` = 'visibility.private' THEN IFNULL(pr.`follows`, 'N')
                       ELSE 'N' END
-     ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC;
+     ORDER BY CASE WHEN `in_since_unix` = 0 THEN 0 ELSE 1 END, tmp.`posted_at` DESC
+     LIMIT `in_count`;
 
      /* Drop the Temporary Tables */
      DROP TEMPORARY TABLE IF EXISTS tmpRelations;
