@@ -2248,7 +2248,7 @@
      *  Apple APN (Push Notifications)
      ***********************************************************************/
 
-    function sendApnsNotification(string $deviceToken, string $title, string $body, bool $production = true ): bool {
+    function sendApnsNotification(string $deviceToken, string $title, string $body, string $postGuid, string $personaName, bool $production = true ): bool {
         $host = $production ? 'api.push.apple.com' : 'api.sandbox.push.apple.com';
         $url  = "https://$host/3/device/$deviceToken";
 
@@ -2262,9 +2262,10 @@
         $payload = json_encode([
             'aps' => [
                 'alert' => ['title' => $title, 'body' => $body],
-                'badge' => 1,
                 'sound' => 'default',
-            ]
+            ],
+            'post_guid' => $postGuid,
+            'persona'   => $personaName,
         ]);
 
         /* Obtain a token */

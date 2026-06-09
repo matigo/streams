@@ -72,7 +72,9 @@ class System {
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
         if ( YNBool($this->settings['_logged_in']) === false ) { return $this->_setMetaMessage("You must be signed in to use these endpoints", 403); }
-        if ( YNBool($this->settings['_is_admin']) === false ) { return $this->_setMetaMessage("You must be an administrator to use these endpoints", 403); }
+        if ( in_array($this->settings['_account_type'], array('account.admin', 'account.global')) === false ) {
+            return $this->_setMetaMessage("You must be an administrator to use these endpoints", 403);
+        }
 
         switch ( $Activity ) {
             case 'testnotifications':
@@ -458,13 +460,20 @@ class System {
         $device = NoNull($this->settings['device_token'], $this->settings['device']);
         $title = NoNull($this->settings['title']);
         $body = NoNull($this->settings['body'], $this->settings['content']);
+        $postGuid = NoNull($this->settings['post_guid'], $this->settings['guid']);
+        $persona = NoNull($this->settings['persona_name'], $this->settings['persona']);
+        $useProd = YNBool(NoNull($this->settings['production'], $this->settings['prod']));
 
         if ( mb_strlen($device) < 20 ) { return $this->_setMetaMessage("Invalid device identifier supplied", 400); }
         if ( mb_strlen($title) < 5 ) { return $this->_setMetaMessage("Please provide a proper message title", 400); }
         if ( mb_strlen($body) < 5 ) { return $this->_setMetaMessage("Please provide a proper message body", 400); }
 
+        /* Do not let weird stuff through */
+        if ( mb_strlen($postGuid) != 36 ) { $postGuid = ''; }
+        if ( mb_strlen($persona) <= 0 || mb_strlen($persona) > 20 ) { $persona = ''; }
+
         /* Attempt to send the message */
-        $isOK = sendApnsNotification( $device, $title, $body );
+        $isOK = sendApnsNotification($device, $title, $body, $postGuid, $persona, $useProd);
 
         return array( 'device'  => $device,
                       'title'   => $title,
