@@ -1427,8 +1427,9 @@ class Account {
         if ( mb_strlen($device_token) <= 10 ) { return $this->_setMetaMessage("Invalid device token provided.", 400); }
 
         /* Record the Value */
-        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']),
-                          '[TOKEN]'      => sqlScrub($device_token),
+        $ReplStr = array( '[ACCOUNT_ID]'   => nullInt($this->settings['_account_id']),
+                          '[TOKEN]'        => sqlScrub($device_token),
+                          '[SQL_SPLITTER]' => sqlScrub(SQL_SPLITTER),
                          );
         $sqlStr = readResource(SQL_DIR . '/account/setPushToken.sql', $ReplStr);
         $rslt = doSQLExecute($sqlStr);

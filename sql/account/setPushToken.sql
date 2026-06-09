@@ -1,3 +1,7 @@
+UPDATE `AccountPushTokens`
+   SET `updated_at` = current_timestamp
+ WHERE `is_deleted` = 'N' and `device_token` = '[TOKEN]' and `account_id` = [ACCOUNT_ID];
+[SQL_SPLITTER]
 INSERT INTO `AccountPushTokens` (`account_id`, `device_token`)
 SELECT tmp.`account_id`, tmp.`device_token`
   FROM (SELECT acct.`id` as `account_id`, '[TOKEN]' as `device_token`, COUNT(apn.`id`) as `tokens`

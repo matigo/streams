@@ -71,21 +71,21 @@ class System {
 
     private function _performPostAction() {
         $Activity = strtolower(NoNull($this->settings['PgSub2'], $this->settings['PgSub1']));
-        $rVal = false;
-
-        if ( !$this->settings['_logged_in']) { return "You Need to Log In First"; }
+        if ( YNBool($this->settings['_logged_in']) === false ) { return $this->_setMetaMessage("You must be signed in to use these endpoints", 403); }
+        if ( YNBool($this->settings['_is_admin']) === false ) { return $this->_setMetaMessage("You must be an administrator to use these endpoints", 403); }
 
         switch ( $Activity ) {
-            case '':
-                $rVal = array( 'activity' => "[POST] /system/$Activity" );
+            case 'testnotifications':
+            case 'testnotify':
+                return $this->_testPushNotifications();
                 break;
 
             default:
                 // Do Nothing
         }
 
-        // Return the Array of Data or an Unhappy Boolean
-        return $rVal;
+        /* If we're here, nothing was done */
+        return false;
     }
 
     private function _performDeleteAction() {
@@ -449,6 +449,31 @@ class System {
     }
 
     /** ********************************************************************* *
+     *  Push Notification Test Functions
+     ** ********************************************************************* */
+    /**
+     *  Function sends a push notification to a given device
+     */
+    private function _testPushNotifications() {
+        $device = NoNull($this->settings['device_token'], $this->settings['device']);
+        $title = NoNull($this->settings['title']);
+        $body = NoNull($this->settings['body'], $this->settings['content']);
+
+        if ( mb_strlen($device) < 20 ) { return $this->_setMetaMessage("Invalid device identifier supplied", 400); }
+        if ( mb_strlen($title) < 5 ) { return $this->_setMetaMessage("Please provide a proper message title", 400); }
+        if ( mb_strlen($body) < 5 ) { return $this->_setMetaMessage("Please provide a proper message body", 400); }
+
+        /* Attempt to send the message */
+        $isOK = sendApnsNotification( $device, $title, $body );
+
+        return array( 'device'  => $device,
+                      'title'   => $title,
+                      'body'    => $body,
+                      'success' => $isOK,
+                     );
+    }
+
+    /** ********************************************************************* *
      *  Class Functions
      ** ********************************************************************* */
     /**
@@ -458,6 +483,7 @@ class System {
         if ( is_array($this->settings['errors']) === false ) { $this->settings['errors'] = array(); }
         if ( NoNull($msg) != '' ) { $this->settings['errors'][] = NoNull($msg); }
         if ( $code > 0 && nullInt($this->settings['status']) == 0 ) { $this->settings['status'] = nullInt($code); }
+        return false;
     }
 }
 ?>
