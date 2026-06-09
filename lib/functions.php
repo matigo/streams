@@ -2263,6 +2263,7 @@
             'aps' => [
                 'alert' => ['title' => $title, 'body' => $body],
                 'sound' => 'default',
+                'badge' => 1,
             ],
             'post_guid' => $postGuid,
             'persona'   => $personaName,
