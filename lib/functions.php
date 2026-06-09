@@ -2332,7 +2332,7 @@
         $jwt = "$unsignedToken." . base64url_encode($signature);
 
         /* Save the signature to the cache and return the Token */
-        setCacheObject('apns-jwt', array('jwt' => $jwt));
+        setCacheObject('apns-jwt', array('jwt' => $jwt), $cacheLife);
         return $jwt;
     }
 
