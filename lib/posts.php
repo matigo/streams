@@ -2292,7 +2292,7 @@ class Posts {
                 $to = NoNull($Row['name']);
 
                 /* Attempt to send the message */
-                $isOK = sendApnsNotification($device, $title, $body, $guid, $to, false);
+                $isOK = sendApnsNotification($device, $title, $body, $guid, $to);
             }
         }
 
