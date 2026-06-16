@@ -2294,6 +2294,13 @@
         writeNote("APNS Response: $httpCode", true);
         writeNote($response, true);
 
+        /* If the response is bad for any reason, mark the token as deleted (Lest Apple Get Upset) */
+        if ( $httpCode >= 400 ) {
+            $ReplStr = array('[TOKEN]' = sqlScrub($deviceToken));
+            $sqlStr = readResource(SQL_DIR . '/system/setTokenBad.sql', $ReplStr);
+            $sOK = doSQLExecute($sqlStr);
+        }
+
         // 200 = success, 410 = token stale (remove from DB), 400/403 = config problem
         return $httpCode === 200;
     }
