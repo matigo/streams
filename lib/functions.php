@@ -1243,7 +1243,7 @@
     /**
      *  Function Records an array of information to a cache location
      */
-    function setCacheObject( $keyName, $data ) {
+    function setCacheObject( $keyName, $data, $expy = 0 ) {
         if ( strlen(NoNull($keyName)) < 3 ) { return false; }
         if ( defined('USE_REDIS') === false ) { define('USE_REDIS', 0); }
 
@@ -1277,6 +1277,7 @@
                 if ( $redis_db->isConnected() ) {
                     /* Determine the key */
                     $key = str_replace(array('/', '_'), '-', $keyName);
+                    $expy = NoNull($expy, REDIS_EXPY);
 
                     /* If we have a Key Prefix, Prepend it */
                     if ( defined('REDIS_PFIX') && mb_strlen(REDIS_PFIX) >= 3 ) { $key = REDIS_PFIX . $key; }
@@ -1287,7 +1288,7 @@
 
                     /* Set the Values */
                     $redis_db->set($key, serialize($data));
-                    $redis_db->expire($key, REDIS_EXPY);
+                    $redis_db->expire($key, $expy);
                     return;
                 }
             }
@@ -2303,8 +2304,6 @@
      *  Note: Tokens can be used for approximately 55 minutes. However, the decision here was to set it to 45 minutes
      */
     function generateApnsJWT(): string {
-        $cacheLife = 60 * 45;
-
         /* Ensure the Basics are in place */
         if ( defined('APN_KEY_FILE') === false ) { return ''; }
         if ( defined('APN_KEYID') === false || mb_strlen(APN_KEYID) != 10 ) { return ''; }
@@ -2332,7 +2331,7 @@
         $jwt = "$unsignedToken." . base64url_encode($signature);
 
         /* Save the signature to the cache and return the Token */
-        setCacheObject('apns-jwt', array('jwt' => $jwt), $cacheLife);
+        setCacheObject('apns-jwt', array('jwt' => $jwt), 300);
         return $jwt;
     }
 

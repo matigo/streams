@@ -60,8 +60,6 @@ class Webmention {
             case '':
                 $this->_parseMentions();
                 $data = json_encode($this->settings);
-                writeNote( "Webmention Received! [GET]", true );
-                writeNote( $data, true );
                 break;
 
             default:
@@ -79,8 +77,6 @@ class Webmention {
             default:
                 $this->_parseMentions();
                 $data = json_encode($this->settings);
-                writeNote( "Webmention Received! [POST]", true );
-                writeNote( $data, true );
         }
 
         // Return the Array of Data or an Unhappy Boolean
