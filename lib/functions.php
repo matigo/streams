@@ -2291,8 +2291,11 @@
         curl_close($ch);
 
         /* Write some debug info for a while */
-        writeNote("APNS Response: $httpCode", true);
-        writeNote($response, true);
+        if ( $httpCode != 200 ) {
+            writeNote("APNS Response: $httpCode", true);
+            writeNote("Device Token: $deviceToken", true);
+            if ( mb_strlen(NoNull($response)) > 0 ) { writeNote($response, true); }
+        }
 
         /* If the response is bad for any reason, mark the token as deleted (Lest Apple Get Upset) */
         if ( $httpCode >= 400 ) {
