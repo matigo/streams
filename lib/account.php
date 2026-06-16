@@ -541,15 +541,17 @@ class Account {
             $sqlStr = prepSQLQuery( "CALL CreateInvite([ACCOUNT_ID]);", $ReplStr );
             $rslt = doSQLQuery($sqlStr);
             if ( is_array($rslt) ) {
-                return array( 'guid'    => NoNull($Row['guid']),
-                              'key'     => NoNull($Row['key']),
-                              'comment' => NoNull($Row['comment']),
+                foreach ( $rslt as $Row ) {
+                    return array( 'guid'    => NoNull($Row['guid']),
+                                  'key'     => NoNull($Row['key']),
+                                  'comment' => NoNull($Row['comment']),
 
-                              'created_at'   => apiDate($Row['created_unix'], 'Z'),
-                              'created_unix' => apiDate($Row['created_unix'], 'U'),
-                              'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
-                              'updated_unix' => apiDate($Row['updated_unix'], 'U'),
-                             );
+                                  'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                                  'created_unix' => apiDate($Row['created_unix'], 'U'),
+                                  'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                                  'updated_unix' => apiDate($Row['updated_unix'], 'U'),
+                                 );
+                }
             }
         }
 
