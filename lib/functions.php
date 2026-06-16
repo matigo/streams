@@ -2299,7 +2299,7 @@
 
         /* If the response is bad for any reason, mark the token as deleted (Lest Apple Get Upset) */
         if ( $httpCode >= 400 ) {
-            $ReplStr = array('[TOKEN]' = sqlScrub($deviceToken));
+            $ReplStr = array('[TOKEN]' => sqlScrub($deviceToken));
             $sqlStr = readResource(SQL_DIR . '/system/setTokenBad.sql', $ReplStr);
             $sOK = doSQLExecute($sqlStr);
         }
