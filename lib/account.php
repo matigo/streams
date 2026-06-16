@@ -143,6 +143,10 @@ class Account {
                 return $this->_createAccount();
                 break;
 
+            case 'invite':
+                return $this->_createInvite();
+                break;
+
             case 'forgot':
                 return $this->_forgotPassword();
                 break;
@@ -507,6 +511,50 @@ class Account {
 
         // If We're Here, Either Something's Wrong or the Requested Name in use
         return array();
+    }
+
+    /**
+     *  Function allows a paid account to create invitation codes, which can be shared
+     */
+    private function _createInvite() {
+        $ReplStr = array( '[ACCOUNT_ID]' => nullInt($this->settings['_account_id']) );
+        $canInvite = false;
+        $accepted = 0;
+        $created = 0;
+
+        // Check if the current account has permission to send invitations
+        $sqlStr = readResource(SQL_DIR . '/account/chkAccountCanInvite.sql', $ReplStr);
+        $rslt = doSQLQuery($sqlStr);
+        if ( is_array($rslt) ) {
+            foreach ( $rslt as $Row ) {
+                $canInvite = YNBool($Row['can_invite']);
+                $accepted = nullInt($Row['invites_accepted']);
+                $created = nullInt($Row['invites_created']);
+            }
+        }
+
+        /* If we cannot create an invitation, we shouldn't be here ... but we also cannot continue */
+        if ( $canInvite === false ) { return $this->_setMetaMessage("Your account cannot create new invitations at this time.", 400); }
+
+        /* Let's keep going ... checking again just because */
+        if ( $canInvite ) {
+            $sqlStr = prepSQLQuery( "CALL CreateInvite([ACCOUNT_ID]);", $ReplStr );
+            $rslt = doSQLQuery($sqlStr);
+            if ( is_array($rslt) ) {
+                return array( 'guid'    => NoNull($Row['guid']),
+                              'key'     => NoNull($Row['key']),
+                              'comment' => NoNull($Row['comment']),
+
+                              'created_at'   => apiDate($Row['created_unix'], 'Z'),
+                              'created_unix' => apiDate($Row['created_unix'], 'U'),
+                              'updated_at'   => apiDate($Row['updated_unix'], 'Z'),
+                              'updated_unix' => apiDate($Row['updated_unix'], 'U'),
+                             );
+            }
+        }
+
+        /* If we're here, then nothing could be created */
+        return $this->_setMetaMessage("Could not create invitation code", 400);
     }
 
     /** ********************************************************************* *

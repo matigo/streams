@@ -203,6 +203,27 @@ CREATE TABLE IF NOT EXISTS `AccountPushTokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE INDEX `idx_apts_main` ON `AccountPushTokens` (`is_deleted`, `account_id`);
 
+DROP TABLE IF EXISTS `AccountInvite`;
+CREATE TABLE IF NOT EXISTS `AccountInvite` (
+    `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
+    `account_id`    int(11)        UNSIGNED                     NOT NULL    ,
+    `key`           varchar(200)            CHARACTER SET utf8  NOT NULL    ,
+    `comment`       varchar(2048)                                   NULL    ,
+    `guid`          char(36)                CHARACTER SET utf8  NOT NULL    ,
+
+    `consumed_by`   int(11)        UNSIGNED                         NULL    ,
+    `consumed_at`   timestamp                                       NULL    ,
+
+    `is_deleted`    enum('N','Y')           CHARACTER SET utf8  NOT NULL    DEFAULT 'N',
+    `created_at`    datetime                                    NOT NULL    DEFAULT Now(),
+    `updated_at`    timestamp                                   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`account_id`) REFERENCES `Account` (`id`),
+    FOREIGN KEY (`consumed_by`) REFERENCES `Account` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX `idx_acctin_main` ON `AccountInvite` (`is_deleted`, `account_id`);
+CREATE INDEX `idx_acctin_key` ON `AccountInvite` (`is_deleted`, `key`);
+
 DROP TABLE IF EXISTS `AccountPass`;
 CREATE TABLE IF NOT EXISTS `AccountPass` (
     `id`            int(11)        UNSIGNED                     NOT NULL    AUTO_INCREMENT,
