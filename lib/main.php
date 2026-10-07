@@ -42,7 +42,7 @@ class Streams {
         $code = 500;
 
         /* So long as we have what appears to be a valid request, respond accoringly */
-        if ( $this->_isValidRequest() ) {
+        if ( $this->_checkForHammer() && $this->_isValidRequest() ) {
             switch ( strtolower($this->settings['Route']) ) {
                 case 'api':
                     require_once(LIB_DIR . '/api.php');
@@ -94,6 +94,61 @@ class Streams {
     /** ********************************************************************** *
      *  Bad Behaviour Functions
      ** ********************************************************************** */
+    /**
+     *  Function Checks to Ensure a Device Isn't Hammering the System Like an Idiot
+     *
+     *  Note: Trusted automation (cron / scheduled jobs) is exempted so it can never
+     *      be caught by this again - see the 25D060 removal, which pulled this
+     *      function entirely because cronjobs sharing an identity bucket were
+     *      tripping the limit.
+     */
+    private function _checkForHammer() {
+        if ( defined('CRON_KEY') === false ) { define('CRON_KEY', ''); }
+        if ( defined('HAMMER_LIMIT') === false ) { define('HAMMER_LIMIT', 120); }
+        if ( defined('HAMMER_LIMIT_AUTH') === false ) { define('HAMMER_LIMIT_AUTH', nullInt(HAMMER_LIMIT, 120) * 10); }
+        $HLimit = nullInt(HAMMER_LIMIT, 120);
+        if ( $HLimit <= 0 ) { return true; }
+
+        /* Trusted automation presenting the shared Cron Key bypasses the limit entirely */
+        if ( mb_strlen(NoNull(CRON_KEY)) >= 20 && NoNull($this->settings['key']) == NoNull(CRON_KEY) ) { return true; }
+
+        /* Requests originating from this server itself are trusted automation, not public traffic */
+        $ip = getVisitorIPv4();
+        if ( in_array($ip, array('127.0.0.1', '::1')) ) { return true; }
+
+        /* Authenticated requests (generally paying customers) get a much higher ceiling - scrapers don't carry valid tokens */
+        $Token = NoNull($this->settings['token']);
+        if ( mb_strlen($Token) >= 30 ) {
+            $HLimit = nullInt(HAMMER_LIMIT_AUTH, $HLimit * 10);
+        } else {
+            /* Anonymous traffic - bucket by IP + User-Agent so one shared VPN/NAT egress isn't punished as a single client */
+            $Token = $ip . '-' . NoNull($_SERVER['HTTP_USER_AGENT']);
+        }
+
+        /* Check To See If Everything's Good */
+        if ( mb_strlen($Token) >= 7 ) {
+            $CleanKey = 'hammer-' . md5($Token . apiDate(strtotime(date("Y-m-d H:i:00")), 'U'));
+            $data = getCacheObject($CleanKey);
+            $reqs = 0;
+
+            /* If we have data, how many requests currently exist? */
+            if ( is_array($data) ) {
+                $reqs = nullInt($data['hit_count']);
+                if ( $reqs <= 0 ) { $reqs = 0; }
+            }
+            $reqs++;
+
+            /* Record the current number of requests (short expiry - the minute is baked into the key already) */
+            setCacheObject($CleanKey, array('hit_count' => nullInt($reqs)), 120);
+
+            /* Return a boolean based on the hit count */
+            if ( $reqs < $HLimit ) { return true; }
+        }
+
+        /* If we're here, we must assume the connection is invalid */
+        return false;
+    }
+
     /**
      *  Function determines if the request is looking for a WordPress, phpMyAdmin, or other
      *      open-source package-based attack vector and returns an abrupt message if so.

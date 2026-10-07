@@ -566,6 +566,13 @@ class Files {
             // Reload the Bucket Data
             $this->_populateClass();
 
+            /* If we have errors, I want them written to the log */
+            if ( is_array($errs) && count($errs) > 0 ) {
+                foreach ( $errs as $err ) {
+                    writeNote("Files Upload Error | Name: " . NoNull($err['name']) . " | Size: " . nullInt($err['size']) . " | Type: " . NoNull($err['type']) . " | Reason: " . NoNull($err['reason']), true);
+                }
+            }
+
             // Return a Files Object Array
             return array( 'files'  => $list,
                           'bucket' => array( 'files' => $this->settings['_storage_used'],

@@ -13,7 +13,8 @@ define('ENABLE_MULTILANG', 1);                              // Enables Multi-Lan
 define('ENABLE_CACHING', 0);                                // Enables Resource Caching
 define('DEFAULT_LANG', 'en-us');                            // The Default Application Language (If Not Already Defined)
 define('DEBUG_ENABLED', 0);                                 // Set the Debug Level (If Not Already Defined)
-define('HAMMER_LIMIT', 120);                                // Maximum Number of Requests from a Device Per Minute (Per Server)
+define('HAMMER_LIMIT', 120);                                // Maximum Number of Requests from an Anonymous Device Per Minute (Per Server)
+define('HAMMER_LIMIT_AUTH', 1200);                          // Maximum Number of Requests from an Authenticated Token Per Minute (Per Server)
 define('ENFORCE_PHPVERSION', 1);                            // Enforce a Requirement that the Server Is Running at Least PHP v.X
 define('MIN_PHPVERSION', 70000);                            // The Lowest Version of PHP to Accept
 

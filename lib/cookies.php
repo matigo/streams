@@ -458,7 +458,7 @@ class Cookies {
 
                     /* Are we dealing with an authorisation token? */
                     if ( strtolower($key) == 'token' ) {
-                        if ( mb_strlen($val) < 36 ) { $LifeTime = -3600; }
+                        if ( is_string($val) && mb_strlen($val) < 36 ) { $LifeTime = -3600; }
                         $key = TOKEN_KEY;
                     }
 

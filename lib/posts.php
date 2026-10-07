@@ -1175,7 +1175,6 @@ class Posts {
                 }
 
                 /* If we have data, save it */
-                $CacheKey = 'no-caching';
                 if ( is_array($data) && count($data) > 0 ) { setCacheObject($CacheKey, $data); }
             }
         }
@@ -2419,8 +2418,8 @@ class Posts {
 
                             /* Do We Have Geo-Markers? Grab the History */
                             $markers = false;
-                            if ( YNBool($Row['has_markers']) ) {
-                                $markers = $this->_getPostMarkers($Row['post_guid']);
+                            if ( YNBool($post['has_markers']) ) {
+                                $markers = $this->_getPostMarkers($post['post_guid']);
                                 if ( is_array($markers) ) {
                                     $poMeta['markers'] = $markers;
                                 }
@@ -2428,7 +2427,7 @@ class Posts {
 
                             /* Prep the Post-Text */
                             $IsNote = true;
-                            if ( in_array(NoNull($Row['post_type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
+                            if ( in_array(NoNull($post['type']), array('post.article', 'post.quotation', 'post.bookmark')) ) { $IsNote = false; }
                             $post_text = $this->_getMarkdownHTML($post['value'], $post['post_id'], $IsNote, true);
                             if ( is_array($mentions) ) {
                                 $post_text = $this->_parsePostMentions($post_text, $mentions);

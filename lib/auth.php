@@ -189,14 +189,14 @@ class Auth {
 
         /* If the data is stored as part of the current HTTP request, return it */
         $rVal = getGlobalObject('token_data');
-        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) { return $rVal; }
+        if ( is_array($rVal) && mb_strlen($rVal['_persona_guid']) >= 36 ) { return $rVal; }
 
         /* Determine the appropriate CacheKey */
         $CacheKey = 'token-' . paddNumber(alphaToInt($data[1])) . '-' . NoNull($data[2]);
 
         /* if the data is stored in the cache, return it */
         $rVal = getCacheObject($CacheKey);
-        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) { return $rVal; }
+        if ( is_array($rVal) && mb_strlen($rVal['_persona_guid']) >= 36 ) { return $rVal; }
 
         /* If we're here, we need to collect the data */
         $PassAge = 10000;
@@ -250,7 +250,7 @@ class Auth {
         }
 
         /* Set the Cache and Return an Array of Data or an Unhappy Boolean */
-        if ( is_array($rVal) && mb_strlen($rVal['persona_guid']) >= 36 ) {
+        if ( is_array($rVal) && mb_strlen($rVal['_persona_guid']) >= 36 ) {
             setGlobalObject('token_data', $rVal);
             setCacheObject($CacheKey, $rVal);
         }
